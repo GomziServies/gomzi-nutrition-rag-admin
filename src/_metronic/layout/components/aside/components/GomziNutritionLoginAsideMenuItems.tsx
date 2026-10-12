@@ -4,6 +4,7 @@ import {
 	faChartLine,
 	faClipboardList,
 	faCoins,
+	faEnvelope,
 	faFileInvoice,
 	faHome,
 	faJar,
@@ -162,6 +163,11 @@ export function GomziNutritionLoginAsideMenuItems() {
 				to='/rag/sample-booking'
 				title='Sample Booking'
 				Icon={faClipboardList}
+			/>
+			<AsideMenuItem
+				to='/rag/contact-inquiry/contact'
+				title='Contact Inquiry'
+				Icon={faEnvelope}
 			/>
 		</>
 	)

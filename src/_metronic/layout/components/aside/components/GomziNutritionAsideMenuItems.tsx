@@ -4,6 +4,7 @@ import {
 	faChartLine,
 	faCoins,
 	faDumbbell,
+	faEnvelope,
 	faFileInvoice,
 	faHome,
 	faJar,
@@ -127,8 +128,8 @@ export function GomziNutritionAsideMenuItems() {
 			</AsideMenuItemWithSub>
 			<AsideMenuItem
 				to='/rag/contact-inquiry/contact'
-				Icon={faUser}
-				title='Contact Inquery'
+				Icon={faEnvelope}
+				title='Contact Inquiry'
 			/>
 		</>
 	)

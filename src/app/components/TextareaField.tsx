@@ -10,6 +10,7 @@ type Props = {
 	onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
 	readOnly?: boolean
 	disabled?: boolean
+	rows?: number
 }
 
 const TextareaField: FC<Props> = ({
@@ -22,6 +23,7 @@ const TextareaField: FC<Props> = ({
 	htmlFor,
 	readOnly,
 	disabled,
+	rows = 4,
 }) => {
 	return (
 		<div className={`fv-row mb-7 ${className}`}>
@@ -35,7 +37,7 @@ const TextareaField: FC<Props> = ({
 				value={value}
 				onChange={onChange}
 				readOnly={readOnly}
-				rows={4}
+				rows={rows}
 				className={`${disabled ? `textareafield-bg1` : `textareafield-bg`} form-control form-control-solid mb-3 mb-lg-0`}
 				placeholder={placeholder}
 				disabled={disabled}></textarea>

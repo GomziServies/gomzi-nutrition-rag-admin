@@ -30,7 +30,12 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 	const isEmployeeLogin = localStorage.getItem('is_employee_login') === 'true'
 	const currentPanel = localStorage.getItem('admin')
 
-	if (isEmployeeLogin && currentPanel && currentPanel !== 'Employee') {
+	const isContactInquiry =
+		to?.includes('contact-inquiry') ||
+		title?.trim().toLowerCase() === 'contact inquiry' ||
+		title?.trim().toLowerCase() === 'contact inquery'
+
+	if (!isContactInquiry && isEmployeeLogin && currentPanel && currentPanel !== 'Employee') {
 		const cachedAuths = localStorage.getItem('employee_authorities')
 		if (cachedAuths) {
 			try {

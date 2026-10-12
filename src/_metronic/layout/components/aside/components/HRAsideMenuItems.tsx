@@ -7,6 +7,7 @@ import {
 	faCheck,
 	faComment,
 	faDollar,
+	faEnvelope,
 	faFileLines,
 	faHome,
 	faListUl,
@@ -108,6 +109,11 @@ export function HRAsideMenuItems() {
 				to='/hr/daily-report'
 				Icon={faBarsProgress}
 				title='Daily Report'
+			/>
+			<AsideMenuItem
+				to='/rag/contact-inquiry/contact'
+				Icon={faEnvelope}
+				title='Contact Inquiry'
 			/>
 			<AsideMenuItem
 				to='/hr/expenses-list'

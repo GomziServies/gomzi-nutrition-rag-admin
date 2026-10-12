@@ -6,6 +6,7 @@ import {
 	faChartSimple,
 	faCheck,
 	faComment,
+	faEnvelope,
 	faFolder,
 	faHome,
 	faMoneyBills,
@@ -150,11 +151,11 @@ export function EmployeeAsideMenuItems() {
 				Icon={faPersonWalking}
 				title='Leave Manager'
 			/>
-			{/* <AsideMenuItem
-				to='/employee/rating-manager'
-				Icon={faStar}
-				title='Rating Manager'
-			/> */}
+			<AsideMenuItem
+				to='/rag/contact-inquiry/contact'
+				Icon={faEnvelope}
+				title='Contact Inquiry'
+			/>
 		</>
 	)
 }
