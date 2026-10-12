@@ -20,7 +20,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Collapse } from 'bootstrap'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd'
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import Modal from 'react-bootstrap/Modal'
 import toast from 'react-hot-toast'
 import { useLocation } from 'react-router-dom'
