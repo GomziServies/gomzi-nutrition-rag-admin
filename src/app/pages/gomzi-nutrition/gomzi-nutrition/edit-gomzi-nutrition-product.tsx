@@ -48,11 +48,11 @@ const EditGomziNutritionProduct = () => {
 		displayImages: [] as string[],
 		selectedFiles: [] as File[],
 
-		highlights: [],
-		benefits: [],
-		ingredients: [],
-		usageInstructions: [],
-		variations: [],
+		highlights: [] as any[],
+		benefits: [] as any[],
+		ingredients: [] as string[],
+		usageInstructions: [] as any[],
+		variations: [] as any[],
 	})
 
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

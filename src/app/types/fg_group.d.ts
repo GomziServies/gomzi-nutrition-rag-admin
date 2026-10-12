@@ -50,7 +50,7 @@ type FitnessCourseCertificateOptions = {
 
 type FGGroupSearchOptions = {
 	search?: string
-	status?: string
+	status?: string | boolean
 }
 
 type InventorySearchOption = {

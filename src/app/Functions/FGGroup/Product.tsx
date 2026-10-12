@@ -11,17 +11,18 @@ export interface ProductPayload {
 	description?: string
 	categories?: string[]
 	tags?: string[]
-	highlights?: string[]
-	benefits?: string[]
-	ingredients?: string[]
-	nutrition?: any[]
-	usageInstructions?: string
+	highlights?: any
+	benefits?: any
+	ingredients?: any
+	nutrition?: any
+	usageInstructions?: any
 	storageInstructions?: string
-	variations?: {
-		name: string
-		price: number
-	}[]
+	additionalInstructions?: string
+	variations?: any[]
 	private_note?: string
+	flavour?: string
+	weight?: any
+	servings?: number
 }
 
 export function AddProduct(body: ProductPayload): Promise<FGGroupAPIResponse> {
@@ -69,12 +70,17 @@ export function UpdateSingleProductStock(body: {
 }
 
 export function AddProductVariation(body: {
-	product_id: string
+	product_id: any
 	name: string
 	price: number
-	discountPrice: number
-	description: string
-	display_image: string[]
+	discountPrice?: number
+	description?: string
+	display_image?: string[]
+	displayImages?: string[]
+	flavour?: string
+	sku?: string
+	weight?: any
+	servings?: number
 	stock: number
 	isAvailable: boolean
 }): Promise<FGGroupAPIResponse> {
@@ -82,15 +88,20 @@ export function AddProductVariation(body: {
 }
 
 export function UpdateProductVariation(body: {
-	product_id: string
-	variant_id: string
-	name: string
-	price: number
-	discountPrice: number
-	description: string
-	display_image: string[]
-	stock: number
-	isAvailable: boolean
+	product_id: any
+	variant_id: any
+	name?: string
+	price?: number
+	discountPrice?: number
+	description?: string
+	display_image?: string[]
+	displayImages?: string[]
+	flavour?: string
+	sku?: string
+	weight?: any
+	servings?: number
+	stock?: number
+	isAvailable?: boolean
 }): Promise<FGGroupAPIResponse> {
 	return APIPatch(
 		FGGroupEndpoints.UpdateProductVariation,

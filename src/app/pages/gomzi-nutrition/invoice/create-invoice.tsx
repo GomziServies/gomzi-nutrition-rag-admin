@@ -674,7 +674,7 @@ const NutritionCreateInvoice: React.FC = () => {
 		wrapper.appendChild(termsContent.cloneNode(true))
 
 		const opt = {
-			margin: [8, 8, 8, 8],
+			margin: [8, 8, 8, 8] as [number, number, number, number],
 			filename: `${name || 'invoice'}.pdf`,
 			image: {
 				type: 'jpeg',

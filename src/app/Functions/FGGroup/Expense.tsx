@@ -18,10 +18,10 @@ export function createExpense(body: {
 	total_amount: number
 	note?: string
 	items: item[]
-	reference_document: {
-		name: string
-		url: string
-		mime_type: string
+	reference_document?: {
+		name?: string
+		url?: string
+		mime_type?: string
 	}
 }): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.CreateExpense, getAPIHeaders('fg_group'), undefined, body)

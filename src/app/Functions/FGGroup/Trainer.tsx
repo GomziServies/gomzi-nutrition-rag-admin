@@ -22,7 +22,7 @@ export function UpdateTrainer(body: {
 	email?: string
 	mobile?: string
 	city?: string
-	company?: number
+	company?: string | number
 	address?: string
 	profile_image?: string
 	birthdate?: string

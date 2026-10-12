@@ -74,8 +74,8 @@ export function getQuotation(
 	query?: {
 		id?: string
 		quotation_category?: string
-		from_date?: Date
-		to_date?: Date
+		from_date?: Date | string
+		to_date?: Date | string
 	} & FGGroupSearchOptions &
 		FGGroupPaginationOptions &
 		FGGroupSortOptions

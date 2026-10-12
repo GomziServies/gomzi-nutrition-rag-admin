@@ -227,8 +227,8 @@ export function GetOrdersInsights(query?: {
 	currency: string | string[]
 	purchase_mode?: string | string[]
 	gateway?: string | string[]
-	from_date?: Date
-	to_date?: Date
+	from_date?: Date | string
+	to_date?: Date | string
 	order_status?: string | string[]
 	receipt_id?: string | string[]
 	user_id?: string | string[]
@@ -239,10 +239,10 @@ export function GetOrdersInsights(query?: {
 }
 
 export function GetInvoiceInsights(query?: {
-	from_date?: Date
-	to_date?: Date
-	createdAt_from?: Date
-	createdAt_to?: Date
+	from_date?: Date | string
+	to_date?: Date | string
+	createdAt_from?: Date | string
+	createdAt_to?: Date | string
 	email?: string | string[]
 	mobile?: string | string[]
 	state?: string | string[]
@@ -258,10 +258,10 @@ export function GetInvoiceInsights(query?: {
 }
 
 export function GetExpenseInsights(query?: {
-	from_date?: Date
-	to_date?: Date
-	createdAt_from?: Date
-	createdAt_to?: Date
+	from_date?: Date | string
+	to_date?: Date | string
+	createdAt_from?: Date | string
+	createdAt_to?: Date | string
 	item_name?: string | string[]
 	payment_method?: string | string[]
 	expense_category?: string | string[]

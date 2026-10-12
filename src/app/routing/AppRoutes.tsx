@@ -189,8 +189,7 @@ const AppRoutes: FC = () => {
 				admin !== 'Fgiit_Tele_Sales' &&
 				admin !== 'Fwg_Tele_Sales' &&
 				admin !== 'Employee' &&
-				admin !== 'Store' &&
-				canSwitch
+				admin !== 'Store'
 			) {
 				localStorage.setItem('admin', 'Gomzi_Nutrition_Tele_Sales')
 				window.location.href = currentUrl

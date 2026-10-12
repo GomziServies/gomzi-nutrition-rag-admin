@@ -25,6 +25,28 @@ interface ChargeItem {
 	charge_amount: number
 }
 
+const predefinedOptions = [
+	'All plan',
+	'Marketing Guru',
+	'Portfolio management service',
+	'Management Consultation',
+	'Business management course',
+	'Digital marketing course',
+	'Stock market course',
+	'Content shoot & Edit',
+	'Graphics designing',
+	'Social Media marketing',
+	'Website designing and development',
+	'Paid Advertisement',
+	'Content writing',
+	'SEO- Search engine optimization',
+	'SEM- Search engine management',
+	'GMB- Google my business profile maintain',
+	'ERP setup and service',
+	'Business solution',
+	'Logo design',
+]
+
 const NutritionUpdateInvoice: React.FC = () => {
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
@@ -137,27 +159,6 @@ const NutritionUpdateInvoice: React.FC = () => {
 			const response: any = await getInvoice({ id: String(invoice_id) })
 			const data = response.data[0]
 
-			const predefinedOptions = [
-				'All plan',
-				'Marketing Guru',
-				'Portfolio management service',
-				'Management Consultation',
-				'Business management course',
-				'Digital marketing course',
-				'Stock market course',
-				'Content shoot & Edit',
-				'Graphics designing',
-				'Social Media marketing',
-				'Website designing and development',
-				'Paid Advertisement',
-				'Content writing',
-				'SEO- Search engine optimization',
-				'SEM- Search engine management',
-				'GMB- Google my business profile maintain',
-				'ERP setup and service',
-				'Business solution',
-				'Logo design',
-			]
 
 			const parseDuration = (durationString: string) => {
 				if (!durationString) return { duration_number: '', duration: '' }
@@ -423,7 +424,7 @@ const NutritionUpdateInvoice: React.FC = () => {
 		wrapper.appendChild(termsContent.cloneNode(true))
 
 		const opt = {
-			margin: [8, 8, 8, 8],
+			margin: [8, 8, 8, 8] as [number, number, number, number],
 			filename: `${name || 'invoice'}.pdf`,
 			image: {
 				type: 'jpeg',

@@ -27,7 +27,7 @@ type TableProps = {
 	sortOrder: 'asc' | 'desc'
 	onSortChange: (field: string, sortOrder: 'asc' | 'desc') => void
 	renderRow: (item: any, index: number, actualIndex: number, isVisible: boolean) => JSX.Element
-	visibleDetails: string | null
+	visibleDetails?: string | null
 	pagination: { page: number; itemsPerPage: number }
 	setPagination: React.Dispatch<React.SetStateAction<{ page: number; itemsPerPage: number }>>
 	loading: boolean

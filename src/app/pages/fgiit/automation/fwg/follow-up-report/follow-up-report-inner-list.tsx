@@ -7,7 +7,7 @@ import SearchFilter from '../../../../../components/SearchFilter'
 import Table from '../../../../../components/Table'
 import TableButton from '../../../../../components/TableButton'
 import UsersListPagination from '../../../../../components/TablePagination'
-import { GetFwgFollowUpReport } from '../../../../../Functions/FWG'
+import { GetFwgFollowUpReport } from '../../../../../Functions/FGGroup'
 import toast from 'react-hot-toast'
 import { useSearchParams } from 'react-router-dom'
 
