@@ -1,0 +1,936 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable jsx-a11y/img-redundant-alt */
+import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+import { useLocation } from 'react-router-dom'
+import { DayJS } from '../../../../_metronic/helpers/Utils'
+import { PageTitle } from '../../../../_metronic/layout/core'
+import CopyableInput from '../../../components/CopyableInput'
+import InputField from '../../../components/InputField'
+import SelectField from '../../../components/SelectField'
+import Table from '../../../components/Table'
+import TableButton from '../../../components/TableButton'
+import UsersListPagination from '../../../components/TablePagination'
+import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
+import { GetEmployees, UpdateEmployee } from '../../../Functions/FGGroup/Employee'
+
+const HRMemberDetail = () => {
+	const location = useLocation()
+	const searchParams = new URLSearchParams(location.search)
+	const employee_id: any = searchParams.get('employee_id')
+	const [loading, setLoading] = useState(false)
+	const [documentLoading, setDocumentLoading] = useState(false)
+	const [sort, setSort] = useState('createdAt')
+	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
+	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
+	const [memberData, setMemberData] = useState<any>([])
+	const [memberDetailData, setMemberDetailData] = useState<any>({
+		admin_id: '',
+		employee_code: '',
+		name: '',
+		photo: '',
+		position: '',
+		mobile: '',
+		bank_name: '',
+		account_details: '',
+		IFSC: '',
+		email: '',
+		salary: '',
+		account_detail: '',
+		blood_group: '',
+		address: '',
+		in_time: '',
+		out_time: '',
+		joining_date: '',
+		branch_name: '',
+	})
+
+	const [family_details, setFamilyDetails] = useState([
+		{
+			name: '',
+			mobile: '',
+		},
+	])
+
+	const handleFamilyChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value } = event.target
+
+		const updatedDetails = [...family_details]
+
+		// Ensure 'name' is a valid key of FamilyMember
+		if (name in updatedDetails[index]) {
+			updatedDetails[index] = {
+				...updatedDetails[index],
+				[name]: value,
+			}
+			setFamilyDetails(updatedDetails)
+		}
+	}
+
+	const addPlan = (event: any) => {
+		event.preventDefault()
+		setFamilyDetails([
+			...family_details,
+			{
+				name: '',
+				mobile: '',
+			},
+		])
+	}
+
+	const removePlan = (index: number, event: React.MouseEvent<HTMLButtonElement>) => {
+		event.preventDefault()
+		let copy = [...family_details]
+		copy.splice(index, 1)
+		setFamilyDetails(copy)
+	}
+
+	const validateFamilyDetails = (): boolean => {
+		for (let i = 0; i < family_details.length; i++) {
+			const member = family_details[i]
+
+			if (!member.name.trim()) {
+				toast.error(`Family Details is required`)
+				return false
+			}
+
+			if (!member.mobile) {
+				toast.error(`Family Details Contact number is required`)
+				return false
+			}
+		}
+
+		return true
+	}
+
+	const [memberDetailAddData, setMemberDetailAddData] = useState({
+		document_type: '',
+		upload_photo: '',
+		file_url: '',
+		editImage: false,
+		selectedFile: null as File | null,
+		joining_date: '',
+		expiry_date: '',
+	})
+	const [pagination, setPagination] = useState({
+		page: 1,
+		itemsPerPage: 10,
+	})
+	const [joiningTime, setJoiningTime] = useState<any>(null)
+
+	const fetchEmployeeData = async () => {
+		setLoading(true)
+		try {
+			const response: any = await GetEmployees({ id: employee_id })
+			const filteredData: any = response.data[0]
+
+			const joiningDate = filteredData?.employee?.joining_date
+
+			let joiningDuration = ''
+			if (joiningDate) {
+				const start = DayJS(joiningDate)
+				const now = DayJS()
+				const years = now.diff(start, 'year')
+				const months = now.diff(start, 'month') % 12
+				const days = now.diff(start, 'day') % 30
+
+				if (years > 0) joiningDuration += `${years} Years`
+				if (months > 0) joiningDuration += `${joiningDuration ? ', ' : ''}${months} Months`
+				if (years === 0 && months === 0) joiningDuration = `${days} Days`
+			}
+
+			setMemberDetailData({
+				admin_id: filteredData?._id,
+				employee_code: filteredData?.employee?.employee_code,
+				name: filteredData?.full_name,
+				photo: filteredData?.employee?.photo,
+				position: filteredData?.employee?.position,
+				mobile: filteredData?.mobile,
+				bank_name: filteredData?.employee?.account_details?.bank_name,
+				account_details: filteredData?.employee?.account_details?.account_number,
+				IFSC: filteredData?.employee.account_details.IFSC,
+				email: filteredData?.email,
+				salary: filteredData?.employee?.salary,
+				blood_group: filteredData?.employee?.blood_group,
+				address: filteredData?.employee?.address,
+				document: filteredData?.employee?.document,
+				proof: filteredData?.employee?.proof,
+				in_time: filteredData?.employee?.in_time,
+				out_time: filteredData?.employee?.out_time,
+				joining_date: joiningDate,
+				branch_name: filteredData?.employee?.branch_name,
+			})
+
+			if (
+				Array.isArray(filteredData?.employee?.family_details) &&
+				filteredData.employee.family_details.length > 0
+			) {
+				setFamilyDetails(filteredData.employee.family_details)
+			} else {
+				// Set default empty row
+				setFamilyDetails([{ name: '', mobile: '' }])
+			}
+
+			setJoiningTime(joiningDuration)
+			setMemberData(filteredData?.employee?.document)
+		} catch (error) {
+			console.error(error)
+		}
+		setLoading(false)
+	}
+
+	useEffect(() => {
+		fetchEmployeeData()
+	}, [])
+
+	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		const { name, value } = event.target
+
+		setMemberDetailData((prevData: any) => ({
+			...prevData,
+			[name]: value,
+		}))
+	}
+
+	const handleSelectChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		const { id, name, value } = event.target
+		if (id === 'fileInput' && event.target instanceof HTMLInputElement && event.target.files) {
+			const file = event.target.files[0]
+			setMemberDetailAddData((prevData) => ({
+				...prevData,
+				selectedFile: file,
+				file_url: URL.createObjectURL(file),
+				editImage: true,
+			}))
+		}
+
+		setMemberDetailAddData((prevData) => ({
+			...prevData,
+			[name]: value,
+		}))
+	}
+
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		const { name, files } = event.target as HTMLInputElement
+		if (files && files[0]) {
+			setMemberDetailData((prevData: any) => ({
+				...prevData,
+				[name]: files[0],
+			}))
+		}
+	}
+
+	const sortableFields = [
+		{ title: 'Document Type', field: 'document_type' },
+		{ title: 'Joining Date', field: 'joining_date' },
+		{ title: 'Expiry Date', field: 'expiry_date' },
+		{ title: 'Preview', field: 'link' },
+	]
+
+	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
+		setSort(newSort)
+		setSortOrder(newSortOrder)
+	}
+
+	const handleRowClick = (id: string) => {
+		if (window.innerWidth <= 1024) {
+			setVisibleDetails(visibleDetails === id ? null : id)
+		}
+	}
+
+	const handleUpdateDocument = async (data: any) => {
+		if (!validateFamilyDetails()) {
+			return
+		}
+		setDocumentLoading(true)
+
+		try {
+			let imgUrl = ''
+
+			if (data === 'Document') {
+				if (!memberDetailAddData.document_type) {
+					toast.error('Please select a document type')
+					setDocumentLoading(false)
+					return
+				}
+				if (!memberDetailAddData.selectedFile) {
+					toast.error('Please select a file to upload')
+					setDocumentLoading(false)
+					return
+				}
+
+				if (memberDetailAddData.selectedFile) {
+					const imageUrl: any = await FileUploadToFGGroup([memberDetailAddData.selectedFile], {
+						directory: 'books',
+					})
+					imgUrl = imageUrl.data?.fileURLs[0]
+					toast.success('Document uploaded successfully')
+				}
+			}
+
+			const {
+				admin_id,
+				employee_code,
+				name,
+				position,
+				salary,
+				mobile,
+				bank_name,
+				account_details,
+				IFSC,
+				blood_group,
+				email,
+				address,
+				in_time,
+				out_time,
+				joining_date,
+				branch_name,
+			} = memberDetailData
+
+			const payload: any = {
+				admin_id,
+				type: 'Employee',
+				employee_code,
+				name,
+				position,
+				salary,
+				blood_group,
+				family_details,
+				mobile,
+				account_details: {
+					bank_name,
+					account_number: account_details,
+					IFSC,
+				},
+				email,
+				address,
+				in_time,
+				out_time,
+				joining_date,
+				...(position === 'Sales Person' ? { branch_name } : {}),
+				document: (data === 'Document'
+					? [
+							...memberData,
+							{
+								document_type: memberDetailAddData.document_type || 'Joining Letter ',
+								link: imgUrl,
+								joining_date: memberDetailAddData.joining_date,
+								expiry_date: memberDetailAddData.expiry_date,
+							},
+					  ]
+					: memberData
+				).filter((doc: any) => doc.document_type && doc.link),
+			}
+
+			await UpdateEmployee(payload)
+
+			if (data === 'Document') {
+				toast.success('Document Updated Successfully')
+			} else {
+				toast.success('Employee Data Updated Successfully')
+			}
+
+			// Clear form data after successful update
+			setMemberDetailAddData({
+				document_type: '',
+				upload_photo: '',
+				file_url: '',
+				editImage: false,
+				selectedFile: null,
+				joining_date: '',
+				expiry_date: '',
+			})
+
+			fetchEmployeeData()
+		} catch (error: any) {
+			toast.error(error.message)
+			console.error(error)
+		}
+		setDocumentLoading(false)
+	}
+
+	const handlePageChange = (page: number) => {
+		setPagination({ ...pagination, page })
+	}
+
+	return (
+		<>
+			<PageTitle breadcrumbs={[]}>Employee Detail</PageTitle>
+			<>
+				<div className='card pb-3'>
+					<div className='card-body'>
+						<h1 className='fw-bold text-dark fs-1 mb-6 mt-3 '>Member Detail</h1>
+
+						<div className='row'>
+							<div className='col-md-3 d-md-block d-flex mb-md-0 mb-5'>
+								<div>
+									<label
+										htmlFor='proof'
+										className='fw-bold ms-md-0 ms-6 fs-6 mb-md-5 mb-2'>
+										Profile :
+									</label>
+									<br />
+									<div className=' d-md-block d-flex justify-content-center'>
+										<img
+											src={'https://files.fggroup.in/' + memberDetailData?.photo}
+											className='w-75'
+											style={{ borderRadius: '5px' }}
+											alt='Image preview'
+										/>
+									</div>
+								</div>
+								<div className='mt-md-5'>
+									<label
+										htmlFor='proof'
+										className='fw-bold ms-md-0 ms-6 fs-6 mb-md-5 mb-2'>
+										Proof :
+									</label>
+									<br />
+									<div className=' d-md-block d-flex justify-content-center'>
+										<img
+											src={'https://files.fggroup.in/' + memberDetailData?.proof}
+											className='w-75'
+											alt='Image preview'
+											style={{ borderRadius: '5px' }}
+										/>
+									</div>
+								</div>
+							</div>
+							<div className='col-md-9'>
+								<div className='row'>
+									{(() => {
+										const isSalesPerson = memberDetailData.position === 'Sales Person'
+										const colClass = isSalesPerson ? 'col-md-3' : 'col-md-4'
+										return (
+											<>
+												<div className={colClass}>
+													<InputField
+														className='col-12 fv-row'
+														placeholder='Employee Code'
+														type='text'
+														name='employee_code'
+														label='Employee Code'
+														htmlFor='employee_code'
+														value={memberDetailData.employee_code}
+														onChange={handleInputChange}
+													/>
+												</div>
+												<div className={colClass}>
+													<InputField
+														className='col-12 fv-row'
+														placeholder='Name'
+														type='text'
+														name='name'
+														label='Name'
+														htmlFor='name'
+														value={memberDetailData.name}
+														onChange={handleInputChange}
+													/>
+												</div>
+												<div className={colClass}>
+													<SelectField
+														className='col-12 fv-row'
+														name='position'
+														label='Position'
+														htmlFor='position'
+														value={memberDetailData?.position}
+														onChange={handleInputChange}
+														options={[
+															'Web Developer',
+															'Web Designer',
+															'Digital marketing',
+															'Franchise Owner',
+															'Graphics Designer',
+															'Sales Manager',
+															'Sales Person',
+															'Video Editor',
+															'Back Office',
+															'faculty',
+															'Trainer',
+															'Dietitian',
+															'Worker',
+															'Branch Manager',
+															'Human Resources',
+															'Team Leader',
+															'Manager',
+															'Admin',
+															'Receptionist',
+															'Director',
+															'Social Media Assistant',
+															'Fitness Counselor',
+															'Production Manager',
+															'SEO',
+															'Junior Production Manager',
+															'Content Creator',
+															'R&D and Procurement Manager',
+															'R&D and Procurement Jr. Manager',
+														]}
+													/>
+												</div>
+												{isSalesPerson && (
+													<div className='col-md-3'>
+														<SelectField
+															className='col-12 fv-row'
+															name='branch_name'
+															label='Branch Name'
+															htmlFor='branch_name'
+															value={memberDetailData?.branch_name}
+															onChange={handleInputChange}
+															options={['FG Group', 'FWG', 'Gomzi Nutrition']}
+														/>
+													</div>
+												)}
+											</>
+										)
+									})()}
+									<div className='col-md-4'>
+										<InputField
+											className='col-12 fv-row'
+											placeholder='Mobile'
+											type='text'
+											name='mobile'
+											label='Mobile'
+											htmlFor='mobile'
+											value={memberDetailData.mobile}
+											onChange={handleInputChange}
+										/>
+									</div>
+									<div className='col-md-4'>
+										<InputField
+											className='col-12 fv-row'
+											placeholder='Email'
+											type='email'
+											name='email'
+											label='Email'
+											htmlFor='email'
+											value={memberDetailData.email}
+											onChange={handleInputChange}
+										/>
+									</div>
+									<div className='col-md-4'>
+										<InputField
+											className='col-12 fv-row'
+											placeholder='Salary'
+											type='text'
+											name='salary'
+											label='Salary'
+											htmlFor='salary'
+											value={memberDetailData.salary}
+											onChange={handleInputChange}
+										/>
+									</div>
+									<SelectField
+										className='col-2 fv-row'
+										name='blood_group'
+										label='Blood Group'
+										htmlFor='bloodGroup'
+										value={memberDetailData?.blood_group}
+										onChange={handleInputChange}
+										options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']}
+									/>
+									<div className='col-md-6'>
+										<InputField
+											className='col-12 fv-row'
+											placeholder='Address'
+											type='text'
+											name='address'
+											label='Address'
+											htmlFor='address'
+											value={memberDetailData.address}
+											onChange={handleInputChange}
+										/>
+									</div>
+									<div className='col-md-4'>
+										<InputField
+											className='col-12 fv-row'
+											placeholder='Joining Date'
+											type='date'
+											name='joining_date'
+											label={`Joining Date (${joiningTime})`}
+											htmlFor='joining_date'
+											value={memberDetailData?.joining_date}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									{family_details && (
+										<div className='col-md-12 mt-3'>
+											<h2 className='mb-5'>Family Details:</h2>
+											<div className='row'>
+												{family_details.map((family, index) => (
+													<div
+														className='row'
+														key={index}>
+														<div className='col-md-5 fv-row'>
+															<InputField
+																placeholder='Name'
+																type='text'
+																className='col-12 fv-row'
+																name='name'
+																label='Name'
+																htmlFor='name'
+																value={family.name}
+																onChange={(e: any) => handleFamilyChange(index, e)}
+															/>
+														</div>
+														<div className='col-md-5 fv-row'>
+															<InputField
+																placeholder='Contact Number'
+																type='number'
+																className='col-12 fv-row'
+																name='mobile'
+																label='Contact Number'
+																htmlFor='number'
+																value={family.mobile}
+																onChange={(e: any) => handleFamilyChange(index, e)}
+															/>
+														</div>
+														{family_details.length > 1 && index != 0 ? (
+															<div className='col-2 d-flex  align-items-center'>
+																<div className='d-flex mt-5 justify-content-center align-items-center'>
+																	<TableButton
+																		action='remove'
+																		backgroundDark={true}
+																		onClick={(e) => removePlan(index, e)}
+																	/>
+																</div>
+															</div>
+														) : (
+															''
+														)}
+													</div>
+												))}
+											</div>
+										</div>
+									)}
+									{family_details && (
+										<div className='col-12 my-3 d-flex justify-content-end'>
+											<button
+												className='btn-primary btn gap-2 mx-2 btn-sm me-1'
+												onClick={(e) => addPlan(e)}>
+												<strong>
+													<big>+</big>
+												</strong>{' '}
+												Add
+											</button>
+										</div>
+									)}
+
+									<div className='col-md-12 mt-3'>
+										<h2 className='mb-5'>Account Details:</h2>
+										<div className='row'>
+											<div className='col-md-4 fv-row mb-md-7'>
+												<CopyableInput
+													placeholder='Bank Name'
+													type='text'
+													className='col-12 fv-row mb-7'
+													name='bank_name'
+													label='Bank Name'
+													htmlFor='bank_name'
+													value={memberDetailData.bank_name}
+													onChange={handleInputChange}
+												/>
+											</div>
+											<div className='col-md-4 fv-row mb-md-7'>
+												<CopyableInput
+													placeholder='Account No.'
+													type='text'
+													className='col-12 fv-row mb-7'
+													name='account_details'
+													label='Account No.'
+													htmlFor='account_details'
+													value={memberDetailData.account_details}
+													onChange={handleInputChange}
+												/>
+											</div>
+											<div className='col-md-4 fv-row mb-md-7'>
+												<CopyableInput
+													placeholder='IFSC Code'
+													type='text'
+													className='col-12 fv-row mb-7'
+													name='IFSC'
+													label='IFSC Code'
+													htmlFor='IFSC'
+													value={memberDetailData.IFSC}
+													onChange={handleInputChange}
+												/>
+											</div>
+										</div>
+									</div>
+
+									<div className='col-md-12 mt-3'>
+										<h2 className='mb-5'>Shift Time:</h2>
+										<div className='row'>
+											<div className='col-md-4 fv-row mb-md-7'>
+												<InputField
+													placeholder='In-Time'
+													type='time'
+													className='col-12 fv-row mb-7'
+													name='in_time'
+													label='In-Time'
+													htmlFor='in_time'
+													value={memberDetailData.in_time}
+													onChange={handleInputChange}
+												/>
+											</div>
+											<div className='col-md-4 fv-row mb-md-7'>
+												<InputField
+													placeholder='Out-Time'
+													type='time'
+													className='col-12 fv-row mb-7'
+													name='out_time'
+													label='Out-Time'
+													htmlFor='out_time'
+													value={memberDetailData.out_time}
+													onChange={handleInputChange}
+												/>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div className='col-12 d-flex justify-content-end'>
+								<TableButton
+									action='edit'
+									onClick={() => handleUpdateDocument('Employee')}
+									text='Save Changes'
+									backgroundDark={true}
+								/>
+							</div>
+						</div>
+					</div>
+				</div>
+				{documentLoading && (
+					<div className='loader-background'>
+						<div
+							className='spinner-border spinner-border-1 text-white'
+							style={{ width: '50px', height: '50px' }}
+							role='status'>
+							<span className='visually-hidden'>Loading...</span>
+						</div>
+					</div>
+				)}
+				<div className='row'>
+					<div className='col-12 mt-7'>
+						<div className='card'>
+							<div className='card-body px-10 py-10'>
+								<div
+									className='mb-10 p-8 rounded-3'
+									style={{ backgroundColor: '#f5f5f5ff', border: '1px solid #f5f3f3ff' }}>
+									<div className='mb-7'>
+										<h3 className='fw-bold text-dark fs-3'>
+											<i className='ki-duotone ki-file-up fs-1 text-primary me-2'>
+												<span className='path1'></span>
+												<span className='path2'></span>
+											</i>
+											Upload Documents
+										</h3>
+									</div>
+									<div className='row'>
+										{(() => {
+											const isDateVisible =
+												memberDetailAddData.document_type === 'Joining Letter ' ||
+												memberDetailAddData.document_type === 'HR Agreement '
+											const colSize = isDateVisible ? 'col-lg-3' : 'col-lg-6'
+
+											return (
+												<>
+													<div className={`${colSize} col-md-6 fv-row mb-md-7 mb-3`}>
+														<SelectField
+															className='col-12'
+															name='document_type'
+															label='Document Type'
+															htmlFor='document_type'
+															value={memberDetailAddData.document_type}
+															onChange={handleSelectChange}
+															options={[
+																'Joining Letter ',
+																'Termination Letter ',
+																'HR Agreement ',
+																'Experience Letter ',
+																'Google Pay QR Code',
+															]}
+														/>
+													</div>
+													<div className={`${colSize} col-md-6 fv-row mb-md-7 mb-3`}>
+														<InputField
+															placeholder='Upload Photo'
+															type='file'
+															className='col-12'
+															name='upload_photo'
+															id='fileInput'
+															label='Upload Photo'
+															htmlFor='upload_photo'
+															onChange={(e) => handleSelectChange(e)}
+														/>
+													</div>
+													{isDateVisible && (
+														<>
+															<div className='col-lg-3 col-md-6 fv-row mb-md-7 mb-3'>
+																<InputField
+																	className='col-12'
+																	placeholder='Joining Date'
+																	type='date'
+																	name='joining_date'
+																	label='Joining Date'
+																	htmlFor='joining_date'
+																	value={memberDetailAddData?.joining_date}
+																	onChange={handleSelectChange}
+																/>
+															</div>
+															<div className='col-lg-3 col-md-6 fv-row mb-md-7 mb-3'>
+																<InputField
+																	className='col-12'
+																	placeholder='Expiry Date'
+																	type='date'
+																	name='expiry_date'
+																	label='Expiry Date'
+																	htmlFor='expiry_date'
+																	value={memberDetailAddData?.expiry_date}
+																	onChange={handleSelectChange}
+																/>
+															</div>
+														</>
+													)}
+												</>
+											)
+										})()}
+									</div>
+									<div className='d-flex justify-content-end'>
+										<button
+											type='button'
+											onClick={() => handleUpdateDocument('Document')}
+											className='btn btn-primary px-10'>
+											<i className='ki-duotone ki-cloud-upload fs-2 me-2'>
+												<span className='path1'></span>
+												<span className='path2'></span>
+											</i>
+											Upload Document
+										</button>
+									</div>
+								</div>
+
+								<div className='table-responsive'>
+									<Table
+										data={memberData}
+										columns={sortableFields}
+										sort={sort}
+										sortOrder={sortOrder}
+										onSortChange={handleSortChange}
+										removeAction={true}
+										renderRow={(
+											member: any,
+											index: number,
+											actualIndex: number,
+											isVisible: boolean
+										) => {
+											const isPdf = member.link.endsWith('.pdf')
+											const fileUrl = 'https://files.fggroup.in/' + member.link
+											return (
+												<React.Fragment key={member._id}>
+													<tr
+														onClick={() => handleRowClick(member._id)}
+														className='data-row'>
+														<td className='text-center'>
+															<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+																{actualIndex}
+															</span>
+														</td>
+														<td>
+															<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+																{member.document_type}
+															</span>
+														</td>
+														<td>
+															<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+																{member.joining_date
+																	? DayJS(member.joining_date).format('DD MMM YYYY')
+																	: '-'}
+															</span>
+														</td>
+														<td>
+															<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+																{member.expiry_date
+																	? DayJS(member.expiry_date).format('DD MMM YYYY')
+																	: '-'}
+															</span>
+														</td>
+
+														<td width={'40%'}>
+															<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+																{isPdf ? (
+																	<>
+																		<a
+																			href={fileUrl}
+																			target='_blank'
+																			rel='noopener noreferrer'>
+																			<embed
+																				src={fileUrl}
+																				className='w-75'
+																			/>
+																		</a>
+																		<div>
+																			<button
+																				type='button'
+																				onClick={() => window.open(fileUrl)}
+																				className='btn btn-success mx-2 mt-md-7 my-4'>
+																				View PDF
+																			</button>
+																		</div>
+																	</>
+																) : (
+																	<a
+																		href={fileUrl}
+																		target='_blank'
+																		rel='noopener noreferrer'>
+																		<img
+																			src={fileUrl}
+																			className='w-50'
+																			alt='Image preview'
+																		/>
+																	</a>
+																)}
+															</span>
+														</td>
+													</tr>
+													{isVisible && (
+														<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
+															<td colSpan={12}>
+																<div>
+																	<strong>{sortableFields[0].title}:</strong> {member.document_type}
+																</div>
+															</td>
+														</tr>
+													)}
+												</React.Fragment>
+											)
+										}}
+										visibleDetails={visibleDetails}
+										pagination={pagination}
+										setPagination={setPagination}
+										loading={loading}
+									/>
+								</div>
+								{memberData.length === 0 && !loading && (
+									<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
+										<b>No records found</b>
+									</div>
+								)}
+								{memberData.length > 0 && (
+									<UsersListPagination
+										totalPages={Math.ceil(memberData.length / pagination.itemsPerPage)}
+										currentPage={pagination.page}
+										onPageChange={handlePageChange}
+									/>
+								)}
+							</div>
+						</div>
+					</div>
+				</div>
+			</>
+		</>
+	)
+}
+
+export { HRMemberDetail }

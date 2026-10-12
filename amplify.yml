@@ -1,0 +1,22 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - COMMIT_SHA=$(git rev-parse HEAD) # Get the commit SHA
+        - 'API_URL="https://gitlab.com/api/v4/projects/29409447/statuses/$COMMIT_SHA"' # Define the API URL
+        - 'curl --header "PRIVATE-TOKEN: $GITLAB_ACCESS_TOKEN" --data "state=running" $API_URL' # Set status to pending
+        - npm i -f
+    build:
+      commands:
+        - npm run build
+        - 'BUILD_RESULT=$?' # Capture the build result
+
+    postBuild:
+      commands:
+        - 'if [ $BUILD_RESULT -eq 0 ]; then BUILD_STATUS="success"; else BUILD_STATUS="failed"; fi' # Determine build status
+        - 'curl --header "PRIVATE-TOKEN: $GITLAB_ACCESS_TOKEN" --data "state=$BUILD_STATUS" $API_URL' # Update the status
+  artifacts:
+    baseDirectory: build
+    files:
+      - '**/*'

@@ -1,0 +1,40 @@
+#invoiceContent,
+#invoiceTermAndCondition {
+	break-inside: avoid;
+	page-break-inside: avoid;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+thead {
+	display: table-header-group;
+}
+
+tfoot {
+	display: table-footer-group;
+}
+
+tr {
+	page-break-inside: avoid !important;
+	break-inside: avoid !important;
+}
+
+td,
+th {
+	page-break-inside: avoid !important;
+	break-inside: avoid !important;
+}
+
+.invoice-details,
+.invoice-items,
+.payment-details {
+	page-break-inside: avoid !important;
+	break-inside: avoid !important;
+}
+
+.page-break {
+	page-break-before: always;
+}

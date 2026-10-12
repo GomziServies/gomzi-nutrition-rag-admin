@@ -1,0 +1,195 @@
+/* Sample Booking - Shared Styles */
+
+/* ===== LIST ===== */
+.sb-plus-icon {
+	color: #607D8B;
+	font-size: 18px;
+}
+
+/* ===== VIEW - Label Container ===== */
+.sb-label-color {
+	color: #000;
+}
+
+.sb-label-printable {
+	padding: 20px;
+}
+
+.sb-label-printable-inner {
+	width: 100%;
+	max-width: 500px;
+	margin: 0 auto;
+	color: #000;
+}
+
+/* Screen - logo dots */
+.sb-dot-wrapper {
+	width: 24px;
+}
+
+.sb-dot {
+	width: 6px;
+	height: 6px;
+	margin: 1px;
+}
+
+/* Print - logo dots wrapper */
+.sb-logo-dots-wrapper {
+	width: 24px;
+	display: flex;
+	flex-wrap: wrap;
+	margin-right: 8px;
+}
+
+/* Print - logo dot */
+.sb-logo-dot {
+	width: 6px;
+	height: 6px;
+	background-color: #000;
+	margin: 1px;
+}
+
+/* Screen/Print - logo title */
+.sb-print-logo-title {
+	font-weight: 900;
+	margin: 0;
+	font-size: 40px;
+	color: #1a2b4b;
+}
+
+/* Screen - courier name */
+.sb-courier-name {
+	font-size: 26px;
+	line-height: 1;
+}
+
+/* Print - courier name */
+.sb-print-courier-name {
+	font-size: 26px;
+	font-weight: 900;
+	margin: 0;
+}
+
+/* Divider */
+.sb-divider {
+	border-top: 2px solid black;
+	margin: 15px 0;
+}
+
+/* Screen - ship to */
+.sb-ship-to-name {
+	font-size: 22px;
+}
+
+.sb-ship-to-address {
+	font-size: 18px;
+	text-align: justify;
+}
+
+/* Print - logo section */
+.sb-print-logo-section {
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+.sb-print-logo-flex {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Print - courier details */
+.sb-print-courier-details {
+	text-align: start;
+}
+
+.sb-print-hub {
+	font-weight: bold;
+	margin: 0;
+}
+
+.sb-print-prepaid {
+	margin: 8px 0 0 0;
+}
+
+.sb-print-awb {
+	font-weight: bold;
+	margin: 0;
+}
+
+/* Print - ship to section */
+.sb-print-ship-to {
+	margin-bottom: 30px;
+}
+
+.sb-print-ship-to-label {
+	margin: 0 0 5px 0;
+}
+
+.sb-print-ship-to-name {
+	font-size: 24px;
+	font-weight: 900;
+	margin: 0 0 5px 0;
+}
+
+.sb-print-ship-to-address {
+	font-size: 20px;
+	font-weight: 900;
+	margin: 0 0 10px 0;
+}
+
+.sb-print-tel {
+	font-size: 18px;
+	font-weight: 900;
+}
+
+/* Print - from section */
+.sb-print-from-label {
+	font-weight: bold;
+	margin: 0 0 3px 0;
+}
+
+.sb-print-from-p {
+	margin: 0;
+}
+
+.sb-print-return-address-span {
+	font-weight: bold;
+}
+
+/* Print - footer */
+.sb-print-footer {
+	margin-top: 20px;
+}
+
+.sb-print-footer-p {
+	margin: 0;
+}
+
+.sb-print-footer-bold {
+	font-weight: bold;
+	margin: 0;
+}
+
+/* ===== PRINT MEDIA ===== */
+@media print {
+	.no-print {
+		display: none !important;
+	}
+
+	body * {
+		visibility: hidden;
+	}
+
+	.printable-label,
+	.printable-label * {
+		visibility: visible;
+	}
+
+	.printable-label {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+	}
+}

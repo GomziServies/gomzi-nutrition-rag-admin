@@ -1,0 +1,12 @@
+# Custom Dictionary Words
+daterangepicker
+feedpath
+fggroup
+Gomzi
+ioweek
+metronic
+Parens
+Swal
+Tabata
+toastr
+urlify

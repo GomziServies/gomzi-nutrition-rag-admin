@@ -1,0 +1,406 @@
+import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
+import Swal from 'sweetalert2'
+import { KTCard } from '../../../../../_metronic/helpers'
+import { PageTitle } from '../../../../../_metronic/layout/core'
+import LengthMenu from '../../../../components/LengthMenu'
+import SearchFilter from '../../../../components/SearchFilter'
+import Table from '../../../../components/Table'
+import TableButton from '../../../../components/TableButton'
+import UsersListPagination from '../../../../components/TablePagination'
+import {
+	GetGnRawMaterialProduct,
+	GetGnRawMaterialSupplier,
+	GetGnRawMaterialSupplierInvoice,
+	RemoveGnRawMaterialSupplierInvoice,
+} from '../../../../Functions/FGGroup'
+
+const GomziNutritionMaterialSuppliersInvoiceList: React.FC = () => {
+	const [searchTerm, setSearchTerm] = useState('')
+	const [supplierData, setSupplierData] = useState<any[]>([])
+	const [metaData, setMetaData] = useState<any>()
+	const [sort, setSort] = useState('createdAt')
+	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
+	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
+	const [loading, setLoading] = useState(false)
+	const [showModal, setShowModal] = useState(false)
+	const [selectedSupplier, setSelectedSupplier] = useState<any | null>(null)
+	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [pagination, setPagination] = useState({
+		page: 1,
+		itemsPerPage: 10,
+	})
+
+	const fetchData = useCallback(
+		async (page?: number) => {
+			setLoading(true)
+			try {
+				const response: any = await GetGnRawMaterialSupplierInvoice({
+					page: page || pagination.page,
+					limit: pagination.itemsPerPage,
+					supplier_name: searchTerm,
+					sort,
+					sortOrder,
+				})
+
+				// Extract invoices from response.data.invoices and unwrap _doc
+				let invoicesRaw: any[] = []
+				if (Array.isArray(response?.data?.invoices)) {
+					invoicesRaw = response.data.invoices.map((inv: any) => inv._doc || inv)
+				} else if (Array.isArray(response?.data)) {
+					invoicesRaw = response.data.map((inv: any) => inv._doc || inv)
+				} else if (Array.isArray(response)) {
+					invoicesRaw = response
+				} else {
+					invoicesRaw = []
+				}
+
+				let activeInvoices = invoicesRaw
+
+				// Extract supplier IDs before mapping
+				const supplierIds = activeInvoices
+					.map((inv: any) => inv.supplier_id)
+					.filter((id: any) => id)
+				const uniqueSupplierIds = Array.from(new Set(supplierIds))
+
+				// Extract product IDs before mapping
+				const productIds = activeInvoices
+					.flatMap((inv: any) => (inv.items || []).map((item: any) => item.product_id))
+					.filter((id: any) => id)
+				const uniqueProductIds = Array.from(new Set(productIds))
+
+				// Format with date
+				activeInvoices = activeInvoices.map((inv: any) => ({
+					...inv,
+					date: new Date(inv.createdAt || inv.updatedAt || Date.now()).toLocaleDateString('en-IN'),
+				}))
+
+				if (uniqueSupplierIds.length > 0) {
+					try {
+						const supplierResp: any = await GetGnRawMaterialSupplier({ limit: 1000 })
+						const suppliersArray = (supplierResp?.data || []).map((sup: any) => sup._doc || sup)
+						const supplierMap = new Map()
+
+						suppliersArray.forEach((sup: any) => {
+							if (sup && sup._id && sup.name) {
+								supplierMap.set(sup._id, sup.name)
+							}
+						})
+
+						activeInvoices = activeInvoices.map((inv: any) => ({
+							...inv,
+							supplier_name: supplierMap.get(inv.supplier_id) || inv.supplier_id,
+						}))
+					} catch (err) {
+						console.warn('Failed to fetch suppliers:', err)
+					}
+				}
+
+				// Fetch product names and enrich items
+				if (uniqueProductIds.length > 0) {
+					try {
+						const productResp: any = await GetGnRawMaterialProduct({ limit: 1000 })
+						const productsArray = (productResp?.data || []).map((prod: any) => prod._doc || prod)
+						const productMap = new Map()
+
+						productsArray.forEach((prod: any) => {
+							if (prod && prod._id && prod.name) {
+								productMap.set(prod._id, prod.name)
+							}
+						})
+
+						activeInvoices = activeInvoices.map((inv: any) => ({
+							...inv,
+							items: (inv.items || []).map((item: any) => ({
+								...item,
+								product_name: productMap.get(item.product_id) || item.product_id,
+							})),
+						}))
+					} catch (err) {
+						console.warn('Failed to fetch products:', err)
+					}
+				}
+
+				setSupplierData(activeInvoices)
+				setMetaData(
+					response?.data?.pagination || {
+						page: 1,
+						totalPages: Math.ceil(activeInvoices.length / pagination.itemsPerPage),
+						totalItems: activeInvoices.length,
+					}
+				)
+			} catch (error: any) {
+				toast.error('Failed to load invoices')
+				setSupplierData([])
+				setMetaData({
+					page: 1,
+					totalPages: 1,
+					totalItems: 0,
+				})
+			}
+			setLoading(false)
+		},
+		[pagination.page, pagination.itemsPerPage, searchTerm, sort, sortOrder]
+	)
+
+	useEffect(() => {
+		fetchData()
+	}, [pagination.page, pagination.itemsPerPage, sort, sortOrder])
+
+	const handleItemsPerPageChange = (value: number) => {
+		setPagination({ ...pagination, itemsPerPage: value })
+	}
+
+	const isFirstRender = useRef(true)
+
+	useEffect(() => {
+		if (isFirstRender.current) {
+			isFirstRender.current = false
+			return
+		}
+
+		if (searchTerm.trim() || searchTerm === '') {
+			setPagination((prev) => ({ ...prev, page: 1 }))
+			if (pagination.page === 1) fetchData()
+		}
+	}, [searchTerm])
+
+	const handlePageChange = (page: number) => {
+		setPagination({ ...pagination, page })
+	}
+
+	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
+		setSort(newSort)
+		setSortOrder(newSortOrder)
+	}
+
+	const sortableFields = [
+		{ title: 'Supplier Name', field: 'name' },
+		{ title: 'Items', field: 'items' },
+		{ title: 'Rate', field: 'rate' },
+		{ title: 'Total Amount', field: 'total_amount' },
+		{ title: 'Date', field: 'createdAt' },
+	]
+
+	const handleRowClick = (id: string) => {
+		if (window.innerWidth <= 1024) {
+			setVisibleDetails(visibleDetails === id ? null : id)
+		}
+	}
+
+	const handleCopy = (id: string) => {
+		navigator.clipboard
+			.writeText(id)
+			.then(() => {
+				toast.success('ID copied to clipboard!')
+			})
+			.catch((err) => {
+				toast.success('Failed to copy ID!')
+			})
+	}
+
+	const handleKeyPress = (event: React.KeyboardEvent<HTMLSpanElement>, id: string) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			handleCopy(id)
+		}
+	}
+
+	const openViewModal = (supplier: any) => {
+		setSelectedSupplier(supplier)
+		setShowModal(true)
+	}
+
+	const handleRemoveItem = async (invoice_id: string) => {
+		const result = await Swal.fire({
+			title: 'Are you sure?',
+			text: "You won't be able to revert this!",
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonColor: '#d33',
+			cancelButtonColor: '#3085d6',
+			confirmButtonText: 'Yes, delete it!',
+		})
+
+		if (result.isConfirmed) {
+			try {
+				setIsSubmitting(true)
+				await RemoveGnRawMaterialSupplierInvoice(invoice_id)
+				toast.success('Invoice removed successfully')
+				fetchData()
+			} catch (error: any) {
+				toast.error(error.message || 'Failed to remove invoice')
+			} finally {
+				setIsSubmitting(false)
+			}
+		}
+	}
+
+	return (
+		<>
+			<PageTitle breadcrumbs={[]}>Gomzi Nutrition Suppliers Invoice List</PageTitle>
+			<KTCard>
+				<div className='card-header border-0 pt-6'>
+					<div className='card-title'>
+						<div className='card-branch_code d-flex'>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+							/>
+							<LengthMenu
+								expenseData={supplierData}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+							/>
+						</div>
+					</div>
+					<div className='card-toolbar'>
+						<TableButton
+							action='add'
+							to='/rag/inventory/suppliers/invoice/add'
+							text='Add Suppliers Invoice'
+						/>
+					</div>
+				</div>
+				<div className='py-4 card-body'>
+					<div className='table-responsive'>
+						<Table
+							data={supplierData}
+							columns={sortableFields}
+							sort={sort}
+							sortOrder={sortOrder}
+							onSortChange={handleSortChange}
+							renderRow={(invoice: any, index: number, actualIndex: number, isVisible: boolean) => (
+								<React.Fragment key={invoice._id}>
+									<tr
+										onClick={() => handleRowClick(invoice._id)}
+										className='data-row'>
+										<td>
+											<span className='text-dark fw-bold  ms-6 mb-1 fs-6'>
+												<FontAwesomeIcon
+													icon={faPlusCircle}
+													className='me-2 plus-icon'
+													style={{ color: '#607D8B', fontSize: '18px' }}
+												/>
+												{actualIndex}
+											</span>
+										</td>
+										<td>
+											<span className='text-dark fw-bold d-block mb-1 fs-6'>
+												{invoice.supplier_name || invoice.supplier_id}
+											</span>
+										</td>
+										<td>
+											{invoice.items && invoice.items.length > 0 && (
+												<ul className='mb-0 ps-4'>
+													{invoice.items.map((item: any, idx: number) => (
+														<li
+															key={idx}
+															className='text-dark fw-bold mb-1 fs-6'>
+															{item.product_name || item.product_id} -{' '}
+															{item.weight_type?.toLowerCase().includes('kg') ||
+															item.weight_type?.toLowerCase().includes('ltr')
+																? item.weight / 1000
+																: item.weight}{' '}
+															{item.weight_type}
+														</li>
+													))}
+												</ul>
+											)}
+										</td>
+										<td>
+											{invoice.items && invoice.items.length > 0 && (
+												<ul className='mb-0 ps-4'>
+													{invoice.items.map((item: any, idx: number) => (
+														<li
+															key={idx}
+															className='text-dark fw-bold mb-1 fs-6'>
+															₹{item.rate} (GST {item.gst}%)
+														</li>
+													))}
+												</ul>
+											)}
+										</td>
+										<td>
+											<span className='text-dark fw-bold d-block mb-1 fs-6'>
+												₹{invoice.total_amount}
+											</span>
+											<div className='text-muted fs-7'>Charges: ₹{invoice.charges}</div>
+										</td>
+										<td>
+											<span className='text-dark fw-bold d-block mb-1 fs-6'>
+												{new Date(invoice.createdAt).toLocaleDateString('en-CA')}
+											</span>
+										</td>
+										<td>
+											<div className='d-flex'>
+												<TableButton
+													action='view'
+													to={`/rag/inventory/suppliers/invoice/view?invoice_id=${invoice._id}`}
+												/>
+												<TableButton
+													action='edit'
+													to={`/rag/inventory/suppliers/invoice/edit?invoice_id=${invoice._id}`}
+												/>
+												<TableButton
+													action='remove'
+													onClick={() => handleRemoveItem(invoice._id)}
+												/>
+											</div>
+										</td>
+									</tr>
+									{isVisible && (
+										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
+											<td colSpan={12}>
+												<div>
+													<strong>{sortableFields[1].title} List:</strong>
+													{invoice.items && invoice.items.length > 0 && (
+														<ul className='mb-0 ps-4'>
+															{invoice.items.map((item: any, idx: number) => (
+																<li
+																	key={idx}
+																	className='fs-7'>
+																	{item.product_name || item.product_id} -{' '}
+																	{item.weight_type?.toLowerCase().includes('kg') ||
+																	item.weight_type?.toLowerCase().includes('ltr')
+																		? item.weight / 1000
+																		: item.weight}{' '}
+																	{item.weight_type} - ₹{item.rate} (GST {item.gst}%)
+																</li>
+															))}
+														</ul>
+													)}
+													<br />
+													<strong>{sortableFields[2].title}: </strong> ₹{invoice.total_amount}
+													<span className='fs-7 text-muted'>(Charges: ₹{invoice.charges})</span>
+												</div>
+											</td>
+										</tr>
+									)}
+								</React.Fragment>
+							)}
+							visibleDetails={visibleDetails}
+							pagination={pagination}
+							setPagination={setPagination}
+							loading={loading}
+						/>
+					</div>
+					{supplierData.length === 0 && !loading && (
+						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
+							<b>No records found</b>
+						</div>
+					)}
+					{supplierData.length > 0 && (
+						<UsersListPagination
+							totalPages={metaData?.totalPages}
+							currentPage={pagination.page}
+							onPageChange={handlePageChange}
+						/>
+					)}
+				</div>
+			</KTCard>
+		</>
+	)
+}
+
+export default GomziNutritionMaterialSuppliersInvoiceList

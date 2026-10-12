@@ -1,0 +1,327 @@
+@media print {
+	.no-print {
+		display: none !important;
+	}
+	.card {
+		border: none !important;
+		box-shadow: none !important;
+		padding: 0 !important;
+	}
+	body {
+		background: white !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	.salary-slip-container {
+		padding: 0 !important;
+		border: none !important;
+		width: 100% !important;
+		max-width: 100% !important;
+		margin: 0 !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	/* Force colors for critical sections */
+	.kesar-banner,
+	.kesar-net-bar,
+	.kesar-table th {
+		background-color: #2f5597 !important;
+		color: white !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+	.kesar-summary-bar {
+		background-color: #f1f4f9 !important;
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+}
+
+.salary-slip-container {
+	width: 100%;
+	background: white;
+	padding: 30px;
+	color: #333;
+	font-family: 'Inter', Arial, sans-serif;
+	border: 1px solid #ccc;
+}
+
+/* Header Sections */
+.kesar-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 30px;
+	border-bottom: 2px solid #2f5597;
+	padding-bottom: 15px;
+}
+
+.kesar-logo-section {
+	margin-right: 30px;
+}
+
+.kesar-company-section {
+	text-align: left;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.kesar-title-section {
+	width: 20%;
+	text-align: center;
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: #2f5597;
+}
+
+.kesar-banner {
+	background-color: #2f5597;
+	color: white;
+	padding: 10px 20px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-weight: 700;
+	margin-bottom: 0;
+}
+
+.net-pay-text {
+	font-size: 1.2rem;
+}
+
+/* Info Grid */
+.kesar-info-grid {
+	width: 100%;
+	border-collapse: collapse;
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #ccc;
+	background-color: #fff;
+}
+
+.kesar-info-grid td {
+	padding: 8px 15px;
+	font-size: 0.85rem;
+	vertical-align: top;
+	width: 50%;
+}
+
+.val-bold {
+	font-weight: 600;
+}
+
+/* Main Table */
+.kesar-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: 0;
+}
+
+.kesar-table th {
+	background-color: #2f5597;
+	color: white;
+	padding: 8px 15px;
+	font-size: 0.85rem;
+	text-align: left;
+	border: 1px solid #2f5597;
+}
+
+.kesar-table td {
+	border-left: 1px solid #ccc;
+	border-bottom: 1px dashed #eee;
+	padding: 6px 15px;
+	font-size: 0.85rem;
+}
+
+.kesar-table td:last-child {
+	border-right: 1px solid #ccc;
+}
+
+.kesar-table tr:last-child td {
+	border-bottom: 1px solid #ccc;
+}
+
+.border-divider {
+	border-left: 1px solid #ccc !important;
+}
+
+/* Summary Bars */
+.kesar-summary-bar {
+	background-color: #f1f4f9;
+	padding: 8px 0; /* Use 0 horizontal padding to allow children to align with columns */
+	display: flex;
+	font-weight: 600;
+	border: 1px solid #ccc;
+	border-top: none;
+	font-size: 0.85rem;
+}
+
+.kesar-net-bar {
+	background-color: #f1f4f9 !important;
+	color: #2f5597 !important; /* Force dark blue for visibility */
+	padding: 10px 15px;
+	border-top: none;
+	-webkit-print-color-adjust: exact !important;
+	print-color-adjust: exact !important;
+}
+
+/* Signature */
+.kesar-signature-row {
+	margin-top: 50px;
+	display: flex;
+	justify-content: space-between;
+	padding: 0 20px;
+}
+
+.kesar-sig-label {
+	font-weight: 700;
+	font-size: 0.9rem;
+}
+
+.text-right {
+	text-align: right;
+}
+.text-center {
+	text-align: center;
+}
+.text-bold {
+	font-weight: 700;
+}
+
+/* Gray button for navigation - Matching Screenshot Fidelity */
+.btn-back-gray {
+	background-color: #f5f8fa !important;
+	color: #5e6278 !important;
+	border: none !important;
+	padding: 8px 15px !important;
+	border-radius: 6px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 10px !important;
+}
+
+.btn-back-gray i {
+	color: #5e6278 !important;
+}
+
+.btn-back-gray:hover {
+	background-color: #eff2f5 !important;
+	color: #3f4254 !important;
+}
+
+/* 
+   FINAL CONSOLIDATED PRINT STYLES 
+   Ensures ONLY the salary slip format is visible on A4.
+*/
+@media print {
+	/* 1. Hide all Metronic/Admin structural elements and EXPLICITLY buttons */
+	#kt_app_sidebar,
+	#kt_app_header,
+	#kt_app_footer,
+	#kt_header,
+	#kt_sidebar,
+	#kt_footer,
+	#kt_app_sidebar_secondary,
+	#kt_app_toolbar,
+	.app-sidebar,
+	.app-sidebar-secondary,
+	.app-header,
+	.app-footer,
+	.app-toolbar,
+	.drawer,
+	.drawer-overlay,
+	[data-kt-drawer='true'],
+	[data-kt-app-sidebar-secondary='on'],
+	.scrolltop,
+	aside,
+	nav,
+	header,
+	footer,
+	.no-print,
+	div.no-print,
+	.btn,
+	.btn-primary,
+	.btn-back-gray,
+	button {
+		display: none !important;
+		visibility: hidden !important;
+		height: 0 !important;
+		width: 0 !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		opacity: 0 !important;
+		overflow: hidden !important;
+	}
+
+	/* 2. Reset containers to remove padding/margins from the admin layout */
+	body,
+	html,
+	#kt_app_root,
+	#kt_app_page,
+	#kt_app_wrapper,
+	#kt_app_main,
+	#kt_app_content,
+	#kt_app_content_container {
+		margin: 0 !important;
+		padding: 0 !important;
+		background-color: white !important;
+		display: block !important;
+	}
+
+	/* 3. Style the slip container to fill the A4 page perfectly */
+	.salary-slip-container {
+		width: 100% !important;
+		max-width: none !important;
+		margin: 0 !important;
+		padding: 8mm !important;
+		border: 1.5px solid #000 !important; /* Clean solid border on all 4 sides */
+		box-shadow: none !important;
+		display: block !important;
+	}
+
+	/* 4. Keep info-grid borders intact - matches table structure */
+
+	/* 5. Remove gray dashed lines between table rows in PDF */
+	.kesar-table td {
+		border-bottom: none !important;
+	}
+	.kesar-table tr:last-child td {
+		border-bottom: 1px solid #ccc !important;
+	}
+
+	/* 6. Remove gray background from summary bars - show white in PDF */
+	.kesar-summary-bar {
+		background-color: #ffffff !important;
+		border: 1px solid #ccc !important;
+		border-top: none !important;
+	}
+
+	/* 7. Reduce signature margin to prevent blank 2nd page */
+	.kesar-signature-row {
+		margin-top: 20px !important;
+	}
+
+	/* 8. Force everything on 1 page - no page break inside */
+	.salary-slip-container {
+		page-break-inside: avoid !important;
+		page-break-after: avoid !important;
+	}
+
+	/* 9. Ensure colors (Blue/Gray) are printed */
+	* {
+		-webkit-print-color-adjust: exact !important;
+		print-color-adjust: exact !important;
+	}
+
+	@page {
+		margin: 8mm !important; /* Reduced to prevent 2-page overflow */
+		size: A4 portrait;
+	}
+}
+
+/* Local override for the list table to remove dashed borders */
+.kesar-salary-slip-table .table.table-row-dashed tr,
+.kesar-salary-slip-table .table.table-row-dashed td {
+	border-bottom-width: 0 !important;
+	border-bottom-style: none !important;
+}

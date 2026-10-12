@@ -1,0 +1,181 @@
+/* GLS Report Custom Styles */
+
+.gls-card {
+	border-radius: 14px;
+}
+
+.gls-kpi-card {
+	border: 0;
+	box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+	height: 100%;
+	overflow: hidden;
+	border-radius: 14px;
+}
+
+.gls-table {
+	font-size: 12px;
+	margin-bottom: 0;
+}
+
+.gls-table-header {
+	font-weight: bold;
+	padding-top: 12px;
+	padding-bottom: 12px;
+}
+
+/* Sticky Logic */
+.gls-sticky-header {
+	position: sticky;
+	top: 0;
+	z-index: 3;
+}
+
+.gls-sticky-column {
+	position: sticky;
+	left: 0;
+	z-index: 2;
+	border-right: 2px solid transparent;
+}
+
+/* ── Specific Styles ── */
+
+/* Yearly Metrics */
+.yearly-header {
+	background-color: #e6f4ea;
+	color: #1e8755;
+	min-width: 80px;
+}
+
+.yearly-sticky-col {
+	background-color: #e6f4ea;
+	color: #1e8755;
+	min-width: 100px;
+	border-right-color: #a8dfbc;
+}
+
+/* City Metrics */
+.city-header {
+	background-color: #e6f4ea;
+	color: #1e8755;
+}
+
+.city-sticky-col {
+	background-color: #e6f4ea;
+	color: #1e8755;
+	min-width: 130px;
+	border-right-color: #a8dfbc;
+}
+
+.city-total-col {
+	background-color: #c8e6d1;
+}
+
+/* Product Metrics */
+.product-header {
+	background-color: #e6f4ea;
+	color: #1e8755;
+}
+
+.product-sticky-col {
+	background-color: #e6f4ea;
+	color: #1e8755;
+	min-width: 200px;
+	border-right-color: #a8dfbc;
+}
+
+.product-total-col {
+	background-color: #c8e6d1;
+}
+
+/* Party Metrics */
+.party-header {
+	background-color: #e6f4ea;
+	color: #1e8755;
+}
+
+.party-sticky-col {
+	background-color: #e6f4ea;
+	color: #1e8755;
+	min-width: 160px;
+	border-right-color: #a8dfbc;
+}
+
+.party-total-col {
+	background-color: #c8e6d1;
+}
+
+/* Common Table Utils */
+.heatmap-cell {
+	text-align: center;
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.grand-total-row {
+	background-color: #e6f4ea;
+	border-top: 2px solid #dee2e6;
+	font-weight: bold;
+}
+
+.truncate-cell {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 200px;
+}
+
+/* ── Excel Style Metrics ── */
+.xls-table {
+	border: 1px solid #7a5c3a !important;
+}
+
+.xls-table th,
+.xls-table td {
+	border: 1px solid #7a5c3a !important;
+	padding: 4px 8px !important;
+	font-size: 11px;
+}
+
+.xls-header-month {
+	background-color: #efe3d4 !important; /* Soft Brown */
+	color: #5d4037 !important;
+	font-weight: 800;
+	text-align: center;
+}
+
+.xls-header-sp {
+	background-color: #f8f1e9 !important; /* Lighter Beige */
+	color: #5d4037 !important;
+	font-weight: 600;
+	text-align: center;
+}
+
+.xls-label-col {
+	background-color: #fcf8f4 !important; /* Very Lightest Brown */
+	color: #5d4037 !important;
+	font-weight: bold;
+	min-width: 150px;
+}
+
+.xls-metric-label {
+	background-color: #fff9f5 !important;
+	color: #8b4513 !important;
+	font-weight: 600;
+}
+
+.xls-total-row {
+	color: #5d4037 !important;
+	font-weight: 800;
+}
+
+.xls-total-row td {
+	background-color: #fdf5e6 !important; /* Sav brown - extremely light beige/brown */
+	border-top: 2px solid #7a5c3a !important;
+	border-bottom: 2px solid #7a5c3a !important;
+}
+
+.xls-sticky-col-header {
+	position: sticky;
+	left: 0;
+	z-index: 10;
+}

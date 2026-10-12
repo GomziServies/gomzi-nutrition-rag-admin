@@ -1,0 +1,78 @@
+
+<TableButton
+    action="add"
+    onClick={handleCreateFeature}
+    text={isSubmitting ? 'Please wait, creating Feature...' : 'Add Feature'}
+    showIcon={false}
+    disabled={isSubmitting}
+    className={`btn-block mb-4 w-100 ${isSubmitting ? 'disabled' : ''}`}
+/>
+
+<TableButton
+	action="edit"
+	onClick={handleCreateInvoice}
+	text={isSubmitting ? 'Please wait, updating Expense...' : 'Update Expense'}
+	showIcon={false}
+    disabled={isSubmitting}
+    backgroundDark={true}
+	className={`mb-4 w-100 btn-block ${isSubmitting ? 'disabled' : ''}`}
+/>
+
+<TableButton
+	action={isEditMode ? 'edit' : 'add'}
+	onClick={handleAddBundle}
+	text={loading ? 'Processing...' : isEditMode ? 'Update' : 'Add'}
+	disabled={loading}
+/>
+
+<td className='d-flex '>
+	<TableButton
+		action="view"
+		onClick={() => viewFitnessOrder(order._id)}
+		text="View"
+		showIcon={false}
+		backgroundDark={true}
+	/>
+	<TableButton
+		action="assign"
+		onClick={() => viewOrder(order_info._id)}
+		text="Explore"
+		showIcon={false}
+		backgroundDark={true}
+	/>
+</td>
+
+<TableButton
+	action="add"
+	onClick={() => setShowModal(true)}
+	text="Add"
+/>
+
+<TableButton
+	action="edit"
+	onClick={() => handleUpdateFood()}
+	text="Update"
+	backgroundDark={true}
+/>
+
+<TableButton
+	action="view"
+	text="View"
+	backgroundDark={true}
+	to={`/fwg/diet-details/diet-edit?diet_id=${plan_id}`}
+/>
+
+<TableButton
+	action="edit"
+	onClick={() => handleSetData(data)}
+/>
+
+<TableButton
+	action="remove"
+	onClick={() => handleDeleteFeature(data._id)}
+/>
+
+<TableButton
+	action="view"
+	onClick={() => handleSetData(data)}
+/>

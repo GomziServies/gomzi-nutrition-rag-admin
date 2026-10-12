@@ -1,0 +1,1 @@
+type QuerySortOptions = 'asc' | 'desc'
