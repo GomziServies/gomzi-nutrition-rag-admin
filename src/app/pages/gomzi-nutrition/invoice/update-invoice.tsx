@@ -427,7 +427,7 @@ const NutritionUpdateInvoice: React.FC = () => {
 			margin: [8, 8, 8, 8] as [number, number, number, number],
 			filename: `${name || 'invoice'}.pdf`,
 			image: {
-				type: 'jpeg',
+				type: 'jpeg' as const,
 				quality: 1,
 			},
 			html2canvas: {
@@ -439,7 +439,7 @@ const NutritionUpdateInvoice: React.FC = () => {
 			jsPDF: {
 				unit: 'mm',
 				format: 'a4',
-				orientation: 'portrait',
+				orientation: 'portrait' as const,
 			},
 			pagebreak: {
 				mode: ['css', 'legacy'],

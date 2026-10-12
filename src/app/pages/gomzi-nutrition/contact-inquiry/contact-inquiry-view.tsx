@@ -582,86 +582,119 @@ const ContactInquiryView: React.FC = () => {
 							</div>
 							<div className='card-body'>
 								<div className='row'>
-									<div className='col-md-4 mb-3'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											Instagram Profile
-										</label>
-										{details?.instagram ? (
-											<a
-												href={
-													details.instagram.startsWith('http')
-														? details.instagram
-														: `https://instagram.com/${details.instagram.replace('@', '')}`
-												}
-												target='_blank'
-												rel='noreferrer'
-												className='fw-bold text-primary text-truncate d-block'>
-												{details.instagram} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-											</a>
-										) : (
-											<span className='text-muted'>N/A</span>
-										)}
-									</div>
-									<div className='col-md-4 mb-3'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											Facebook Profile / Page
-										</label>
-										{details?.facebook ? (
-											<a
-												href={
-													details.facebook.startsWith('http')
-														? details.facebook
-														: `https://${details.facebook}`
-												}
-												target='_blank'
-												rel='noreferrer'
-												className='fw-bold text-primary text-truncate d-block'>
-												{details.facebook} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-											</a>
-										) : (
-											<span className='text-muted'>N/A</span>
-										)}
-									</div>
-									<div className='col-md-4 mb-3'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											YouTube Channel
-										</label>
-										{details?.youtube ? (
-											<a
-												href={
-													details.youtube.startsWith('http')
-														? details.youtube
-														: `https://${details.youtube}`
-												}
-												target='_blank'
-												rel='noreferrer'
-												className='fw-bold text-primary text-truncate d-block'>
-												{details.youtube} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-											</a>
-										) : (
-											<span className='text-muted'>N/A</span>
-										)}
-									</div>
-									<div className='col-md-4 mb-3'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											LinkedIn Profile
-										</label>
-										{details?.linkedin ? (
-											<a
-												href={
-													details.linkedin.startsWith('http')
-														? details.linkedin
-														: `https://${details.linkedin}`
-												}
-												target='_blank'
-												rel='noreferrer'
-												className='fw-bold text-primary text-truncate d-block'>
-												{details.linkedin} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-											</a>
-										) : (
-											<span className='text-muted'>N/A</span>
-										)}
-									</div>
+									{details?.social_platform ? (
+										<div className='col-md-6 mb-3'>
+											<label className='fw-bold fs-7 text-muted d-block mb-1'>
+												Selected Social Platform & Link
+											</label>
+											<div className='d-flex align-items-center gap-2 flex-wrap'>
+												<span className='badge badge-light-primary fw-bolder fs-7 px-3 py-2'>
+													{details.social_platform}
+												</span>
+												{details?.social_link ? (
+													<a
+														href={
+															details.social_link.startsWith('http')
+																? details.social_link
+																: details.social_platform === 'Instagram'
+																? `https://instagram.com/${details.social_link.replace('@', '')}`
+																: `https://${details.social_link}`
+														}
+														target='_blank'
+														rel='noreferrer'
+														className='fw-bold text-primary text-truncate d-block'>
+														{details.social_link}{' '}
+														<FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
+													</a>
+												) : (
+													<span className='text-muted'>No link provided</span>
+												)}
+											</div>
+										</div>
+									) : (
+										<>
+											<div className='col-md-4 mb-3'>
+												<label className='fw-bold fs-7 text-muted d-block mb-1'>
+													Instagram Profile
+												</label>
+												{details?.instagram ? (
+													<a
+														href={
+															details.instagram.startsWith('http')
+																? details.instagram
+																: `https://instagram.com/${details.instagram.replace('@', '')}`
+														}
+														target='_blank'
+														rel='noreferrer'
+														className='fw-bold text-primary text-truncate d-block'>
+														{details.instagram} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
+													</a>
+												) : (
+													<span className='text-muted'>N/A</span>
+												)}
+											</div>
+											<div className='col-md-4 mb-3'>
+												<label className='fw-bold fs-7 text-muted d-block mb-1'>
+													Facebook Profile / Page
+												</label>
+												{details?.facebook ? (
+													<a
+														href={
+															details.facebook.startsWith('http')
+																? details.facebook
+																: `https://${details.facebook}`
+														}
+														target='_blank'
+														rel='noreferrer'
+														className='fw-bold text-primary text-truncate d-block'>
+														{details.facebook} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
+													</a>
+												) : (
+													<span className='text-muted'>N/A</span>
+												)}
+											</div>
+											<div className='col-md-4 mb-3'>
+												<label className='fw-bold fs-7 text-muted d-block mb-1'>
+													YouTube Channel
+												</label>
+												{details?.youtube ? (
+													<a
+														href={
+															details.youtube.startsWith('http')
+																? details.youtube
+																: `https://${details.youtube}`
+														}
+														target='_blank'
+														rel='noreferrer'
+														className='fw-bold text-primary text-truncate d-block'>
+														{details.youtube} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
+													</a>
+												) : (
+													<span className='text-muted'>N/A</span>
+												)}
+											</div>
+											<div className='col-md-4 mb-3'>
+												<label className='fw-bold fs-7 text-muted d-block mb-1'>
+													LinkedIn Profile
+												</label>
+												{details?.linkedin ? (
+													<a
+														href={
+															details.linkedin.startsWith('http')
+																? details.linkedin
+																: `https://${details.linkedin}`
+														}
+														target='_blank'
+														rel='noreferrer'
+														className='fw-bold text-primary text-truncate d-block'>
+														{details.linkedin} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
+													</a>
+												) : (
+													<span className='text-muted'>N/A</span>
+												)}
+											</div>
+										</>
+									)}
 									<div className='col-md-4 mb-3'>
 										<label className='fw-bold fs-7 text-muted d-block mb-1'>
 											Website / Online Coaching Profile
