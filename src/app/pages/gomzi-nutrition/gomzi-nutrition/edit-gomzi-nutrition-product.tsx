@@ -408,7 +408,67 @@ const EditGomziNutritionProduct = () => {
 						<div className='card-body'>
 							<div className='row'>
 								<div className='col-md-5'>
-<ProductMediaCard items={mediaItems} onChange={setMediaItems} />
+									<div className='card-header'>
+										<h3 className='card-title fw-bold'>Product Images</h3>
+									</div>
+
+									<div className='card-body'>
+										<div className='mb-5'>
+											<input
+												type='file'
+												multiple
+												accept='image/*'
+												className='form-control'
+												onChange={handleImageChange}
+											/>
+										</div>
+
+										{formData.displayImages.length === 0 && (
+											<div className='text-center py-10 border rounded'>
+												<img
+													src='/media/logos/rag-favicon-logo.png'
+													alt='preview'
+													style={{
+														maxHeight: '150px',
+													}}
+												/>
+
+												<div className='text-muted mt-3'>No images selected</div>
+											</div>
+										)}
+
+										{formData.displayImages.length > 0 && (
+											<div className='row'>
+												{formData.displayImages.map((image, index) => (
+													<div
+														className='col-md-3 mb-5'
+														key={index}>
+														<div
+															className='position-relative border rounded overflow-hidden'
+															style={{
+																height: '180px',
+															}}>
+															<img
+																src={image}
+																alt='product'
+																className='w-100 h-100'
+																style={{
+																	objectFit: 'cover',
+																}}
+															/>
+
+															<button
+																type='button'
+																className='btn btn-danger btn-sm position-absolute top-0 end-0 m-2'
+																onClick={() => removeImage(index)}>
+																×
+															</button>
+														</div>
+													</div>
+												))}
+											</div>
+										)}
+									</div>
 								</div>
 								<div className='col-md-7'>
 									<div className='row justify-content-end'>
@@ -936,12 +996,6 @@ const EditGomziNutritionProduct = () => {
 												</div>
 											</div>
 										</div>
-<ProductDisplayOptionsCard
-isNewArrival={displayOptions.isNewArrival}
-isBestSeller={displayOptions.isBestSeller}
-onChange={(field, value) => setDisplayOptions((prev) => ({ ...prev, [field]: value }))}
-/>
-<ProductLabReportCard value={labReport} onChange={setLabReport} />
 										<div className='col-md-2 fv-row mb-7'>
 											<TableButton
 												action='add'
