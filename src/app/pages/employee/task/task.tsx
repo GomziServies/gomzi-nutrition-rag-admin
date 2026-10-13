@@ -1,4 +1,4 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faPlusCircle, faStar } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Form, Modal } from 'react-bootstrap'
@@ -546,6 +546,18 @@ const EmployeeTask: React.FC = () => {
 		navigate(`/employee/task-view?id=${taskId}`)
 	}
 
+	const rawRating = Array.isArray(rattingData) ? rattingData[0]?.rating : rattingData?.rating
+	const ratingNum =
+		rawRating !== undefined && rawRating !== null && rawRating !== '' && !isNaN(Number(rawRating))
+			? Number(rawRating)
+			: null
+	const starCount =
+		ratingNum !== null
+			? ratingNum <= 5
+				? Math.round(ratingNum)
+				: Math.max(0, Math.min(5, Math.round((ratingNum / 100) * 5)))
+			: 0
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Task Assignment</PageTitle>
@@ -555,17 +567,29 @@ const EmployeeTask: React.FC = () => {
 					<div className='col-md-9'>
 						<div className='row mt-3 justify-content-between'>
 							<div className='col-md-12 mt-md-7 d-flex justify-content-between align-items-center card-toolbar'>
-								<div className='col-md-2 fv-row'>
-									<InputField
-										placeholder='Enter remark'
-										type='text'
-										className='col-12 fv-row'
-										name='remark'
-										label='Task Rating'
-										htmlFor='Remark'
-										labelMarginRemove={true}
-										value={rattingData?.rating + '%'}
-									/>
+								<div className='col-md-4 col-lg-3 fv-row'>
+									<label className='form-label fs-7 fw-bold text-gray-700 mb-1 d-block'>
+										Task Rating
+									</label>
+									<div
+										className='d-flex align-items-center rounded px-3 py-2 border'
+										style={{ minHeight: '40px', background: '#faf8f5', borderColor: 'var(--gz-border)' }}>
+										<div className='d-flex align-items-center gap-1'>
+											{[1, 2, 3, 4, 5].map((star) => (
+												<FontAwesomeIcon
+													key={star}
+													icon={faStar as any}
+													className='fs-6'
+													style={{ color: star <= starCount ? '#f59e0b' : '#d1d5db' }}
+												/>
+											))}
+										</div>
+										<span className='ms-2 fs-7 fw-bold text-gray-800'>
+											{ratingNum !== null
+												? `${ratingNum <= 5 ? ratingNum : Math.round(ratingNum / 20)}/5`
+												: 'No rating'}
+										</span>
+									</div>
 								</div>
 								<div className='d-md-flex'>
 									{assignTaskData?.length > 0 && (
@@ -823,8 +847,14 @@ const EmployeeTask: React.FC = () => {
 						/>
 					</div>
 					{paginatedTaskData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex flex-column align-items-center justify-content-center text-center py-10 w-100'>
+							<div
+								className='rounded-circle d-flex align-items-center justify-content-center mb-3'
+								style={{ width: '56px', height: '56px', background: '#eff6ff' }}>
+								<i className='bi bi-inbox fs-2' style={{ color: '#2563EB' }}></i>
+							</div>
+							<span className='fw-bold text-gray-700 fs-6'>No tasks found</span>
+							<span className='text-muted fs-7'>No running tasks match the selected date range.</span>
 						</div>
 					)}
 

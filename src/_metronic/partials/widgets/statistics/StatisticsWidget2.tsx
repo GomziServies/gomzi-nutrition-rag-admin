@@ -8,7 +8,7 @@ type Props = {
 	className: string
 	title: any | number
 	description: string
-	Icon: IconDefinition
+	Icon: any
 	color: string
 }
 
@@ -32,7 +32,7 @@ const StatisticsWidget2: FC<Props> = ({ className, title, description, Icon, col
 			</div>
 			{/* end::Body */}
 			<FontAwesomeIcon
-				icon={Icon}
+				icon={Icon as any}
 				className={`fs-3x align-self-end text-${color}`}
 				style={{
 					position: 'absolute',

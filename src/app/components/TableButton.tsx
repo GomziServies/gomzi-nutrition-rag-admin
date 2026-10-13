@@ -113,7 +113,7 @@ const TableButton: FC<Props> = ({
 			style={style}>
 			{showIcon && (
 				<FontAwesomeIcon
-					icon={icon}
+					icon={icon as any}
 					className='fs-3'
 					style={iconStyle}
 				/>
@@ -128,7 +128,7 @@ const TableButton: FC<Props> = ({
 			style={style}>
 			{showIcon && (
 				<FontAwesomeIcon
-					icon={icon}
+					icon={icon as any}
 					className='fs-3'
 					style={iconStyle}
 				/>

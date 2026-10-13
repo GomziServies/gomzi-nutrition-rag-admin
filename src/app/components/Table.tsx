@@ -108,17 +108,51 @@ const Table: React.FC<TableProps> = ({
 					</tr>
 				</thead>
 				<tbody>
-					{loading && (
-						<tr>
-							<td colSpan={columns.length + 2} className='text-center'>
-								<div className='d-flex justify-content-center align-items-center mb-4 my-7'>
-									<div className='spinner-border text-primary' role='status'>
-										<span className='visually-hidden'>Loading...</span>
-									</div>
-								</div>
-							</td>
-						</tr>
-					)}
+					{loading &&
+						Array.from({ length: Math.min(pagination?.itemsPerPage || 5, 8) }).map(
+							(_, rIdx) => (
+								<tr key={`gz-skeleton-row-${rIdx}`} className='gz-skeleton-tr'>
+									<td className='text-center ps-4 py-4'>
+										<div
+											className='gz-skeleton'
+											style={{
+												width: '28px',
+												height: '14px',
+												margin: '0 auto',
+											}}
+										/>
+									</td>
+									{columns.map((col, cIdx) => (
+										<td key={`gz-skeleton-col-${cIdx}`} className='py-4'>
+											<div
+												className='gz-skeleton'
+												style={{
+													width:
+														cIdx === 0
+															? '75%'
+															: cIdx % 2 === 0
+															? '60%'
+															: '85%',
+													height: '14px',
+												}}
+											/>
+										</td>
+									))}
+									{!removeAction && (
+										<td className='ps-4 py-4'>
+											<div
+												className='gz-skeleton'
+												style={{
+													width: '56px',
+													height: '24px',
+													borderRadius: '6px',
+												}}
+											/>
+										</td>
+									)}
+								</tr>
+							)
+						)}
 					{!loading &&
 						filteredData?.map((item, index) => {
 							const actualIndex =

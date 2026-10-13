@@ -10,7 +10,7 @@ export function AutomationAsideMenuItems() {
 			<div className='menu-item'>
 				<div className='menu-content pt-8 pb-2'>
 					<span className='menu-section text-muted text-uppercase fs-8 ls-1 d-flex align-items-center gap-2'>
-						<FontAwesomeIcon icon={faPaperPlane} />
+						<FontAwesomeIcon icon={faPaperPlane as any} />
 						Automation System
 					</span>
 				</div>

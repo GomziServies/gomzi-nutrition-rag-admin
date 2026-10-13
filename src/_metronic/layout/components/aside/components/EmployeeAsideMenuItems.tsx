@@ -59,6 +59,11 @@ export function EmployeeAsideMenuItems() {
 
 	return (
 		<>
+			<div className='menu-item'>
+				<div className='menu-content pt-2 pb-1 px-4'>
+					<span className='menu-section text-muted text-uppercase fs-9 fw-bolder ls-1'>MAIN</span>
+				</div>
+			</div>
 			<AsideMenuItem
 				to='/employee/dashboard'
 				Icon={faHome}
@@ -68,6 +73,7 @@ export function EmployeeAsideMenuItems() {
 				to='/employee/employee-chat'
 				Icon={faComment}
 				title='Chat'
+				badge='12'
 			/>
 			<AsideMenuItem
 				to='/employee/report'
@@ -79,6 +85,12 @@ export function EmployeeAsideMenuItems() {
 				Icon={faBarsProgress}
 				title='Daily Report'
 			/>
+
+			<div className='menu-item'>
+				<div className='menu-content pt-4 pb-1 px-4'>
+					<span className='menu-section text-muted text-uppercase fs-9 fw-bolder ls-1'>OPERATIONS</span>
+				</div>
+			</div>
 			<AsideMenuItem
 				to='/employee/expenses-list'
 				Icon={faMoneyBills}
@@ -94,12 +106,6 @@ export function EmployeeAsideMenuItems() {
 						title='Transactions'
 						hasBullet={true}
 					/>
-					{/*
-					<AsideMenuItem
-						to='/employee/invoice'
-						title='Invoice'
-						hasBullet={true}
-					/> */}
 					<AsideMenuItem
 						to='/employee/auto-commission'
 						title='Auto Commission'
@@ -111,6 +117,7 @@ export function EmployeeAsideMenuItems() {
 				to='/employee/task'
 				Icon={faCheck}
 				title='Task'
+				badge='3'
 			/>
 			{isManager && (
 				<>
@@ -126,11 +133,6 @@ export function EmployeeAsideMenuItems() {
 					/>
 				</>
 			)}
-			{/* <AsideMenuItem
-						to='/employee/lead'
-						Icon={faUserPlus}
-						title='Lead'
-					/> */}
 			<AsideMenuItem
 				to='/employee/document'
 				Icon={faFolder}
@@ -141,6 +143,12 @@ export function EmployeeAsideMenuItems() {
 				Icon={faChartSimple}
 				title='SOP'
 			/>
+
+			<div className='menu-item'>
+				<div className='menu-content pt-4 pb-1 px-4'>
+					<span className='menu-section text-muted text-uppercase fs-9 fw-bolder ls-1'>BUSINESS</span>
+				</div>
+			</div>
 			<AsideMenuItem
 				to='/employee/target'
 				Icon={faCalendarCheck}

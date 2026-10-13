@@ -241,7 +241,7 @@ const AssignSopList: React.FC = () => {
 					<div className='d-flex justify-content-between'>
 						<h4>Add Services</h4>
 						<FontAwesomeIcon
-							icon={faMinus}
+							icon={faMinus as any}
 							className='fs-3 text-muted pe-auto'
 							onClick={() => setShowAddService(false)}
 						/>

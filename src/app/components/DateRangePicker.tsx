@@ -264,7 +264,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
 					value={formatDateRange(selectedRange)} // Show default or selected date range
 				/>
 				<FontAwesomeIcon
-					icon={faCalendarDays}
+					icon={faCalendarDays as any}
 					style={{
 						position: 'absolute',
 						right: '0.75rem',

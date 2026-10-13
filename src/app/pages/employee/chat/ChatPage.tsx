@@ -2,7 +2,7 @@ import { faChevronLeft, faFile, faRightFromBracket } from '@fortawesome/free-sol
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useEffect, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { KTIcon, toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle, useLayout } from '../../../../_metronic/layout/core'
@@ -11,6 +11,7 @@ import { GetEmployeeChatHistory } from '../../../Functions/FGGroup/EmployeeChat'
 import { EmployeeChatInner } from './ChatInner'
 
 const EmployeeChatPage = () => {
+	const navigate = useNavigate()
 	const { config } = useLayout()
 	const { aside } = config
 	const [searchTerm, setSearchTerm] = useState('')
@@ -111,7 +112,7 @@ const EmployeeChatPage = () => {
 	}
 
 	const backPage = () => {
-		window.history.back()
+		navigate('/employee/dashboard')
 	}
 
 	const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm)
@@ -138,33 +139,38 @@ const EmployeeChatPage = () => {
 						className='card card-flush whatsapp-msg-box'
 						id='style-4'
 						style={{ zIndex: '10' }}>
-						{/* Search */}
+						{/* Header */}
 						<div
-							className='card-header px-2'
+							className='card-header px-4 py-3'
 							id='kt_chat_contacts_header'
-							style={{ backgroundColor: '#2d2d43', borderRadius: '0px' }}>
+							style={{ backgroundColor: '#0F172A', borderRadius: '0px' }}>
 							<div className='w-100 d-flex align-items-center justify-content-between'>
-								<div className='d-flex align-items-center justify-content-between'>
+								<div className='d-flex align-items-center'>
 									<div className='me-3'>
 										<img
 											alt='Logo'
 											src={toAbsoluteUrl('/media/logos/rag-favicon-logo.png')}
-											className='h-25px h-lg-45px'
+											className='h-30px'
 										/>
 									</div>
-									<div className='me-3 mt-2'>
-										<h1 className='text-white'>Chats</h1>
+									<div>
+										<h2 className='text-white mb-0 fs-3 fw-bolder'>Chats</h2>
 									</div>
 								</div>
-								<div
-									className='me-3 mt-1'
-									role='button'
-									onClick={backPage}>
+								<Link
+									to='/employee/dashboard'
+									className='btn btn-sm btn-white d-flex align-items-center gap-2 px-3 py-1 shadow-sm'
+									style={{ backgroundColor: '#ffffff', borderRadius: '6px' }}
+									title='Exit to Dashboard'>
 									<FontAwesomeIcon
 										icon={faRightFromBracket}
-										className='text-white fs-2'
+										className='fs-6'
+										style={{ color: '#0F172A' }}
 									/>
-								</div>
+									<span className='fs-7 fw-bold' style={{ color: '#0F172A' }}>
+										Exit
+									</span>
+								</Link>
 							</div>
 						</div>
 
@@ -320,65 +326,80 @@ const EmployeeChatPage = () => {
 							className='card'
 							id='kt_chat_messenger'>
 							<div
-								className='card-header-1 d-flex flex-nowrap'
+								className='card-header-1 d-flex flex-nowrap align-items-center justify-content-between px-4 py-3'
 								id='kt_chat_messenger_header'
-								style={{ backgroundColor: '#2d2d43', borderRadius: '0px' }}>
-								<div className='card-title'>
+								style={{ backgroundColor: '#0F172A', borderRadius: '0px' }}>
+								<div className='card-title mb-0'>
 									<div className='symbol-group symbol-hover'></div>
 									<div className='d-flex justify-content-center flex-column me-3'>
-										<div className='fs-4 fw-bolder d-flex align-items-center text-white text-hover-primary mb-0 me-1'>
+										<div className='fs-4 fw-bolder d-flex align-items-center text-white mb-0 me-1'>
 											<div
 												role='button'
-												onClick={() => setUserId('')}>
+												onClick={() => setUserId('')}
+												title='Back to contacts'>
 												<FontAwesomeIcon
 													icon={faChevronLeft}
-													className='me-5 text-white'
+													className='me-4 text-white fs-4'
 												/>
 											</div>
 											{currentUser?.profileImg !== 'https://files.fggroup.in/undefined' ? (
-												<div className='symbol symbol-45px symbol-circle me-5'>
+												<div className='symbol symbol-40px symbol-circle me-3'>
 													<img
 														alt='Pic'
 														src={toAbsoluteUrl(currentUser.profileImg)}
 													/>
 												</div>
 											) : currentUser.name ? (
-												<div className='symbol symbol-45px symbol-circle me-5'>
-													<span className='symbol-label bg-light-success text-dark fs-6 fw-bolder'>
+												<div className='symbol symbol-40px symbol-circle me-3'>
+													<span className='symbol-label bg-white text-dark fs-6 fw-bolder'>
 														{currentUser.name[0]}
 													</span>
 												</div>
 											) : (
 												''
 											)}
-											{currentUser.name.includes('undefined') ? 'FG User' : currentUser.name}
+											<span>{currentUser.name.includes('undefined') ? 'FG User' : currentUser.name}</span>
 										</div>
 									</div>
 								</div>
 
-								<div className='card-toolbar'>
-									<div className='me-n3'>
-										<div className='dropdown'>
-											<button
-												className='btn btn-sm btn-icon btn-active-light-primary dropdown-toggle'
-												type='button'
-												id='dropdownMenuButton'
-												data-bs-toggle='dropdown'
-												aria-expanded='false'>
-												<i className='bi bi-three-dots fs-2'></i>
-											</button>
-											<ul
-												className='dropdown-menu'
-												aria-labelledby='dropdownMenuButton'>
-												<li>
-													<Link
-														to={'/fwg/users/user-view-details?user_id=' + userId}
-														className='dropdown-item'>
-														View User
-													</Link>
-												</li>
-											</ul>
-										</div>
+								<div className='card-toolbar d-flex align-items-center gap-2'>
+									<Link
+										to='/employee/dashboard'
+										className='btn btn-sm btn-white d-flex align-items-center gap-2 px-3 py-1 shadow-sm me-2'
+										style={{ backgroundColor: '#ffffff', borderRadius: '6px' }}
+										title='Exit to Dashboard'>
+										<FontAwesomeIcon
+											icon={faRightFromBracket}
+											className='fs-6'
+											style={{ color: '#0F172A' }}
+										/>
+										<span className='fs-7 fw-bold' style={{ color: '#0F172A' }}>
+											Exit
+										</span>
+									</Link>
+
+									<div className='dropdown'>
+										<button
+											className='btn btn-sm btn-icon btn-color-white btn-active-white'
+											style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+											type='button'
+											id='dropdownMenuButton'
+											data-bs-toggle='dropdown'
+											aria-expanded='false'>
+											<i className='bi bi-three-dots fs-2 text-white'></i>
+										</button>
+										<ul
+											className='dropdown-menu dropdown-menu-end'
+											aria-labelledby='dropdownMenuButton'>
+											<li>
+												<Link
+													to={'/fwg/users/user-view-details?user_id=' + userId}
+													className='dropdown-item'>
+													View User
+												</Link>
+											</li>
+										</ul>
 									</div>
 								</div>
 							</div>
@@ -390,9 +411,29 @@ const EmployeeChatPage = () => {
 				) : (
 					<div className='flex-lg-row-fluid d-md-block d-none'>
 						<div
-							className='card h-100 w-100 d-flex justify-content-center align-items-center'
-							id='kt_chat_messenger'>
-							<h1 className='my-5'>Select User to see chat</h1>
+							className='card h-100 w-100 d-flex flex-column justify-content-center align-items-center p-8'
+							id='kt_chat_messenger'
+							style={{ minHeight: 'calc(100vh - 80px)' }}>
+							<div
+								className='rounded-circle d-flex align-items-center justify-content-center mb-4'
+								style={{
+									width: '80px',
+									height: '80px',
+									background: 'var(--gz-brand-soft)',
+									color: 'var(--gz-brand)',
+								}}>
+								<i className='bi bi-chat-dots-fill fs-2tx' style={{ color: 'var(--gz-brand)' }}></i>
+							</div>
+							<h2 className='fw-bold text-gray-800 mb-2'>Select User to see chat</h2>
+							<p className='text-muted fs-6 mb-5' style={{ maxWidth: '340px', textAlign: 'center' }}>
+								Pick a conversation from the left to start messaging, or return to your employee workspace.
+							</p>
+							<Link
+								to='/employee/dashboard'
+								className='btn btn-sm btn-primary px-4 py-2 d-flex align-items-center gap-2'>
+								<FontAwesomeIcon icon={faChevronLeft} />
+								<span>Back to Dashboard</span>
+							</Link>
 						</div>
 					</div>
 				)}

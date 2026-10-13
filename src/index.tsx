@@ -18,6 +18,8 @@ import './_metronic/assets/sass/plugins.scss'
 import './_metronic/assets/sass/style.react.scss'
 // custom css end
 import './_metronic/assets/sass/style.scss'
+// GOMZI enterprise workspace theme (visual-only layer, loaded last)
+import './_metronic/assets/sass/gomzi-theme.scss'
 // Apps
 import { MetronicI18nProvider } from './_metronic/i18n/Metronici18n'
 /**

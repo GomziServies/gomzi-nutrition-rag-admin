@@ -644,7 +644,7 @@ const MasterReports: React.FC = () => {
 									onClick={handleDownload}
 									disabled={loading}>
 									<FontAwesomeIcon
-										icon={faDownload}
+										icon={faDownload as any}
 										className='fs-3'
 									/>
 								</button>
@@ -667,7 +667,7 @@ const MasterReports: React.FC = () => {
 												<div className='symbol symbol-45px w-40px me-4'>
 													<span className='symbol-label bg-primary text-light rounded-circle'>
 														<FontAwesomeIcon
-															icon={faDollar}
+															icon={faDollar as any}
 															className='fs-3'
 														/>
 													</span>
@@ -697,7 +697,7 @@ const MasterReports: React.FC = () => {
 												<div className='symbol symbol-45px w-40px me-4'>
 													<span className='symbol-label bg-danger text-light rounded-circle'>
 														<FontAwesomeIcon
-															icon={faDollar}
+															icon={faDollar as any}
 															className='fs-3'
 														/>
 													</span>
@@ -723,7 +723,7 @@ const MasterReports: React.FC = () => {
 												<div className='symbol symbol-45px w-40px me-4'>
 													<span className='symbol-label bg-info text-light rounded-circle'>
 														<FontAwesomeIcon
-															icon={faFileLines}
+															icon={faFileLines as any}
 															className='fs-3'
 														/>
 													</span>
@@ -747,7 +747,7 @@ const MasterReports: React.FC = () => {
 												<div className='symbol symbol-45px w-40px me-4'>
 													<span className='symbol-label bg-success text-light rounded-circle'>
 														<FontAwesomeIcon
-															icon={faFileInvoice}
+															icon={faFileInvoice as any}
 															className='fs-3'
 														/>
 													</span>

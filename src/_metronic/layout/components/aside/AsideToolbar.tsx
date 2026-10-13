@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getProfile } from '../../../../app/Functions/FGGroup'
 import { getProfile as profile } from '../../../../app/Functions/FWG'
-import { KTIcon } from '../../../helpers'
+import { KTIcon, toAbsoluteUrl } from '../../../helpers'
 import { HeaderUserMenu } from '../../../partials'
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
@@ -39,61 +39,52 @@ const AsideToolbar = () => {
 		}
 	}, [])
 
+	const [isMinimized, setIsMinimized] = useState(() =>
+		typeof document !== 'undefined' && document.body.classList.contains('aside-minimize')
+	)
+
+	const toggleSidebar = () => {
+		const nextState = !document.body.classList.contains('aside-minimize')
+		if (nextState) {
+			document.body.classList.add('aside-minimize')
+			document.body.classList.add('gz-aside-collapsed')
+			document.body.removeAttribute('data-kt-aside-minimize')
+		} else {
+			document.body.classList.remove('aside-minimize')
+			document.body.classList.remove('gz-aside-collapsed')
+			document.body.removeAttribute('data-kt-aside-minimize')
+		}
+		setIsMinimized(nextState)
+	}
+
 	return (
-		<>
-			{/*begin::User*/}
-			<div className='aside-user d-flex align-items-sm-center justify-content-center py-5'>
-				{/*begin::Wrapper*/}
-				<div className='aside-user-info flex-row-fluid flex-wrap ms-5'>
-					{/*begin::Section*/}
-					<div className='d-flex'>
-						{/*begin::Info*/}
-						<div className='flex-grow-1 me-2'>
-							{/*begin::Username*/}
-							<a
-								href='#'
-								className='text-white text-hover-primary fs-6 fw-bold'>
-								{userProfile?.full_name || 'Demo'}
-							</a>
-							{/*end::Username*/}
-
-							{/*begin::Label*/}
-							<div className='d-flex align-items-center text-success fs-9'>
-								<span className='bullet bullet-dot bg-success me-1'></span>
-								{userProfile?.type}
-							</div>
-							{/*end::Label*/}
-						</div>
-						{/*end::Info*/}
-
-						{/*begin::User menu*/}
-						<div className='me-n2'>
-							{/*begin::Action*/}
-							<a
-								href='#'
-								className='btn btn-icon btn-sm btn-active-color-primary mt-n2'
-								data-kt-menu-trigger='click'
-								data-kt-menu-placement='bottom-start'
-								data-kt-menu-overflow='false'>
-								<KTIcon
-									iconName='setting-2'
-									className='text-muted fs-1'
-								/>
-							</a>
-
-							<HeaderUserMenu />
-							{/*end::Action*/}
-						</div>
-						{/*end::User menu*/}
+		<div className={`gz-aside-top ${isMinimized ? 'gz-aside-top-minimized' : ''}`}>
+			<div
+				className='gz-brand-lockup'
+				onClick={isMinimized ? toggleSidebar : undefined}
+				title={isMinimized ? 'Click to expand sidebar' : undefined}
+				style={{ cursor: isMinimized ? 'pointer' : 'default' }}>
+				<img
+					alt='GOMZI'
+					src={toAbsoluteUrl('/media/logos/rag-favicon-logo.png')}
+					className='gz-brand-logo'
+				/>
+				<div className='gz-brand-details'>
+					<div className='gz-brand-title'>
+						GOMZI<span className='gz-brand-tm'>™</span>
 					</div>
-					{/*end::Section*/}
+					<div className='gz-brand-sub'>SUPPLEMENTS</div>
+					<div className='gz-brand-tagline'>THE LEGACY OF RAG</div>
 				</div>
-				{/*end::Wrapper*/}
 			</div>
-			{/*end::User*/}
-
-			<div className='aside-search'></div>
-		</>
+			<button
+				type='button'
+				className='gz-aside-collapse-btn'
+				title={isMinimized ? 'Expand sidebar' : 'Collapse sidebar'}
+				onClick={toggleSidebar}>
+				<i className={`bi ${isMinimized ? 'bi-chevron-double-right' : 'bi-chevron-double-left'}`}></i>
+			</button>
+		</div>
 	)
 }
 

@@ -227,7 +227,7 @@ const WhatsappAutomationCreate = () => {
 					<div className='card-title m-0 d-flex align-items-center justify-content-between'>
 						<h3 className='fw-bolder m-0'>Create Automation</h3>
 						<FontAwesomeIcon
-							icon={faAngleDown}
+							icon={faAngleDown as any}
 							className='fs-3'
 						/>
 					</div>

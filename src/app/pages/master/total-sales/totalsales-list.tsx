@@ -305,7 +305,7 @@ const MasterTotalSalesList: React.FC = () => {
 										onClick={downloadExcel}
 										disabled={loading}>
 										<FontAwesomeIcon
-											icon={faDownload}
+											icon={faDownload as any}
 											className='fs-3'
 										/>
 									</button>
@@ -352,7 +352,7 @@ const MasterTotalSalesList: React.FC = () => {
 												className='d-flex ms-8'
 												role='button'>
 												<FontAwesomeIcon
-													icon={faPlusCircle}
+													icon={faPlusCircle as any}
 													className='mx-2 ms-5 mb-1 plus-icon'
 													style={{ color: '#607D8B', fontSize: '18px' }}
 												/>

@@ -38,15 +38,15 @@ export function HeaderWrapper() {
 			id='kt_header'
 			className={clsx('header', classes.header.join(' '), 'align-items-stretch')}
 			{...attributes.headerMenu}>
-			{/* begin::Brand */}
-			<div className='header-brand'>
+			{/* begin::Brand (mobile only toggle & logo) */}
+			<div className='header-brand d-lg-none'>
 				{/* begin::Logo */}
 				<div className='d-flex align-items-center'>
 					<div>
 						<img
 							alt='Logo'
-							src={toAbsoluteUrl('/media/logos/rag-white-logo.png')}
-							className='h-25px h-lg-45px'
+							src={toAbsoluteUrl('/media/logos/gomzi-nutrition.png')}
+							className='h-25px h-lg-40px'
 						/>
 					</div>
 					<div>

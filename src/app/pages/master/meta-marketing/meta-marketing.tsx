@@ -1629,7 +1629,7 @@ const MetaMarketingDashboard = () => {
 						<div className='d-flex align-items-center gap-2 mb-4'>
 							<div className='section-icon-box section-icon-small bg-light-blue'>
 								<FontAwesomeIcon
-									icon={faUsers}
+									icon={faUsers as any}
 									className='text-primary fs-8'
 								/>
 							</div>
@@ -1675,7 +1675,7 @@ const MetaMarketingDashboard = () => {
 						<div className='d-flex align-items-center gap-2 mb-4'>
 							<div className='section-icon-box br-8 bg-light-pink'>
 								<FontAwesomeIcon
-									icon={faAd}
+									icon={faAd as any}
 									className='text-pink fs-8'
 								/>
 							</div>
@@ -1741,7 +1741,7 @@ const MetaMarketingDashboard = () => {
 						) : (
 							<div className='bg-amber-50 br-12 p-4 d-flex align-items-center gap-3'>
 								<FontAwesomeIcon
-									icon={faAd}
+									icon={faAd as any}
 									className='text-amber-500 fs-5'
 								/>
 								<span className='text-amber-800 fs-7 fw-500'>Ad detail not available.</span>

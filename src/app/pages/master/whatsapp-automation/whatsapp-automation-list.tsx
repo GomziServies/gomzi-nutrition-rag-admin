@@ -197,7 +197,7 @@ const WhatsappAutomationList: React.FC = () => {
 										<td>
 											<span className='text-dark text-center fw-bold  ms-6 mb-1 fs-6'>
 												<FontAwesomeIcon
-													icon={faPlusCircle}
+													icon={faPlusCircle as any}
 													className='me-2 plus-icon'
 													style={{ color: '#607D8B', fontSize: '18px' }}
 												/>
@@ -283,7 +283,7 @@ const WhatsappAutomationList: React.FC = () => {
 						onClick={() => setUpdateShow(false)}>
 						<FontAwesomeIcon
 							className='fs-1 position-absolute ms-3'
-							icon={faXmark}
+							icon={faXmark as any}
 						/>
 					</button>
 				</div>

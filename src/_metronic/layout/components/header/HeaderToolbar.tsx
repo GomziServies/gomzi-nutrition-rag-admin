@@ -1,11 +1,15 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 import { useEffect, useState } from 'react'
+import DateFilter from '../../../../app/components/DateRangePicker'
 import { GetMyAuthority } from '../../../../app/Functions/FGGroup/RBAC'
+import { toAbsoluteUrl } from '../../../helpers'
+import { HeaderUserMenu } from '../../../partials'
 import { useLayout } from '../../core'
-import { DefaultTitle } from './page-title/DefaultTitle'
 
 const HeaderToolbar = () => {
 	const { classes } = useLayout()
+	const [searchQuery, setSearchQuery] = useState('')
+	const [showUserMenu, setShowUserMenu] = useState(false)
+	const [userProfile, setUserProfile] = useState<any>(null)
 	const [selectedLogo, setSelectedLogo] = useState('')
 	const [adminType, setAdminType] = useState('')
 	const [masterShow, setMasterShow] = useState(false)
@@ -40,6 +44,15 @@ const HeaderToolbar = () => {
 		}
 		if (storedAdmin) {
 			setAdminType(storedAdmin)
+		}
+
+		const adminInfo = localStorage.getItem('fg_group_info')
+		if (adminInfo) {
+			try {
+				setUserProfile(JSON.parse(adminInfo))
+			} catch (e) {
+				console.error(e)
+			}
 		}
 
 		const isEmp = localStorage.getItem('is_employee_login') === 'true' || storedAdmin === 'Employee'
@@ -96,41 +109,70 @@ const HeaderToolbar = () => {
 		}
 	}, [])
 
+	const userName = userProfile?.full_name || 'chiragFWG'
+	const userRole = userProfile?.type || 'Employee'
+
 	return (
-		<div className='toolbar d-flex align-items-stretch'>
-			{/* begin::Toolbar container */}
-			<div
-				className={`${classes.headerContainer.join(
-					' '
-				)} py-6 py-lg-0 d-flex flex-row align-items-lg-stretch justify-content-between`}>
-				<DefaultTitle />
-				<div className='d-flex align-items-stretch pt-3 pt-lg-0'>
-					{/* begin::Action wrapper */}
-					{/* <div className='d-flex align-items-center'>
-						<div className='bullet bg-secondary h-35px w-1px mx-5'></div>
-					</div> */}
-					{/* end::Action wrapper */}
+		<div className='gz-topbar-wrapper d-flex align-items-center justify-content-between w-100 px-4 py-2'>
+			{/* Left: Search anything... with ⌘ K */}
+			<div className='gz-top-search-bar'>
+				<i className='bi bi-search gz-top-search-icon'></i>
+				<input
+					type='text'
+					className='gz-top-search-input'
+					placeholder='Search anything...'
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+				/>
+				<span className='gz-top-search-kbd'>⌘ K</span>
+			</div>
 
-					{/* begin::Action wrapper */}
-					{/* <div className='d-flex align-items-center'>
-						<span className='fs-7 text-gray-700 fw-bolder pe-3 d-none d-xxl-block'>Theme:</span>
+			{/* Right: Date range filter + Notification bell + Profile pill */}
+			<div className='d-flex align-items-center gap-3'>
+				{/* Date Range Picker Pill */}
+				<div className='gz-top-date-wrap'>
+					<DateFilter
+						onDateRangeChange={() => {}}
+						rightValue='0'
+					/>
+				</div>
 
-						<div className='d-flex'>
-							<div className='d-flex align-items-center'>
-								<ThemeModeSwitcher toggleBtnClass='btn btn-sm btn-icon btn-icon-muted btn-active-icon-primary' />
-							</div>
+				{/* Notifications Bell */}
+				<button
+					type='button'
+					className='gz-top-btn-icon position-relative'
+					title='Notifications'>
+					<i className='bi bi-bell fs-5'></i>
+					<span className='gz-bell-red-dot'></span>
+				</button>
+
+				{/* User Profile Pill */}
+				<div className='gz-top-user-wrap position-relative'>
+					<button
+						type='button'
+						className='gz-top-user-btn'
+						onClick={() => setShowUserMenu(!showUserMenu)}>
+						<img
+							src={toAbsoluteUrl('/media/avatars/300-1.jpg')}
+							alt='User'
+							className='gz-top-user-avatar'
+						/>
+						<div className='gz-top-user-info text-start d-none d-sm-flex flex-column'>
+							<span className='gz-top-user-name'>{userName}</span>
+							<span className='gz-top-user-role'>{userRole}</span>
 						</div>
-					</div> */}
+						<i className='bi bi-chevron-down gz-top-user-arrow ms-2'></i>
+					</button>
 
-					<div className='d-flex align-items-center'>
-						<div className='bullet bg-secondary h-35px w-1px mx-5'></div>
-
-						<div className='d-flex align-items-center'></div>
-					</div>
-					{/* end::Action wrapper */}
+					{showUserMenu && (
+						<div
+							className='gz-topbar-user-dropdown-menu'
+							onClick={() => setShowUserMenu(false)}>
+							<HeaderUserMenu />
+						</div>
+					)}
 				</div>
 			</div>
-			{/* end::Toolbar container */}
 		</div>
 	)
 }

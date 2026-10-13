@@ -12,7 +12,26 @@ import { TrainerAuthPage } from '../pages/gomzi-nutrition-trainer/auth/AuthPage'
 import { NutritionAuthPage } from '../pages/gomzi-nutrition/auth/AuthPage'
 import { GomziNutritionLoginAuthPage } from '../pages/gomzi-nutrition/nutrition-login/AuthPage'
 import { MasterAuthPage } from '../pages/master/auth/AuthPage'
+import { AccountPrivateRoutes } from './AccountPrivateRoutes'
+import AdajanBranchPrivateRoutes from './AdajanBranchPrivateRoutes'
+import { AutomationPrivateRoutes } from './AutomationPrivateRoutes'
+import { EmployeePrivateRoutes } from './EmployeePrivateRoutes'
+import { FWGPrivateRoutes } from './FWGPrivateRoutes'
+import { FgiitPrivateRoutes } from './FgiitPrivateRoutes'
+import { FgiitTeleSalesPrivateRoutes } from './FgiitTeleSalesPrivateRoutes'
+import { FwgTeleSalesPrivateRoutes } from './FwgTeleSalesPrivateRoutes'
+import { GCSPrivateRoutes } from './GCSPrivateRoutes'
+import GlsInvestorPrivateRoutes from './GlsInvestorPrivateRoutes'
+import { GomziMedicalDoctorPrivateRoutes } from './GomziMedicalDoctorPrivateRoutes'
+import { GomziMedicalPharmacyPrivateRoutes } from './GomziMedicalPharmacyPrivateRoutes'
+import { GomziMedicalPrivateRoutes } from './GomziMedicalPrivateRoutes'
 import { GomziNutritionPrivateRoutes } from './GomziNutritionPrivateRoutes'
+import { GomziNutritionTeleSalesPrivateRoutes } from './GomziNutritionTeleSalesPrivateRoutes'
+import { HelixPrivateRoutes } from './HelixPrivateRoutes'
+import { HRPrivateRoutes } from './HRPrivateRoutes'
+import InvestorPrivateRoutes from './InvestorPrivateRoutes'
+import { MasterPrivateRoutes } from './MasterPrivateRoutes'
+import { MatricesPrivateRoute } from './MatricesPrivateRoute'
 import { TrainerPrivateRoutes } from './TrainerPrivateRoutes'
 
 const { PUBLIC_URL } = process.env
@@ -25,6 +44,7 @@ const AppRoutes: FC = () => {
 		() => !!localStorage.getItem('auth_fg_group')
 	)
 	const adminType = localStorage.getItem('admin_type')
+	const admin = localStorage.getItem('admin')
 
 	useEffect(() => {
 		const Gomzi_Nutrition_Token = localStorage.getItem('auth_fg_group')
@@ -227,7 +247,27 @@ const AppRoutes: FC = () => {
 								path='/'
 								element={
 									<Navigate
-										to='/rag/dashboard'
+										to={
+											admin === 'Employee'
+												? '/employee/dashboard'
+												: admin === 'Master'
+												? '/master/dashboard'
+												: admin === 'HR'
+												? '/hr/dashboard'
+												: admin === 'Trainer'
+												? '/trainer/dashboard'
+												: admin === 'Account'
+												? '/account/dashboard'
+												: admin === 'Adajan-Branch'
+												? '/adajan-branch/dashboard'
+												: admin === 'GLS_Investor' || admin === 'Investor'
+												? '/gls-investor/dashboard'
+												: admin === 'Matrices'
+												? '/matrices/gls-report'
+												: admin === 'Automation'
+												? '/automation/broadcast/list'
+												: '/rag/dashboard'
+										}
 										replace
 									/>
 								}
@@ -248,51 +288,96 @@ const AppRoutes: FC = () => {
 								path='/gls-investor/login'
 								element={<Navigate to='/gls-investor/dashboard' />}
 							/>
-							{gomziNutritionToken && adminType !== 'Automation' ? (
-								<>
-									<Route
-										path='/rag/*'
-										element={<GomziNutritionPrivateRoutes />}
-									/>
-								</>
-							) : null}
 
-							{gomziNutritionToken && adminType === 'Gomzi_Nutrition' && (
-								<>
-									<Route
-										path='/rag/*'
-										element={<GomziNutritionPrivateRoutes />}
-									/>
-									<Route
-										index
-										element={<Navigate to='/rag/dashboard' />}
-									/>
-								</>
-							)}
-							{gomziNutritionToken && adminType === 'Gomzi_Nutrition_Login' && (
-								<>
-									<Route
-										path='/rag/*'
-										element={<GomziNutritionPrivateRoutes />}
-									/>
-									<Route
-										index
-										element={<Navigate to='/rag/dashboard' />}
-									/>
-								</>
-							)}
-							{gomziNutritionToken && adminType === 'Trainer' && (
-								<>
-									<Route
-										path='/trainer/*'
-										element={<TrainerPrivateRoutes />}
-									/>
-									<Route
-										index
-										element={<Navigate to='/trainer/dashboard' />}
-									/>
-								</>
-							)}
+							{/* Module Routes */}
+							<Route
+								path='/employee/*'
+								element={<EmployeePrivateRoutes />}
+							/>
+							<Route
+								path='/rag/*'
+								element={<GomziNutritionPrivateRoutes />}
+							/>
+							<Route
+								path='/nutrition/*'
+								element={<GomziNutritionPrivateRoutes />}
+							/>
+							<Route
+								path='/trainer/*'
+								element={<TrainerPrivateRoutes />}
+							/>
+							<Route
+								path='/master/*'
+								element={<MasterPrivateRoutes />}
+							/>
+							<Route
+								path='/hr/*'
+								element={<HRPrivateRoutes />}
+							/>
+							<Route
+								path='/account/*'
+								element={<AccountPrivateRoutes />}
+							/>
+							<Route
+								path='/adajan-branch/*'
+								element={<AdajanBranchPrivateRoutes />}
+							/>
+							<Route
+								path='/automation/*'
+								element={<AutomationPrivateRoutes />}
+							/>
+							<Route
+								path='/fwg/*'
+								element={<FWGPrivateRoutes />}
+							/>
+							<Route
+								path='/fgiit/*'
+								element={<FgiitPrivateRoutes />}
+							/>
+							<Route
+								path='/fgiit-tele-sales/*'
+								element={<FgiitTeleSalesPrivateRoutes />}
+							/>
+							<Route
+								path='/fwg-tele-sales/*'
+								element={<FwgTeleSalesPrivateRoutes />}
+							/>
+							<Route
+								path='/gcs/*'
+								element={<GCSPrivateRoutes />}
+							/>
+							<Route
+								path='/gls-investor/*'
+								element={<GlsInvestorPrivateRoutes />}
+							/>
+							<Route
+								path='/investor/*'
+								element={<InvestorPrivateRoutes />}
+							/>
+							<Route
+								path='/gomzi-medical-doctor/*'
+								element={<GomziMedicalDoctorPrivateRoutes />}
+							/>
+							<Route
+								path='/gomzi-medical-pharmacy/*'
+								element={<GomziMedicalPharmacyPrivateRoutes />}
+							/>
+							<Route
+								path='/gomzi-medical/*'
+								element={<GomziMedicalPrivateRoutes />}
+							/>
+							<Route
+								path='/gn-tele-sales/*'
+								element={<GomziNutritionTeleSalesPrivateRoutes />}
+							/>
+							<Route
+								path='/helix/*'
+								element={<HelixPrivateRoutes />}
+							/>
+							<Route
+								path='/matrices/*'
+								element={<MatricesPrivateRoute />}
+							/>
 						</>
 					) : (
 						<>
