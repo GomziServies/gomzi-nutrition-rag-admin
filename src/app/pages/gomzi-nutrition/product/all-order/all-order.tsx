@@ -8,6 +8,7 @@ import { KTCard, toAbsoluteUrl } from '../../../../../_metronic/helpers'
 import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import InputField from '../../../../components/InputField'
+import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
 import SelectField from '../../../../components/SelectField'
 import Table from '../../../../components/Table'
@@ -348,15 +349,7 @@ const NutritionAllOrder: React.FC = () => {
 				<div className='d-flex justify-content-between mx-3 m-5'>
 					<div className='d-flex pt-1 mx-2'>
 						<div className='d-flex align-items-center justify-content-between'>
-							<div>
-								<select
-									className='form-select form-select mx-3'
-									onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}>
-									<option value='10'>10</option>
-									<option value='25'>25</option>
-									<option value='50'>50</option>
-								</select>
-							</div>
+							<LengthMenu handleItemsPerPageChange={handleItemsPerPageChange} />
 						</div>
 						<button
 							className='btn btn-primary ms-5 mx-2'

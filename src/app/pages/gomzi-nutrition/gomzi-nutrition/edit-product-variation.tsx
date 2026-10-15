@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import CopyableInput from '../../../components/CopyableInput'
 import InputField from '../../../components/InputField'
+import SelectField from '../../../components/SelectField'
 import TableButton from '../../../components/TableButton'
 import { FileUploadToFGGroup, GetProduct, UpdateProductVariation } from '../../../Functions/FGGroup'
 
@@ -360,14 +361,15 @@ const EditGomziNutritionVariationProduct = () => {
 											/>
 										</div>
 										<div className='col-md-6 fv-row'>
-											<InputField
-												labelMarginRemove
-												htmlFor='weightUnit'
-												name='unit'
-												type='text'
+											<SelectField
 												label='Weight Unit'
+												name='unit'
+												htmlFor='weightUnit'
 												value={formData.weight.unit}
 												onChange={(e) => updateWeight('unit', e.target.value)}
+												options={['g', 'kg', 'mg', 'lb', 'oz']}
+												searchable={false}
+												hideDefaultOption
 											/>
 										</div>
 										<div className='col-md-6 fv-row mb-7'>

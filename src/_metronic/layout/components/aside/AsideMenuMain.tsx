@@ -31,24 +31,44 @@ import { HelixAsideMenuItems } from './components/HelixAsideMenuItems'
 
 export function AsideMenuMain() {
 	const [portalAdminType, setPortalAdminType] = useState('')
-	const [adminType, setAdminType] = useState('')
+	const [adminType, setAdminType] = useState(() => {
+		if (window.location.pathname.startsWith('/rag')) {
+			localStorage.setItem('admin', 'Gomzi_Nutrition')
+			localStorage.setItem('admin_type', 'Gomzi_Nutrition')
+			localStorage.removeItem('is_employee_login')
+			return 'Gomzi_Nutrition'
+		}
+		return localStorage.getItem('admin') || ''
+	})
 	const location = useLocation()
-
-	useEffect(() => {
-		const portalAdminType = localStorage.getItem('fwg_portal')
-		const storedAdminType = localStorage.getItem('admin')
-		if (portalAdminType) {
-			setPortalAdminType(portalAdminType)
-		}
-		if (storedAdminType) {
-			setAdminType(storedAdminType)
-		}
-	}, [])
 
 	useEffect(() => {
 		const pathSegments = location.pathname.split('/')
 		const firstSegment = pathSegments[1]
-	}, [location])
+
+		if (firstSegment === 'rag') {
+			setAdminType('Gomzi_Nutrition')
+			localStorage.setItem('admin', 'Gomzi_Nutrition')
+			localStorage.setItem('admin_type', 'Gomzi_Nutrition')
+			localStorage.removeItem('is_employee_login')
+			return
+		}
+
+		if (firstSegment === 'employee') {
+			setAdminType('Employee')
+			localStorage.setItem('admin', 'Employee')
+			return
+		}
+
+		const portalAdmin = localStorage.getItem('fwg_portal')
+		const storedAdmin = localStorage.getItem('admin')
+		if (portalAdmin) {
+			setPortalAdminType(portalAdmin)
+		}
+		if (storedAdmin) {
+			setAdminType(storedAdmin)
+		}
+	}, [location.pathname])
 
 	return (
 		<>

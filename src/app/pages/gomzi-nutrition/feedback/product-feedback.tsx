@@ -1,10 +1,13 @@
-import { faCheck, faClose } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faClose, faDownload, faStar } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
+import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../_metronic/helpers'
+import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetProductFeedback, UpdateProductFeedback } from '../../../Functions/FGGroup'
@@ -31,19 +34,59 @@ const NutritionProductFeedback: React.FC = () => {
 	})
 
 	const handlePageChange = (page: number) => {
-		setPagination({ ...pagination, page })
+		setPagination((prev) => ({ ...prev, page }))
 	}
 
-	const filteredFeedback = feedbackData.filter((data: any) => {
-		const matchesSearchTerm = data.feedback_comment.toLowerCase().includes(searchTerm.toLowerCase())
+	const handleItemsPerPageChange = (value: number) => {
+		setPagination((prev) => ({ ...prev, itemsPerPage: value, page: 1 }))
+	}
 
-		return matchesSearchTerm
+	useEffect(() => {
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}, [searchTerm])
+
+	const filteredFeedback = feedbackData.filter((data: any) => {
+		if (!searchTerm || !searchTerm.trim()) return true
+		const term = searchTerm.toLowerCase().trim()
+		const comment = (data?.feedback_comment || '').toLowerCase()
+		const userName = `${data?.user?.first_name || ''} ${data?.user?.last_name || ''}`.toLowerCase()
+		const productName = (data?.product?.name || data?.product_name || '').toLowerCase()
+
+		return comment.includes(term) || userName.includes(term) || productName.includes(term)
 	})
 
 	const paginatedFeedback = filteredFeedback.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
 		pagination.page * pagination.itemsPerPage
 	)
+
+	const downloadExcel = () => {
+		const worksheetData = filteredFeedback.map((data: any, idx: number) => {
+			const userName = data?.user
+				? `${data?.user?.first_name || ''} ${data?.user?.last_name || ''}`.trim()
+				: data?.user_name || 'N/A'
+			const productName = data?.product?.name || data?.product_name || 'N/A'
+			const comment = data?.feedback_comment || 'N/A'
+			const stars = data?.feedback_point ?? 'N/A'
+			const status = data?.status || 'N/A'
+			const date = data?.createdAt ? DayJS(data.createdAt).format('DD/MM/YYYY hh:mm:ss A') : 'N/A'
+
+			return {
+				'No.': idx + 1,
+				'Product Name': productName,
+				'User Name': userName,
+				'Rating (Stars)': stars,
+				Comment: comment,
+				Status: status,
+				Date: date,
+			}
+		})
+
+		const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+		const workbook = XLSX.utils.book_new()
+		XLSX.utils.book_append_sheet(workbook, worksheet, 'Product Feedback')
+		XLSX.writeFile(workbook, `Product_Feedback_${DayJS().format('YYYY-MM-DD')}.xlsx`)
+	}
 
 	const updateReviewStatus = async (feedback_id: string, status: FeedbackStatusValue) => {
 		try {
@@ -78,11 +121,46 @@ const NutritionProductFeedback: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Product Feedback</PageTitle>
 			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<SearchFilter
-						searchTerm={searchTerm}
-						setSearchTerm={setSearchTerm}
-					/>
+				{/* Filters Toolbar Row: Search, LengthMenu, Download Excel */}
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex flex-wrap align-items-center gap-3 w-100'>
+						{/* 1. Search Filter */}
+						<div>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 2. Dropdown (show entries per page) */}
+						<div>
+							<LengthMenu
+								expenseData={filteredFeedback}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<button
+								type='button'
+								className='btn btn-primary d-flex align-items-center justify-content-center'
+								style={{
+									width: '38px',
+									height: '38px',
+									padding: 0,
+									borderRadius: '8px',
+									fontSize: '14px',
+								}}
+								onClick={downloadExcel}
+								disabled={filteredFeedback.length === 0}
+								title='Download Excel'>
+								<FontAwesomeIcon icon={faDownload} />
+							</button>
+						</div>
+					</div>
 				</div>
 				<div className='py-4 card-body'>
 					<div className='table-responsive'>
@@ -107,14 +185,14 @@ const NutritionProductFeedback: React.FC = () => {
 									.map((feedbackData: any, index: number) => {
 										const actualIndex = (pagination.page - 1) * pagination.itemsPerPage + index + 1
 
-										const stars = []
-										for (let i = 0; i < feedbackData.feedback_point; i++) {
-											stars.push(
-												<i
-													key={i}
-													className='fas fa-star text-warning'></i>
-											)
-										}
+										const rating = Math.max(0, Math.min(5, Number(feedbackData.feedback_point) || 0))
+										const stars = Array.from({ length: 5 }, (_, i) => (
+											<FontAwesomeIcon
+												key={i}
+												icon={faStar}
+												className={`fs-7 me-1 ${i < rating ? 'text-warning' : 'text-gray-300'}`}
+											/>
+										))
 										const statusBadge = () => {
 											switch (feedbackData.status) {
 												case 'APPROVED':

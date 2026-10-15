@@ -1,4 +1,4 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -7,6 +7,7 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -20,6 +21,7 @@ const EmployeeSalary = () => {
 	const [selectedStatus, setSelectedStatus] = useState('')
 	const [isRotating, setIsRotating] = useState(false)
 	const [loading, setLoading] = useState(false)
+	const [exporting, setExporting] = useState(false)
 	const [sort, setSort] = useState('createdAt')
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [metaData, setMetaData] = useState<any>()
@@ -280,6 +282,56 @@ const EmployeeSalary = () => {
 		}
 	}
 
+	const downloadExcel = async () => {
+		try {
+			setExporting(true)
+			const toastId = toast.loading('Exporting salary data to Excel...')
+
+			const dataToExport = filteredAdminData || []
+			if (dataToExport.length === 0) {
+				toast.dismiss(toastId)
+				toast.error('No salary records found to export')
+				return
+			}
+
+			const worksheetData = dataToExport.map((salary: any, index: number) => ({
+				No: index + 1,
+				'Employee Code': salary.employee_id?.employee_code || salary.employee_code || '-',
+				'Employee Name': salary.employee_name || salary.employee_id?.full_name || '-',
+				Email: salary.employee_email || salary.employee_id?.email || '-',
+				'Account Number':
+					salary.employee_id?.account_details?.account_number || salary.bank_account_number || '-',
+				'IFSC Code': salary.employee_id?.account_details?.IFSC || salary.ifsc_code || '-',
+				'Total Salary': salary.total_salary ?? '-',
+				'Final Salary': salary.final_salary ?? '-',
+				Period: salary.period || '-',
+			}))
+
+			const XLSX = await import('xlsx')
+			const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+			const columnWidths = Object.keys(worksheetData[0]).map((key) => {
+				const maxLength = Math.max(
+					key.length,
+					...worksheetData.map((row: any) => String(row[key] ?? '').length)
+				)
+				return { wch: Math.min(maxLength + 2, 40) }
+			})
+			worksheet['!cols'] = columnWidths
+
+			const workbook = XLSX.utils.book_new()
+			XLSX.utils.book_append_sheet(workbook, worksheet, 'Salary Data')
+			XLSX.writeFile(workbook, `Salary_Data_${selectedYear}_${selectedMonth}.xlsx`)
+
+			toast.dismiss(toastId)
+			toast.success(`${dataToExport.length} salary records exported successfully`)
+		} catch (error: any) {
+			console.error('Export error:', error)
+			toast.error('Failed to export salary data')
+		} finally {
+			setExporting(false)
+		}
+	}
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Salary</PageTitle>
@@ -292,36 +344,88 @@ const EmployeeSalary = () => {
 					</div>
 				</div>
 
-				<div className='card-header row border-0 pt-6'>
-					<div className='col-md-6 d-flex'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-						/>
-						<div className='d-md-block d-none'>
-							<LengthMenu
-								expenseData={salaryData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-							/>
-						</div>
-					</div>
-					<div className='col-md-6 pe-md-6'>
-						<div className='row justify-content-end'>
-							<div className='col-md-8 my-md-0 my-5 pe-0'>
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
+						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+							{/* 1. Searchbar */}
+							<div>
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									className='me-0'
+								/>
+							</div>
+
+							{/* 2. Dropdown (show entries per page) */}
+							<div>
+								<LengthMenu
+									expenseData={salaryData}
+									handleItemsPerPageChange={handleItemsPerPageChange}
+									value={pagination.itemsPerPage}
+									className='me-0'
+								/>
+							</div>
+
+							{/* 3. Download Excel Button */}
+							<div>
+								<button
+									type='button'
+									className='btn btn-icon d-flex align-items-center justify-content-center'
+									onClick={downloadExcel}
+									disabled={exporting}
+									style={{
+										width: '38px',
+										height: '38px',
+										minWidth: '38px',
+										padding: 0,
+										borderRadius: '8px',
+										fontSize: '14px',
+										backgroundColor: '#ffffff',
+										border: '1px solid #DFE7F0',
+										color: '#1E3A5F',
+										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+										cursor: exporting ? 'not-allowed' : 'pointer',
+									}}
+									onMouseEnter={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#1E3A5F'
+											e.currentTarget.style.borderColor = '#1E3A5F'
+											e.currentTarget.style.color = '#ffffff'
+											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
+											e.currentTarget.style.transform = 'translateY(-1px)'
+										}
+									}}
+									onMouseLeave={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#ffffff'
+											e.currentTarget.style.borderColor = '#DFE7F0'
+											e.currentTarget.style.color = '#1E3A5F'
+											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
+											e.currentTarget.style.transform = 'translateY(0)'
+										}
+									}}
+									title='Download Excel'>
+									{exporting ? (
+										<span
+											className='spinner-border spinner-border-sm'
+											role='status'
+											aria-hidden='true'></span>
+									) : (
+										<FontAwesomeIcon icon={faDownload} />
+									)}
+								</button>
+							</div>
+
+							{/* 4. Datefilter */}
+							<div className='d-flex align-items-center flex-shrink-0'>
 								<DateFilter
 									onDateRangeChange={handleDateRangeChange}
-									leftValue='-600px'
+									rightValue='0'
 									lastMonth={true}
 								/>
-								{/* <input type="month" name="" id="" /> */}
 							</div>
 						</div>
-					</div>
-					<div className='col-md-3 d-flex d-md-none justify-content-between p-0'>
-						<LengthMenu
-							expenseData={salaryData}
-							handleItemsPerPageChange={handleItemsPerPageChange}
-						/>
 					</div>
 				</div>
 
@@ -485,38 +589,46 @@ const EmployeeSalary = () => {
 							/>
 						</div>
 						<div className='col-md-3 mb-4'>
-							<label className='form-label'>Month</label>
-							<select
-								className='form-select'
+							<SelectField
+								label='Month'
+								name='month'
 								value={selectedMonth}
-								onChange={(e) => setSelectedMonth(e.target.value)}>
-								<option value=''>Select Month</option>
-								<option value='01'>January</option>
-								<option value='02'>February</option>
-								<option value='03'>March</option>
-								<option value='04'>April</option>
-								<option value='05'>May</option>
-								<option value='06'>June</option>
-								<option value='07'>July</option>
-								<option value='08'>August</option>
-								<option value='09'>September</option>
-								<option value='10'>October</option>
-								<option value='11'>November</option>
-								<option value='12'>December</option>
-							</select>
+								onChange={(e) => setSelectedMonth(e.target.value)}
+								options={[
+									{ label: 'Select Month', value: '' },
+									{ label: 'January', value: '01' },
+									{ label: 'February', value: '02' },
+									{ label: 'March', value: '03' },
+									{ label: 'April', value: '04' },
+									{ label: 'May', value: '05' },
+									{ label: 'June', value: '06' },
+									{ label: 'July', value: '07' },
+									{ label: 'August', value: '08' },
+									{ label: 'September', value: '09' },
+									{ label: 'October', value: '10' },
+									{ label: 'November', value: '11' },
+									{ label: 'December', value: '12' },
+								]}
+								hideDefaultOption={true}
+								marginRemove={true}
+							/>
 						</div>
 						<div className='col-md-3 mb-4'>
-							<label className='form-label'>Year</label>
-							<select
-								className='form-select'
+							<SelectField
+								label='Year'
+								name='year'
 								value={selectedYear}
-								onChange={(e) => setSelectedYear(e.target.value)}>
-								<option value=''>Select Year</option>
-								<option value='2023'>2023</option>
-								<option value='2024'>2024</option>
-								<option value='2025'>2025</option>
-								<option value='2026'>2026</option>
-							</select>
+								onChange={(e) => setSelectedYear(e.target.value)}
+								options={[
+									{ label: 'Select Year', value: '' },
+									{ label: '2023', value: '2023' },
+									{ label: '2024', value: '2024' },
+									{ label: '2025', value: '2025' },
+									{ label: '2026', value: '2026' },
+								]}
+								hideDefaultOption={true}
+								marginRemove={true}
+							/>
 						</div>
 					</div>
 					<div className='row'>
@@ -530,15 +642,19 @@ const EmployeeSalary = () => {
 							/>
 						</div>
 						<div className='col-md-6 mb-4'>
-							<label className='form-label'>Transaction Type</label>
-							<select
-								className='form-select'
+							<SelectField
+								label='Transaction Type'
+								name='transactionType'
 								value={transactionType}
-								onChange={(e) => setTransactionType(e.target.value)}>
-								<option value='IMPS'>IMPS</option>
-								<option value='RTGS'>RTGS</option>
-								<option value='NEFT'>NEFT</option>
-							</select>
+								onChange={(e) => setTransactionType(e.target.value)}
+								options={[
+									{ label: 'IMPS', value: 'IMPS' },
+									{ label: 'RTGS', value: 'RTGS' },
+									{ label: 'NEFT', value: 'NEFT' },
+								]}
+								hideDefaultOption={true}
+								marginRemove={true}
+							/>
 						</div>
 					</div>
 					<div className='col-12'>

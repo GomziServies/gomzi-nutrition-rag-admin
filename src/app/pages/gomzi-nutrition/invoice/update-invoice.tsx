@@ -306,6 +306,15 @@ const NutritionUpdateInvoice: React.FC = () => {
 		}
 	}
 
+	const salesPersonOptions = [
+		{ label: 'Select', value: '' },
+		...salesPersonList.map((emp: any) => ({
+			label: emp.full_name || emp.name || 'Unnamed',
+			value: emp._id,
+		})),
+		{ label: 'N/A', value: 'N/A' },
+	]
+
 	const handleUpdateInvoice = async () => {
 		if (!formData.sales_person) {
 			toast.error('Please select Sales Person')
@@ -699,33 +708,17 @@ const NutritionUpdateInvoice: React.FC = () => {
 											value={formData?.branch_name}
 											onChange={handleInputChange}
 										/>
-										<div
+										<SelectField
 											className={`${
 												formData.sales_person === 'N/A' ? 'col-md-2' : 'col-md-4'
-											} fv-row mb-7`}>
-											<label
-												htmlFor='sales_person'
-												className='fw-bold fs-6 mb-md-5 mb-2'>
-												Sales Person
-											</label>
-											<div className='selectfield-bg mb-3 mb-lg-0'>
-												<select
-													name='sales_person'
-													value={formData.sales_person}
-													onChange={handleInputChange}
-													className='form-select inputfield-bg'>
-													<option value=''>Select</option>
-													{salesPersonList.map((emp: any) => (
-														<option
-															key={emp._id}
-															value={emp._id}>
-															{emp.full_name}
-														</option>
-													))}
-													<option value='N/A'>N/A</option>
-												</select>
-											</div>
-										</div>
+											} fv-row mb-7`}
+											label='Sales Person'
+											name='sales_person'
+											htmlFor='sales_person'
+											value={formData.sales_person}
+											onChange={handleInputChange}
+											options={salesPersonOptions}
+										/>
 										{formData.sales_person === 'N/A' && (
 											<InputField
 												className='col-md-2 fv-row'
@@ -931,7 +924,7 @@ const NutritionUpdateInvoice: React.FC = () => {
 																	htmlFor={`item_weight_${index}`}>
 																	Weight
 																</label>
-																<div className='d-flex align-items-center'>
+																<div className='d-flex align-items-center gap-3'>
 																	<input
 																		type='number'
 																		name='item_weight'
@@ -939,29 +932,25 @@ const NutritionUpdateInvoice: React.FC = () => {
 																		value={plan.item_weight}
 																		onChange={(e: any) => handlePlanInputChange(index, e)}
 																		placeholder='Enter Weight'
-																		className='form-control rounded-end-0 border-end-0 inputfield-bg'
+																		className='form-control inputfield-bg flex-grow-1'
 																		style={{
-																			borderTopRightRadius: 0,
-																			borderBottomRightRadius: 0,
-																			borderRight: 'none',
+																			height: '38px',
+																			borderRadius: '8px',
+																			minWidth: 0,
 																		}}
 																	/>
-																	<select
-																		name='item_weight_type'
-																		value={plan.item_weight_type || 'kg'}
-																		onChange={(e: any) => handlePlanInputChange(index, e)}
-																		className='form-select rounded-start-0'
-																		style={{
-																			borderTopLeftRadius: 0,
-																			borderBottomLeftRadius: 0,
-																			width: 'auto',
-																			minWidth: '80px',
-																		}}>
-																		<option value='gm'>gm</option>
-																		<option value='kg'>kg</option>
-																		<option value='ml'>ml</option>
-																		<option value='ltr'>ltr</option>
-																	</select>
+																	<div style={{ width: '95px', flexShrink: 0 }}>
+																		<SelectField
+																			showLabel={false}
+																			marginRemove
+																			name='item_weight_type'
+																			value={plan.item_weight_type || 'kg'}
+																			onChange={(e: any) => handlePlanInputChange(index, e)}
+																			options={['gm', 'kg', 'ml', 'ltr']}
+																			searchable={false}
+																			hideDefaultOption={true}
+																		/>
+																	</div>
 																</div>
 															</div>
 															<InputField

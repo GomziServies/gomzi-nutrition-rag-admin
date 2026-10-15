@@ -1,0 +1,1714 @@
+/* ==========================================================================
+   RAG NUTRITION ADMIN - MODERN PRESTIGE DESIGN SYSTEM OVERRIDES
+   Theme Color: Navy Blue #1E3A5F (Premium SaaS)
+   Active Pill: Solid Navy (#1E3A5F -> #152D4A) WITHOUT side dots
+   Surface: Pure White (#FFFFFF) & light blue-gray (#F8FAFD / #F3F7FC)
+   Complete Dropdowns & Selects Architecture Overhaul (Native, RMSC, React-Select)
+   Zero logic or functionality changes.
+   ========================================================================== */
+
+:root {
+	/* Navy Blue brand theme */
+	--rag-primary: #1e3a5f;
+	--rag-primary-hex: #1e3a5f;
+	--rag-primary-dark: #152d4a;
+	--rag-primary-hover: #152d4a;
+	--rag-primary-light: #e8f0f8;
+	--rag-primary-focus: rgba(30, 58, 95, 0.15);
+	--rag-slate-900: #172b4d;
+	--rag-slate-800: #1e3a5f;
+	--rag-slate-700: #475569;
+	--rag-slate-100: #f1f5fa;
+	--rag-border: #dfe7f0;
+
+	/* Premium Navy Blue SaaS theme variables (centralized) */
+	--admin-primary: #1e3a5f;
+	--admin-primary-dark: #152d4a;
+	--admin-primary-hover: #152d4a;
+	--admin-primary-light: #e8f0f8;
+	--admin-bg: #f8fafd;
+	--admin-sidebar-bg: #f3f7fc;
+	--admin-card-bg: #ffffff;
+	--admin-card-secondary-bg: #f1f5fa;
+	--admin-table-header-bg: #edf3fa;
+	--admin-text-primary: #172b4d;
+	--admin-text-secondary: #475569;
+	--admin-text-muted: #64748b;
+	--admin-border: #dfe7f0;
+	--admin-hover: #e8f0f8;
+	--admin-selected-bg: #1e3a5f;
+	--admin-selected-text: #ffffff;
+	--admin-focus-border: #1e3a5f;
+	--admin-focus-ring: rgba(30, 58, 95, 0.15);
+	--admin-success: #15803d;
+	--admin-warning: #b45309;
+	--admin-danger: #dc2626;
+	--admin-info: #2563eb;
+
+	/* Metronic & Bootstrap Core Variable Overrides */
+	--kt-primary: #1e3a5f !important;
+	--kt-primary-active: #152d4a !important;
+	--kt-primary-light: #e8f0f8 !important;
+	--kt-component-active-bg: #1e3a5f !important;
+	--kt-component-active-color: #ffffff !important;
+	--kt-component-hover-bg: #e8f0f8 !important;
+	--kt-component-hover-color: #1e3a5f !important;
+	--bs-primary: #1e3a5f !important;
+	--bs-primary-rgb: 30, 58, 95 !important;
+}
+
+/* ==========================================================================
+   1. GLOBAL PAGE & CONTENT CONTAINER
+   ========================================================================== */
+body {
+	background-color: #F8FAFD !important;
+	color: #172B4D !important;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+#kt_content,
+.content,
+.page,
+.page-content,
+#kt_post,
+.post,
+#kt_content_container {
+	background-color: transparent !important;
+	background-image: none !important;
+}
+
+/* ==========================================================================
+   2. HEADER & TOOLBAR
+   ========================================================================== */
+#kt_header,
+.header {
+	background-color: #ffffff !important;
+	border-bottom: 1px solid #DFE7F0 !important;
+	box-shadow: 0 1px 4px 0 rgba(15, 23, 42, 0.05) !important;
+}
+
+.header .header-brand {
+	background-color: #ffffff !important;
+	border-right: 1px solid #DFE7F0 !important;
+}
+
+#kt_header_user_menu_toggle:hover {
+	background-color: #E8F0F8 !important;
+	border-radius: 8px !important;
+}
+
+/* ==========================================================================
+   3. ASIDE / SIDEBAR NAVIGATION (Light Blue-Gray Surface with Clean Right Shadow)
+   ========================================================================== */
+#kt_aside,
+.aside {
+	background: #F3F7FC !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border: none !important;
+	border-right: 1px solid #DFE7F0 !important;
+	box-shadow: 6px 0 20px -3px rgba(15, 23, 42, 0.06) !important;
+	width: 265px !important;
+	min-width: 265px !important;
+	max-width: 265px !important;
+	z-index: 104 !important;
+	transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#kt_aside_toolbar,
+.aside-toolbar,
+.aside-search {
+	display: none !important;
+	height: 0 !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
+}
+
+/* Aside Section Headers */
+.menu-section {
+	color: #94a3b8 !important;
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	letter-spacing: 0.08em !important;
+	text-transform: uppercase !important;
+	margin-top: 16px !important;
+	margin-bottom: 8px !important;
+	padding-left: 1.5rem !important;
+}
+
+/* Sidebar Menu Items & Links */
+.aside-menu .menu-item {
+	margin: 2px 6px !important;
+}
+
+.aside-menu .menu-link {
+	border-radius: 6px !important;
+	padding: 7px 10px !important;
+	border: 1px solid transparent !important;
+	transition: background-color 0.15s ease, color 0.15s ease !important;
+	background-color: transparent !important;
+	display: flex !important;
+	align-items: center !important;
+	position: relative !important;
+	white-space: nowrap !important;
+}
+
+.aside-menu .menu-link .menu-title {
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	color: #2d3139 !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	letter-spacing: -0.01em !important;
+	transition: color 0.15s ease !important;
+	line-height: 1.3 !important;
+}
+
+.aside-menu .menu-link .menu-icon,
+.aside-menu .menu-link .menu-icon i,
+.aside-menu .menu-link .menu-icon svg {
+	color: #555b68 !important;
+	fill: #555b68 !important;
+	font-size: 15px !important;
+	transition: color 0.15s ease, fill 0.15s ease !important;
+	margin-right: 10px !important;
+}
+
+/* Hover State - Clean Cool Slate Tint */
+.aside-menu .menu-link:hover:not(.active) {
+	background-color: #f1f5f9 !important;
+	border-color: transparent !important;
+}
+
+.aside-menu .menu-link:hover:not(.active) .menu-title {
+	color: #0f172a !important;
+	font-weight: 600 !important;
+}
+
+.aside-menu .menu-link:hover:not(.active) .menu-icon,
+.aside-menu .menu-link:hover:not(.active) .menu-icon i,
+.aside-menu .menu-link:hover:not(.active) .menu-icon svg {
+	color: #2563eb !important;
+	fill: #2563eb !important;
+}
+
+/* ==========================================================================
+   ACTIVE STATE - EXACT MATCH TO SCREENSHOT 1:
+   Only currently active route or currently active section (.here) is highlighted
+   ========================================================================== */
+.aside-menu .menu-item .menu-link.active,
+.aside-menu .menu-item.here > .menu-link,
+#kt_aside_menu .menu-item .menu-link.active,
+#kt_aside_menu .menu-item.here > .menu-link {
+	background-color: #eff6ff !important;
+	background-image: none !important;
+	border: 1px solid rgba(37, 99, 235, 0.12) !important;
+	box-shadow: none !important;
+	color: #0f172a !important;
+	position: relative !important;
+}
+
+.aside-menu .menu-item .menu-link.active .menu-title,
+.aside-menu .menu-item.here > .menu-link .menu-title,
+#kt_aside_menu .menu-item .menu-link.active .menu-title,
+#kt_aside_menu .menu-item.here > .menu-link .menu-title {
+	color: #0f172a !important;
+	font-weight: 700 !important;
+}
+
+.aside-menu .menu-item .menu-link.active .menu-icon,
+.aside-menu .menu-item .menu-link.active .menu-icon i,
+.aside-menu .menu-item .menu-link.active .menu-icon svg,
+.aside-menu .menu-item.here > .menu-link .menu-icon,
+.aside-menu .menu-item.here > .menu-link .menu-icon i,
+.aside-menu .menu-item.here > .menu-link .menu-icon svg,
+#kt_aside_menu .menu-item .menu-link.active .menu-icon,
+#kt_aside_menu .menu-item .menu-link.active .menu-icon i,
+#kt_aside_menu .menu-item .menu-link.active .menu-icon svg,
+#kt_aside_menu .menu-item.here > .menu-link .menu-icon,
+#kt_aside_menu .menu-item.here > .menu-link .menu-icon i,
+#kt_aside_menu .menu-item.here > .menu-link .menu-icon svg {
+	color: #2563eb !important;
+	fill: #2563eb !important;
+}
+
+.aside-menu .menu-item .menu-link.active .menu-arrow,
+.aside-menu .menu-item.here > .menu-link .menu-arrow {
+	color: #64748b !important;
+}
+
+/* LEFT COBALT INDICATOR PILL (Visible ONLY on active/here item) */
+.aside-menu .menu-item .menu-link.active::before,
+.aside-menu .menu-item.here > .menu-link::before,
+#kt_aside_menu .menu-item .menu-link.active::before,
+#kt_aside_menu .menu-item.here > .menu-link::before {
+	content: '' !important;
+	display: block !important;
+	position: absolute !important;
+	left: -6px !important;
+	top: 5px !important;
+	bottom: 5px !important;
+	width: 3.5px !important;
+	border-radius: 4px !important;
+	background-color: #2563eb !important;
+	box-shadow: 0 0 6px rgba(37, 99, 235, 0.35) !important;
+}
+
+/* Merely open/expanded accordions when current page is elsewhere (NEVER styled as active) */
+.aside-menu .menu-item.show:not(.here) > .menu-link,
+#kt_aside_menu .menu-item.show:not(.here) > .menu-link {
+	background-color: transparent !important;
+	border-color: transparent !important;
+	box-shadow: none !important;
+}
+
+.aside-menu .menu-item.show:not(.here) > .menu-link .menu-title,
+#kt_aside_menu .menu-item.show:not(.here) > .menu-link .menu-title {
+	color: #2d3139 !important;
+	font-weight: 500 !important;
+}
+
+.aside-menu .menu-item.show:not(.here) > .menu-link .menu-icon,
+.aside-menu .menu-item.show:not(.here) > .menu-link .menu-icon i,
+.aside-menu .menu-item.show:not(.here) > .menu-link .menu-icon svg,
+#kt_aside_menu .menu-item.show:not(.here) > .menu-link .menu-icon,
+#kt_aside_menu .menu-item.show:not(.here) > .menu-link .menu-icon i,
+#kt_aside_menu .menu-item.show:not(.here) > .menu-link .menu-icon svg {
+	color: #555b68 !important;
+	fill: #555b68 !important;
+}
+
+.aside-menu .menu-item.show:not(.here) > .menu-link::before,
+#kt_aside_menu .menu-item.show:not(.here) > .menu-link::before {
+	display: none !important;
+	content: none !important;
+}
+
+/* Remove default dots / bullets */
+.aside-menu .menu-item .menu-link.active::after,
+.aside-menu .menu-item.here > .menu-link::after {
+	display: none !important;
+	content: none !important;
+}
+
+.aside-menu .menu-item .menu-link.active .bullet,
+.aside-menu .menu-item.here > .menu-link .bullet,
+.aside-menu .menu-item .menu-link.active .bullet-dot,
+.aside-menu .menu-item.here > .menu-link .bullet-dot {
+	display: none !important;
+}
+
+/* ==========================================================================
+   4. DROPDOWNS & SELECT MENUS - COMPLETE UI REDESIGN
+   Includes:
+   A) Native HTML Selects & Bootstrap .form-select
+   B) React-Multi-Select Component (.rmsc)
+   C) React-Select & AsyncPaginate
+   D) Bootstrap & Metronic Floating Menus (.dropdown-menu, .menu-sub-dropdown)
+   ========================================================================== */
+
+/* Hide all browser-default extra triangles and picker artifacts */
+select::-ms-expand {
+	display: none !important;
+}
+
+select::picker-icon,
+.form-select::picker-icon,
+::picker-icon {
+	display: none !important;
+	visibility: hidden !important;
+	opacity: 0 !important;
+	width: 0 !important;
+	height: 0 !important;
+}
+select,
+.form-select,
+.form-select.form-select-solid,
+.form-select.form-select-sm,
+.form-select.form-select-lg,
+.form-select.inputfield-bg,
+.selectfield-bg select,
+select.form-control,
+select.form-control-solid,
+select.inputfield-bg,
+select.inputfield-bg1,
+.fv-row select,
+div[class*='select'] select {
+	background-color: #ffffff !important;
+	color: #172B4D !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
+	padding-left: 12px !important;
+	padding-right: 36px !important;
+	padding-top: 6px !important;
+	padding-bottom: 6px !important;
+	line-height: 1.5 !important;
+	color-scheme: light !important;
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	/* Custom SVG Dropdown Chevron matching theme #1E3A5F */
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%231E3A5F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 12px center !important;
+	background-size: 13px 9px !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	outline: none !important;
+	cursor: pointer !important;
+}
+
+select.rounded-start-0,
+.form-select.rounded-start-0 {
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
+}
+
+select.rounded-end-0,
+.form-select.rounded-end-0 {
+	border-top-right-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
+}
+
+select:hover:not(:disabled),
+.form-select:hover:not(:disabled) {
+	border-color: #1E3A5F !important;
+}
+
+select:focus,
+select:focus-visible,
+.form-select:focus,
+.form-select:focus-visible,
+.form-select.form-select-solid:focus,
+.selectfield-bg select:focus {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+	outline: none !important;
+	background-color: #ffffff !important;
+	color: #172B4D !important;
+}
+
+/* Native Dropdown Options List */
+select option,
+.form-select option {
+	background-color: #ffffff !important;
+	color: #172B4D !important;
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
+	padding: 10px 14px !important;
+}
+
+select option:checked,
+.form-select option:checked,
+select option:hover,
+.form-select option:hover {
+	background: #1E3A5F linear-gradient(0deg, #1E3A5F 0%, #1E3A5F 100%) !important;
+	background-color: #1E3A5F !important;
+	color: #ffffff !important;
+}
+
+select,
+.form-select {
+	accent-color: #1E3A5F !important;
+}
+
+/* Progressive enhancement for modern browsers supporting base-select */
+@supports (appearance: base-select) {
+	select,
+	.form-select {
+		appearance: base-select !important;
+	}
+	select::picker(select),
+	.form-select::picker(select) {
+		background-color: #ffffff !important;
+		border: 1px solid #DFE7F0 !important;
+		border-radius: 12px !important;
+		box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12) !important;
+		padding: 6px !important;
+	}
+	select option,
+	.form-select option {
+		border-radius: 8px !important;
+		padding: 8px 12px !important;
+	}
+	select option:hover,
+	.form-select option:hover {
+		background-color: rgba(30, 58, 95, 0.1) !important;
+		color: #1E3A5F !important;
+	}
+}
+
+/* --- B. REACT MULTI SELECT COMPONENT (.rmsc) --- */
+.rmsc,
+.selectfield-bg {
+	--rmsc-main: #1E3A5F !important;
+	--rmsc-hover: rgba(30, 58, 95, 0.1) !important;
+	--rmsc-selected: rgba(30, 58, 95, 0.15) !important;
+	--rmsc-border: #DFE7F0 !important;
+	--rmsc-gray: #64748b !important;
+	--rmsc-bg: #ffffff !important;
+	--rmsc-p: 8px !important;
+	--rmsc-radius: 8px !important;
+	position: relative !important;
+}
+
+.rmsc .dropdown-container {
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	background: #ffffff !important;
+	min-height: 38px !important;
+	height: 38px !important;
+	display: flex !important;
+	align-items: center !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+	padding: 0 10px !important;
+}
+
+.rmsc .dropdown-container:hover {
+	border-color: #1E3A5F !important;
+}
+
+.rmsc .dropdown-container:focus-within {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+}
+
+.rmsc .dropdown-heading {
+	padding: 0 !important;
+	height: 36px !important;
+}
+
+.rmsc .dropdown-heading-value {
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
+	color: #172B4D !important;
+}
+
+.rmsc .dropdown-content {
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 12px !important;
+	box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+	padding: 6px !important;
+	margin-top: 6px !important;
+	background-color: #ffffff !important;
+	z-index: 1050 !important;
+}
+
+.rmsc .dropdown-content .select-item,
+.rmsc .dropdown-content .select-all {
+	border-radius: 8px !important;
+	padding: 0 !important;
+	margin-bottom: 2px !important;
+	transition: background-color 0.12s ease !important;
+}
+
+.rmsc .dropdown-content .select-item:hover,
+.rmsc .dropdown-content .select-all:hover {
+	background-color: rgba(30, 58, 95, 0.1) !important;
+}
+
+.rmsc .dropdown-content .select-item.selected,
+.rmsc .dropdown-content .select-all.selected {
+	background-color: rgba(30, 58, 95, 0.15) !important;
+}
+
+.rmsc .item-renderer {
+	padding: 8px 12px !important;
+	border-radius: 8px !important;
+	font-size: 13px !important;
+	color: #475569 !important;
+	cursor: pointer !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 10px !important;
+}
+
+.rmsc .item-renderer:hover {
+	color: #1E3A5F !important;
+}
+
+.rmsc .dropdown-content input[type='checkbox'] {
+	accent-color: #1E3A5F !important;
+	width: 16px !important;
+	height: 16px !important;
+	border-radius: 4px !important;
+}
+
+/* --- C. REACT-SELECT & ASYNC-PAGINATE DROPDOWNS --- */
+.react-select__control,
+div[class*='-control'] {
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	min-height: 38px !important;
+	height: 38px !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
+	display: flex !important;
+	align-items: center !important;
+	cursor: pointer !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.react-select__control:hover,
+div[class*='-control']:hover {
+	border-color: #1E3A5F !important;
+}
+
+.react-select__control--is-focused,
+div[class*='-control'][class*='--is-focused'] {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+	outline: none !important;
+}
+
+/* Reset React-Select inner inputs */
+input[id^='react-select-'],
+input[aria-autocomplete='list'],
+.react-select__input-container input,
+.react-select__input input,
+div[class*='-Input'] input,
+div[class*='-input'] input {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	outline: none !important;
+	height: auto !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	color: #172B4D !important;
+}
+
+.react-select__value-container,
+div[class*='-ValueContainer'] {
+	padding: 2px 10px !important;
+	display: flex !important;
+	align-items: center !important;
+	height: 36px !important;
+}
+
+.react-select__single-value,
+div[class*='-singleValue'] {
+	color: #172B4D !important;
+	font-weight: 500 !important;
+	font-size: 13.5px !important;
+}
+
+.react-select__placeholder,
+div[class*='-placeholder'] {
+	color: #94a3b8 !important;
+	font-size: 13.5px !important;
+}
+
+.react-select__indicators,
+div[class*='-IndicatorsContainer'] {
+	display: flex !important;
+	align-items: center !important;
+	color: #1E3A5F !important;
+}
+
+.react-select__dropdown-indicator,
+div[class*='-dropdownIndicator'] {
+	color: #1E3A5F !important;
+	padding: 6px !important;
+}
+
+/* React-Select Floating Popup Menu */
+.react-select__menu,
+div[class*='-menu'] {
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 12px !important;
+	box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+	padding: 6px !important;
+	margin-top: 6px !important;
+	z-index: 1050 !important;
+}
+
+.react-select__option,
+div[class*='-option'] {
+	background-color: transparent !important;
+	color: #475569 !important;
+	border-radius: 8px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	padding: 8px 12px !important;
+	cursor: pointer !important;
+	transition: background-color 0.12s ease, color 0.12s ease !important;
+}
+
+.react-select__option:hover,
+div[class*='-option']:hover {
+	background-color: rgba(30, 58, 95, 0.1) !important;
+	color: #1E3A5F !important;
+}
+
+.react-select__option--is-selected,
+div[class*='-option'][class*='--is-selected'] {
+	background: linear-gradient(135deg, #1E3A5F 0%, #152D4A 100%) !important;
+	background-color: #1E3A5F !important;
+	color: #ffffff !important;
+	font-weight: 600 !important;
+}
+
+/* --- D. BOOTSTRAP & METRONIC FLOATING MENUS --- */
+.dropdown-menu,
+.menu-sub-dropdown,
+.menu.menu-sub-dropdown,
+.menu.menu-sub,
+.custom-dropdown-popup {
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 12px !important;
+	box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+	padding: 6px !important;
+	z-index: 1050 !important;
+}
+
+.dropdown-item,
+.menu-sub-dropdown .menu-item .menu-link,
+.dropdown-menu .menu-item .menu-link {
+	color: #475569 !important;
+	border-radius: 8px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	padding: 8px 12px !important;
+	transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.dropdown-item:hover,
+.menu-sub-dropdown .menu-item .menu-link:hover,
+.dropdown-menu .menu-item .menu-link:hover,
+.dropdown-item:focus {
+	background-color: rgba(30, 58, 95, 0.1) !important;
+	color: #1E3A5F !important;
+}
+
+.dropdown-item.active,
+.menu-sub-dropdown .menu-item .menu-link.active,
+.dropdown-menu .menu-item .menu-link.active {
+	background-color: rgba(30, 58, 95, 0.15) !important;
+	color: #1E3A5F !important;
+	font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   5. FORM INPUT FIELDS
+   ========================================================================== */
+.form-control:not(select),
+input.form-control,
+.inputfield-bg:not(select),
+.textareafield-bg {
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	color: #172B4D !important;
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
+	padding: 0.625rem 0.875rem !important;
+	transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+.form-control::placeholder,
+.inputfield-bg::placeholder {
+	color: #94a3b8 !important;
+	font-weight: 400 !important;
+}
+
+.form-control:focus,
+.form-control:focus-visible,
+.inputfield-bg:focus,
+.inputfield-bg:focus-visible,
+.textareafield-bg:focus,
+.textareafield-bg:focus-visible {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+	outline: none !important;
+	background-color: #ffffff !important;
+}
+
+.form-control.form-control-solid {
+	background-color: #F1F5FA !important;
+	border-color: #DFE7F0 !important;
+}
+
+.form-control.form-control-solid:focus {
+	background-color: #ffffff !important;
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+}
+
+.form-label,
+label.fw-bold {
+	color: #172B4D !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	margin-bottom: 6px !important;
+}
+
+/* Search bar clear button stability */
+.search-filter-clear-btn,
+.search-filter-clear-btn:hover,
+.search-filter-clear-btn:focus,
+.search-filter-clear-btn:active {
+	position: absolute !important;
+	top: 50% !important;
+	transform: translateY(-50%) !important;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+/* Checkboxes & Switches */
+.form-check-input:checked {
+	background-color: #1E3A5F !important;
+	border-color: #1E3A5F !important;
+}
+
+.form-check-input:focus {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15) !important;
+}
+
+/* ==========================================================================
+   6. BUTTONS & ACTIONS (#1E3A5F)
+   ========================================================================== */
+.btn {
+	border-radius: 8px !important;
+	font-weight: 600 !important;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn.btn-primary,
+.btn-primary {
+	background: linear-gradient(135deg, #1E3A5F 0%, #152D4A 100%) !important;
+	border-color: #152D4A !important;
+	color: #ffffff !important;
+	box-shadow: 0 2px 6px rgba(30, 58, 95, 0.28) !important;
+}
+
+.btn.btn-primary:hover,
+.btn.btn-primary:focus,
+.btn.btn-primary:active,
+.btn.btn-primary.active,
+.btn.btn-primary.show,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+	background: linear-gradient(135deg, #152D4A 0%, #152D4A 100%) !important;
+	border-color: #152D4A !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 12px rgba(30, 58, 95, 0.38) !important;
+	transform: translateY(-1px) !important;
+}
+
+.btn.btn-light-primary,
+.btn-light-primary {
+	background-color: rgba(30, 58, 95, 0.1) !important;
+	color: #1E3A5F !important;
+	border-color: transparent !important;
+}
+
+.btn.btn-light-primary:hover,
+.btn.btn-light-primary:focus,
+.btn.btn-light-primary:active,
+.btn-light-primary:hover,
+.btn-light-primary:focus,
+.btn-light-primary:active {
+	background-color: #1E3A5F !important;
+	border-color: #1E3A5F !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 10px rgba(30, 58, 95, 0.15) !important;
+	transform: translateY(-1px) !important;
+}
+
+.table-btn-action,
+.btn.btn-icon {
+	border-radius: 8px !important;
+	transition: all 0.15s ease-in-out !important;
+}
+
+.table-btn-action:hover,
+.btn.btn-icon:hover {
+	transform: scale(1.06) !important;
+}
+
+/* ==========================================================================
+   7. PAGINATION (Table Pagination Component)
+   ========================================================================== */
+.pagination {
+	display: inline-flex !important;
+	gap: 4px !important;
+	align-items: center !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.pagination .page-item {
+	margin: 0 !important;
+	padding: 0 !important;
+	list-style: none !important;
+}
+
+.pagination .page-item .page-link {
+	border-radius: 8px !important;
+	border: 1px solid #DFE7F0 !important;
+	color: #475569 !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	min-width: 34px !important;
+	height: 34px !important;
+	padding: 0 8px !important;
+	margin: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	background-color: #ffffff !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	transition: all 0.15s ease !important;
+}
+
+.pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+	background-color: rgba(30, 58, 95, 0.1) !important;
+	border-color: #1E3A5F !important;
+	color: #1E3A5F !important;
+}
+
+.pagination .page-item.active .page-link {
+	background: linear-gradient(135deg, #1E3A5F 0%, #152D4A 100%) !important;
+	border-color: #152D4A !important;
+	color: #ffffff !important;
+	box-shadow: 0 3px 8px rgba(30, 58, 95, 0.32) !important;
+}
+
+.pagination .page-item.disabled .page-link {
+	background-color: #F8FAFD !important;
+	border-color: #DFE7F0 !important;
+	color: #cbd5e1 !important;
+	cursor: not-allowed !important;
+	opacity: 0.7 !important;
+}
+
+/* Ensure table action cells stay side-by-side (excluding printable documents) */
+table:not(#invoiceContent table):not(#quotationContent table) td:last-child {
+	white-space: nowrap !important;
+}
+
+table:not(#invoiceContent table):not(#quotationContent table) td:last-child .d-flex {
+	display: inline-flex !important;
+	flex-direction: row !important;
+	flex-wrap: nowrap !important;
+	align-items: center !important;
+}
+
+table:not(#invoiceContent table):not(#quotationContent table) td:last-child .btn,
+table:not(#invoiceContent table):not(#quotationContent table) td:last-child a.btn {
+	display: inline-flex !important;
+	vertical-align: middle !important;
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
+}
+
+/* ==========================================================================
+   8. CARDS & CONTAINER UI
+   ========================================================================== */
+.card,
+.kt-card,
+.card-flush {
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 14px !important;
+	box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+	transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.card:hover {
+	box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07) !important;
+}
+
+.card .card-header {
+	background-color: transparent !important;
+	border-bottom: 1px solid #f1f5f9 !important;
+	padding: 1.25rem 1.5rem !important;
+	min-height: 64px !important;
+}
+
+.card .card-title,
+.card-title h3 {
+	font-weight: 700 !important;
+	font-size: 16px !important;
+	color: #172B4D !important;
+}
+
+.card .card-body {
+	padding: 1.5rem !important;
+}
+
+.rag-stat-card,
+.fwg-metric-card,
+.fgiit-stat-card {
+	cursor: pointer !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 14px !important;
+	transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease !important;
+}
+
+.rag-stat-card:hover,
+.fwg-metric-card:hover,
+.fgiit-stat-card:hover {
+	transform: translateY(-4px) !important;
+	box-shadow: 0 10px 25px -4px rgba(30, 58, 95, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.05) !important;
+	border-color: #1E3A5F !important;
+}
+
+/* ==========================================================================
+   9. TABLES & LISTINGS - THEMED (#1E3A5F)
+   ========================================================================== */
+.table-responsive {
+	overflow-x: auto !important;
+	-webkit-overflow-scrolling: touch !important;
+	border-radius: 12px !important;
+	border: 1px solid #DFE7F0 !important;
+	background: #ffffff !important;
+}
+
+table,
+.table {
+	border-collapse: separate !important;
+	border-spacing: 0 !important;
+	width: 100% !important;
+	margin-bottom: 0 !important;
+}
+
+table thead tr,
+.table thead tr {
+	background-color: #EDF3FA !important;
+	border-bottom: 1px solid #DFE7F0 !important;
+}
+
+table thead th,
+.table thead th {
+	background-color: #EDF3FA !important;
+	color: #172B4D !important;
+	font-size: 12px !important;
+	font-weight: 700 !important;
+	letter-spacing: 0.05em !important;
+	text-transform: uppercase !important;
+	border: none !important;
+	border-bottom: 2px solid #DFE7F0 !important;
+	padding: 1rem 1.25rem !important;
+	white-space: nowrap !important;
+	vertical-align: middle !important;
+}
+
+table thead th.sortable:hover {
+	color: #1E3A5F !important;
+	cursor: pointer !important;
+}
+
+table thead th.sortable:hover svg,
+table thead th.sortable:hover i {
+	color: #1E3A5F !important;
+}
+
+table tbody tr,
+.table tbody tr {
+	transition: background-color 0.15s ease !important;
+	border-bottom: 1px solid #f1f5f9 !important;
+}
+
+table tbody tr:last-child {
+	border-bottom: none !important;
+}
+
+table tbody td,
+.table tbody td {
+	color: #172B4D !important;
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
+	vertical-align: middle !important;
+	border: none !important;
+	border-bottom: 1px solid #f1f5f9 !important;
+	padding: 0.95rem 1.25rem !important;
+	background-color: transparent !important;
+}
+
+table tbody tr:hover td,
+.table tbody tr:hover td {
+	background-color: #F1F5FA !important;
+}
+
+/* ==========================================================================
+   10. SQUARE ACTION BUTTONS & THEMED BUTTON HOVER STATES
+   Eliminates all jarring blue, green, and red default hover backgrounds.
+   Action buttons become neat squares with theme-coordinated backgrounds.
+   ========================================================================== */
+
+/* Main Add / Primary Button */
+.btn.btn-primary,
+.btn-primary {
+	background: linear-gradient(135deg, #1E3A5F 0%, #152D4A 100%) !important;
+	border: none !important;
+	color: #ffffff !important;
+	font-weight: 600 !important;
+	border-radius: 8px !important;
+	box-shadow: 0 2px 6px rgba(30, 58, 95, 0.28) !important;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn.btn-primary:hover,
+.btn-primary:hover {
+	background: linear-gradient(135deg, #152D4A 0%, #152D4A 100%) !important;
+	box-shadow: 0 4px 12px rgba(30, 58, 95, 0.38) !important;
+	transform: translateY(-1px) !important;
+	color: #ffffff !important;
+}
+
+/* Square Action Buttons (Icon-Only Row Actions in Tables) */
+.table-action-btn-square,
+a.table-action-btn-square,
+button.table-action-btn-square {
+	width: 36px !important;
+	height: 36px !important;
+	min-width: 36px !important;
+	min-height: 36px !important;
+	border-radius: 8px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 0 !important;
+	margin: 0 3px !important;
+	border: 1px solid rgba(30, 58, 95, 0.15) !important;
+	background-color: rgba(30, 58, 95, 0.08) !important;
+	color: #1E3A5F !important;
+	transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	text-decoration: none !important;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+/* Regular Action / Add / Link Buttons with Text */
+.table-btn-regular,
+a.table-btn-regular,
+button.table-btn-regular {
+	border-radius: 8px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 8px 18px !important;
+	height: 38px !important;
+	width: auto !important;
+	min-width: auto !important;
+	font-size: 13.5px !important;
+	font-weight: 600 !important;
+	text-decoration: none !important;
+	outline: none !important;
+}
+
+.table-action-btn-square svg,
+.table-action-btn-square i {
+	color: #1E3A5F !important;
+	font-size: 14px !important;
+	transition: color 0.15s ease !important;
+}
+
+/* Unified Theme Hover: Fills with #1E3A5F and turns icon white (NO blue/green/red) */
+/* Action Buttons & Square Actions in Tables - THEMED HOVER (#1E3A5F) */
+.table-action-btn-square,
+.table-btn-action,
+.table tbody td .btn-light-success,
+.table tbody td .btn-light-info,
+.table tbody td .btn-light-warning,
+.table tbody td .btn-light-danger,
+.table tbody td .btn-light-primary,
+.table tbody td a.btn-light-success,
+.table tbody td a.btn-light-info,
+.table tbody td a.btn-light-warning,
+.table tbody td a.btn-light-danger,
+.table tbody td a.btn-light-primary {
+	background-color: rgba(30, 58, 95, 0.08) !important;
+	border: 1px solid rgba(30, 58, 95, 0.15) !important;
+	color: #1E3A5F !important;
+	transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.table-action-btn-square svg,
+.table-action-btn-square i,
+.table-btn-action svg,
+.table-btn-action i,
+.table tbody td .btn-light-success svg,
+.table tbody td .btn-light-info svg,
+.table tbody td .btn-light-warning svg,
+.table tbody td .btn-light-danger svg,
+.table tbody td .btn-light-primary svg,
+.table tbody td a.btn-light-success svg,
+.table tbody td a.btn-light-info svg,
+.table tbody td a.btn-light-warning svg,
+.table tbody td a.btn-light-danger svg,
+.table tbody td a.btn-light-primary svg {
+	color: #1E3A5F !important;
+	transition: color 0.18s ease !important;
+}
+
+/* UNIVERSAL HOVER: Every single action button in tables turns into theme #1E3A5F */
+.table-action-btn-square:hover,
+.table-action-btn-square:focus-visible,
+a.table-action-btn-square:hover,
+button.table-action-btn-square:hover,
+.table-btn-action:hover,
+.table-btn-action:focus-visible,
+a.table-btn-action:hover,
+button.table-btn-action:hover,
+.table tbody td .btn-light-success:hover,
+.table tbody td .btn-light-info:hover,
+.table tbody td .btn-light-warning:hover,
+.table tbody td .btn-light-danger:hover,
+.table tbody td .btn-light-primary:hover,
+.table tbody td a.btn-light-success:hover,
+.table tbody td a.btn-light-info:hover,
+.table tbody td a.btn-light-warning:hover,
+.table tbody td a.btn-light-danger:hover,
+.table tbody td a.btn-light-primary:hover,
+.table tbody td .btn.btn-light-success:hover:not(.btn-active),
+.table tbody td .btn.btn-light-info:hover:not(.btn-active),
+.table tbody td .btn.btn-light-warning:hover:not(.btn-active),
+.table tbody td .btn.btn-light-danger:hover:not(.btn-active),
+.table tbody td .btn.btn-light-primary:hover:not(.btn-active),
+.table-action-btn-square.rag-action-btn-remove:hover,
+.table-btn-action.rag-action-btn-remove:hover,
+.btn-light-danger.table-btn-action:hover,
+.table-action-btn-square[title*='Delete']:hover,
+.table-action-btn-square[title*='delete']:hover,
+.table-action-btn-square[title*='Remove']:hover,
+.table-action-btn-square[title*='remove']:hover {
+	background-color: #1E3A5F !important;
+	border-color: #1E3A5F !important;
+	color: #ffffff !important;
+	transform: translateY(-2px) !important;
+	box-shadow: 0 4px 12px rgba(30, 58, 95, 0.32) !important;
+}
+
+.table-action-btn-square:hover svg,
+.table-action-btn-square:hover i,
+a.table-action-btn-square:hover svg,
+button.table-action-btn-square:hover svg,
+.table-btn-action:hover svg,
+.table-btn-action:hover i,
+a.table-btn-action:hover svg,
+button.table-btn-action:hover svg,
+.table tbody td .btn-light-success:hover svg,
+.table tbody td .btn-light-info:hover svg,
+.table tbody td .btn-light-warning:hover svg,
+.table tbody td .btn-light-danger:hover svg,
+.table tbody td .btn-light-primary:hover svg,
+.table tbody td a.btn-light-success:hover svg,
+.table tbody td a.btn-light-info:hover svg,
+.table tbody td a.btn-light-warning:hover svg,
+.table tbody td a.btn-light-danger:hover svg,
+.table tbody td a.btn-light-primary:hover svg,
+.table tbody td .btn.btn-light-success:hover:not(.btn-active) svg,
+.table tbody td .btn.btn-light-info:hover:not(.btn-active) svg,
+.table tbody td .btn.btn-light-warning:hover:not(.btn-active) svg,
+.table tbody td .btn.btn-light-danger:hover:not(.btn-active) svg,
+.table-action-btn-square.rag-action-btn-remove:hover svg,
+.table-btn-action.rag-action-btn-remove:hover svg {
+	color: #ffffff !important;
+}
+
+/* STRICT SQUARE DIMENSIONS: view, edit, qr, remove, etc. (36px x 36px) */
+.table-action-btn-square,
+.table tbody td a.table-action-btn-square,
+.table tbody td button.table-action-btn-square,
+.table-btn-action.table-action-btn-square {
+	width: 36px !important;
+	height: 36px !important;
+	min-width: 36px !important;
+	min-height: 36px !important;
+	max-width: 36px !important;
+	max-height: 36px !important;
+	padding: 0 !important;
+	border-radius: 8px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+/* ==========================================================================
+   10. ICONS, ACCENTS & BADGES (#1E3A5F)
+   ========================================================================== */
+.text-primary,
+a.text-primary {
+	color: #1E3A5F !important;
+}
+
+.text-hover-primary:hover,
+a.text-hover-primary:hover {
+	color: #152D4A !important;
+}
+
+.bg-primary {
+	background-color: #1E3A5F !important;
+}
+
+.bg-light-primary {
+	background-color: rgba(30, 58, 95, 0.1) !important;
+	color: #1E3A5F !important;
+}
+
+.badge.badge-light-primary {
+	background-color: rgba(30, 58, 95, 0.12) !important;
+	color: #1E3A5F !important;
+	border-radius: 6px !important;
+	font-weight: 600 !important;
+}
+
+/* Navigation Tabs */
+.nav-line-tabs .nav-item .nav-link.active,
+.nav-line-tabs .nav-item .nav-link:hover {
+	border-bottom-color: #1E3A5F !important;
+	color: #1E3A5F !important;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .nav-link.active:hover {
+	background: linear-gradient(135deg, #1E3A5F 0%, #152D4A 100%) !important;
+	color: #ffffff !important;
+}
+
+/* ==========================================================================
+   11. DATE FILTER & REACT-DATE-RANGE COMPLETE THEME OVERHAUL
+   Theme Color: #1E3A5F
+   Overhauls:
+   - Date range input trigger box
+   - Date range popup container & shadow
+   - Left predefined static ranges sidebar
+   - Month & Year selector dropdowns & chevrons
+   - Month calendar grid, headers & days
+   - In-range selection gradient, start & end date pills
+   - Today indicator & hover previews
+   ========================================================================== */
+
+/* Calendar Outer Container */
+.rdrDateRangePickerWrapper {
+	background-color: #ffffff !important;
+	border-radius: 12px !important;
+	overflow: hidden !important;
+	font-family: inherit !important;
+}
+
+.rdrCalendarWrapper {
+	background-color: #ffffff !important;
+	color: #172B4D !important;
+	font-size: 13px !important;
+}
+
+/* Date Display Header (Start Date & End Date Inputs at top) */
+.rdrDateDisplayWrapper {
+	background-color: #F8FAFD !important;
+	padding: 10px 14px !important;
+	border-bottom: 1px solid #DFE7F0 !important;
+}
+
+.rdrDateDisplayItem {
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.rdrDateDisplayItemActive {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15) !important;
+}
+
+.rdrDateDisplayItem input {
+	color: #172B4D !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	text-align: center !important;
+}
+
+/* Predefined Ranges (Sidebar on Left) */
+.rdrDefinedRangesWrapper {
+	background-color: #F3F7FC !important;
+	border-right: 1px solid #DFE7F0 !important;
+	width: 170px !important;
+}
+
+.rdrStaticRange {
+	background-color: transparent !important;
+	border-bottom: 1px solid #f1f5f9 !important;
+	transition: background-color 0.12s ease !important;
+}
+
+.rdrStaticRange:hover .rdrStaticRangeLabel,
+.rdrStaticRange:focus .rdrStaticRangeLabel {
+	background-color: rgba(30, 58, 95, 0.08) !important;
+	color: #1E3A5F !important;
+}
+
+.rdrStaticRangeLabel {
+	color: #475569 !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	padding: 10px 16px !important;
+}
+
+.rdrStaticRangeSelected {
+	color: #1E3A5F !important;
+	font-weight: 700 !important;
+	background-color: rgba(30, 58, 95, 0.12) !important;
+}
+
+.rdrStaticRangeSelected .rdrStaticRangeLabel {
+	color: #1E3A5F !important;
+	font-weight: 700 !important;
+}
+
+/* Month and Year Navigation Header */
+.rdrMonthAndYearWrapper {
+	padding: 12px 14px !important;
+	height: auto !important;
+	align-items: center !important;
+}
+
+/* Next / Prev Month Buttons */
+.rdrNextPrevButton {
+	width: 28px !important;
+	height: 28px !important;
+	border-radius: 6px !important;
+	background-color: #E8F0F8 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	transition: all 0.15s ease !important;
+}
+
+.rdrNextPrevButton:hover {
+	background-color: rgba(30, 58, 95, 0.12) !important;
+}
+
+.rdrPprevButton i {
+	border-color: transparent #1E3A5F transparent transparent !important;
+}
+
+.rdrNextButton i {
+	border-color: transparent transparent transparent #1E3A5F !important;
+}
+
+/* Month and Year Dropdowns Pickers */
+.rdrMonthAndYearPickers {
+	display: flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+}
+
+.rdrMonthPicker select,
+.rdrYearPicker select {
+	background-color: #ffffff !important;
+	color: #172B4D !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	padding: 6px 28px 6px 12px !important;
+	height: 34px !important;
+	min-height: 34px !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	cursor: pointer !important;
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%231E3A5F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 8px center !important;
+	background-size: 12px 8px !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.rdrMonthPicker select:hover,
+.rdrYearPicker select:hover {
+	border-color: #1E3A5F !important;
+}
+
+.rdrMonthPicker select:focus,
+.rdrYearPicker select:focus {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15) !important;
+	outline: none !important;
+}
+
+/* Month & Year Select Dropdown Options */
+.rdrMonthPicker select option,
+.rdrYearPicker select option {
+	background-color: #ffffff !important;
+	color: #172B4D !important;
+	font-size: 13px !important;
+	padding: 8px 12px !important;
+}
+
+.rdrMonthPicker select option:checked,
+.rdrYearPicker select option:checked {
+	background: #1E3A5F !important;
+	color: #ffffff !important;
+	font-weight: 600 !important;
+}
+
+/* Weekday Names Header (Sun, Mon, Tue...) */
+.rdrWeekDay {
+	color: #64748b !important;
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	text-transform: capitalize !important;
+}
+
+/* Days & Dates Grid */
+.rdrDay {
+	height: 38px !important;
+	line-height: 38px !important;
+}
+
+.rdrDayNumber span {
+	color: #172B4D !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+}
+
+/* Today Indicator */
+.rdrDayToday .rdrDayNumber span:after {
+	background: #1E3A5F !important;
+	height: 3px !important;
+	border-radius: 2px !important;
+}
+
+/* In-Range Selected Days (Connecting Band) */
+.rdrInRange {
+	background: rgba(30, 58, 95, 0.15) !important;
+	top: 4px !important;
+	bottom: 4px !important;
+}
+
+.rdrDay:not(.rdrDayPassive) .rdrInRange ~ .rdrDayNumber span {
+	color: #1E3A5F !important;
+	font-weight: 700 !important;
+}
+
+/* Start Date Pill */
+.rdrStartEdge {
+	background: linear-gradient(135deg, #1E3A5F 0%, #152D4A 100%) !important;
+	border-top-left-radius: 8px !important;
+	border-bottom-left-radius: 8px !important;
+	top: 4px !important;
+	bottom: 4px !important;
+}
+
+/* End Date Pill */
+.rdrEndEdge {
+	background: linear-gradient(135deg, #1E3A5F 0%, #152D4A 100%) !important;
+	border-top-right-radius: 8px !important;
+	border-bottom-right-radius: 8px !important;
+	top: 4px !important;
+	bottom: 4px !important;
+}
+
+/* Single Selected Day */
+.rdrSelected {
+	background: linear-gradient(135deg, #1E3A5F 0%, #152D4A 100%) !important;
+	border-radius: 8px !important;
+	top: 4px !important;
+	bottom: 4px !important;
+}
+
+.rdrDay:not(.rdrDayPassive) .rdrStartEdge ~ .rdrDayNumber span,
+.rdrDay:not(.rdrDayPassive) .rdrEndEdge ~ .rdrDayNumber span,
+.rdrDay:not(.rdrDayPassive) .rdrSelected ~ .rdrDayNumber span {
+	color: #ffffff !important;
+	font-weight: 700 !important;
+}
+
+/* Hover Preview Range */
+.rdrDayStartPreview,
+.rdrDayInPreview,
+.rdrDayEndPreview {
+	background: rgba(30, 58, 95, 0.1) !important;
+	border-color: rgba(30, 58, 95, 0.3) !important;
+	top: 4px !important;
+	bottom: 4px !important;
+}
+
+.rdrDayStartPreview {
+	border-top-left-radius: 8px !important;
+	border-bottom-left-radius: 8px !important;
+}
+
+.rdrDayEndPreview {
+	border-top-right-radius: 8px !important;
+	border-bottom-right-radius: 8px !important;
+}
+
+/* Custom Dropdown Search Input Fix - Unbeatable specificity against global input[type='text'] */
+.selectfield-search-wrapper {
+	display: flex !important;
+	align-items: center !important;
+	width: 100% !important;
+	height: 34px !important;
+	min-height: 34px !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 6px !important;
+	background-color: #F8FAFD !important;
+	padding: 0 10px !important;
+	gap: 8px !important;
+	box-sizing: border-box !important;
+	transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.selectfield-search-wrapper:focus-within {
+	border-color: #1E3A5F !important;
+	background-color: #FFFFFF !important;
+	box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.12) !important;
+}
+
+.selectfield-search-wrapper input.selectfield-search-input,
+.selectfield-search-wrapper input[type='text'],
+.selectfield-search-wrapper input[type='search'],
+input[type='search'].selectfield-search-input,
+input[type='text'].selectfield-search-input,
+input.selectfield-search-input,
+.selectfield-search-input {
+	padding: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	border-width: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	background-color: transparent !important;
+	height: 100% !important;
+	min-height: 0 !important;
+	max-height: none !important;
+	outline: none !important;
+	font-size: 12.5px !important;
+	font-weight: 500 !important;
+	color: #172b4d !important;
+	line-height: normal !important;
+	width: 100% !important;
+	-webkit-appearance: none !important;
+}
+
+.selectfield-search-wrapper input::-webkit-search-decoration,
+.selectfield-search-wrapper input::-webkit-search-cancel-button,
+.selectfield-search-wrapper input::-webkit-search-results-button,
+.selectfield-search-wrapper input::-webkit-search-results-decoration,
+.selectfield-search-input::-webkit-search-decoration,
+.selectfield-search-input::-webkit-search-cancel-button {
+	-webkit-appearance: none !important;
+	display: none !important;
+}
+
+.selectfield-search-wrapper input:focus,
+.selectfield-search-wrapper input.selectfield-search-input:focus,
+.selectfield-search-wrapper input[type='text']:focus,
+.selectfield-search-wrapper input[type='search']:focus,
+input[type='search'].selectfield-search-input:focus,
+input[type='text'].selectfield-search-input:focus,
+input.selectfield-search-input:focus,
+.selectfield-search-input:focus {
+	border: none !important;
+	border-color: transparent !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	background-color: transparent !important;
+	outline: none !important;
+}
+
+/* ================================================================
+   SEARCH FILTER INPUT COMPONENT FIX
+   Guarantee proper icon clearance, transparent background, and no double-border
+   ================================================================ */
+.search-filter-box {
+	display: flex !important;
+	align-items: center !important;
+	position: relative !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	overflow: hidden !important;
+	box-sizing: border-box !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.search-filter-box:focus-within {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+}
+
+input.search-filter-input,
+.search-filter-input,
+input[type='text'].search-filter-input,
+input[type='search'].search-filter-input {
+	border: none !important;
+	border-width: 0 !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	background-color: transparent !important;
+	box-shadow: none !important;
+	outline: none !important;
+	height: 100% !important;
+	min-height: unset !important;
+	max-height: none !important;
+	line-height: normal !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: #172B4D !important;
+	padding-left: 38px !important;
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
+	margin: 0 !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+	-webkit-appearance: none !important;
+}
+
+input.search-filter-input.pe-8,
+.search-filter-input.pe-8 {
+	padding-right: 32px !important;
+}
+
+input.search-filter-input.pe-3,
+.search-filter-input.pe-3 {
+	padding-right: 12px !important;
+}
+
+input.search-filter-input:focus,
+.search-filter-input:focus,
+input[type='text'].search-filter-input:focus,
+input[type='search'].search-filter-input:focus {
+	border: none !important;
+	border-color: transparent !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	background-color: transparent !important;
+	outline: none !important;
+}
+
+input.search-filter-input::placeholder,
+.search-filter-input::placeholder {
+	color: #94A3B8 !important;
+	font-weight: 400 !important;
+	opacity: 1 !important;
+}
+
+

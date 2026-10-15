@@ -17,6 +17,7 @@ import { StatisticsWidget2 } from '../../../../_metronic/partials/widgets'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -384,19 +385,22 @@ const GlsInvestorInvoiceList: React.FC = () => {
 							<div className='d-flex align-items-center gap-3'>
 								{adminType !== 'Store' && adminType !== 'GLS_Investor' && (
 									<div style={{ minWidth: '200px' }}>
-										<select
+										<SelectField
+											label='Store'
 											name='Select Store'
-											className='form-select'
-											onChange={(e) => handleSetStoreInvoice(e.target.value)}>
-											<option value='default'>Select Store</option>
-											{branchesData.map((item: any) => (
-												<option
-													key={item._id}
-													value={item._id}>
-													{item.full_name}
-												</option>
-											))}
-										</select>
+											showLabel={false}
+											onChange={(e) => handleSetStoreInvoice(e.target.value)}
+											options={[
+												{ label: 'Select Store', value: 'default' },
+												...branchesData.map((item: any) => ({
+													label: item.full_name,
+													value: item._id,
+												})),
+											]}
+											hideDefaultOption={true}
+											searchable={true}
+											marginRemove={true}
+										/>
 									</div>
 								)}
 								<div style={{ minWidth: '250px' }}>

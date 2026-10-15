@@ -1,4 +1,4 @@
-import { faCheck, faShoppingCart } from '@fortawesome/free-solid-svg-icons'
+import { faCamera, faCheck, faShoppingCart, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import CopyableInput from '../../../../components/CopyableInput'
 import InputField from '../../../../components/InputField'
+import SelectField from '../../../../components/SelectField'
 import TableButton from '../../../../components/TableButton'
 import {
 	AssignFitnessCourse,
@@ -116,28 +117,28 @@ const UserView = () => {
 			const markSheetData = filteredData?.document?.find((data: any) => data.label == 'marksheet')
 
 			const userData = {
-				cover_image: filteredData.profile_image,
-				_id: filteredData._id,
-				uid: filteredData.uid,
+				cover_image: filteredData?.profile_image || '',
+				_id: filteredData?._id || '',
+				uid: filteredData?.uid || '',
 				app_version: filteredData?.app_data?.app_version || '',
-				first_name: filteredData.first_name,
-				last_name: filteredData.last_name,
-				email: filteredData.email,
-				mobile: filteredData.mobile,
-				createdAt: filteredData.createdAt,
-				updatedAt: filteredData.updatedAt,
-				birth_date: filteredData.birth_date,
-				alumni: filteredData.alumni,
+				first_name: filteredData?.first_name || '',
+				last_name: filteredData?.last_name || '',
+				email: filteredData?.email || '',
+				mobile: filteredData?.mobile || '',
+				createdAt: filteredData?.createdAt || '',
+				updatedAt: filteredData?.updatedAt || '',
+				birth_date: filteredData?.birth_date || '',
+				alumni: filteredData?.alumni || '',
 				address_line_1: filteredData?.address?.address_line_1 || '',
 				address_line_2: filteredData?.address?.address_line_2 || '',
 				city: filteredData?.address?.city || '',
 				state: filteredData?.address?.state || '',
 				country: filteredData?.address?.country || '',
 				pin_code: filteredData?.address?.pin_code || '',
-				lock: filteredData.lock,
+				lock: filteredData?.lock || false,
 				editImage: false,
-				active_services: filteredData?.active_services,
-				notes: filteredData?.notes,
+				active_services: filteredData?.active_services || [],
+				notes: filteredData?.notes || '',
 				profile: profileData,
 				aadhar: aadharData,
 				marksheet: markSheetData,
@@ -565,34 +566,73 @@ const UserView = () => {
 			<>
 				<div className='row'>
 					<div className='col-12 mt-3'>
-						<div className='card py-10'>
-							<div className='card-body'>
+						<div
+							className='card border-0 shadow-xs mb-8'
+							style={{ borderRadius: '12px', backgroundColor: '#ffffff' }}>
+							<div className='card-header border-0 pt-6 px-8 d-flex justify-content-between align-items-center flex-wrap gap-3'>
+								<div>
+									<h2
+										className='fw-bolder text-gray-900 mb-1'
+										style={{ fontSize: '1.35rem' }}>
+										User Information
+									</h2>
+									<div className='text-muted fs-7'>
+										Manage profile details, contact information, and address records
+									</div>
+								</div>
+								{userResponseData._id && (
+									<span
+										className='badge badge-light-primary fw-bold px-3 py-2'
+										style={{ fontSize: '12.5px', borderRadius: '6px' }}>
+										User ID: {userResponseData._id}
+									</span>
+								)}
+							</div>
+							<div className='card-body px-8 pt-4 pb-8'>
 								<div className='row'>
-									<div className='col-md-2 text-center'>
+									<div className='col-md-2 text-center d-flex flex-column align-items-center mb-6 mb-md-0'>
 										<div className='mb-3'>
-											<h4>Profile:</h4>
-											<img
-												alt='Users'
-												src={
-													isDocument.profile
-														? `https://files.fggroup.in/${documentFile.profile}`
-														: userResponseData?.profile?.file
-														? `https://files.fggroup.in/${userResponseData?.profile?.file}`
-														: '/media/avatars/300-1.jpg'
-												}
-												style={{ borderRadius: '10px', width: '90%' }}
-											/>
-											<div>
+											<label className='fw-bold fs-6 mb-3 d-block text-gray-800'>
+												Profile Photo
+											</label>
+											<div className='position-relative d-inline-block'>
+												<img
+													alt='Users'
+													src={
+														isDocument.profile
+															? `https://files.fggroup.in/${documentFile.profile}`
+															: userResponseData?.profile?.file
+															? `https://files.fggroup.in/${userResponseData?.profile?.file}`
+															: '/media/avatars/300-1.jpg'
+													}
+													style={{
+														width: '130px',
+														height: '130px',
+														borderRadius: '12px',
+														objectFit: 'cover',
+														border: '2px solid #DFE7F0',
+														boxShadow: '0 4px 14px rgba(15, 23, 42, 0.08)',
+													}}
+												/>
+											</div>
+											<div className='mt-3'>
 												<button
 													type='button'
-													className='mt-5 px-2 py-1 mb-2 btn btn-success'
+													className='btn btn-sm btn-primary d-inline-flex align-items-center gap-2 px-3 py-2'
+													style={{
+														fontSize: '12.5px',
+														fontWeight: 600,
+														borderRadius: '8px',
+													}}
 													onClick={() => handleFileButtonClick('fileInput')}>
-													Upload Profile
+													<FontAwesomeIcon icon={faCamera} />
+													<span>Upload Profile</span>
 												</button>
 												<input
 													type='file'
 													id='fileInput'
 													className='d-none'
+													accept='image/*'
 													onChange={(e) => handleFileUpload(e, 'profile')}
 												/>
 											</div>
@@ -604,11 +644,10 @@ const UserView = () => {
 												<CopyableInput
 													placeholder='User ID'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='uid'
 													label='User ID'
 													htmlFor='uid'
-													value={userResponseData._id}
+													value={userResponseData._id || ''}
 													onChange={handleInputChange}
 													disabled
 												/>
@@ -617,11 +656,10 @@ const UserView = () => {
 												<InputField
 													placeholder='First Name'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='first_name'
 													label='First Name'
 													htmlFor='first_name'
-													value={userResponseData.first_name}
+													value={userResponseData.first_name || ''}
 													onChange={handleInputChange}
 												/>
 											</div>
@@ -629,11 +667,10 @@ const UserView = () => {
 												<InputField
 													placeholder='Last Name'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='last_name'
 													label='Last Name'
 													htmlFor='last_name'
-													value={userResponseData.last_name}
+													value={userResponseData.last_name || ''}
 													onChange={handleInputChange}
 												/>
 											</div>
@@ -641,11 +678,10 @@ const UserView = () => {
 												<CopyableInput
 													placeholder='Email'
 													type='email'
-													className='col-12 fv-row mb-7'
 													name='email'
 													label='Email'
 													htmlFor='email'
-													value={userResponseData.email}
+													value={userResponseData.email || ''}
 													onChange={handleInputChange}
 													disabled
 												/>
@@ -654,11 +690,10 @@ const UserView = () => {
 												<CopyableInput
 													placeholder='Mobile Number'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='mobile'
 													label='Mobile Number'
 													htmlFor='mobile'
-													value={userResponseData.mobile}
+													value={userResponseData.mobile || ''}
 													onChange={handleInputChange}
 													disabled
 												/>
@@ -667,11 +702,10 @@ const UserView = () => {
 												<InputField
 													placeholder='Registration Date'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='createdAt'
 													label='Registration Date'
 													htmlFor='createdAt'
-													value={userResponseData.createdAt}
+													value={userResponseData.createdAt || ''}
 													onChange={handleInputChange}
 													disabled
 												/>
@@ -680,11 +714,10 @@ const UserView = () => {
 												<InputField
 													placeholder='Last Modification'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='updatedAt'
 													label='Last Modification'
 													htmlFor='updatedAt'
-													value={userResponseData.updatedAt}
+													value={userResponseData.updatedAt || ''}
 													onChange={handleInputChange}
 													disabled
 												/>
@@ -693,11 +726,10 @@ const UserView = () => {
 												<InputField
 													placeholder='Date of Birth'
 													type='date'
-													className='col-12 fv-row mb-7'
 													name='birth_date'
 													label='Date of Birth'
 													htmlFor='birth_date'
-													value={userResponseData.birth_date}
+													value={userResponseData.birth_date || ''}
 													onChange={handleInputChange}
 													disabled
 												/>
@@ -706,11 +738,10 @@ const UserView = () => {
 												<InputField
 													placeholder='Plot/House No.'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='address_line_1'
 													label='Plot/House No.'
 													htmlFor='address_line_1'
-													value={userResponseData.address_line_1}
+													value={userResponseData.address_line_1 || ''}
 													onChange={handleInputChange}
 												/>
 											</div>
@@ -718,88 +749,56 @@ const UserView = () => {
 												<InputField
 													placeholder='Address'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='address_line_2'
 													label='Address'
 													htmlFor='address_line_2'
-													value={userResponseData.address_line_2}
+													value={userResponseData.address_line_2 || ''}
 													onChange={handleInputChange}
 												/>
 											</div>
-											<div className='col-md-4 fv-row mb-7'>
-												<label
-													htmlFor='country'
-													className='fw-bold fs-6 mb-2'>
-													Country
-												</label>
-												<select
-													name='country'
-													value={userResponseData.country}
-													onChange={handleInputChange}
-													className='form-select inputfield-bg'>
-													<option value=''>Select Country</option>
-													{countries.map((country, index) => (
-														<option
-															key={index}
-															value={country}>
-															{country}
-														</option>
-													))}
-												</select>
-											</div>
-											<div className='col-md-4 fv-row mb-7'>
-												<label
-													htmlFor='state'
-													className='fw-bold fs-6 mb-2'>
-													State
-												</label>
-												<select
-													name='state'
-													value={userResponseData.state}
-													onChange={handleInputChange}
-													className='form-select inputfield-bg'
-													disabled={states.length === 0}>
-													<option value=''>Select State</option>
-													{states.map((state, index) => (
-														<option
-															key={index}
-															value={state}>
-															{state}
-														</option>
-													))}
-												</select>
-											</div>
-											<div className='col-md-4 fv-row mb-7'>
-												<label
-													htmlFor='city'
-													className='fw-bold fs-6 mb-2'>
-													City
-												</label>
-												<select
-													name='city'
-													value={userResponseData.city}
-													onChange={handleInputChange}
-													className='form-select inputfield-bg'
-													disabled={cities.length === 0}>
-													<option value=''>Select City</option>
-													{cities.map((city, index) => (
-														<option
-															key={index}
-															value={city}>
-															{city}
-														</option>
-													))}
-												</select>
-											</div>
+											<SelectField
+												className='col-md-4 fv-row mb-7'
+												label='Country'
+												name='country'
+												value={userResponseData.country || ''}
+												onChange={handleInputChange}
+												htmlFor='country'
+												options={countries.map((c) => ({ label: c, value: c }))}
+												searchable={true}
+												defaultLabel='Select Country'
+											/>
+											<SelectField
+												className='col-md-4 fv-row mb-7'
+												label='State'
+												name='state'
+												value={userResponseData.state || ''}
+												onChange={handleInputChange}
+												htmlFor='state'
+												options={states.map((s) => ({ label: s, value: s }))}
+												searchable={true}
+												disabled={states.length === 0}
+												defaultLabel='Select State'
+											/>
+											<SelectField
+												className='col-md-4 fv-row mb-7'
+												label='City'
+												name='city'
+												value={userResponseData.city || ''}
+												onChange={handleInputChange}
+												htmlFor='city'
+												options={cities.map((ci) => ({ label: ci, value: ci }))}
+												searchable={true}
+												disabled={cities.length === 0}
+												defaultLabel='Select City'
+											/>
 											<div className='col-md-4 fv-row mb-7'>
 												<InputField
 													placeholder='Pincode'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='pin_code'
 													label='Pincode'
 													htmlFor='pin_code'
-													value={userResponseData.pin_code}
+													value={userResponseData.pin_code || ''}
 													onChange={handleInputChange}
 												/>
 											</div>
@@ -807,37 +806,53 @@ const UserView = () => {
 												<InputField
 													placeholder='Notes'
 													type='text'
-													className='col-12 fv-row mb-7'
 													name='notes'
 													label='Notes'
 													htmlFor='notes'
-													value={userResponseData.notes}
+													value={userResponseData.notes || ''}
 													onChange={handleInputChange}
 												/>
 											</div>
 
-											<div className='col-md-12 fv-row mb-2 d-flex justify-content-end'>
-												<div className='me-3'>
-													<TableButton
-														action='edit'
-														onClick={handleUpdateUser}
-														text={isSubmitting ? 'Please wait, Updating User...' : 'Update User'}
-														showIcon={false}
-														disabled={isSubmitting}
-														backgroundDark={true}
-														className={`mb-4 w-100 btn-block ${isSubmitting ? 'disabled' : ''}`}
-													/>
-												</div>
-												<div
+											<div className='col-md-12 fv-row mt-4 mb-2 d-flex justify-content-end align-items-center gap-3'>
+												<button
+													type='button'
+													className='btn btn-primary d-inline-flex align-items-center justify-content-center'
+													onClick={handleUpdateUser}
+													disabled={isSubmitting}
+													style={{
+														height: '38px',
+														padding: '0 24px',
+														borderRadius: '8px',
+														fontSize: '13.5px',
+														fontWeight: 600,
+													}}>
+													{isSubmitting ? (
+														<>
+															<span
+																className='spinner-border spinner-border-sm me-2'
+																role='status'
+																aria-hidden='true'></span>
+															Updating User...
+														</>
+													) : (
+														'Update User'
+													)}
+												</button>
+												<button
+													type='button'
+													className='btn btn-light-danger d-inline-flex align-items-center justify-content-center'
 													data-bs-toggle='modal'
-													data-bs-target='#kt_modal_exercise'>
-													<TableButton
-														action='remove'
-														text='Remove user'
-														backgroundDark={true}
-														showIcon={false}
-													/>
-												</div>
+													data-bs-target='#kt_modal_exercise'
+													style={{
+														height: '38px',
+														padding: '0 20px',
+														borderRadius: '8px',
+														fontSize: '13.5px',
+														fontWeight: 600,
+													}}>
+													Remove User
+												</button>
 											</div>
 										</div>
 									</div>
@@ -846,90 +861,135 @@ const UserView = () => {
 						</div>
 					</div>
 				</div>
+
 				<div
 					className='modal fade'
 					id='kt_modal_exercise'
 					aria-hidden='true'>
-					<div className='modal-dialog modal-dialog-centered mw-600px'>
-						<div className='modal-content border-0'>
-							<div className='modal-header border-0 justify-content-end'>
+					<div className='modal-dialog modal-dialog-centered mw-450px'>
+						<div
+							className='modal-content border-0'
+							style={{ borderRadius: '14px', overflow: 'hidden' }}>
+							<div className='modal-header border-0 pb-0 justify-content-end'>
 								<button
 									type='button'
 									className='btn-close'
 									data-bs-dismiss='modal'
 									aria-label='Close'></button>
 							</div>
-							<div className='text-center mb-4'>
-								<img
-									src={questionmark}
-									alt='Question Mark'
-									style={{ width: '80px', height: '80px' }}
-								/>
-								<h2
-									className='fw-bold mt-3'
-									style={{ fontSize: '25px' }}>
-									Are you sure?
-								</h2>
-							</div>
-							<div className='modal-body p-5'>
-								<h3 className='text-center fw-20'>
-									This user will be removed from the portal and will no longer access
+							<div className='modal-body text-center px-8 pt-2 pb-6'>
+								<div
+									className='d-inline-flex align-items-center justify-content-center mb-4'
+									style={{
+										width: '64px',
+										height: '64px',
+										borderRadius: '50%',
+										backgroundColor: '#fee2e2',
+										color: '#ef4444',
+										fontSize: '24px',
+									}}>
+									<FontAwesomeIcon icon={faTrash} />
+								</div>
+								<h3
+									className='fw-bolder text-gray-900 mb-2'
+									style={{ fontSize: '1.25rem' }}>
+									Remove User?
 								</h3>
-							</div>
-							<div className='modal-footer border-0 d-flex justify-content-center'>
-								<button
-									className='btn btn-danger me-3 fs-24'
-									onClick={() => delete_user()}
-									style={{ padding: '12px 24px', fontSize: '20px' }}>
-									<FontAwesomeIcon
-										className='me-2'
-										icon={faCheck}
-									/>
-									Okay
-								</button>
-								<button
-									className='btn btn-success fs-29'
-									data-bs-dismiss='modal'
-									style={{ padding: '12px 24px', fontSize: '20px' }}>
-									Cancel
-								</button>
+								<p className='text-muted fs-7 mb-6'>
+									This user will be permanently removed from the portal and will no longer have access.
+								</p>
+								<div className='d-flex justify-content-center gap-3'>
+									<button
+										type='button'
+										className='btn btn-light'
+										data-bs-dismiss='modal'
+										style={{
+											borderRadius: '8px',
+											padding: '9px 20px',
+											fontWeight: 600,
+											fontSize: '13.5px',
+										}}>
+										Cancel
+									</button>
+									<button
+										type='button'
+										className='btn btn-danger d-inline-flex align-items-center gap-2'
+										data-bs-dismiss='modal'
+										onClick={() => delete_user()}
+										style={{
+											borderRadius: '8px',
+											padding: '9px 22px',
+											fontWeight: 600,
+											fontSize: '13.5px',
+										}}>
+										<FontAwesomeIcon icon={faCheck} />
+										Confirm Remove
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 
-				<div className='card py-12  my-10'>
-					<div className='card-body'>
-						<h1 className='fw-bold text-dark fs-1 mb-6 '>View records</h1>
-
-						<div className='row flex-column'>
-							<div className='row'>
-								<div className='col-md-3 my-2'>
-									<Link
-										className='text-dark'
-										to={'/rag/all-order?user_id=' + userResponseData._id}>
+				<div
+					className='card border-0 shadow-xs mb-8'
+					style={{ borderRadius: '12px', backgroundColor: '#ffffff' }}>
+					<div className='card-header border-0 pt-6 px-8'>
+						<h3
+							className='fw-bolder text-gray-900 m-0'
+							style={{ fontSize: '1.2rem' }}>
+							User Records & Activity
+						</h3>
+					</div>
+					<div className='card-body px-8 py-6'>
+						<div className='row'>
+							<div className='col-md-3 col-sm-6 my-2'>
+								<Link
+									className='text-decoration-none'
+									to={'/rag/all-order?user_id=' + userResponseData._id}>
+									<div
+										className='d-flex align-items-center p-4'
+										style={{
+											backgroundColor: '#F8FAFD',
+											border: '1px solid #DFE7F0',
+											borderRadius: '10px',
+											transition: 'all 0.2s ease',
+											cursor: 'pointer',
+										}}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.borderColor = '#1E3A5F'
+											e.currentTarget.style.backgroundColor = '#FFFFFF'
+											e.currentTarget.style.boxShadow =
+												'0 6px 16px rgba(30, 58, 95, 0.08)'
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.borderColor = '#DFE7F0'
+											e.currentTarget.style.backgroundColor = '#F8FAFD'
+											e.currentTarget.style.boxShadow = 'none'
+										}}>
 										<div
-											className='category-box d-flex align-items-center'
+											className='d-flex align-items-center justify-content-center me-3'
 											style={{
-												backgroundColor: 'transparent',
-												textAlign: 'center',
-												padding: '15px 20px',
-												borderRadius: '10px',
-												border: '2px solid #ffc107',
+												width: '42px',
+												height: '42px',
+												borderRadius: '8px',
+												backgroundColor: '#E8F0F8',
+												color: '#1E3A5F',
+												fontSize: '18px',
+												flexShrink: 0,
 											}}>
-											<FontAwesomeIcon
-												icon={faShoppingCart}
-												className='category-icon me-2'
-												style={{ fontSize: '25px' }}
-											/>
-											<h3
-												className='m-0'
-												style={{ fontSize: '12px' }}>
-												All Orders
-											</h3>
+											<FontAwesomeIcon icon={faShoppingCart} />
 										</div>
-									</Link>
-								</div>
+										<div>
+											<div
+												className='fw-bold text-gray-900'
+												style={{ fontSize: '14px' }}>
+												All Orders
+											</div>
+											<div className='text-muted fs-8'>View order history</div>
+										</div>
+									</div>
+								</Link>
 							</div>
 						</div>
 					</div>

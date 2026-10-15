@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
+import SelectField from '../../../components/SelectField'
 import TableButton from '../../../components/TableButton'
 import TextareaField from '../../../components/TextareaField'
 import { FileUploadToFGGroup, GetProduct, UpdateProduct } from '../../../Functions/FGGroup'
 
 const EditGomziNutritionProduct = () => {
+	const navigate = useNavigate()
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
 	const product_id: string | any = searchParams.get('product_id')
@@ -234,6 +236,7 @@ const EditGomziNutritionProduct = () => {
 
 			toast.success('Product Updated Successfully')
 			setIsSubmitting(false)
+			navigate('/rag/product-list')
 		} catch (error: any) {
 			toast.error(error.message)
 			setIsSubmitting(false)
@@ -558,18 +561,17 @@ const EditGomziNutritionProduct = () => {
 														</div>
 
 														<div className='col-md-2'>
-															<label className='form-label'>Weight Unit</label>
-
-															<select
-																className='form-select mt-3'
+															<SelectField
+																label='Weight Unit'
+																name='weightUnit'
+																htmlFor='weightUnit'
+																marginRemove
 																value={formData.weight.unit}
-																onChange={(e) => updateWeight('unit', e.target.value)}>
-																<option value='g'>g</option>
-																<option value='kg'>kg</option>
-																<option value='mg'>mg</option>
-																<option value='lb'>lb</option>
-																<option value='oz'>oz</option>
-															</select>
+																onChange={(e) => updateWeight('unit', e.target.value)}
+																options={['g', 'kg', 'mg', 'lb', 'oz']}
+																searchable={false}
+																hideDefaultOption
+															/>
 														</div>
 
 														{/* Categories */}

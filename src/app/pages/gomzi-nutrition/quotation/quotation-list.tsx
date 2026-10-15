@@ -212,15 +212,19 @@ const QuotationList: React.FC = () => {
 							{DayJS(item?.date).format('YYYY-MM-DD')}
 						</span>
 					</td>
-					<td>
-						<TableButton
-							action='edit'
-							to={`/rag/update-quotation?id=${item?._id}`}
-						/>
-						<TableButton
-							action='remove'
-							onClick={() => handleDeleteQuotation(item?._id)}
-						/>
+					<td className='text-nowrap'>
+						<div className='d-flex align-items-center text-nowrap'>
+							<TableButton
+								action='edit'
+								to={`/rag/update-quotation?id=${item?._id}`}
+								title='Edit'
+							/>
+							<TableButton
+								action='remove'
+								onClick={() => handleDeleteQuotation(item?._id)}
+								title='Delete'
+							/>
+						</div>
 					</td>
 				</tr>
 				{isVisible && (
@@ -260,61 +264,60 @@ const QuotationList: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Quotation List</PageTitle>
 			<KTCard>
-				<div className='row mx-5 border-0 pt-6'>
-					<div className='col-md-5'>
-						<div className='card-title'>
-							<div className='row'>
-								<div className='col-md-6 mx-4'>
-									<SearchFilter
-										searchTerm={searchTerm}
-										setSearchTerm={setSearchTerm}
-									/>
-								</div>
-								<div className='d-md-block d-none col-md-3'>
-									<LengthMenu
-										expenseData={quotationData}
-										handleItemsPerPageChange={handleItemsPerPageChange}
-									/>
-								</div>
-								{masterData === 'MASTER' && (
-									<div className='col-md-2'>
-										<button
-											className='btn btn-primary'
-											onClick={exportToExcel}
-											disabled={loading}>
-											<FontAwesomeIcon
-												icon={faDownload}
-												className='fs-3'
-											/>
-										</button>
-									</div>
-								)}
-							</div>
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex flex-wrap align-items-center gap-3 w-100'>
+						{/* 1. Search */}
+						<div>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								className='me-0'
+							/>
 						</div>
-					</div>
-					<div className='col-md-7'>
-						<div className='card-toolbar d-flex'>
-							<div className='row'>
-								<div className='col-md-6 mt-md-0 mt-2'>
-									<DateFilter
-										onDateRangeChange={handleDateRangeChange}
-										rightValue='0'
-									/>
-								</div>
-								<div className='col-md-6 mt-md-0 mt-5 d-md-block d-flex'>
-									<TableButton
-										action='add'
-										to='/rag/create-quotation'
-										text='Create Quotation'
-									/>
-									<div className='d-md-none d-block col-md-6 col-4'>
-										<LengthMenu
-											expenseData={quotationData}
-											handleItemsPerPageChange={handleItemsPerPageChange}
-										/>
-									</div>
-								</div>
-							</div>
+
+						{/* 2. Dropdown (show entries per page) */}
+						<div>
+							<LengthMenu
+								expenseData={quotationData}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<button
+								type='button'
+								className='btn btn-primary d-flex align-items-center justify-content-center'
+								onClick={exportToExcel}
+								disabled={loading || quotationData.length === 0}
+								style={{
+									width: '38px',
+									height: '38px',
+									padding: 0,
+									borderRadius: '8px',
+									fontSize: '14px',
+								}}
+								title='Download Excel'>
+								<FontAwesomeIcon icon={faDownload} />
+							</button>
+						</div>
+
+						{/* 4. Date Filter */}
+						<div className='d-flex align-items-center'>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+							/>
+						</div>
+
+						{/* 5. End me Create Quotation */}
+						<div className='ms-auto'>
+							<TableButton
+								action='add'
+								to='/rag/create-quotation'
+								text='Create Quotation'
+							/>
 						</div>
 					</div>
 				</div>

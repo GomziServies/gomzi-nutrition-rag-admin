@@ -6,6 +6,8 @@ export function GetGnSampleBooking(
     query?: {
         id?: string
         status?: boolean
+        start_date?: string | Date
+        end_date?: string | Date
     } & FGGroupSearchOptions & FGGroupPaginationOptions & FGGroupSortOptions
 ): Promise<FGGroupAPIResponse> {
     return APIGet(FGGroupEndpoints.GetGnSampleBooking, getAPIHeaders('fg_group'), query)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
@@ -17,6 +17,7 @@ import {
 } from '../../../Functions/FGGroup/Expense'
 
 const AddExpenseNutrition = () => {
+	const navigate = useNavigate()
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
 	const expense_id: string | any = searchParams.get('expense_id')
@@ -238,6 +239,7 @@ const AddExpenseNutrition = () => {
 
 				toast.success('Expense Updated Successfully')
 				setIsUpdateMode(true)
+				navigate('/rag/expense')
 			} else {
 				await createExpense(formDataWith)
 
@@ -265,6 +267,7 @@ const AddExpenseNutrition = () => {
 				])
 
 				fetchExpenseData()
+				navigate('/rag/expense')
 			}
 
 			setIsSubmitting(false)
@@ -451,16 +454,52 @@ const AddExpenseNutrition = () => {
 													<div className='text-muted fs-7'>{existingDocument.name}</div>
 												</div>
 
-												<div className='d-flex gap-2'>
+												<div className='d-flex align-items-center gap-2'>
 													<a
 														href={getDocumentUrl(existingDocument.url)}
 														target='_blank'
 														rel='noopener noreferrer'
-														className='btn btn-sm btn-light-primary'>
-														{isImageDocument(existingDocument) ? 'View' : 'Download / View'}
+														className='btn btn-sm d-inline-flex align-items-center justify-content-center gap-2'
+														style={{
+															height: '38px',
+															padding: '0 16px',
+															borderRadius: '8px',
+															fontSize: '13px',
+															fontWeight: 600,
+															backgroundColor: '#ffffff',
+															border: '1px solid #DFE7F0',
+															color: '#1E3A5F',
+															boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+															transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+														}}
+														onMouseEnter={(e) => {
+															e.currentTarget.style.backgroundColor = '#1E3A5F'
+															e.currentTarget.style.borderColor = '#1E3A5F'
+															e.currentTarget.style.color = '#ffffff'
+															e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
+														}}
+														onMouseLeave={(e) => {
+															e.currentTarget.style.backgroundColor = '#ffffff'
+															e.currentTarget.style.borderColor = '#DFE7F0'
+															e.currentTarget.style.color = '#1E3A5F'
+															e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
+														}}>
+														<i className='bi bi-eye fs-5'></i>
+														{isImageDocument(existingDocument) ? 'View Document' : 'Download / View Document'}
 													</a>
 
-													<label className='btn btn-sm btn-primary mb-0'>
+													<label
+														className='btn btn-sm btn-primary mb-0 d-inline-flex align-items-center justify-content-center gap-2'
+														style={{
+															height: '38px',
+															padding: '0 16px',
+															borderRadius: '8px',
+															fontSize: '13px',
+															fontWeight: 600,
+															cursor: 'pointer',
+															boxShadow: '0 2px 6px rgba(30, 58, 95, 0.25)',
+														}}>
+														<i className='bi bi-arrow-repeat fs-5 text-white'></i>
 														Replace Document
 														<input
 															type='file'
@@ -544,21 +583,35 @@ const AddExpenseNutrition = () => {
 
 								{/* Add / Update Expense */}
 								<div className='col-md-12 d-flex justify-content-end fv-row mb-7 mt-5'>
-									<TableButton
-										action={expense_id ? 'edit' : 'add'}
+									<button
+										type='button'
+										className='btn btn-primary d-inline-flex align-items-center justify-content-center px-6'
 										onClick={handleSaveExpense}
-										text={
-											isSubmitting
-												? 'Please wait, saving Expense...'
-												: expense_id
-												? 'Update Expense'
-												: 'Add Expense'
-										}
-										showIcon={false}
 										disabled={isSubmitting}
-										backgroundDark={true}
-										className={`mb-4 btn-block ${isSubmitting ? 'disabled' : ''}`}
-									/>
+										style={{
+											height: '42px',
+											fontSize: '14px',
+											fontWeight: 600,
+											borderRadius: '8px',
+											minWidth: '160px',
+											boxShadow: '0 2px 6px rgba(30, 58, 95, 0.28)',
+											transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+										}}>
+										{isSubmitting ? (
+											<>
+												<span
+													className='spinner-border spinner-border-sm me-2'
+													role='status'
+													aria-hidden='true'></span>
+												Please wait...
+											</>
+										) : (
+											<>
+												<i className={`bi ${expense_id ? 'bi-check2-circle' : 'bi-plus-circle'} fs-5 me-2`}></i>
+												{expense_id ? 'Update Expense' : 'Add Expense'}
+											</>
+										)}
+									</button>
 								</div>
 							</div>
 						</div>

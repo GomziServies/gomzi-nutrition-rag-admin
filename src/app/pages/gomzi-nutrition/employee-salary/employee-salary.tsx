@@ -1,6 +1,8 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
+import * as XLSX from 'xlsx'
 import { toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
@@ -21,6 +23,7 @@ const EmployeeSalary = () => {
 	const [selectedStatus, setSelectedStatus] = useState('')
 	const [isRotating, setIsRotating] = useState(false)
 	const [loading, setLoading] = useState(false)
+	const [exporting, setExporting] = useState(false)
 	const [sort, setSort] = useState('createdAt')
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [metaData, setMetaData] = useState<any>()
@@ -164,6 +167,55 @@ const EmployeeSalary = () => {
 		setPagination({ ...pagination, page: 1 })
 	}
 
+	const downloadExcel = async () => {
+		try {
+			setExporting(true)
+			const toastId = toast.loading('Exporting employee salary to Excel...')
+
+			const dataToExport = filteredAdminData || []
+			if (dataToExport.length === 0) {
+				toast.dismiss(toastId)
+				toast.error('No salary records found to export')
+				return
+			}
+
+			const worksheetData = dataToExport.map((salary: any, index: number) => ({
+				No: index + 1,
+				'Employee Code': salary.employee_code || '-',
+				'Employee Name': salary.full_name || salary.name || '-',
+				Mobile: salary.mobile || '-',
+				Email: salary.email || '-',
+				'Total Salary': salary.total_salary ?? '-',
+				'Final Salary': salary.final_salary ?? '-',
+				'Total Present': salary.total_present ?? 0,
+				'Total Absent': salary.total_absent ?? 0,
+				Period: salary.period || '-',
+			}))
+
+			const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+			const columnWidths = Object.keys(worksheetData[0]).map((key) => {
+				const maxLength = Math.max(
+					key.length,
+					...worksheetData.map((row: any) => String(row[key] ?? '').length)
+				)
+				return { wch: Math.min(maxLength + 2, 40) }
+			})
+			worksheet['!cols'] = columnWidths
+
+			const workbook = XLSX.utils.book_new()
+			XLSX.utils.book_append_sheet(workbook, worksheet, 'Employee Salary')
+			XLSX.writeFile(workbook, `Employee_Salary_${DayJS(new Date()).format('DD-MM-YYYY')}.xlsx`)
+
+			toast.dismiss(toastId)
+			toast.success(`${dataToExport.length} salary records exported successfully`)
+		} catch (error: any) {
+			console.error('Export error:', error)
+			toast.error('Failed to export employee salary data')
+		} finally {
+			setExporting(false)
+		}
+	}
+
 	const handleEmployeeChange = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
 		const selectedLabel = event.target.value
 
@@ -212,36 +264,88 @@ const EmployeeSalary = () => {
 					</div>
 				</div>
 
-				<div className='card-header row border-0 pt-6'>
-					<div className='col-md-6 d-flex'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-						/>
-						<div className='d-md-block d-none'>
-							<LengthMenu
-								expenseData={salaryData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-							/>
-						</div>
-					</div>
-					<div className='col-md-6 pe-md-6'>
-						<div className='row justify-content-end'>
-							<div className='col-md-8 my-md-0 my-5 pe-0'>
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
+						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+							{/* 1. Searchbar */}
+							<div>
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									className='me-0'
+								/>
+							</div>
+
+							{/* 2. Dropdown (show entries per page) */}
+							<div>
+								<LengthMenu
+									expenseData={salaryData}
+									handleItemsPerPageChange={handleItemsPerPageChange}
+									value={pagination.itemsPerPage}
+									className='me-0'
+								/>
+							</div>
+
+							{/* 3. Download Excel Button */}
+							<div>
+								<button
+									type='button'
+									className='btn btn-icon d-flex align-items-center justify-content-center'
+									onClick={downloadExcel}
+									disabled={exporting}
+									style={{
+										width: '38px',
+										height: '38px',
+										minWidth: '38px',
+										padding: 0,
+										borderRadius: '8px',
+										fontSize: '14px',
+										backgroundColor: '#ffffff',
+										border: '1px solid #DFE7F0',
+										color: '#1E3A5F',
+										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+										cursor: exporting ? 'not-allowed' : 'pointer',
+									}}
+									onMouseEnter={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#1E3A5F'
+											e.currentTarget.style.borderColor = '#1E3A5F'
+											e.currentTarget.style.color = '#ffffff'
+											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
+											e.currentTarget.style.transform = 'translateY(-1px)'
+										}
+									}}
+									onMouseLeave={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#ffffff'
+											e.currentTarget.style.borderColor = '#DFE7F0'
+											e.currentTarget.style.color = '#1E3A5F'
+											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
+											e.currentTarget.style.transform = 'translateY(0)'
+										}
+									}}
+									title='Download Excel'>
+									{exporting ? (
+										<span
+											className='spinner-border spinner-border-sm'
+											role='status'
+											aria-hidden='true'></span>
+									) : (
+										<FontAwesomeIcon icon={faDownload} />
+									)}
+								</button>
+							</div>
+
+							{/* 4. Datefilter */}
+							<div className='d-flex align-items-center flex-shrink-0'>
 								<DateFilter
 									onDateRangeChange={handleDateRangeChange}
-									leftValue='-600px'
+									rightValue='0'
 									lastMonth={true}
 								/>
-								{/* <input type="month" name="" id="" /> */}
 							</div>
 						</div>
-					</div>
-					<div className='col-md-3 d-flex d-md-none justify-content-between p-0'>
-						<LengthMenu
-							expenseData={salaryData}
-							handleItemsPerPageChange={handleItemsPerPageChange}
-						/>
 					</div>
 				</div>
 

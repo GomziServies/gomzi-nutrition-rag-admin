@@ -1,9 +1,11 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
+import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../_metronic/helpers'
+import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
@@ -93,6 +95,29 @@ const GomziNutritionProductList: React.FC = () => {
 		{ title: 'Discount Price', field: 'discount_price' },
 	]
 
+	const downloadExcel = () => {
+		const worksheetData = productData.map((product: any, idx: number) => {
+			return {
+				'No.': idx + 1,
+				'Product Name': product?.name || 'N/A',
+				Flavour: product?.flavour || 'N/A',
+				Stock: product?.stock ?? 'N/A',
+				Price: product?.price ?? 'N/A',
+				'Discount Price': product?.discount_price ?? 'N/A',
+				SKU: product?.sku || 'N/A',
+				Status: product?.status || 'N/A',
+				'Created At': product?.createdAt
+					? DayJS(product.createdAt).format('DD/MM/YYYY hh:mm:ss A')
+					: 'N/A',
+			}
+		})
+
+		const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+		const workbook = XLSX.utils.book_new()
+		XLSX.utils.book_append_sheet(workbook, worksheet, 'Products')
+		XLSX.writeFile(workbook, `Products_${DayJS().format('YYYY-MM-DD')}.xlsx`)
+	}
+
 	const handleRowClick = (id: string) => {
 		if (window.innerWidth <= 1024) {
 			setVisibleDetails(visibleDetails === id ? null : id)
@@ -145,17 +170,34 @@ const GomziNutritionProductList: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>RAG STRENGTH AND NUTRITION PRODUCTS</PageTitle>
 			<KTCard>
-				<div className='card-header border-0 pt-6'>
+				<div className='card-header border-0 pt-6 px-6'>
 					<div className='card-title'>
-						<div className='card-branch_code d-flex'>
+						<div className='d-flex flex-wrap align-items-center gap-3'>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
+								className='me-0'
 							/>
 							<LengthMenu
 								expenseData={productData}
 								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
 							/>
+							<button
+								type='button'
+								className='btn btn-primary d-flex align-items-center justify-content-center'
+								style={{
+									width: '38px',
+									height: '38px',
+									padding: 0,
+									borderRadius: '8px',
+									fontSize: '14px',
+								}}
+								onClick={downloadExcel}
+								disabled={loading || productData.length === 0}
+								title='Download Excel'>
+								<FontAwesomeIcon icon={faDownload} />
+							</button>
 						</div>
 					</div>
 					<div className='card-toolbar'>
@@ -214,11 +256,30 @@ const GomziNutritionProductList: React.FC = () => {
 										</td>
 										<td>
 											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												<img
-													src={`https://files.fggroup.in/` + product.displayImages[0]}
-													alt={product.name}
-													style={{ width: '80px', height: '80px', borderRadius: '10px' }}
-												/>
+												{product?.displayImages && product?.displayImages[0] ? (
+													<img
+														src={`https://files.fggroup.in/` + product.displayImages[0]}
+														alt={product.name}
+														style={{ width: '80px', height: '80px', borderRadius: '10px', objectFit: 'cover' }}
+													/>
+												) : (
+													<div
+														style={{
+															width: '80px',
+															height: '80px',
+															borderRadius: '10px',
+															backgroundColor: '#F1F5F9',
+															display: 'flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+															color: '#94A3B8',
+															fontSize: '11px',
+															fontWeight: 600,
+														}}
+													>
+														No Image
+													</div>
+												)}
 											</span>
 										</td>
 										<td>

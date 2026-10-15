@@ -305,59 +305,45 @@ const QuotationList: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Quotation List</PageTitle>
 			<KTCard>
-				<div className='row mx-5 border-0 pt-6'>
-					<div className='col-md-5'>
-						<div className='card-title'>
-							<div className='row'>
-								<div className='col-md-6 mx-4'>
-									<SearchFilter
-										searchTerm={searchTerm}
-										setSearchTerm={setSearchTerm}
-									/>
-								</div>
-								<div className='d-md-block d-none col-md-3'>
-									<LengthMenu
-										expenseData={quotationData}
-										handleItemsPerPageChange={handleItemsPerPageChange}
-									/>
-								</div>
-								<div className='col-md-2'>
-									<button
-										className='btn btn-primary'
-										onClick={exportToExcel}
-										disabled={loading}>
-										<FontAwesomeIcon
-											icon={faDownload}
-											className='fs-3'
-										/>
-									</button>
-								</div>
-							</div>
+				<div className='d-flex flex-wrap justify-content-between align-items-center mx-5 border-0 pt-6 gap-4'>
+					<div className='d-flex align-items-center gap-4 flex-wrap'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+						/>
+						<div className='d-md-block d-none'>
+							<LengthMenu
+								expenseData={quotationData}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+							/>
+						</div>
+						<div className=''>
+							<button
+								className='btn btn-primary'
+								onClick={exportToExcel}
+								disabled={loading}>
+								<FontAwesomeIcon
+									icon={faDownload}
+									className='fs-3'
+								/>
+							</button>
 						</div>
 					</div>
-					<div className='col-md-7'>
-						<div className='card-toolbar d-flex'>
-							<div className='row'>
-								<div className='col-md-6 mt-md-0 mt-2'>
-									<DateFilter
-										onDateRangeChange={handleDateRangeChange}
-										rightValue='0'
-									/>
-								</div>
-								<div className='col-md-6 mt-md-0 mt-5 d-md-block d-flex'>
-									<TableButton
-										action='add'
-										to='/rag/create-quotation'
-										text='Create Quotation'
-									/>
-									<div className='d-md-none d-block col-md-6 col-4'>
-										<LengthMenu
-											expenseData={quotationData}
-											handleItemsPerPageChange={handleItemsPerPageChange}
-										/>
-									</div>
-								</div>
-							</div>
+					<div className='d-flex align-items-center gap-3 flex-wrap'>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+						/>
+						<TableButton
+							action='add'
+							to='/rag/create-quotation'
+							text='Create Quotation'
+						/>
+						<div className='d-md-none d-block'>
+							<LengthMenu
+								expenseData={quotationData}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+							/>
 						</div>
 					</div>
 				</div>

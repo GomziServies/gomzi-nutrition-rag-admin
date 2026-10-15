@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
+import SelectField from '../../../components/SelectField'
 import TableButton from '../../../components/TableButton'
 import TextareaField from '../../../components/TextareaField'
 import { AddProduct, FileUploadToFGGroup } from '../../../Functions/FGGroup'
 
 const AddGomziNutritionProduct = () => {
+	const navigate = useNavigate()
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [formData, setFormData] = useState({
 		name: '',
@@ -206,58 +209,9 @@ const AddGomziNutritionProduct = () => {
 
 			await AddProduct(payload)
 
-			toast.success('Product Add Successfully')
-
-			setFormData({
-				name: '',
-				shortDescription: '',
-				description: '',
-				price: '',
-				discountPrice: '',
-				private_note: '',
-				storageInstructions: '',
-				stock: '',
-				flavour: '',
-				additionalInstructions: '',
-				weight: {
-					amount: '',
-					unit: 'g',
-				},
-				categories: '',
-				tags: '',
-
-				nutrition: {
-					servingSize: '',
-					energy: '',
-					protein: '',
-					carbohydrates: '',
-					fat: '',
-					fiber: '',
-					vitaminC: '',
-					iron: '',
-					resveratrol: '',
-					unit: 'g',
-				},
-
-				displayImages: [] as string[],
-				selectedFiles: [] as File[],
-
-				highlights: formData.highlights.filter((item) => item.title.trim()),
-
-				benefits: formData.benefits.filter((item) => item.title.trim()),
-
-				ingredients: [''],
-
-				usageInstructions: [
-					{
-						stepNumber: '',
-						description: '',
-					},
-				],
-
-				variations: [],
-			})
+			toast.success('Product Added Successfully')
 			setIsSubmitting(false)
+			navigate('/rag/product-list')
 		} catch (error: any) {
 			toast.error(error.message)
 			setIsSubmitting(false)
@@ -562,18 +516,16 @@ const AddGomziNutritionProduct = () => {
 														</div>
 
 														<div className='col-md-2'>
-															<label className='form-label'>Weight Unit</label>
-
-															<select
-																className='form-select mt-3'
+															<SelectField
+																label='Weight Unit'
+																name='weightUnit'
+																htmlFor='weightUnit'
 																value={formData.weight.unit}
-																onChange={(e) => updateWeight('unit', e.target.value)}>
-																<option value='g'>g</option>
-																<option value='kg'>kg</option>
-																<option value='mg'>mg</option>
-																<option value='lb'>lb</option>
-																<option value='oz'>oz</option>
-															</select>
+																onChange={(e) => updateWeight('unit', e.target.value)}
+																options={['g', 'kg', 'mg', 'lb', 'oz']}
+																searchable={false}
+																hideDefaultOption
+															/>
 														</div>
 
 														{/* Categories */}

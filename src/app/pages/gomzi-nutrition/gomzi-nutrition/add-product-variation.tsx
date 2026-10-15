@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import { useLocation } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
+import SelectField from '../../../components/SelectField'
 import TableButton from '../../../components/TableButton'
 import { AddProductVariation, FileUploadToFGGroup } from '../../../Functions/FGGroup'
 
@@ -305,14 +306,15 @@ const AddGomziNutritionVariationProduct = () => {
 											/>
 										</div>
 										<div className='col-md-6 fv-row'>
-											<InputField
-												labelMarginRemove
-												htmlFor='weightUnit'
-												name='unit'
-												type='text'
+											<SelectField
 												label='Weight Unit'
+												name='unit'
+												htmlFor='weightUnit'
 												value={formData.weight.unit}
 												onChange={(e) => updateWeight('unit', e.target.value)}
+												options={['g', 'kg', 'mg', 'lb', 'oz']}
+												searchable={false}
+												hideDefaultOption
 											/>
 										</div>
 										<div className='col-md-6 fv-row'>

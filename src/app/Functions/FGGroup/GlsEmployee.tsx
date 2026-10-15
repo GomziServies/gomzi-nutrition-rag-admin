@@ -52,7 +52,7 @@ export function RemoveGlsEmployee(body: { id: string }): Promise<FGGroupAPIRespo
 }
 
 export function GetGlsEmployees(
-	query?: { id?: string } & FGGroupSearchOptions & FGGroupPaginationOptions & FGGroupSortOptions
+	query?: { id?: string; start_date?: string | Date; end_date?: string | Date } & FGGroupSearchOptions & FGGroupPaginationOptions & FGGroupSortOptions
 ): Promise<FGGroupAPIResponse> {
 	return APIGet(FGGroupEndpoints.GetGlsEmployees, getAPIHeaders('fg_group'), query)
 }

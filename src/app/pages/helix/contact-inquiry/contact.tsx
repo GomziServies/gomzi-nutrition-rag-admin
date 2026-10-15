@@ -36,7 +36,6 @@ const ContactInquiry: React.FC = () => {
 		startOfMonth(new Date()),
 		endOfMonth(new Date()),
 	])
-	const initialDateSyncDone = useRef(false)
 	const [pagination, setPagination] = useState({
 		page: 1,
 		itemsPerPage: 10,
@@ -91,14 +90,6 @@ const ContactInquiry: React.FC = () => {
 	useEffect(() => {
 		setPagination((prev) => ({ ...prev, page: 1 }))
 	}, [searchTerm, sort, sortOrder, showUnreadOnly, subject, selectedDateRange])
-
-	useEffect(() => {
-		const timer = window.setTimeout(() => {
-			initialDateSyncDone.current = true
-		}, 0)
-
-		return () => window.clearTimeout(timer)
-	}, [])
 
 	const handleItemsPerPageChange = (value: number) => {
 		setPagination((prev) => ({ ...prev, page: 1, itemsPerPage: value }))
@@ -166,51 +157,68 @@ const ContactInquiry: React.FC = () => {
 	}
 
 	const handleDateRangeChange = (range: [Date, Date] | null) => {
-		if (
-			!initialDateSyncDone.current &&
-			range &&
-			(range[0].getMonth() !== new Date().getMonth() ||
-				range[0].getFullYear() !== new Date().getFullYear() ||
-				range[1].getMonth() !== new Date().getMonth() ||
-				range[1].getFullYear() !== new Date().getFullYear())
-		) {
-			return
-		}
-
 		setSelectedDateRange(range)
 	}
 
-	const filteredContactInquiry = allContactInquiry.filter((item: any) => {
-		// Apply client-side filters: search, subject, unread, date range
-		if (!item) return false
+	const filteredContactInquiry = useMemo(() => {
+		const filtered = allContactInquiry.filter((item: any) => {
+			// Apply client-side filters: search, subject, unread, date range
+			if (!item) return false
 
-		if (searchTerm && typeof searchTerm === 'string') {
-			const q = searchTerm.toLowerCase()
-			const matchesSearch =
-				(item.name || '').toString().toLowerCase().includes(q) ||
-				(item.email || '').toString().toLowerCase().includes(q) ||
-				(item.mobile || '').toString().toLowerCase().includes(q) ||
-				(item.message || '').toString().toLowerCase().includes(q)
-			if (!matchesSearch) return false
-		}
+			if (searchTerm && typeof searchTerm === 'string') {
+				const q = searchTerm.toLowerCase().trim()
+				const matchesSearch =
+					(item.name || '').toString().toLowerCase().includes(q) ||
+					(item.email || '').toString().toLowerCase().includes(q) ||
+					(item.mobile || '').toString().toLowerCase().includes(q) ||
+					(item.message || '').toString().toLowerCase().includes(q)
+				if (!matchesSearch) return false
+			}
 
-		if (subject && subject !== '') {
-			if ((item.subject || '').toString() !== subject) return false
-		}
+			if (subject && subject !== '') {
+				if ((item.subject || '').toString() !== subject) return false
+			}
 
-		if (showUnreadOnly) {
-			if (item.read_receipt !== false) return false
-		}
+			if (showUnreadOnly) {
+				if (item.read_receipt !== false) return false
+			}
 
-		if (!selectedDateRange) {
+			if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+				const startTime = new Date(selectedDateRange[0]).setHours(0, 0, 0, 0)
+				const endTime = new Date(selectedDateRange[1]).setHours(23, 59, 59, 999)
+				const rawDate = item.createdAt || item.created_at || item.date
+				if (!rawDate) return false
+				const itemTime = new Date(rawDate).getTime()
+				if (isNaN(itemTime) || itemTime < startTime || itemTime > endTime) {
+					return false
+				}
+			}
+
 			return true
+		})
+
+		if (sort) {
+			filtered.sort((a: any, b: any) => {
+				let aVal = a[sort]
+				let bVal = b[sort]
+
+				if (sort === 'createdAt' || sort === 'date') {
+					const aTime = new Date(aVal || a.created_at || a.date || 0).getTime()
+					const bTime = new Date(bVal || b.created_at || b.date || 0).getTime()
+					return sortOrder === 'asc' ? aTime - bTime : bTime - aTime
+				}
+
+				aVal = (aVal || '').toString().toLowerCase()
+				bVal = (bVal || '').toString().toLowerCase()
+
+				if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1
+				if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1
+				return 0
+			})
 		}
 
-		const [startDate, endDate] = selectedDateRange
-		const itemDate = new Date(item.createdAt)
-
-		return itemDate >= startDate && itemDate <= endDate
-	})
+		return filtered
+	}, [allContactInquiry, searchTerm, subject, showUnreadOnly, selectedDateRange, sort, sortOrder])
 
 	const paginatedContactInquiry = filteredContactInquiry.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
@@ -249,50 +257,60 @@ const ContactInquiry: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Contact Inquiry</PageTitle>
 			<KTCard>
-				<div className='w-100 px-5 border-0 pt-6 row'>
-					<div className='w-100 d-flex flex-wrap align-items-end gap-3'>
-						<div className='me-auto col-md-4 pe-0'>
+				<div className='card-header border-0 pt-6'>
+					<div className='card-title w-100 d-flex flex-wrap align-items-center gap-3'>
+						<div>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
+								className='me-0'
 							/>
 						</div>
 
-						<div className='col-auto'>
-							<button
-								className='btn btn-primary btn-icon'
-								onClick={downloadExcel}
-								disabled={loading || exporting || filteredContactInquiry.length === 0}>
-								<FontAwesomeIcon
-									icon={faDownload}
-									className='fs-3'
-								/>
-							</button>
-						</div>
-
-						<div className='col-auto'>
+						<div>
 							<LengthMenu
 								expenseData={filteredContactInquiry}
 								handleItemsPerPageChange={handleItemsPerPageChange}
+								value={pagination.itemsPerPage}
+								className='me-0'
 							/>
 						</div>
 
-						<div className='col-md-3'>
+						<div>
+							<button
+								type='button'
+								className='btn btn-primary d-flex align-items-center justify-content-center'
+								onClick={downloadExcel}
+								disabled={loading || exporting || filteredContactInquiry.length === 0}
+								style={{
+									width: '38px',
+									height: '38px',
+									padding: 0,
+									borderRadius: '8px',
+									fontSize: '14px',
+								}}
+								title='Download Excel'>
+								<FontAwesomeIcon icon={faDownload} />
+							</button>
+						</div>
+
+						<div style={{ minWidth: '220px', maxWidth: '300px' }}>
 							<SelectField
-								className='fv-row'
+								className='fv-row mb-0'
 								label='Subject'
+								showLabel={false}
+								defaultLabel='All Subjects'
 								name='Filter Subject'
 								value={subject}
 								onChange={handleSelectChange}
 								htmlFor='Filter Subject'
 								marginRemove={true}
+								height='38px'
 								options={subjectOptions}
 							/>
 						</div>
 
-						<div
-							style={{ minWidth: '250px' }}
-							className='col-auto'>
+						<div style={{ minWidth: '250px' }}>
 							<DateFilter
 								onDateRangeChange={handleDateRangeChange}
 								rightValue='0'

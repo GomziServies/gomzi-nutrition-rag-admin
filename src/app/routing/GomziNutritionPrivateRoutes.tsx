@@ -258,6 +258,10 @@ const GomziNutritionPrivateRoutes = () => {
 					path='product-stock-management'
 					element={<GomziNutritionProductStock />}
 				/>
+				<Route
+					path='stock'
+					element={<GomziNutritionProductStock />}
+				/>
 
 				{/* Contact list */}
 
@@ -417,6 +421,36 @@ const GomziNutritionPrivateRoutes = () => {
 				<Route
 					path='inventory/gn-procurement/view'
 					element={<GNProcurementView />}
+				/>
+
+				{/* gn-inventory direct & sidebar routes */}
+				<Route
+					path='gn-inventory/raw-material-suppliers'
+					element={<GomziNutritionMaterialSuppliersList />}
+				/>
+				<Route
+					path='gn-inventory/raw-material-suppliers-invoice'
+					element={<GomziNutritionMaterialSuppliersInvoiceList />}
+				/>
+				<Route
+					path='gn-inventory/table-view'
+					element={<GNNutritionTableView />}
+				/>
+				<Route
+					path='gn-inventory/procurement'
+					element={<GNProcurementView />}
+				/>
+				<Route
+					path='gn-inventory/production-details'
+					element={<GNInventoryProductionDetailsView />}
+				/>
+				<Route
+					path='gn-inventory/design-approve-system'
+					element={<GnDesignApproveSystemView />}
+				/>
+				<Route
+					path='gn-inventory/product-dispatch-billing-details'
+					element={<GomziNutritionProductDispatchDetailsAdd />}
 				/>
 				{/* Employee */}
 				<Route

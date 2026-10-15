@@ -1,6 +1,7 @@
 import { faDownload, faHandHoldingDollar, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -19,6 +20,7 @@ const ExpenseListDetailsNutrition: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [expenseData, setExpenseData] = useState<any>([])
 	const [loading, setLoading] = useState(false)
+	const [exporting, setExporting] = useState(false)
 	const [sort, setSort] = useState('createdAt')
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
@@ -147,23 +149,70 @@ const ExpenseListDetailsNutrition: React.FC = () => {
 		pagination.page * pagination.itemsPerPage
 	)
 
-	const downloadExcel = () => {
-		const worksheetData = expenseData.map((invoice: any, index: number) => {
-			return {
-				'No.': index + 1,
-				'Expenses No.': invoice.expense_number || 'N/A',
-				'Expenses Category': invoice.expense_category || 'N/A',
-				'Payment Method': invoice.payment_method || 'N/A',
-				'Total Amount': invoice?.total_amount || 'N/A',
-				Date: invoice.date || 'N/A',
-				'Expense Notes': invoice.note || 'N/A',
-			}
-		})
+	const downloadExcel = async () => {
+		try {
+			setExporting(true)
+			const toastId = toast.loading('Preparing expense export...')
 
-		const worksheet = XLSX.utils.json_to_sheet(worksheetData)
-		const workbook = XLSX.utils.book_new()
-		XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders')
-		XLSX.writeFile(workbook, 'ExpenseData.xlsx')
+			let exportData = expenseData
+
+			let startDate: Date
+			let endDate: Date
+			if (selectedDateRange) {
+				;[startDate, endDate] = selectedDateRange
+			} else {
+				startDate = new Date(0)
+				endDate = new Date()
+			}
+
+			try {
+				const response: any = await getExpense({
+					expense_company: adminType == 'Store' ? adminType : 'Gomzi Nutrition',
+					from_date: startDate,
+					to_date: endDate,
+					page: 1,
+					limit: 5000,
+					...(searchTerm && { search: searchTerm }),
+					sort,
+					sortOrder,
+				})
+				if (response?.data && response.data.length > 0) {
+					exportData = response.data
+				}
+			} catch (e) {
+				console.warn('Fallback to current page expense data', e)
+			}
+
+			if (exportData.length === 0) {
+				toast.dismiss(toastId)
+				toast.error('No expense data to export')
+				return
+			}
+
+			const worksheetData = exportData.map((invoice: any, index: number) => {
+				return {
+					'No.': index + 1,
+					'Expenses No.': invoice.expense_number || 'N/A',
+					'Expenses Category': invoice.expense_category || 'N/A',
+					'Payment Method': invoice.payment_method || 'N/A',
+					'Total Amount': invoice?.total_amount || 0,
+					'Date': invoice.date ? DayJS(invoice.date).format('DD/MM/YYYY') : 'N/A',
+					'Expense Notes': invoice.note || 'N/A',
+				}
+			})
+
+			const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+			const workbook = XLSX.utils.book_new()
+			XLSX.utils.book_append_sheet(workbook, worksheet, 'Expenses')
+			XLSX.writeFile(workbook, `ExpenseData_${DayJS().format('YYYY-MM-DD')}.xlsx`)
+			toast.dismiss(toastId)
+			toast.success(`${exportData.length} expenses exported successfully`)
+		} catch (error) {
+			console.error('Error exporting expenses:', error)
+			toast.error('Failed to export expenses')
+		} finally {
+			setExporting(false)
+		}
 	}
 
 	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
@@ -202,52 +251,95 @@ const ExpenseListDetailsNutrition: React.FC = () => {
 				</div>
 			</div>
 			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='col-12 row mb-5'>
-						<div className='col-md-9'>
-							<h1 className='fw-bold text-dark fs-1 mb-6 '>Expenses Details</h1>
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
+						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+							{/* 1. Searchbar */}
+							<div>
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									className='me-0'
+								/>
+							</div>
+
+							{/* 2. Dropdown (show entries per page) */}
+							<div>
+								<LengthMenu
+									expenseData={expenseData}
+									handleItemsPerPageChange={handleItemsPerPageChange}
+									value={pagination.itemsPerPage}
+									className='me-0'
+								/>
+							</div>
+
+							{/* 3. Download Excel Button */}
+							<div>
+								<button
+									type='button'
+									className='btn btn-icon d-flex align-items-center justify-content-center'
+									onClick={downloadExcel}
+									disabled={exporting}
+									style={{
+										width: '38px',
+										height: '38px',
+										minWidth: '38px',
+										padding: 0,
+										borderRadius: '8px',
+										fontSize: '14px',
+										backgroundColor: '#ffffff',
+										border: '1px solid #DFE7F0',
+										color: '#1E3A5F',
+										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+										cursor: exporting ? 'not-allowed' : 'pointer',
+									}}
+									onMouseEnter={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#1E3A5F'
+											e.currentTarget.style.borderColor = '#1E3A5F'
+											e.currentTarget.style.color = '#ffffff'
+											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
+											e.currentTarget.style.transform = 'translateY(-1px)'
+										}
+									}}
+									onMouseLeave={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#ffffff'
+											e.currentTarget.style.borderColor = '#DFE7F0'
+											e.currentTarget.style.color = '#1E3A5F'
+											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
+											e.currentTarget.style.transform = 'translateY(0)'
+										}
+									}}
+									title='Download Excel'>
+									{exporting ? (
+										<span
+											className='spinner-border spinner-border-sm'
+											role='status'
+											aria-hidden='true'></span>
+									) : (
+										<FontAwesomeIcon icon={faDownload} />
+									)}
+								</button>
+							</div>
+
+							{/* 4. Datefilter */}
+							<div className='d-flex align-items-center flex-shrink-0'>
+								<DateFilter
+									onDateRangeChange={handleDateRangeChange}
+									rightValue='0'
+								/>
+							</div>
 						</div>
-						<div className='col-md-3 text-end'>
+
+						{/* 5. End me right side Add Expense Button */}
+						<div className='flex-shrink-0 ms-auto'>
 							<TableButton
 								action='add'
 								to={'/rag/expense/create'}
 								text='Add Expense'
 							/>
-						</div>
-					</div>
-
-					<div className='mt-9'>
-						<div className='d-flex'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-						</div>
-					</div>
-
-					<div className='row mt-9'>
-						<div className='col-6'>
-							<DateFilter
-								onDateRangeChange={handleDateRangeChange}
-								rightValue='0'
-							/>
-						</div>
-						<div className='col-3'>
-							<LengthMenu
-								expenseData={expenseData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-							/>
-						</div>
-						<div className='col-3'>
-							<button
-								className='btn btn-success'
-								onClick={downloadExcel}
-								disabled={loading}>
-								<FontAwesomeIcon
-									icon={faDownload}
-									className='fs-3'
-								/>
-							</button>
 						</div>
 					</div>
 				</div>

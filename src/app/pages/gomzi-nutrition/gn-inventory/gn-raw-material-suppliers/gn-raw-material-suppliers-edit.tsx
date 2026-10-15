@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faArrowLeft,
+	faBuilding,
+	faCheck,
+	faLocationDot,
+	faUpload,
+} from '@fortawesome/free-solid-svg-icons'
+import { KTCard } from '../../../../../_metronic/helpers'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import CopyableInput from '../../../../components/CopyableInput'
 import InputField from '../../../../components/InputField'
 import SelectField from '../../../../components/SelectField'
-import TableButton from '../../../../components/TableButton'
 import {
 	FileUploadToFGGroup,
 	GetGnRawMaterialSupplier,
@@ -320,176 +328,328 @@ const GomziNutritionMaterialSupplierEdit = () => {
 
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>Supplier Details</PageTitle>
-			<div className='row'>
-				<div className='col-12 mt-3'>
-					<div className='card py-10'>
-						<div className='card-body'>
-							<div className='row'>
-								<div className='col-md-3 text-center'>
-									{displayImg ? (
+			<PageTitle breadcrumbs={[]}>Edit Supplier</PageTitle>
+
+			<KTCard className='border-0 shadow-sm' style={{ borderRadius: '12px' }}>
+				{/* 1. Card Header */}
+				<div className='card-header border-bottom py-5 px-6 px-lg-8 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+					<div className='d-flex align-items-center gap-3'>
+						<span
+							className='d-inline-flex align-items-center justify-content-center rounded-3'
+							style={{
+								width: '42px',
+								height: '42px',
+								backgroundColor: '#EEF2F6',
+								color: '#1E3A5F',
+							}}>
+							<FontAwesomeIcon icon={faBuilding} className='fs-3' />
+						</span>
+						<div>
+							<h3 className='card-title fw-bolder text-gray-900 fs-3 m-0'>
+								Edit Supplier Details
+							</h3>
+							<span className='text-muted fs-7 mt-1 d-block'>
+								Update raw material vendor profile, contact information, and warehouse location
+							</span>
+						</div>
+					</div>
+
+					<div>
+						<button
+							type='button'
+							className='btn btn-light btn-active-light-primary fw-semibold d-flex align-items-center gap-2'
+							onClick={() => navigate('/rag/inventory/suppliers/list')}
+							style={{ height: '38px', borderRadius: '8px', fontSize: '13px' }}>
+							<FontAwesomeIcon icon={faArrowLeft} />
+							Back to Suppliers
+						</button>
+					</div>
+				</div>
+
+				{/* 2. Card Body */}
+				<div className='card-body px-6 px-lg-8 py-7'>
+					<div className='row g-7'>
+						{/* Left Column: Logo & Visual Identification */}
+						<div className='col-12 col-lg-4 col-xl-3'>
+							<div
+								className='p-5 rounded-4 text-center d-flex flex-column align-items-center'
+								style={{
+									backgroundColor: '#F8FAFC',
+									border: '1px solid #E2E8F0',
+								}}>
+								<span className='fw-bold text-gray-800 fs-7 mb-3 d-block align-self-start'>
+									Supplier Logo
+								</span>
+
+								{/* Logo Image Preview Container */}
+								<div
+									className='d-flex align-items-center justify-content-center bg-white rounded-3 shadow-sm mb-3'
+									style={{
+										width: '160px',
+										height: '160px',
+										border: '1px solid #E2E8F0',
+										overflow: 'hidden',
+										position: 'relative',
+									}}>
+									{displayImg || formData.supplier_logo ? (
 										<img
-											alt='supplier'
-											src={`https://files.fggroup.in/${displayImg || '/media/avatars/300-1.jpg'}`}
-											style={{ borderRadius: '10px', width: '70%' }}
+											alt={formData.name || 'supplier'}
+											src={`https://files.fggroup.in/${displayImg || formData.supplier_logo}`}
+											style={{
+												width: '100%',
+												height: '100%',
+												objectFit: 'contain',
+												padding: '8px',
+											}}
+											onError={(e) => {
+												e.currentTarget.style.display = 'none'
+											}}
 										/>
 									) : (
-										<img
-											alt='supplier'
-											src={`https://files.fggroup.in/${
-												formData.supplier_logo || '/media/avatars/300-1.jpg'
-											}`}
-											style={{ borderRadius: '10px', width: '70%' }}
-										/>
+										<div className='text-muted d-flex flex-column align-items-center gap-2'>
+											<FontAwesomeIcon icon={faBuilding} className='fs-1 text-gray-400' />
+											<span className='fs-8 text-gray-500'>No Logo Uploaded</span>
+										</div>
 									)}
-									<div>
-										<button
-											type='button'
-											className='mt-5 px-2 py-1 mb-2 btn btn-success'
-											onClick={handleFileButtonClick}>
-											Upload Photo
-										</button>
-										<input
-											type='file'
-											id='fileInput'
-											className='d-none'
-											onChange={handleInputChange}
-										/>
-									</div>
 								</div>
-								<div className='col-md-9'>
-									<div className='row'>
-										<div className='col-md-6 fv-row mb-7'>
-											<CopyableInput
-												value={formData._id}
-												label={'Supplier ID'}
-												className='col-12 fv-row mb-7'
-												htmlFor={'_id'}
-												placeholder='Enter Supplier ID'
-												type='text'
-												name='_id'
-												onChange={handleInputChange}
-												disabled={true}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Enter Supplier Name'
-												type='text'
-												className='fv-row'
-												name='name'
-												label='Supplier Name'
-												htmlFor='name'
-												value={formData.name}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Enter Email'
-												type='email'
-												className='fv-row'
-												name='email'
-												label='Email'
-												htmlFor='email'
-												value={formData.email}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Enter Mobile Number'
-												type='number'
-												className='fv-row'
-												name='number'
-												label='Mobile Number'
-												htmlFor='number'
-												value={formData.number}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-12 fv-row mb-7'>
-											<InputField
-												placeholder='Enter Address Line 1'
-												type='text'
-												className='fv-row'
-												name='address_line_1'
-												label='Address Line 1'
-												htmlFor='address_line_1'
-												value={formData.address_line_1}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<SelectField
-												className='fv-row'
-												label='Country'
-												name='country'
-												value={formData.country}
-												onChange={handleInputChange}
-												htmlFor='country'
-												options={countries.map((country) => country.name)}
-												disabled={loadingCountries}
-											/>
-										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<SelectField
-												className='fv-row'
-												label='State'
-												name='state'
-												value={formData.state}
-												onChange={handleInputChange}
-												htmlFor='state'
-												options={states.map((state) => state.name)}
-												disabled={loadingStates || !formData.country}
-											/>
-										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<SelectField
-												className='fv-row'
-												label='City'
-												name='city'
-												value={formData.city}
-												onChange={handleInputChange}
-												htmlFor='city'
-												options={cities.map((city) => city.name)}
-												disabled={loadingCities || !formData.state}
-											/>
-										</div>
-										<div className='col-md-12 fv-row mb-7'>
-											<InputField
-												placeholder='Enter Pin Code'
-												type='text'
-												className='fv-row'
-												name='pin_code'
-												label='Pin Code'
-												htmlFor='pin_code'
-												value={formData.pin_code}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-12 fv-row text-end mb-7'>
-											<TableButton
-												action='edit'
-												onClick={handleUpdateButtonClick}
-												text={
-													isSubmitting
-														? 'Please wait, Updating Supplier Details...'
-														: 'Update Supplier Details'
-												}
-												showIcon={false}
-												disabled={isSubmitting}
-												backgroundDark={true}
-												className={`mb-4 btn-block ${isSubmitting ? 'disabled' : ''}`}
-											/>
-										</div>
+
+								{/* Upload Button */}
+								<button
+									type='button'
+									className='btn btn-sm btn-light-primary fw-bold w-100 d-flex align-items-center justify-content-center gap-2'
+									onClick={handleFileButtonClick}
+									style={{
+										height: '38px',
+										borderRadius: '8px',
+										fontSize: '13px',
+									}}>
+									<FontAwesomeIcon icon={faUpload} />
+									Upload Photo
+								</button>
+								<input
+									type='file'
+									id='fileInput'
+									accept='image/*'
+									className='d-none'
+									onChange={handleInputChange}
+								/>
+								<span className='text-muted fs-8 mt-2 d-block'>
+									Supported formats: PNG, JPG, WEBP
+								</span>
+
+								{/* Supplier Metadata Badges */}
+								<div
+									className='w-100 mt-5 pt-4 border-top text-start'
+									style={{ borderColor: '#E2E8F0' }}>
+									<div className='d-flex align-items-center justify-content-between mb-2'>
+										<span className='text-muted fs-8 fw-semibold'>Vendor Type:</span>
+										<span className='badge badge-light-primary fs-8 fw-bold'>
+											Raw Material
+										</span>
+									</div>
+									<div className='d-flex align-items-center justify-content-between'>
+										<span className='text-muted fs-8 fw-semibold'>Status:</span>
+										<span className='badge badge-light-success fs-8 fw-bold'>Active</span>
 									</div>
 								</div>
 							</div>
 						</div>
+
+						{/* Right Column: Form Fields */}
+						<div className='col-12 col-lg-8 col-xl-9'>
+							{/* Section 1: Basic Company Information */}
+							<div className='mb-7'>
+								<div className='d-flex align-items-center gap-2 mb-4 pb-2 border-bottom'>
+									<FontAwesomeIcon icon={faBuilding} className='text-primary fs-6' />
+									<h4 className='fw-bolder text-gray-900 fs-5 m-0'>Company Information</h4>
+								</div>
+
+								<div className='row g-4'>
+									<div className='col-12 col-md-6'>
+										<CopyableInput
+											value={formData._id}
+											label={'Supplier ID'}
+											htmlFor={'_id'}
+											placeholder='Supplier ID'
+											type='text'
+											name='_id'
+											onChange={handleInputChange}
+											disabled={true}
+											className='mb-0'
+										/>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<InputField
+											placeholder='Enter Supplier Name'
+											type='text'
+											name='name'
+											label='Supplier Name'
+											htmlFor='name'
+											value={formData.name}
+											onChange={handleInputChange}
+											required
+											labelMarginRemove
+											marginRemove
+										/>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<InputField
+											placeholder='Enter Email'
+											type='email'
+											name='email'
+											label='Email Address'
+											htmlFor='email'
+											value={formData.email}
+											onChange={handleInputChange}
+											required
+											labelMarginRemove
+											marginRemove
+										/>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<InputField
+											placeholder='Enter 10-digit Mobile Number'
+											type='number'
+											name='number'
+											label='Mobile Number'
+											htmlFor='number'
+											value={formData.number}
+											onChange={handleInputChange}
+											required
+											labelMarginRemove
+											marginRemove
+										/>
+									</div>
+								</div>
+							</div>
+
+							{/* Section 2: Address & Warehouse Details */}
+							<div className='mb-6'>
+								<div className='d-flex align-items-center gap-2 mb-4 pb-2 border-bottom'>
+									<FontAwesomeIcon icon={faLocationDot} className='text-primary fs-6' />
+									<h4 className='fw-bolder text-gray-900 fs-5 m-0'>
+										Address & Warehouse Location
+									</h4>
+								</div>
+
+								<div className='row g-4'>
+									<div className='col-12'>
+										<InputField
+											placeholder='Enter full street address or warehouse location'
+											type='text'
+											name='address_line_1'
+											label='Address Line 1'
+											htmlFor='address_line_1'
+											value={formData.address_line_1}
+											onChange={handleInputChange}
+											labelMarginRemove
+											marginRemove
+										/>
+									</div>
+
+									<div className='col-12 col-md-4'>
+										<SelectField
+											label='Country'
+											name='country'
+											value={formData.country}
+											onChange={handleInputChange}
+											htmlFor='country'
+											options={countries.map((country) => country.name)}
+											disabled={loadingCountries}
+											marginRemove
+										/>
+									</div>
+
+									<div className='col-12 col-md-4'>
+										<SelectField
+											label='State'
+											name='state'
+											value={formData.state}
+											onChange={handleInputChange}
+											htmlFor='state'
+											options={states.map((state) => state.name)}
+											disabled={loadingStates || !formData.country}
+											marginRemove
+										/>
+									</div>
+
+									<div className='col-12 col-md-4'>
+										<SelectField
+											label='City'
+											name='city'
+											value={formData.city}
+											onChange={handleInputChange}
+											htmlFor='city'
+											options={cities.map((city) => city.name)}
+											disabled={loadingCities || !formData.state}
+											marginRemove
+										/>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<InputField
+											placeholder='Enter Postal PIN Code'
+											type='text'
+											name='pin_code'
+											label='PIN Code'
+											htmlFor='pin_code'
+											value={formData.pin_code}
+											onChange={handleInputChange}
+											labelMarginRemove
+											marginRemove
+										/>
+									</div>
+								</div>
+							</div>
+
+							{/* Section 3: Action Buttons Footer */}
+							<div
+								className='d-flex align-items-center justify-content-end gap-3 mt-8 pt-5 border-top'
+								style={{ borderColor: '#E2E8F0' }}>
+								<button
+									type='button'
+									className='btn btn-light btn-active-light-primary fw-semibold px-5'
+									onClick={() => navigate('/rag/inventory/suppliers/list')}
+									disabled={isSubmitting}
+									style={{ height: '40px', borderRadius: '8px', fontSize: '13px' }}>
+									Cancel
+								</button>
+
+								<button
+									type='button'
+									className='btn btn-primary fw-bold px-6 d-flex align-items-center gap-2'
+									onClick={handleUpdateButtonClick}
+									disabled={isSubmitting}
+									style={{
+										height: '40px',
+										borderRadius: '8px',
+										fontSize: '13px',
+										backgroundColor: '#0F172A',
+										borderColor: '#0F172A',
+									}}>
+									{isSubmitting ? (
+										<>
+											<span
+												className='spinner-border spinner-border-sm me-1'
+												role='status'
+												aria-hidden='true'></span>
+											Updating Supplier...
+										</>
+									) : (
+										<>
+											<FontAwesomeIcon icon={faCheck} />
+											Update Supplier Details
+										</>
+									)}
+								</button>
+							</div>
+						</div>
 					</div>
 				</div>
-			</div>
+			</KTCard>
 		</>
 	)
 }

@@ -112,10 +112,10 @@ const FgiitAbandonedList: React.FC = () => {
 	}
 
 	const sortableFields = [
-		{ title: 'User', field: 'book_title' },
-		{ title: 'Receipt ID', field: 'cover_image' },
-		{ title: 'Item Name', field: 'amount' },
-		{ title: 'Price', field: 'createdAt' },
+		{ title: 'User', field: 'user_info.first_name' },
+		{ title: 'Receipt ID', field: 'receipt_id' },
+		{ title: 'Item Name', field: 'product.name' },
+		{ title: 'Price', field: 'amount' },
 		{ title: 'Date', field: 'createdAt' },
 	]
 

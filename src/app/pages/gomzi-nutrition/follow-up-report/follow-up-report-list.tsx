@@ -1,7 +1,7 @@
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { endOfMonth, startOfMonth } from 'date-fns'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -11,6 +11,7 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import SelectField from '../../../components/SelectField'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import * as FGGroupAPIs from '../../../Functions/FGGroup'
@@ -304,6 +305,37 @@ const FollowUpReportList: React.FC = () => {
 		{ label: 'Orange', value: '#fff7ed', dot: '#f97316' },
 		{ label: 'Blue', value: '#eff6ff', dot: '#3b82f6' },
 	]
+
+	const assignedToOptions = useMemo(
+		() => [
+			{ label: 'All Assigned To', value: '' },
+			...employees.map((emp) => ({
+				label: emp.full_name,
+				value: emp.employee_id,
+			})),
+		],
+		[employees]
+	)
+
+	const platformOptions = [
+		{ label: 'All Platforms', value: '' },
+		{ label: 'Facebook', value: 'fb' },
+		{ label: 'Instagram', value: 'ig' },
+		{ label: 'Pull Marketing', value: 'Pull_marketing' },
+	]
+
+	const colorFilterOptions = useMemo(
+		() => [
+			{ label: 'All Colors', value: '' },
+			...colorOptions
+				.filter((c) => c.value !== '')
+				.map((c) => ({
+					label: c.label,
+					value: c.value,
+				})),
+		],
+		[colorOptions]
+	)
 
 	const getBorderColor = (bg: string) => {
 		const map: Record<string, string> = {
@@ -682,6 +714,7 @@ const FollowUpReportList: React.FC = () => {
 					align-items: center;
 					justify-content: flex-start;
 					gap: 12px;
+					flex-wrap: wrap;
 				}
 				.flr-filter-left, .flr-filter-right {
 					display: flex;
@@ -691,24 +724,25 @@ const FollowUpReportList: React.FC = () => {
 				.flr-select {
 					height: 38px;
 					padding: 0 32px 0 12px;
-					border: 1.5px solid #e5e7eb;
-					border-radius: 10px;
+					border: 1px solid #DFE7F0;
+					border-radius: 8px;
 					font-size: 13px;
 					font-weight: 500;
-					color: #374151;
-					background: #fff;
-					min-width: 170px;
+					color: #172B4D;
+					background: #ffffff;
+					min-width: 160px;
 					outline: none;
 					cursor: pointer;
 					appearance: none;
-					background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+					background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
 					background-repeat: no-repeat;
-					background-position: right 10px center;
+					background-position: right 12px center;
 					background-size: 11px;
-					transition: border-color .15s, box-shadow .15s;
+					box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+					transition: border-color .15s ease, box-shadow .15s ease;
 				}
-				.flr-select:hover { border-color: #6366f1; }
-				.flr-select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+				.flr-select:hover { border-color: #1E3A5F; }
+				.flr-select:focus { border-color: #1E3A5F; box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15); }
 
 				/* Stats Bar */
 				.flr-stats-bar {
@@ -1109,76 +1143,99 @@ const FollowUpReportList: React.FC = () => {
 				{/* Filter Bar */}
 				<div className='flr-filter-bar'>
 					<div className='flr-filter-row'>
-						<div className='flr-filter-left'>
+						<div>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
+								className='me-0'
 							/>
 						</div>
-						<div className='flr-filter-right'>
-							<select
-								className='flr-select'
-								value={selectedAssignedTo}
-								onChange={(e) => {
-									setSelectedAssignedTo(e.target.value)
-									setPagination((p) => ({ ...p, page: 1 }))
-								}}>
-								<option value=''>All Assigned To</option>
-								{employees.map((emp) => (
-									<option
-										key={emp.employee_id}
-										value={emp.employee_id}>
-										{emp.full_name}
-									</option>
-								))}
-							</select>
 
-							<select
-								className='flr-select'
-								value={selectedPlatform}
-								onChange={(e) => {
-									setSelectedPlatform(e.target.value)
-									setPagination((p) => ({ ...p, page: 1 }))
-								}}>
-								<option value=''>All Platforms</option>
-								<option value='fb'>Facebook</option>
-								<option value='ig'>Instagram</option>
-								<option value='Pull_marketing'>Pull Marketing</option>
-							</select>
-							<select
-								className='flr-select'
-								value={selectedColor}
-								onChange={(e) => setSelectedColor(e.target.value)}>
-								<option value=''>All Colors</option>
-								{colorOptions
-									.filter((c) => c.value !== '')
-									.map((c) => (
-										<option
-											key={c.value}
-											value={c.value}>
-											{c.label}
-										</option>
-									))}
-							</select>
+						<div>
+							<LengthMenu
+								expenseData={jobData}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								value={pagination.itemsPerPage}
+								className='me-0'
+							/>
+						</div>
+
+						<div>
 							<button
-								className='btn btn-primary btn-icon'
+								type='button'
+								className='btn btn-primary d-flex align-items-center justify-content-center'
 								onClick={downloadExcel}
 								disabled={loading || exporting || filteredData.length === 0}
+								style={{
+									width: '38px',
+									height: '38px',
+									padding: 0,
+									borderRadius: '8px',
+									fontSize: '14px',
+								}}
 								title='Download as Excel'>
 								<FontAwesomeIcon
 									icon={faDownload}
 									className='fs-5'
 								/>
 							</button>
-							<div>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-								/>
-							</div>
-							<LengthMenu
-								expenseData={jobData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
+						</div>
+
+						<div style={{ minWidth: '170px' }}>
+							<SelectField
+								className='fv-row mb-0'
+								label='Assigned To'
+								showLabel={false}
+								hideDefaultOption={true}
+								name='assigned_to'
+								value={selectedAssignedTo}
+								onChange={(e) => {
+									setSelectedAssignedTo(e.target.value)
+									setPagination((p) => ({ ...p, page: 1 }))
+								}}
+								marginRemove={true}
+								height='38px'
+								options={assignedToOptions}
+							/>
+						</div>
+
+						<div style={{ minWidth: '160px' }}>
+							<SelectField
+								className='fv-row mb-0'
+								label='Platform'
+								showLabel={false}
+								hideDefaultOption={true}
+								name='platform'
+								value={selectedPlatform}
+								onChange={(e) => {
+									setSelectedPlatform(e.target.value)
+									setPagination((p) => ({ ...p, page: 1 }))
+								}}
+								marginRemove={true}
+								height='38px'
+								options={platformOptions}
+							/>
+						</div>
+
+						<div style={{ minWidth: '150px' }}>
+							<SelectField
+								className='fv-row mb-0'
+								label='Color'
+								showLabel={false}
+								hideDefaultOption={true}
+								name='color'
+								value={selectedColor}
+								onChange={(e) => setSelectedColor(e.target.value)}
+								marginRemove={true}
+								height='38px'
+								options={colorFilterOptions}
+							/>
+						</div>
+
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
 							/>
 						</div>
 					</div>

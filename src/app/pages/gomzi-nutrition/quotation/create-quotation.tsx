@@ -474,7 +474,7 @@ const NutritionCreateQuotation: React.FC = () => {
 															htmlFor={`item_weight_${index}`}>
 															Weight
 														</label>
-														<div className='d-flex align-items-center'>
+														<div className='d-flex align-items-center gap-3'>
 															<input
 																type='number'
 																name='item_weight'
@@ -482,29 +482,25 @@ const NutritionCreateQuotation: React.FC = () => {
 																value={(plan.item_weight || '').toString()}
 																onChange={(e: any) => handlePlanInputChange(index, e)}
 																placeholder='Enter Weight'
-																className='form-control rounded-end-0 border-end-0 inputfield-bg'
+																className='form-control inputfield-bg flex-grow-1'
 																style={{
-																	borderTopRightRadius: 0,
-																	borderBottomRightRadius: 0,
-																	borderRight: 'none',
+																	height: '38px',
+																	borderRadius: '8px',
+																	minWidth: 0,
 																}}
 															/>
-															<select
-																name='item_weight_type'
-																value={plan.item_weight_type || 'kg'}
-																onChange={(e: any) => handlePlanInputChange(index, e)}
-																className='form-select rounded-start-0'
-																style={{
-																	borderTopLeftRadius: 0,
-																	borderBottomLeftRadius: 0,
-																	width: 'auto',
-																	minWidth: '80px',
-																}}>
-																<option value='gm'>gm</option>
-																<option value='kg'>kg</option>
-																<option value='ml'>ml</option>
-																<option value='ltr'>ltr</option>
-															</select>
+															<div style={{ width: '95px', flexShrink: 0 }}>
+																<SelectField
+																	showLabel={false}
+																	marginRemove
+																	name='item_weight_type'
+																	value={plan.item_weight_type || 'kg'}
+																	onChange={(e: any) => handlePlanInputChange(index, e)}
+																	options={['gm', 'kg', 'ml', 'ltr']}
+																	searchable={false}
+																	hideDefaultOption={true}
+																/>
+															</div>
 														</div>
 													</div>
 													<InputField
@@ -799,6 +795,9 @@ const NutritionCreateQuotation: React.FC = () => {
 													</td>
 													<td className='border border-black'>
 														<span className='inv-paid'>-</span>
+													</td>
+													<td className='border border-black'>
+														<span className='inv-total'>-</span>
 													</td>
 													<td className='border border-black'>
 														<span className='inv-total'>-</span>

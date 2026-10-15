@@ -1,4 +1,4 @@
-import { faPlusCircle, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faPlusCircle, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import Modal from 'react-bootstrap/Modal'
@@ -67,10 +67,11 @@ const GomziNutritionProductStock: React.FC = () => {
 	}, [pagination.page, pagination.itemsPerPage, sort, sortOrder])
 
 	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value })
+		setPagination({ ...pagination, itemsPerPage: value, page: 1 })
+		sessionStorage.setItem('currentPage', '1')
 	}
 
-	const isFirstRender = useRef(true);
+	const isFirstRender = useRef(true)
 
 	useEffect(() => {
 		if (isFirstRender.current) {
@@ -99,6 +100,8 @@ const GomziNutritionProductStock: React.FC = () => {
 	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
 		setSort(newSort)
 		setSortOrder(newSortOrder)
+		setPagination((prev) => ({ ...prev, page: 1 }))
+		sessionStorage.setItem('currentPage', '1')
 	}
 
 	const sortableFields = [
@@ -131,6 +134,25 @@ const GomziNutritionProductStock: React.FC = () => {
 		}
 	}
 
+	const closeUpdateModal = () => {
+		setUpdateShowModal(false)
+		if (typeof document !== 'undefined') {
+			;(document.activeElement as HTMLElement)?.blur()
+		}
+	}
+
+	const closeAddModal = () => {
+		setShowModal(false)
+		setFormData({
+			stock_id: '',
+			stock: '',
+			item_id: '',
+		})
+		if (typeof document !== 'undefined') {
+			;(document.activeElement as HTMLElement)?.blur()
+		}
+	}
+
 	const handleAddStock = async () => {
 		try {
 			const productData: any = product.find((item: any) => item?.label == formData?.item_id)
@@ -141,12 +163,7 @@ const GomziNutritionProductStock: React.FC = () => {
 			await CreateProductStock(payload)
 			toast.success('Stock Added Successfully')
 			fetchData()
-			setShowModal(false)
-			setFormData({
-				stock_id: '',
-				stock: '',
-				item_id: '',
-			})
+			closeAddModal()
 		} catch (error: any) {
 			toast.error(error.message)
 			console.error(error)
@@ -164,7 +181,7 @@ const GomziNutritionProductStock: React.FC = () => {
 			await UpdateProductStock(payload)
 			toast.success('Stock Updated Successfully')
 			fetchData()
-			setUpdateShowModal(false)
+			closeUpdateModal()
 			setFormData({
 				stock_id: '',
 				stock: '',
@@ -240,6 +257,7 @@ const GomziNutritionProductStock: React.FC = () => {
 							<LengthMenu
 								expenseData={productData}
 								handleItemsPerPageChange={handleItemsPerPageChange}
+								value={pagination.itemsPerPage}
 							/>
 						</div>
 					</div>
@@ -345,128 +363,165 @@ const GomziNutritionProductStock: React.FC = () => {
 					)}
 				</div>
 			</KTCard>
-			{/*add Modal*/}
+			{/* Add Modal */}
 			<Modal
 				centered
 				show={showModal}
-				onHide={() => setShowModal(false)}>
-				<div className='modal-content'>
-					<div className='modal-header justify-content-between'>
-						<h2 className='fw-bolder'>Add Product Stock</h2>
-						<button
-							onClick={() => setShowModal(false)}
-							className='btn btn-sm btn-icon btn-active-color-primary'
-							data-bs-dismiss='modal'>
-							<FontAwesomeIcon
-								className='fs-1 position-absolute ms-3'
-								icon={faXmark}
-							/>
-						</button>
+				onHide={closeAddModal}
+				contentClassName='border-0 shadow-lg'
+				style={{ borderRadius: '12px' }}>
+				<div className='modal-header border-bottom py-4 px-6 d-flex align-items-center justify-content-between'>
+					<h3 className='modal-title fw-bolder text-gray-900 fs-4 m-0'>Add Product Stock</h3>
+					<button
+						type='button'
+						className='btn btn-sm btn-icon btn-active-light-primary rounded-circle'
+						onClick={closeAddModal}
+						aria-label='Close'
+						style={{ width: '32px', height: '32px' }}>
+						<FontAwesomeIcon icon={faXmark} className='fs-4 text-gray-500' />
+					</button>
+				</div>
+				<div className='modal-body px-6 py-5'>
+					<div className='mb-4'>
+						<label className='form-label required fw-bold text-gray-800 fs-7 mb-1'>Product</label>
+						<SelectField
+							className='w-100'
+							label=''
+							name='item_id'
+							options={product.map((item: any) => item?.label)}
+							value={formData.item_id}
+							onChange={handleInputChange}
+							showLabel={false}
+							marginRemove
+						/>
 					</div>
-					<div className='modal-body'>
-						<div className='row'>
-							<div className='col-12 fv-row mb-7'>
-								<label
-									htmlFor='Product List'
-									className='fw-bold fs-6 mb-md-5 mb-2'>
-									Product List
-								</label>
-								<SelectField
-									className='w-100 fv-row mb-7'
-									label='Product'
-									name='item_id'
-									options={product.map((product: any) => product?.label)}
-									value={formData.item_id}
-									onChange={handleInputChange}
-									htmlFor='user'
-								/>
-								<label
-									htmlFor='Stock'
-									className='required fw-bold fs-6 mb-5'>
-									Stock
-								</label>
-								<input
-									placeholder='Bundle Name'
-									type='number'
-									name='stock'
-									className='w-100 form-control fv-row mb-7'
-									autoComplete='off'
-									value={formData.stock}
-									onChange={handleInputChange}
-								/>
-							</div>
-						</div>
-					</div>
-					<div className='modal-footer justify-content-end'>
-						<TableButton
-							action='add'
-							onClick={() => handleAddStock()}
-							text='Add'
+					<div>
+						<label className='form-label required fw-bold text-gray-800 fs-7 mb-1'>Stock Quantity</label>
+						<input
+							placeholder='Enter stock quantity'
+							type='number'
+							name='stock'
+							min='0'
+							className='form-control'
+							autoComplete='off'
+							value={formData.stock}
+							onChange={handleInputChange}
+							style={{
+								border: '1px solid #DFE7F0',
+								borderRadius: '8px',
+								height: '40px',
+								fontSize: '14px',
+								fontWeight: 600,
+							}}
 						/>
 					</div>
 				</div>
+				<div className='modal-footer border-top py-3 px-6 d-flex justify-content-end gap-2'>
+					<button
+						type='button'
+						className='btn btn-light btn-active-light-primary fw-semibold px-4'
+						style={{ height: '38px', borderRadius: '8px', fontSize: '13px' }}
+						onClick={closeAddModal}>
+						Cancel
+					</button>
+					<button
+						type='button'
+						className='btn btn-primary fw-bold px-5 d-flex align-items-center gap-2'
+						style={{
+							height: '38px',
+							borderRadius: '8px',
+							fontSize: '13px',
+							backgroundColor: '#0F172A',
+							borderColor: '#0F172A',
+						}}
+						onClick={handleAddStock}>
+						<FontAwesomeIcon icon={faCheck} />
+						Add Stock
+					</button>
+				</div>
 			</Modal>
 
-			{/*Update Modal*/}
+			{/* Update Modal */}
 			<Modal
 				centered
 				show={updateShowModal}
-				onHide={() => setUpdateShowModal(false)}>
-				<div className='modal-content'>
-					<div className='modal-header justify-content-between'>
-						<h2 className='fw-bolder'>Update Product Stock</h2>
-						<button
-							onClick={() => setUpdateShowModal(false)}
-							className='btn btn-sm btn-icon btn-active-color-primary'
-							data-bs-dismiss='modal'>
-							<FontAwesomeIcon
-								className='fs-1 position-absolute ms-3'
-								icon={faXmark}
-							/>
-						</button>
-					</div>
-					<div className='modal-body'>
-						<div className='row'>
-							<div className='col-12 fv-row mb-7'>
-								<label
-									htmlFor='Product List'
-									className='fw-bold fs-6 mb-md-5 mb-2'>
-									Product List
-								</label>
-								<input
-									placeholder='Bundle Name'
-									type='text'
-									name='item_id'
-									className='w-100 form-control fv-row mb-7'
-									autoComplete='off'
-									value={formData.item_id}
-									onChange={handleInputChange}
-									disabled
-								/>
-								<label
-									htmlFor='Stock'
-									className='required fw-bold fs-6 mb-5'>
-									Stock
-								</label>
-								<input
-									placeholder='Enter Stock'
-									type='number'
-									name='stock'
-									className='w-100 form-control fv-row mb-7'
-									autoComplete='off'
-									value={formData.stock}
-									onChange={handleInputChange}
-								/>
-							</div>
-						</div>
-					</div>
-					<div className='modal-footer justify-content-end'>
-						<TableButton
-							action='edit'
-							onClick={() => handleUpdateStock()}
-							text='Update'
+				onHide={closeUpdateModal}
+				contentClassName='border-0 shadow-lg'
+				style={{ borderRadius: '12px' }}>
+				<div className='modal-header border-bottom py-4 px-6 d-flex align-items-center justify-content-between'>
+					<h3 className='modal-title fw-bolder text-gray-900 fs-4 m-0'>Update Product Stock</h3>
+					<button
+						type='button'
+						className='btn btn-sm btn-icon btn-active-light-primary rounded-circle'
+						onClick={closeUpdateModal}
+						aria-label='Close'
+						style={{ width: '32px', height: '32px' }}>
+						<FontAwesomeIcon icon={faXmark} className='fs-4 text-gray-500' />
+					</button>
+				</div>
+				<div className='modal-body px-6 py-5'>
+					{/* Product (Read-Only) */}
+					<div className='mb-4'>
+						<label className='form-label fw-bold text-gray-700 fs-7 mb-1'>Product</label>
+						<input
+							type='text'
+							name='item_id'
+							className='form-control form-control-solid fw-semibold fs-7 text-gray-700'
+							value={formData.item_id}
+							readOnly
+							style={{
+								backgroundColor: '#F8FAFC',
+								border: '1px solid #E2E8F0',
+								borderRadius: '8px',
+								height: '40px',
+							}}
 						/>
 					</div>
+
+					{/* Stock Quantity */}
+					<div>
+						<label className='form-label required fw-bold text-gray-800 fs-7 mb-1'>Stock Quantity</label>
+						<input
+							placeholder='Enter stock quantity'
+							type='number'
+							name='stock'
+							min='0'
+							className='form-control'
+							autoComplete='off'
+							value={formData.stock}
+							onChange={handleInputChange}
+							style={{
+								border: '1px solid #DFE7F0',
+								borderRadius: '8px',
+								height: '40px',
+								fontSize: '14px',
+								fontWeight: 600,
+							}}
+						/>
+					</div>
+				</div>
+				<div className='modal-footer border-top py-3 px-6 d-flex justify-content-end gap-2'>
+					<button
+						type='button'
+						className='btn btn-light btn-active-light-primary fw-semibold px-4'
+						style={{ height: '38px', borderRadius: '8px', fontSize: '13px' }}
+						onClick={closeUpdateModal}>
+						Cancel
+					</button>
+					<button
+						type='button'
+						className='btn btn-primary fw-bold px-5 d-flex align-items-center gap-2'
+						style={{
+							height: '38px',
+							borderRadius: '8px',
+							fontSize: '13px',
+							backgroundColor: '#0F172A',
+							borderColor: '#0F172A',
+						}}
+						onClick={handleUpdateStock}>
+						<FontAwesomeIcon icon={faCheck} />
+						Update Stock
+					</button>
 				</div>
 			</Modal>
 		</>

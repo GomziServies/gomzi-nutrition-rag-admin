@@ -1,7 +1,11 @@
+import { faDownload } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
+import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import UsersListPagination from '../../../components/TablePagination'
@@ -75,7 +79,7 @@ const AddToCart: React.FC = () => {
 					)
 					return {
 						...cartItem,
-						display_image: itemDetail?.displayImages[0] || [],
+						display_image: itemDetail?.displayImages?.[0] || '',
 						name: itemDetail?.name || 'Unknown',
 						price: itemDetail?.price || 0,
 						user_id: item.user_id,
@@ -100,34 +104,126 @@ const AddToCart: React.FC = () => {
 		setPagination((prev) => ({ ...prev, page }))
 	}
 
-	const handleItemsPerPageChange = (value: number) => {
-		setPagination((prev) => ({ ...prev, itemsPerPage: value }))
+	useEffect(() => {
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}, [searchTerm])
+
+	const [dateRange, setDateRange] = useState<[Date, Date] | null>(null)
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setDateRange(range)
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
-	const filteredCartData = cartDataWithUser.filter((item) =>
-		item?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-	)
+	const handleItemsPerPageChange = (value: number) => {
+		setPagination((prev) => ({ ...prev, itemsPerPage: value, page: 1 }))
+	}
+
+	const filteredCartData = cartDataWithUser.filter((item) => {
+		// 1. Date Filter
+		if (dateRange && dateRange[0] && dateRange[1]) {
+			const itemDate = new Date(item.createdAt).getTime()
+			const startDate = new Date(dateRange[0]).setHours(0, 0, 0, 0)
+			const endDate = new Date(dateRange[1]).setHours(23, 59, 59, 999)
+			if (isNaN(itemDate) || itemDate < startDate || itemDate > endDate) {
+				return false
+			}
+		}
+
+		// 2. Search Filter (Item Name, User Name, Mobile, Email)
+		if (!searchTerm || !searchTerm.trim()) return true
+		const term = searchTerm.toLowerCase().trim()
+		const itemName = (item?.name || '').toLowerCase()
+		const userName = `${item?.user?.first_name || ''} ${item?.user?.last_name || ''}`.toLowerCase()
+		const mobile = (item?.user?.mobile || '').toString().toLowerCase()
+		const email = (item?.user?.email || '').toLowerCase()
+
+		return itemName.includes(term) || userName.includes(term) || mobile.includes(term) || email.includes(term)
+	})
 
 	const paginatedCartData = filteredCartData.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
 		pagination.page * pagination.itemsPerPage
 	)
 
+	const downloadExcel = () => {
+		const worksheetData = filteredCartData.map((data: any, idx: number) => {
+			const userName = data?.user
+				? `${data?.user?.first_name || 'Deleted User'} ${data?.user?.last_name || ''}`.trim()
+				: 'Deleted User'
+			const mobile = data?.user?.mobile || 'N/A'
+			const email = data?.user?.email || 'N/A'
+
+			return {
+				'No.': idx + 1,
+				'User Name': userName,
+				Mobile: mobile,
+				Email: email,
+				'Item Name': data?.name || 'N/A',
+				Quantity: data?.quantity ?? 0,
+				'Price (Per Item)': data?.price ?? 0,
+				Date: data?.createdAt ? DayJS(data.createdAt).format('DD/MM/YYYY hh:mm:ss A') : 'N/A',
+			}
+		})
+
+		const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+		const workbook = XLSX.utils.book_new()
+		XLSX.utils.book_append_sheet(workbook, worksheet, 'User Cart')
+		XLSX.writeFile(workbook, `User_Cart_${DayJS().format('YYYY-MM-DD')}.xlsx`)
+	}
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Products</PageTitle>
 			<KTCard>
-				<div className='d-flex justify-content-between mx-3 m-5'>
-					<div className='d-flex pt-1 mx-2'>
-						<LengthMenu
-							expenseData={cartDataWithUser}
-							handleItemsPerPageChange={handleItemsPerPageChange}
-						/>
+				{/* Filters Toolbar Row: Search, LengthMenu, Download Excel, DateFilter */}
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex flex-wrap align-items-center gap-3 w-100'>
+						{/* 1. Search Filter */}
+						<div>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 2. Dropdown (show entries per page) */}
+						<div>
+							<LengthMenu
+								expenseData={filteredCartData}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<button
+								type='button'
+								className='btn btn-primary d-flex align-items-center justify-content-center'
+								style={{
+									width: '38px',
+									height: '38px',
+									padding: 0,
+									borderRadius: '8px',
+									fontSize: '14px',
+								}}
+								onClick={downloadExcel}
+								disabled={loading || filteredCartData.length === 0}
+								title='Download Excel'>
+								<FontAwesomeIcon icon={faDownload} />
+							</button>
+						</div>
+
+						{/* 4. Date Filter */}
+						<div className='d-flex align-items-center'>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+							/>
+						</div>
 					</div>
-					<SearchFilter
-						searchTerm={searchTerm}
-						setSearchTerm={setSearchTerm}
-					/>
 				</div>
 
 				<div className='py-4 card-body'>

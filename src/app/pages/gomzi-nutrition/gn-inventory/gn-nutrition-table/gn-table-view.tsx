@@ -69,10 +69,8 @@ const GnTablePriceView: React.FC = () => {
         return
       }
 
-      // If no formulation_id in URL, show error
+      // If no formulation_id in URL, do not fetch
       if (!formulation_id) {
-        toast.error('No formulation ID provided')
-        navigate(-1)
         return
       }
 
@@ -409,13 +407,13 @@ const GnTablePriceView: React.FC = () => {
             <div className="d-flex flex-column text-center w-100 align-content-center justify-content-center mt-5 py-10">
               <i className="bi bi-inbox fs-4x text-gray-400 mb-4"></i>
               <b className="text-gray-800 fs-3">No data available</b>
-              <p className="text-gray-600 fs-6 mt-2">Unable to load formulation data</p>
+              <p className="text-gray-600 fs-6 mt-2">Please select a client process from the Inventory Dashboard to view its Production Formula</p>
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/rag/inventory')}
                 className='btn btn-primary mt-4'
-                style={{ maxWidth: '200px', margin: '0 auto' }}
+                style={{ maxWidth: '240px', margin: '0 auto' }}
               >
-                Go Back
+                Go to Inventory Dashboard
               </button>
             </div>
           </div>

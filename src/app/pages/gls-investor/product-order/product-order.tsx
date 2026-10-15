@@ -135,12 +135,12 @@ const GlsInvestorProductOrder: React.FC = () => {
 	}
 
 	const sortableFields = [
-		{ title: 'User', field: 'book_title' },
-		{ title: 'Receipt ID', field: 'cover_image' },
-		{ title: 'Items with Quantity', field: 'amount' },
-		{ title: 'Total Price', field: 'createdAt' },
+		{ title: 'User', field: 'user_info.first_name' },
+		{ title: 'Receipt ID', field: 'receipt_id' },
+		{ title: 'Items with Quantity', field: 'product.name' },
+		{ title: 'Total Price', field: 'amount' },
 		{ title: 'Purchased On', field: 'createdAt' },
-		{ title: 'Shipment Status', field: 'createdAt' },
+		{ title: 'Shipment Status', field: 'order_status' },
 	]
 
 	const handleRowClick = (id: string) => {

@@ -1,10 +1,13 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
+import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../../_metronic/helpers'
+import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
+import DateFilter from '../../../../components/DateRangePicker'
 import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
 import Table from '../../../../components/Table'
@@ -32,18 +35,35 @@ const GomziNutritionMaterialSuppliersInvoiceList: React.FC = () => {
 		page: 1,
 		itemsPerPage: 10,
 	})
+	const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>(null)
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setSelectedDateRange(range)
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}
 
 	const fetchData = useCallback(
 		async (page?: number) => {
 			setLoading(true)
 			try {
-				const response: any = await GetGnRawMaterialSupplierInvoice({
+				const queryPayload: any = {
 					page: page || pagination.page,
 					limit: pagination.itemsPerPage,
 					supplier_name: searchTerm,
 					sort,
 					sortOrder,
-				})
+				}
+
+				if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+					const fromDateStr = DayJS(selectedDateRange[0]).format('YYYY-MM-DD')
+					const toDateStr = DayJS(selectedDateRange[1]).format('YYYY-MM-DD')
+					queryPayload.from_date = fromDateStr
+					queryPayload.to_date = toDateStr
+					queryPayload.startDate = fromDateStr
+					queryPayload.endDate = toDateStr
+				}
+
+				const response: any = await GetGnRawMaterialSupplierInvoice(queryPayload)
 
 				// Extract invoices from response.data.invoices and unwrap _doc
 				let invoicesRaw: any[] = []
@@ -74,8 +94,20 @@ const GomziNutritionMaterialSuppliersInvoiceList: React.FC = () => {
 				// Format with date
 				activeInvoices = activeInvoices.map((inv: any) => ({
 					...inv,
-					date: new Date(inv.createdAt || inv.updatedAt || Date.now()).toLocaleDateString('en-IN'),
+					date: new Date(inv.issue_date || inv.createdAt || inv.updatedAt || Date.now()).toLocaleDateString('en-IN'),
 				}))
+
+				// Apply date range filter client-side as well to guarantee consistency
+				if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+					const startTime = new Date(selectedDateRange[0]).setHours(0, 0, 0, 0)
+					const endTime = new Date(selectedDateRange[1]).setHours(23, 59, 59, 999)
+					activeInvoices = activeInvoices.filter((inv: any) => {
+						const dateVal = inv.issue_date || inv.createdAt
+						if (!dateVal) return true
+						const invoiceTime = new Date(dateVal).getTime()
+						return invoiceTime >= startTime && invoiceTime <= endTime
+					})
+				}
 
 				if (uniqueSupplierIds.length > 0) {
 					try {
@@ -142,12 +174,12 @@ const GomziNutritionMaterialSuppliersInvoiceList: React.FC = () => {
 			}
 			setLoading(false)
 		},
-		[pagination.page, pagination.itemsPerPage, searchTerm, sort, sortOrder]
+		[pagination.page, pagination.itemsPerPage, searchTerm, sort, sortOrder, selectedDateRange]
 	)
 
 	useEffect(() => {
 		fetchData()
-	}, [pagination.page, pagination.itemsPerPage, sort, sortOrder])
+	}, [pagination.page, pagination.itemsPerPage, sort, sortOrder, selectedDateRange])
 
 	const handleItemsPerPageChange = (value: number) => {
 		setPagination({ ...pagination, itemsPerPage: value })
@@ -237,29 +269,164 @@ const GomziNutritionMaterialSuppliersInvoiceList: React.FC = () => {
 		}
 	}
 
+	const downloadExcel = async () => {
+		setLoading(true)
+		try {
+			let exportData = supplierData
+			try {
+				const queryPayload: any = {
+					limit: 5000,
+					supplier_name: searchTerm,
+					sort,
+					sortOrder,
+				}
+				if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+					const fromDateStr = DayJS(selectedDateRange[0]).format('YYYY-MM-DD')
+					const toDateStr = DayJS(selectedDateRange[1]).format('YYYY-MM-DD')
+					queryPayload.from_date = fromDateStr
+					queryPayload.to_date = toDateStr
+					queryPayload.startDate = fromDateStr
+					queryPayload.endDate = toDateStr
+				}
+				const allResp: any = await GetGnRawMaterialSupplierInvoice(queryPayload)
+
+				let raw: any[] = []
+				if (Array.isArray(allResp?.data?.invoices)) {
+					raw = allResp.data.invoices.map((inv: any) => inv._doc || inv)
+				} else if (Array.isArray(allResp?.data)) {
+					raw = allResp.data.map((inv: any) => inv._doc || inv)
+				}
+
+				if (raw.length > 0) {
+					if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+						const startTime = new Date(selectedDateRange[0]).setHours(0, 0, 0, 0)
+						const endTime = new Date(selectedDateRange[1]).setHours(23, 59, 59, 999)
+						raw = raw.filter((inv: any) => {
+							const d = inv.issue_date || inv.createdAt
+							if (!d) return true
+							const t = new Date(d).getTime()
+							return t >= startTime && t <= endTime
+						})
+					}
+					exportData = raw
+				}
+			} catch (e) {
+				console.warn('Fallback to current page invoice data', e)
+			}
+
+			if (exportData.length === 0) {
+				toast.error('No invoice data to export')
+				return
+			}
+
+			const worksheetData = exportData.map((inv: any, index: number) => {
+				const itemsStr = (inv.items || [])
+					.map((item: any) => {
+						const pName = item.product_name || item.product_id
+						const weight =
+							item.weight_type?.toLowerCase().includes('kg') ||
+							item.weight_type?.toLowerCase().includes('ltr')
+								? item.weight / 1000
+								: item.weight
+						return `${pName} (${weight} ${item.weight_type || ''}) @ ₹${item.rate || 0}`
+					})
+					.join('; ')
+
+				return {
+					'Sr No': index + 1,
+					'Invoice ID': inv._id || '',
+					'Supplier Name': inv.supplier_name || inv.supplier_id || '',
+					'Items': itemsStr,
+					'Delivery Charges (₹)': inv.charges || 0,
+					'Total Amount (₹)': inv.total_amount || 0,
+					'Date': inv.date || (inv.issue_date || inv.createdAt ? new Date(inv.issue_date || inv.createdAt).toLocaleDateString('en-IN') : ''),
+				}
+			})
+
+			const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+
+			const columnWidths = Object.keys(worksheetData[0]).map((key) => {
+				const maxLength = Math.max(
+					key.length,
+					...worksheetData.map((row: any) => String(row[key] ?? '').length)
+				)
+				return { wch: Math.min(maxLength + 3, 40) }
+			})
+			worksheet['!cols'] = columnWidths
+
+			const workbook = XLSX.utils.book_new()
+			XLSX.utils.book_append_sheet(workbook, worksheet, 'Supplier Invoices')
+			XLSX.writeFile(workbook, `Supplier_Invoices_${DayJS().format('YYYY-MM-DD')}.xlsx`)
+			toast.success(`${exportData.length} invoices exported successfully`)
+		} catch (error: any) {
+			console.error('Export error:', error)
+			toast.error('Failed to export invoice data')
+		} finally {
+			setLoading(false)
+		}
+	}
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Gomzi Nutrition Suppliers Invoice List</PageTitle>
 			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title'>
-						<div className='card-branch_code d-flex'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-							<LengthMenu
-								expenseData={supplierData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex align-items-center justify-content-between flex-nowrap w-100 gap-3'>
+						{/* Left: Filters & Search */}
+						<div
+							className='d-flex align-items-center flex-nowrap overflow-auto gap-2 gap-md-3 py-1'
+							style={{ scrollbarWidth: 'thin' }}>
+							<div>
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									className='me-0'
+								/>
+							</div>
+
+							<div>
+								<LengthMenu
+									expenseData={supplierData}
+									handleItemsPerPageChange={handleItemsPerPageChange}
+									value={pagination.itemsPerPage}
+									className='me-0'
+								/>
+							</div>
+
+							<div>
+								<button
+									type='button'
+									className='btn btn-primary d-flex align-items-center justify-content-center'
+									onClick={downloadExcel}
+									disabled={loading || supplierData.length === 0}
+									style={{
+										width: '38px',
+										height: '38px',
+										padding: 0,
+										borderRadius: '8px',
+										fontSize: '14px',
+									}}
+									title='Download Excel'>
+									<FontAwesomeIcon icon={faDownload} />
+								</button>
+							</div>
+
+							<div className='d-flex align-items-center flex-shrink-0'>
+								<DateFilter
+									onDateRangeChange={handleDateRangeChange}
+									rightValue='0'
+								/>
+							</div>
+						</div>
+
+						{/* Right: Add Suppliers Invoice Button pinned to end */}
+						<div className='flex-shrink-0 ms-auto'>
+							<TableButton
+								action='add'
+								to='/rag/inventory/suppliers/invoice/add'
+								text='Add Suppliers Invoice'
 							/>
 						</div>
-					</div>
-					<div className='card-toolbar'>
-						<TableButton
-							action='add'
-							to='/rag/inventory/suppliers/invoice/add'
-							text='Add Suppliers Invoice'
-						/>
 					</div>
 				</div>
 				<div className='py-4 card-body'>

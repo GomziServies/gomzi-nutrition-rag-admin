@@ -1,14 +1,16 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
+import * as XLSX from 'xlsx'
 import { KTCard, toAbsoluteUrl } from '../../../../_metronic/helpers'
+import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetOrders } from '../../../Functions/FGGroup'
-import { DayJS } from '../../../../_metronic/helpers/Utils'
 
 const AbandonedList: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -23,12 +25,36 @@ const AbandonedList: React.FC = () => {
 		itemsPerPage: 10,
 	})
 
+	const [formData, setFormData] = useState<any>({
+		from_date: DayJS().startOf('month').format('YYYY-MM-DD'),
+		to_date: DayJS().endOf('month').format('YYYY-MM-DD'),
+	})
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		if (range && range[0] && range[1]) {
+			setFormData({
+				from_date: DayJS(range[0]).format('YYYY-MM-DD'),
+				to_date: DayJS(range[1]).format('YYYY-MM-DD'),
+			})
+		} else {
+			setFormData({
+				from_date: '',
+				to_date: '',
+			})
+		}
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}
+
 	const fetchAbandonedData = async (page?: number) => {
 		setLoading(true)
 		try {
 			const filterQuery: any = {
 				item_type: ['FG_MEAL_PRODUCT'],
 				order_status: 'PENDING',
+			}
+			if (formData.from_date && formData.to_date) {
+				filterQuery.from_date = formData.from_date
+				filterQuery.to_date = formData.to_date
 			}
 			const response = await GetOrders({
 				page: page || pagination.page,
@@ -69,7 +95,11 @@ const AbandonedList: React.FC = () => {
 
 	useEffect(() => {
 		fetchAbandonedData()
-	}, [pagination.page, pagination.itemsPerPage, sort, sortOrder])
+	}, [pagination.page, pagination.itemsPerPage, sort, sortOrder, formData.from_date, formData.to_date])
+
+	useEffect(() => {
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}, [searchTerm])
 
 	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
 		setSort(newSort)
@@ -81,14 +111,64 @@ const AbandonedList: React.FC = () => {
 	}
 
 	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value })
+		setPagination({ ...pagination, itemsPerPage: value, page: 1 })
+	}
+
+	const filteredAbandonedData = abandonedData.filter((cart: any) => {
+		if (!searchTerm || !searchTerm.trim()) return true
+		const term = searchTerm.toLowerCase().trim()
+		const firstName = cart?.user_info?.first_name || ''
+		const lastName = cart?.user_info?.last_name || ''
+		const fullName = `${firstName} ${lastName}`.toLowerCase()
+		const mobile = (cart?.user_info?.mobile || '').toString().toLowerCase()
+		const receiptId = (cart?.receipt_id || '').toString().toLowerCase()
+		const product = (cart?.product?.name || '').toLowerCase()
+		const merged = (cart?.merged_items || []).map((m: any) => m.name).join(' ').toLowerCase()
+
+		return (
+			fullName.includes(term) ||
+			mobile.includes(term) ||
+			receiptId.includes(term) ||
+			product.includes(term) ||
+			merged.includes(term)
+		)
+	})
+
+	const downloadExcel = () => {
+		const worksheetData = filteredAbandonedData.map((data: any, idx: number) => {
+			const userName = data?.user_info
+				? `${data.user_info.first_name || 'Deleted User'} ${data.user_info.last_name || ''}`.trim()
+				: 'Deleted User'
+			const mobile = data?.user_info?.mobile || 'N/A'
+			const receiptId = data?.receipt_id || 'N/A'
+			const itemsList = data?.product
+				? data.product.name
+				: data.merged_items?.map((item: any) => `${item.name} (x${item.quantity})`).join(', ') || 'N/A'
+			const price = data?.amount || 0
+			const date = data?.createdAt ? DayJS(data.createdAt).format('DD/MM/YYYY hh:mm:ss A') : 'N/A'
+
+			return {
+				'No.': idx + 1,
+				'User Name': userName,
+				Mobile: mobile,
+				'Receipt ID': receiptId,
+				Items: itemsList,
+				Price: price,
+				Date: date,
+			}
+		})
+
+		const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+		const workbook = XLSX.utils.book_new()
+		XLSX.utils.book_append_sheet(workbook, worksheet, 'Abandoned List')
+		XLSX.writeFile(workbook, `Abandoned_Checkout_${DayJS().format('YYYY-MM-DD')}.xlsx`)
 	}
 
 	const sortableFields = [
-		{ title: 'User', field: 'book_title' },
-		{ title: 'Receipt ID', field: 'cover_image' },
-		{ title: 'Item Name', field: 'amount' },
-		{ title: 'Price', field: 'createdAt' },
+		{ title: 'User', field: 'user_info.first_name' },
+		{ title: 'Receipt ID', field: 'receipt_id' },
+		{ title: 'Item Name', field: 'product.name' },
+		{ title: 'Price', field: 'amount' },
 		{ title: 'Date', field: 'createdAt' },
 	]
 
@@ -102,28 +182,65 @@ const AbandonedList: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Abandoned List</PageTitle>
 			<KTCard>
-				<div className='d-flex justify-content-between mx-3 m-5'>
-					<div className='d-flex pt-1 mx-2'>
-						<LengthMenu
-							expenseData={abandonedData}
-							handleItemsPerPageChange={handleItemsPerPageChange}
-						/>
+				{/* Filters Toolbar Row: Search, LengthMenu, Download Excel, DateFilter */}
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex flex-wrap align-items-center gap-3 w-100'>
+						{/* 1. Search Filter */}
+						<div>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 2. Dropdown (show entries per page) */}
+						<div>
+							<LengthMenu
+								expenseData={filteredAbandonedData}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<button
+								type='button'
+								className='btn btn-primary d-flex align-items-center justify-content-center'
+								style={{
+									width: '38px',
+									height: '38px',
+									padding: 0,
+									borderRadius: '8px',
+									fontSize: '14px',
+								}}
+								onClick={downloadExcel}
+								disabled={loading || filteredAbandonedData.length === 0}
+								title='Download Excel'>
+								<FontAwesomeIcon icon={faDownload} />
+							</button>
+						</div>
+
+						{/* 4. Date Filter */}
+						<div className='d-flex align-items-center'>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+							/>
+						</div>
 					</div>
-					<SearchFilter
-						searchTerm={searchTerm}
-						setSearchTerm={setSearchTerm}
-					/>
 				</div>
 
 				<div className='py-4 card-body'>
 					<div className='table-responsive'>
 						<Table
-							data={abandonedData}
+							data={filteredAbandonedData}
 							columns={sortableFields}
 							sort={sort}
 							sortOrder={sortOrder}
 							onSortChange={handleSortChange}
-							disableSortFields={['cover_image']}
+							disableSortFields={['receipt_id']}
 							renderRow={(data: any, index: number, actualIndex: number, isVisible: boolean) => (
 								<React.Fragment key={data._id}>
 									<tr

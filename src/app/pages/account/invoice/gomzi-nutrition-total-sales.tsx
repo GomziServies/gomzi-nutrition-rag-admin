@@ -17,6 +17,7 @@ import { StatisticsWidget2 } from '../../../../_metronic/partials/widgets'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -483,43 +484,46 @@ const NutritionTotalSalesList: React.FC = () => {
 							</div>
 							{adminType !== 'Store' && (
 								<div className='w-200px'>
-									<select
+									<SelectField
+										label='Store'
 										name='Select Store'
-										className='form-select inputfield-bg'
-										onChange={(e) => handleSetStoreInvoice(e.target.value)}>
-										<option value='default'>Select Store</option>
-										{branchesData.map((item: any) => (
-											<option
-												key={item._id}
-												value={item._id}>
-												{item.full_name}
-											</option>
-										))}
-									</select>
+										showLabel={false}
+										onChange={(e) => handleSetStoreInvoice(e.target.value)}
+										options={[
+											{ label: 'Select Store', value: 'default' },
+											...branchesData.map((item: any) => ({
+												label: item.full_name,
+												value: item._id,
+											})),
+										]}
+										hideDefaultOption={true}
+										searchable={true}
+										marginRemove={true}
+									/>
 								</div>
 							)}
 							<div className='w-200px'>
-								<div className='selectfield-bg mb-0'>
-									<select
-										name='Select Sales Person'
-										className='form-select inputfield-bg'
-										value={selectedSalesPerson}
-										onChange={(e) => setSelectedSalesPerson(e.target.value)}>
-										<option value='default'>Select Sales Person</option>
-										{salesPersonList.map((item: any) => (
-											<option
-												key={item._id}
-												value={
-													item._id ||
-													item.employee?._id ||
-													item.employee_id ||
-													item.employee?.employee_id
-												}>
-												{item.full_name}
-											</option>
-										))}
-									</select>
-								</div>
+								<SelectField
+									label='Sales Person'
+									name='Select Sales Person'
+									showLabel={false}
+									value={selectedSalesPerson}
+									onChange={(e) => setSelectedSalesPerson(e.target.value)}
+									options={[
+										{ label: 'Select Sales Person', value: 'default' },
+										...salesPersonList.map((item: any) => ({
+											label: item.full_name,
+											value:
+												item._id ||
+												item.employee?._id ||
+												item.employee_id ||
+												item.employee?.employee_id,
+										})),
+									]}
+									hideDefaultOption={true}
+									searchable={true}
+									marginRemove={true}
+								/>
 							</div>
 							<div className='w-250px'>
 								<DateFilter

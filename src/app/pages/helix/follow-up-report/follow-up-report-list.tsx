@@ -827,13 +827,45 @@ const FollowUpReportList: React.FC = () => {
 				{/* Filter Bar */}
 				<div className='flr-filter-bar'>
 					<div className='flr-filter-row'>
-						<div className='flr-filter-left'>
+						<div>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
+								className='me-0'
 							/>
 						</div>
-						<div className='flr-filter-right'>
+
+						<div>
+							<LengthMenu
+								expenseData={jobData}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								value={pagination.itemsPerPage}
+								className='me-0'
+							/>
+						</div>
+
+						<div>
+							<button
+								type='button'
+								className='btn btn-primary d-flex align-items-center justify-content-center'
+								onClick={downloadExcel}
+								disabled={loading || exporting || filteredData.length === 0}
+								style={{
+									width: '38px',
+									height: '38px',
+									padding: 0,
+									borderRadius: '8px',
+									fontSize: '14px',
+								}}
+								title='Download as Excel'>
+								<FontAwesomeIcon
+									icon={faDownload}
+									className='fs-5'
+								/>
+							</button>
+						</div>
+
+						<div>
 							<select
 								className='flr-select'
 								value={selectedPlatform}
@@ -846,6 +878,9 @@ const FollowUpReportList: React.FC = () => {
 								<option value='ig'>Instagram</option>
 								<option value='Pull_marketing'>Pull Marketing</option>
 							</select>
+						</div>
+
+						<div>
 							<select
 								className='flr-select'
 								value={selectedColor}
@@ -861,25 +896,12 @@ const FollowUpReportList: React.FC = () => {
 										</option>
 									))}
 							</select>
-							<button
-								className='btn btn-primary btn-icon'
-								onClick={downloadExcel}
-								disabled={loading || exporting || filteredData.length === 0}
-								title='Download as Excel'>
-								<FontAwesomeIcon
-									icon={faDownload}
-									className='fs-5'
-								/>
-							</button>
-							<div>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-								/>
-							</div>
-							<LengthMenu
-								expenseData={jobData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
+						</div>
+
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
 							/>
 						</div>
 					</div>

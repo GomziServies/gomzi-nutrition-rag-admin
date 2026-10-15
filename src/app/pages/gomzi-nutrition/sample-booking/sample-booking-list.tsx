@@ -1,8 +1,13 @@
+import { faDownload } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { endOfMonth, startOfMonth } from 'date-fns'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
+import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
@@ -15,29 +20,60 @@ const SampleBookingList: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [bookingData, setBookingData] = useState<any[]>([])
 	const [loading, setLoading] = useState(false)
+	const [exporting, setExporting] = useState(false)
 	const [sort, setSort] = useState('createdAt')
 	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
+	const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>([
+		startOfMonth(new Date()),
+		endOfMonth(new Date()),
+	])
 	const [pagination, setPagination] = useState({
 		page: 1,
 		itemsPerPage: 10,
 	})
 	const [totalPages, setTotalPages] = useState(1)
+	const [totalDocs, setTotalDocs] = useState(0)
 
 	const fetchBookings = async () => {
 		setLoading(true)
 		try {
-			const response: any = await GetGnSampleBooking({
+			const queryPayload: any = {
 				search: searchTerm,
 				page: pagination.page,
 				limit: pagination.itemsPerPage,
 				sort: sort,
 				sortOrder: sortOrder,
-			})
+			}
+			if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+				const start = new Date(selectedDateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(selectedDateRange[1])
+				end.setHours(23, 59, 59, 999)
+				queryPayload.start_date = start.toISOString()
+				queryPayload.end_date = end.toISOString()
+			}
+
+			const response: any = await GetGnSampleBooking(queryPayload)
 
 			if (response.status === 200) {
 				setBookingData(response.data || [])
-				setTotalPages(response.pagination?.total_pages || 1)
+				const metaPagination = response.metadata?.pagination || response.pagination || {}
+				const docsCount = Number(
+					metaPagination.totalDocs ??
+					metaPagination.total_items ??
+					metaPagination.total ??
+					response.data?.length ??
+					0
+				)
+				setTotalDocs(docsCount)
+
+				const pages = Number(
+					metaPagination.totalPages ??
+					metaPagination.total_pages ??
+					(docsCount > 0 ? Math.ceil(docsCount / pagination.itemsPerPage) : 1)
+				)
+				setTotalPages(pages > 0 ? pages : 1)
 			}
 		} catch (error: any) {
 			console.error('Error fetching sample bookings:', error)
@@ -49,22 +85,143 @@ const SampleBookingList: React.FC = () => {
 	useEffect(() => {
 		const delayDebounceFn = setTimeout(() => {
 			fetchBookings()
-		}, 500)
+		}, 300)
 
 		return () => clearTimeout(delayDebounceFn)
-	}, [searchTerm, pagination.page, pagination.itemsPerPage, sort, sortOrder])
+	}, [searchTerm, pagination.page, pagination.itemsPerPage, sort, sortOrder, selectedDateRange])
 
 	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value, page: 1 })
+		setPagination({ page: 1, itemsPerPage: value })
+	}
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setSelectedDateRange(range)
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
 	const handlePageChange = (page: number) => {
-		setPagination({ ...pagination, page })
+		setPagination((prev) => ({ ...prev, page }))
 	}
 
 	const handleSortChange = (newSort: string, newSortOrder: 'asc' | 'desc') => {
 		setSort(newSort)
 		setSortOrder(newSortOrder)
+	}
+
+	const downloadExcel = async () => {
+		try {
+			setExporting(true)
+			const toastId = toast.loading('Preparing sample bookings export...')
+
+			let exportData: any[] = []
+			try {
+				const queryPayload: any = {
+					search: searchTerm,
+					page: 1,
+					limit: 5000,
+					sort: sort,
+					sortOrder: sortOrder,
+				}
+				if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+					const start = new Date(selectedDateRange[0])
+					start.setHours(0, 0, 0, 0)
+					const end = new Date(selectedDateRange[1])
+					end.setHours(23, 59, 59, 999)
+					queryPayload.start_date = start.toISOString()
+					queryPayload.end_date = end.toISOString()
+				}
+				const response: any = await GetGnSampleBooking(queryPayload)
+				if (response.status === 200 && response.data && response.data.length > 0) {
+					exportData = response.data
+				}
+			} catch (e) {
+				console.warn('Fallback to current page sample bookings data', e)
+			}
+
+			if (exportData.length === 0) {
+				exportData = bookingData
+			}
+
+			if (exportData.length === 0) {
+				toast.dismiss(toastId)
+				toast.error('No sample bookings to export')
+				return
+			}
+
+			const worksheetData = exportData.map((booking: any, index: number) => {
+				const sampleUpdateLink =
+					window.location.hostname === 'localhost'
+						? `http://localhost:3001/rag/sample-booking-update?id=${booking._id}`
+						: `https://www.gomzilifesciences.in/rag/sample-booking-update?id=${booking._id}`
+
+				const productsStr = (booking.products || [])
+					.map((p: any) => p.product_name + (p.rating ? ` (${p.rating}★)` : ''))
+					.filter(Boolean)
+					.join('; ')
+
+				const ratedProducts = booking.products?.filter((p: any) => p.rating > 0) || []
+				const avgRating =
+					ratedProducts.length > 0
+						? (
+								ratedProducts.reduce((sum: number, p: any) => sum + (p.rating || 0), 0) /
+								ratedProducts.length
+						  ).toFixed(1)
+						: '-'
+
+				const addressParts = [
+					booking.address?.address_line_1,
+					booking.address?.city,
+					booking.address?.state,
+					booking.address?.pin_code,
+					booking.address?.country,
+				]
+					.filter(Boolean)
+					.join(', ')
+
+				return {
+					'Sr No': index + 1,
+					'Customer Name': booking.customer_name || '---',
+					'Mobile': booking.mobile || '---',
+					'Order ID': booking.order_id || '---',
+					'Courier': booking.courier_name || booking.courier || '---',
+					'AWB': booking.awb || '---',
+					'Tracking ID': booking.tracking_id || '---',
+					'Tracking Link': booking.tracking_link || '---',
+					'Products': productsStr || '---',
+					'Average Rating': avgRating,
+					'Sample Update Link': sampleUpdateLink,
+					'Address': addressParts || '---',
+					'Date': booking.createdAt
+						? new Date(booking.createdAt).toLocaleDateString('en-GB')
+						: '---',
+				}
+			})
+
+			const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+
+			const columnWidths = Object.keys(worksheetData[0]).map((key) => {
+				const maxLength = Math.max(
+					key.length,
+					...worksheetData.map((row: any) => String(row[key] ?? '').length)
+				)
+				return { wch: Math.min(maxLength + 3, 40) }
+			})
+			worksheet['!cols'] = columnWidths
+
+			const workbook = XLSX.utils.book_new()
+			XLSX.utils.book_append_sheet(workbook, worksheet, 'Sample Bookings')
+			XLSX.writeFile(
+				workbook,
+				`Sample_Bookings_${new Date().toISOString().split('T')[0]}.xlsx`
+			)
+			toast.dismiss(toastId)
+			toast.success(`${exportData.length} sample bookings exported successfully`)
+		} catch (error: any) {
+			console.error('Error exporting sample bookings to Excel:', error)
+			toast.error('Failed to export sample bookings')
+		} finally {
+			setExporting(false)
+		}
 	}
 
 	const handleRemove = async (id: string) => {
@@ -106,25 +263,87 @@ const SampleBookingList: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Sample Booking List</PageTitle>
 			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title'>
-						<div className='card-branch_code d-flex'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-							<LengthMenu
-								expenseData={bookingData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
+						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+							<div>
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									className='me-0'
+								/>
+							</div>
+							<div>
+								<LengthMenu
+									expenseData={bookingData}
+									handleItemsPerPageChange={handleItemsPerPageChange}
+									value={pagination.itemsPerPage}
+									className='me-0'
+								/>
+							</div>
+							<div>
+								<button
+									type='button'
+									className='btn btn-icon d-flex align-items-center justify-content-center'
+									onClick={downloadExcel}
+									disabled={exporting}
+									style={{
+										width: '38px',
+										height: '38px',
+										minWidth: '38px',
+										padding: 0,
+										borderRadius: '8px',
+										fontSize: '14px',
+										backgroundColor: '#ffffff',
+										border: '1px solid #DFE7F0',
+										color: '#1E3A5F',
+										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+										cursor: exporting ? 'not-allowed' : 'pointer',
+									}}
+									onMouseEnter={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#1E3A5F'
+											e.currentTarget.style.borderColor = '#1E3A5F'
+											e.currentTarget.style.color = '#ffffff'
+											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
+											e.currentTarget.style.transform = 'translateY(-1px)'
+										}
+									}}
+									onMouseLeave={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#ffffff'
+											e.currentTarget.style.borderColor = '#DFE7F0'
+											e.currentTarget.style.color = '#1E3A5F'
+											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
+											e.currentTarget.style.transform = 'translateY(0)'
+										}
+									}}
+									title='Download Excel'>
+									{exporting ? (
+										<span
+											className='spinner-border spinner-border-sm'
+											role='status'
+											aria-hidden='true'></span>
+									) : (
+										<FontAwesomeIcon icon={faDownload} />
+									)}
+								</button>
+							</div>
+							<div className='d-flex align-items-center flex-shrink-0'>
+								<DateFilter
+									onDateRangeChange={handleDateRangeChange}
+									rightValue='0'
+								/>
+							</div>
+						</div>
+						<div className='flex-shrink-0 ms-auto'>
+							<TableButton
+								action='add'
+								to='/rag/sample-booking-add'
+								text='Add Sample'
 							/>
 						</div>
-					</div>
-					<div className='card-toolbar'>
-						<TableButton
-							action='add'
-							to='/rag/sample-booking-add'
-							text='Add Sample'
-						/>
 					</div>
 				</div>
 				<div className='py-4 card-body'>

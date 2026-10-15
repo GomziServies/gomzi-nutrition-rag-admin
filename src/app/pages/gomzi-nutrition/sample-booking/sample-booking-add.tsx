@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import SelectField from '../../../components/SelectField'
@@ -8,6 +9,7 @@ import { AddGnSampleBooking } from '../../../Functions/FGGroup'
 import './sample-booking.css'
 
 const SampleBookingAdd = () => {
+	const navigate = useNavigate()
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [formData, setFormData] = useState({
 		customer_name: '',
@@ -246,6 +248,7 @@ const SampleBookingAdd = () => {
 				setProducts([{ product_name: '' }])
 				setStates([])
 				setCities([])
+				navigate('/rag/sample-booking')
 			}
 		} catch (error: any) {
 			toast.error(error.message || 'Failed to add sample booking')

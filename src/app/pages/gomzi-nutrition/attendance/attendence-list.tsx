@@ -1,7 +1,9 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
+import * as XLSX from 'xlsx'
 import { toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
@@ -18,6 +20,7 @@ const AttendenceList = () => {
 	const [attendanceData, setAttendanceData] = useState<any>([])
 	const [isRotating, setIsRotating] = useState(false)
 	const [loading, setLoading] = useState(false)
+	const [exporting, setExporting] = useState(false)
 	const [sort, setSort] = useState('DateString')
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
@@ -163,6 +166,96 @@ const AttendenceList = () => {
 		setPagination({ ...pagination, page: 1 })
 	}
 
+	const downloadExcel = async () => {
+		try {
+			setExporting(true)
+			const toastId = toast.loading('Exporting attendance to Excel...')
+
+			let startDate: any
+			let endDate: any
+			if (selectedDateRange) {
+				startDate = new Date(selectedDateRange[0])
+				startDate.setHours(0, 0, 0, 0)
+				endDate = new Date(selectedDateRange[1])
+				endDate.setHours(23, 59, 59, 999)
+			} else {
+				const now = new Date()
+				startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+				endDate = new Date()
+			}
+
+			const [attendanceRes, employeeRes]: [any, any] = await Promise.all([
+				GetGlsAttendance({
+					from_date: DayJS(startDate).format('YYYY-MM-DD'),
+					to_date: DayJS(endDate).format('YYYY-MM-DD'),
+					limit: 10000,
+				}),
+				GetGlsEmployees({
+					page: 1,
+					limit: 10000,
+					search: searchTerm,
+					sort,
+					sortOrder,
+				}),
+			])
+
+			const salaryData = attendanceRes?.data || []
+			const employeeData = employeeRes?.data || []
+
+			if (employeeData.length === 0) {
+				toast.dismiss(toastId)
+				toast.error('No attendance data found to export')
+				return
+			}
+
+			const worksheetData = employeeData.map((emp: any, index: number) => {
+				const empCode = String(emp?.employee_code || '').trim()
+				const empAttendance = salaryData.filter(
+					(salary: any) => String(salary.employee_code || '').trim() === empCode
+				)
+				const total_present = empAttendance.filter((att: any) => att.Status === 'P').length
+				const total_absent = empAttendance.filter((att: any) => att.Status === 'A').length
+				const half_day = empAttendance.filter((att: any) => att.halfDay === true).length
+
+				return {
+					No: index + 1,
+					'Employee Code': emp.employee_code || '-',
+					'Employee Name': emp.full_name || emp.name || '-',
+					Mobile: emp.mobile || '-',
+					'Total Present': total_present,
+					'Total Absent': total_absent,
+					'Half Day': half_day,
+					'Date Range': `${DayJS(startDate).format('DD/MM/YYYY')} - ${DayJS(endDate).format('DD/MM/YYYY')}`,
+				}
+			})
+
+			const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+			const columnWidths = Object.keys(worksheetData[0]).map((key) => {
+				const maxLength = Math.max(
+					key.length,
+					...worksheetData.map((row: any) => String(row[key] ?? '').length)
+				)
+				return { wch: Math.min(maxLength + 2, 40) }
+			})
+			worksheet['!cols'] = columnWidths
+
+			const workbook = XLSX.utils.book_new()
+			XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance')
+			XLSX.writeFile(
+				workbook,
+				`Attendance_${DayJS(startDate).format('DD-MM-YYYY')}_to_${DayJS(endDate).format('DD-MM-YYYY')}.xlsx`
+			)
+
+			toast.dismiss(toastId)
+			toast.success(`${employeeData.length} records exported successfully`)
+		} catch (error: any) {
+			console.error('Export error:', error)
+			toast.error('Failed to export attendance data')
+		} finally {
+			setExporting(false)
+		}
+	}
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Attendance</PageTitle>
@@ -175,56 +268,87 @@ const AttendenceList = () => {
 					</div>
 				</div>
 
-				<div className='card-header row border-0 pt-6'>
-					<div className='col-md-12 d-flex justify-content-between'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-						/>
-						<div className='d-flex'>
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
+						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+							{/* 1. Searchbar */}
 							<div>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									leftValue='-600px'
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									className='me-0'
 								/>
 							</div>
-							<div className='d-md-flex d-none'>
+
+							{/* 2. Dropdown (show entries per page) */}
+							<div>
 								<LengthMenu
 									expenseData={attendanceData}
 									handleItemsPerPageChange={handleItemsPerPageChange}
+									value={pagination.itemsPerPage}
+									className='me-0'
 								/>
 							</div>
-							<div className='col-md-3 d-md-flex d-none'>
-								<div>
-									{/* <button
-                                        className='btn btn-sm ms-8 bg-primary d-flex py-3'
-                                        onClick={handleSyncButton}
-                                        disabled={isRotating}>
-                                        <FontAwesomeIcon
-                                            icon={faSync}
-                                            className={` fs-3 text-white my-1 ${isRotating ? 'rotate' : ''}`}
-                                        />
-                                        <span className='text-white ms-2 my-1'>Sync</span>
-                                    </button> */}
-								</div>
+
+							{/* 3. Download Excel Button */}
+							<div>
+								<button
+									type='button'
+									className='btn btn-icon d-flex align-items-center justify-content-center'
+									onClick={downloadExcel}
+									disabled={exporting}
+									style={{
+										width: '38px',
+										height: '38px',
+										minWidth: '38px',
+										padding: 0,
+										borderRadius: '8px',
+										fontSize: '14px',
+										backgroundColor: '#ffffff',
+										border: '1px solid #DFE7F0',
+										color: '#1E3A5F',
+										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+										cursor: exporting ? 'not-allowed' : 'pointer',
+									}}
+									onMouseEnter={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#1E3A5F'
+											e.currentTarget.style.borderColor = '#1E3A5F'
+											e.currentTarget.style.color = '#ffffff'
+											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
+											e.currentTarget.style.transform = 'translateY(-1px)'
+										}
+									}}
+									onMouseLeave={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#ffffff'
+											e.currentTarget.style.borderColor = '#DFE7F0'
+											e.currentTarget.style.color = '#1E3A5F'
+											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
+											e.currentTarget.style.transform = 'translateY(0)'
+										}
+									}}
+									title='Download Excel'>
+									{exporting ? (
+										<span
+											className='spinner-border spinner-border-sm'
+											role='status'
+											aria-hidden='true'></span>
+									) : (
+										<FontAwesomeIcon icon={faDownload} />
+									)}
+								</button>
+							</div>
+
+							{/* 4. Datefilter */}
+							<div className='d-flex align-items-center flex-shrink-0'>
+								<DateFilter
+									onDateRangeChange={handleDateRangeChange}
+									rightValue='0'
+								/>
 							</div>
 						</div>
-					</div>
-					<div className='col-md-3 d-flex d-md-none justify-content-between p-0 mt-3'>
-						<LengthMenu
-							expenseData={attendanceData}
-							handleItemsPerPageChange={handleItemsPerPageChange}
-						/>
-						{/* <button
-                            className='btn btn-sm ms-md-8 ms-4 bg-primary w-50'
-                            onClick={handleSyncButton}
-                            disabled={isRotating}>
-                            <FontAwesomeIcon
-                                icon={faSync}
-                                className={`fs-3 text-white ${isRotating ? 'rotate' : ''}`}
-                            />
-                            <span className='text-white ms-2 mb-3'>Sync</span>
-                        </button> */}
 					</div>
 				</div>
 
@@ -406,7 +530,7 @@ const AttendenceList = () => {
 					)}
 					{attendanceData.length > 0 && (
 						<UsersListPagination
-							totalPages={metaData?.totalPages}
+							totalPages={metaData?.totalPages || metaData?.total_pages || 1}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
 						/>

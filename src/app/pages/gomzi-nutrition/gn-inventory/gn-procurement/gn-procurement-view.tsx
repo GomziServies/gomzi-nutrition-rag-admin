@@ -122,11 +122,12 @@ const GNProcurementView: React.FC = () => {
 							textAlign: 'center',
 						}}>
 						<h2>No procurement record found</h2>
+						<p className='text-muted mt-2'>Please select a client process from the Inventory Dashboard to view procurement records.</p>
 						<button
-							onClick={() => navigate(-1)}
+							onClick={() => navigate('/rag/inventory')}
 							className='btn btn-primary'
 							style={{ marginTop: '20px' }}>
-							Go Back
+							Go to Inventory Dashboard
 						</button>
 					</div>
 				</div>

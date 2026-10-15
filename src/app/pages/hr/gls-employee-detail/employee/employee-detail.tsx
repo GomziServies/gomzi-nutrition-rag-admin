@@ -371,39 +371,31 @@ const EmployeeDetail: React.FC = () => {
 												</span>
 											</td>
 											<td>
-												<div className='d-flex justify-content-center'>
-													<Link
+												<div className='d-flex justify-content-center align-items-center gap-1'>
+													<TableButton
+														action='view'
 														to={`/hr/gls-employees-view?employee_id=${employee._id}`}
-														className='btn d-flex align-items-center gap-2 mx-2 btn-light-success btn-sm me-1'>
-														<FontAwesomeIcon
-															icon={faEye}
-															className='fs-2'
-														/>
-													</Link>
-													<button
-														className='btn gap-2 btn-light-info mx-2 btn-sm me-1'
+														title='View Employee'
+													/>
+													<TableButton
+														action='qr'
 														onClick={() => {
 															setShowModal(true)
 															fetchEditEmployeeData(employee)
-														}}>
-														<FontAwesomeIcon
-															icon={faQrcode}
-															className='fs-3'
-														/>
-													</button>
+														}}
+														title='Employee QR'
+													/>
 													<TableButton
 														action='remove'
 														onClick={() => handleDeleteFeature(employee._id)}
+														title='Delete Employee'
 													/>
-													<Link
-														to={`/hr/reports`}
-														className='btn fw-bold gap-1 btn-light-warning my-sm-0 ms-2 d-flex btn-sm'>
-														<FontAwesomeIcon
-															icon={faStar}
-															className='fs-3'
-														/>{' '}
-														Rating
-													</Link>
+													<TableButton
+														action='star'
+														text='Rating'
+														to='/hr/reports'
+														title='Employee Rating'
+													/>
 												</div>
 											</td>
 										</tr>

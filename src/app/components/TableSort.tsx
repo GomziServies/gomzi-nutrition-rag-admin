@@ -33,9 +33,9 @@ const TableSort: React.FC<TableSortProps> = ({
 		<thead className='table-hide-th'>
 			<tr className='fw-bold text-muted bg-light border-bottom-0'>
 				<th className='text-center rounded-start'>No.</th>
-				{sortableFields.map((field) => (
+				{sortableFields.map((field, index) => (
 					<th
-						key={field.field}
+						key={`${field.field}-${index}`}
 						onClick={() => handleSort(field.field)}
 						className={disableSortFields.includes(field.field) ? 'disable-sort' : 'sortable'}>
 						{field.title}	

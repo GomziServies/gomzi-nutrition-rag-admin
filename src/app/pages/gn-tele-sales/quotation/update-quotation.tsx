@@ -947,6 +947,9 @@ const NutritionUpdateQuotation: React.FC = () => {
 													<td className='border border-black'>
 														<span className='inv-total'>-</span>
 													</td>
+													<td className='border border-black'>
+														<span className='inv-total'>-</span>
+													</td>
 												</tr>
 											) : (
 												quotationPlanData.map((item: any, index: any) => {

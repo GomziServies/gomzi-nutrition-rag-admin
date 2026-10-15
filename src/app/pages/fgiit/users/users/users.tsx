@@ -1,11 +1,13 @@
 import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import * as XLSX from 'xlsx'
 import { KTCard, toAbsoluteUrl } from '../../../../../_metronic/helpers'
 import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
+import DateFilter from '../../../../components/DateRangePicker'
 import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
 import Table from '../../../../components/Table'
@@ -25,26 +27,38 @@ const Users: React.FC = () => {
 	const [metaData, setMetaData] = useState<any>()
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
-
-	const masterData = localStorage.getItem('admin_type')
+	const [exporting, setExporting] = useState(false)
+	const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>(null)
 
 	const fetchData = async (page?: number) => {
 		setLoading(true)
 		try {
-			const response: any = await GetUsers({
+			const queryPayload: any = {
 				page: page || pagination.page,
 				limit: pagination.itemsPerPage,
 				search: searchTerm,
 				sort,
 				sortOrder,
-			})
-			const metaData: any = response.metadata
-			setMetaData(metaData.pagination)
-			setUserData(response.data)
+			}
+
+			if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+				const start = new Date(selectedDateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(selectedDateRange[1])
+				end.setHours(23, 59, 59, 999)
+				queryPayload.start_date = start.toISOString()
+				queryPayload.end_date = end.toISOString()
+			}
+
+			const response: any = await GetUsers(queryPayload)
+			const metaPagination: any = response?.metadata?.pagination || response?.pagination || {}
+			setMetaData(metaPagination)
+			setUserData(response?.data || [])
 		} catch (error: any) {
 			console.error(error)
+		} finally {
+			setLoading(false)
 		}
-		setLoading(false)
 	}
 
 	const handleLockUnlock = (userId: string, isLocked?: boolean) => {
@@ -80,9 +94,14 @@ const Users: React.FC = () => {
 		setSortOrder(newSortOrder)
 	}
 
+	const handleDateRangeChange = (dateRange: [Date, Date] | null) => {
+		setSelectedDateRange(dateRange)
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}
+
 	useEffect(() => {
 		fetchData()
-	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder])
+	}, [selectedDateRange, pagination.itemsPerPage, pagination.page, sort, sortOrder])
 
 	const isFirstRender = useRef(true)
 
@@ -122,21 +141,32 @@ const Users: React.FC = () => {
 
 	const downloadExcel = async () => {
 		try {
-			setLoading(true)
+			setExporting(true)
+			const toastId = toast.loading('Exporting users to Excel...')
 
-			// Fetch all users
-			const response: any = await GetUsers({
+			const queryPayload: any = {
 				page: 1,
-				limit: 100000,
-				search: '',
+				limit: 10000,
+				search: searchTerm,
 				sort: 'createdAt',
 				sortOrder: 'desc',
-			})
+			}
 
+			if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
+				const start = new Date(selectedDateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(selectedDateRange[1])
+				end.setHours(23, 59, 59, 999)
+				queryPayload.start_date = start.toISOString()
+				queryPayload.end_date = end.toISOString()
+			}
+
+			const response: any = await GetUsers(queryPayload)
 			const users = response?.data || []
 
 			if (users.length === 0) {
-				Swal.fire('No Data', 'There is no user data to export.', 'info')
+				toast.dismiss(toastId)
+				toast.error('No users found to export')
 				return
 			}
 
@@ -176,13 +206,13 @@ const Users: React.FC = () => {
 
 			XLSX.writeFile(workbook, `Users_${DayJS(new Date()).format('DD-MM-YYYY')}.xlsx`)
 
-			Swal.fire('Export Successful!', `${users.length} users exported successfully.`, 'success')
+			toast.dismiss(toastId)
+			toast.success(`${users.length} users exported successfully`)
 		} catch (error: any) {
 			console.error('Export error:', error)
-
-			Swal.fire('Export Failed!', 'Unable to export user data.', 'error')
+			toast.error('Unable to export user data')
 		} finally {
-			setLoading(false)
+			setExporting(false)
 		}
 	}
 
@@ -190,42 +220,90 @@ const Users: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>User</PageTitle>
 			<KTCard>
-				<div className='row align-items-center justify-content-between'>
-					<div className='col-sm-6 px-10 col-12 d-flex align-items-center p-2 '>
-						<div className='col-md-7'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-						</div>
-						<div className='d-md-block d-none ms-3'>
-							<LengthMenu
-								expenseData={userData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-							/>
-						</div>
-						{masterData == 'MASTER' ? (
-							<button
-								className='btn btn-primary mx-4'
-								onClick={downloadExcel}
-								disabled={loading}>
-								<FontAwesomeIcon
-									icon={faDownload}
-									className='fs-3'
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
+						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+							{/* 1. Searchbar */}
+							<div>
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									className='me-0'
 								/>
-							</button>
-						) : (
-							''
-						)}
-					</div>
-					<div className='col-sm-6 col-12 card-header border-0 d-flex justify-content-md-end '>
-						<div className='card-toolbar'>
-							<div className='d-md-none d-block'>
+							</div>
+
+							{/* 2. Dropdown (show entries per page) */}
+							<div>
 								<LengthMenu
 									expenseData={userData}
 									handleItemsPerPageChange={handleItemsPerPageChange}
+									value={pagination.itemsPerPage}
+									className='me-0'
 								/>
 							</div>
+
+							{/* 3. Download Excel Button */}
+							<div>
+								<button
+									type='button'
+									className='btn btn-icon d-flex align-items-center justify-content-center'
+									onClick={downloadExcel}
+									disabled={exporting}
+									style={{
+										width: '38px',
+										height: '38px',
+										minWidth: '38px',
+										padding: 0,
+										borderRadius: '8px',
+										fontSize: '14px',
+										backgroundColor: '#ffffff',
+										border: '1px solid #DFE7F0',
+										color: '#1E3A5F',
+										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+										cursor: exporting ? 'not-allowed' : 'pointer',
+									}}
+									onMouseEnter={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#1E3A5F'
+											e.currentTarget.style.borderColor = '#1E3A5F'
+											e.currentTarget.style.color = '#ffffff'
+											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
+											e.currentTarget.style.transform = 'translateY(-1px)'
+										}
+									}}
+									onMouseLeave={(e) => {
+										if (!exporting) {
+											e.currentTarget.style.backgroundColor = '#ffffff'
+											e.currentTarget.style.borderColor = '#DFE7F0'
+											e.currentTarget.style.color = '#1E3A5F'
+											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
+											e.currentTarget.style.transform = 'translateY(0)'
+										}
+									}}
+									title='Download Excel'>
+									{exporting ? (
+										<span
+											className='spinner-border spinner-border-sm'
+											role='status'
+											aria-hidden='true'></span>
+									) : (
+										<FontAwesomeIcon icon={faDownload} />
+									)}
+								</button>
+							</div>
+
+							{/* 4. Datefilter */}
+							<div className='d-flex align-items-center flex-shrink-0'>
+								<DateFilter
+									onDateRangeChange={handleDateRangeChange}
+									rightValue='0'
+								/>
+							</div>
+						</div>
+
+						{/* 5. Right side Add Button */}
+						<div className='flex-shrink-0 ms-auto'>
 							<TableButton
 								action='add'
 								to='/rag/users/add-user'
@@ -379,7 +457,7 @@ const Users: React.FC = () => {
 					)}
 					{userData.length > 0 && (
 						<UsersListPagination
-							totalPages={metaData?.totalPages}
+							totalPages={metaData?.totalPages || metaData?.total_pages || 1}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
 						/>

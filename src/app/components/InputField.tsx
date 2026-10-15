@@ -70,7 +70,7 @@ const InputField: FC<Props> = ({
 					placeholder={placeholder}
 					type={type === 'password' && showPassword ? 'text' : type}
 					name={name}
-					value={value}
+					value={value ?? ''}
 					onChange={handleChange}
 					readOnly={readOnly}
 					className={`form-control mb-3 mb-lg-0 ${disabled ? `inputfield-bg1` : `inputfield-bg`}`}

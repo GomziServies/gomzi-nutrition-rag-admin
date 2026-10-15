@@ -8,6 +8,7 @@ import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetInventoryHistory } from '../../../Functions/FGGroup'
@@ -120,20 +121,26 @@ const InventoryLogList = () => {
 							/>
 						</div>
 					</div>
-					<div className='card-toolbar'>
-						<select
+					<div className='card-toolbar' style={{ minWidth: '170px' }}>
+						<SelectField
 							name='Select status'
-							className='form-select'
+							options={[
+								{ label: 'Select Source', value: '' },
+								{ label: 'MANUAL', value: 'MANUAL' },
+								{ label: 'ORDER', value: 'ORDER' },
+								{ label: 'INVOICE', value: 'INVOICE' },
+								{ label: 'RESET', value: 'RESET' },
+								{ label: 'RETURN', value: 'RETURN' },
+								{ label: 'PURCHASE', value: 'PURCHASE' },
+							]}
 							value={selectedSource}
-							onChange={(e) => setSelectedSource(e.target.value)}>
-							<option value=''>Select Source</option>
-							<option value='MANUAL'>MANUAL</option>
-							<option value='ORDER'>ORDER</option>
-							<option value='INVOICE'>INVOICE</option>
-							<option value='RESET'>RESET</option>
-							<option value='RETURN'>RETURN</option>
-							<option value='PURCHASE'>PURCHASE</option>
-						</select>
+							onChange={(e: any) => setSelectedSource(e.target.value)}
+							showLabel={false}
+							marginRemove={true}
+							hideDefaultOption={true}
+							searchable={false}
+							height='38px'
+						/>
 					</div>
 				</div>
 

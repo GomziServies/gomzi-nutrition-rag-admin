@@ -1,4 +1,5 @@
 import {
+	faDownload,
 	faEnvelope,
 	faLocationDot,
 	faPhone,
@@ -10,7 +11,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
+import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../../_metronic/helpers'
+import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
@@ -167,29 +170,121 @@ const GomziNutritionMaterialSuppliersList: React.FC = () => {
 		return parts.join(', ')
 	}
 
+	const downloadExcel = async () => {
+		setLoading(true)
+		try {
+			let exportData = supplierData
+			try {
+				const allResp: any = await GetGnRawMaterialSupplier({
+					limit: 5000,
+					search: searchTerm,
+					sort,
+					sortOrder,
+				})
+				if (allResp?.data && Array.isArray(allResp.data)) {
+					const activeAll = allResp.data.filter((s: any) => s.status === true)
+					if (activeAll.length > 0) {
+						exportData = activeAll
+					}
+				}
+			} catch (e) {
+				console.warn('Fallback to current page supplier data', e)
+			}
+
+			if (exportData.length === 0) {
+				toast.error('No supplier data to export')
+				return
+			}
+
+			const worksheetData = exportData.map((supplier: any, index: number) => ({
+				'Sr No': index + 1,
+				'Supplier ID': supplier._id || '',
+				'Brand / Supplier Name': supplier.name || '',
+				'Email': supplier.email || '',
+				'Contact No': supplier.number || '',
+				'Address': formatAddress(supplier.address),
+				'City': supplier.address?.city || '',
+				'State': supplier.address?.state || '',
+				'Pin Code': supplier.address?.pin_code || '',
+				'Country': supplier.address?.country || '',
+				'Status': supplier.status ? 'Active' : 'Inactive',
+			}))
+
+			const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+
+			const columnWidths = Object.keys(worksheetData[0]).map((key) => {
+				const maxLength = Math.max(
+					key.length,
+					...worksheetData.map((row: any) => String(row[key] ?? '').length)
+				)
+				return { wch: Math.min(maxLength + 3, 40) }
+			})
+			worksheet['!cols'] = columnWidths
+
+			const workbook = XLSX.utils.book_new()
+			XLSX.utils.book_append_sheet(workbook, worksheet, 'Suppliers')
+			XLSX.writeFile(workbook, `Suppliers_${DayJS().format('YYYY-MM-DD')}.xlsx`)
+			toast.success(`${exportData.length} suppliers exported successfully`)
+		} catch (error: any) {
+			console.error('Export error:', error)
+			toast.error('Failed to export supplier data')
+		} finally {
+			setLoading(false)
+		}
+	}
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Gomzi Nutrition Suppliers List</PageTitle>
 			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title'>
-						<div className='card-branch_code d-flex'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-							<LengthMenu
-								expenseData={supplierData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
+				<div className='card-header border-0 pt-6 px-6'>
+					<div className='d-flex align-items-center justify-content-between flex-nowrap w-100 gap-3'>
+						{/* Left: Filter Controls */}
+						<div
+							className='d-flex align-items-center flex-nowrap overflow-auto gap-2 gap-md-3 py-1'
+							style={{ scrollbarWidth: 'thin' }}>
+							<div>
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									className='me-0'
+								/>
+							</div>
+							<div>
+								<LengthMenu
+									expenseData={supplierData}
+									handleItemsPerPageChange={handleItemsPerPageChange}
+									value={pagination.itemsPerPage}
+									className='me-0'
+								/>
+							</div>
+							<div>
+								<button
+									type='button'
+									className='btn btn-primary d-flex align-items-center justify-content-center'
+									onClick={downloadExcel}
+									disabled={loading || supplierData.length === 0}
+									style={{
+										width: '38px',
+										height: '38px',
+										padding: 0,
+										borderRadius: '8px',
+										fontSize: '14px',
+									}}
+									title='Download Excel'>
+									<FontAwesomeIcon icon={faDownload} />
+								</button>
+							</div>
+						</div>
+
+						{/* Right: Add Supplier Button pinned to end */}
+						<div className='flex-shrink-0 ms-auto'>
+							<TableButton
+								action='add'
+								to='/rag/inventory/suppliers/add'
+								text='Add Supplier'
 							/>
 						</div>
-					</div>
-					<div className='card-toolbar'>
-						<TableButton
-							action='add'
-							to='/rag/inventory/suppliers/add'
-							text='Add Supplier'
-						/>
 					</div>
 				</div>
 				<div className='py-4 card-body'>
