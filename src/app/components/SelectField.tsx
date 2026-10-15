@@ -4,41 +4,59 @@ import { MultiSelect, Option } from 'react-multi-select-component'
 type Props = {
 	className?: string
 	label?: string
-	name: string
-	value: string | string[]
+	name?: string
+	value?: any
 	htmlFor?: string
-	onChange: (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => void
-	options: (string | { label: string; value: string })[]
+	onChange?: (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement> | any) => void
+	options: (string | { label: any; value: any })[] | any
 	showLabel?: boolean
 	multiSelect?: boolean
 	marginRemove?: boolean
 	defaultOpening?: boolean
 	defaultClosing?: boolean
 	disabled?: boolean | undefined
+	searchable?: boolean
+	hideDefaultOption?: boolean
+	defaultLabel?: string
+	height?: string
 }
 
 const SelectField: React.FC<Props> = ({
 	className = '',
 	label = '',
 	value,
-	name,
+	name = '',
 	onChange,
 	htmlFor = '',
-	options,
+	options = [],
 	disabled,
 	showLabel = true,
 	multiSelect = false,
 	marginRemove,
 	defaultOpening,
 	defaultClosing,
+	searchable,
+	hideDefaultOption = false,
+	defaultLabel,
+	height,
 }) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const [searchTerm, setSearchTerm] = useState('')
 	const dropdownRef = useRef<HTMLDivElement>(null)
 
-	const formattedOptions = options.map((option) =>
-		typeof option === 'string' ? { label: option, value: option } : option
-	)
+	const rawOptions = Array.isArray(options) ? options : []
+	const formattedOptions: { label: string; value: string }[] = rawOptions.map((option) => {
+		if (typeof option === 'string' || typeof option === 'number') {
+			return { label: String(option), value: String(option) }
+		}
+		if (option && typeof option === 'object') {
+			return {
+				label: String(option.label ?? option.name ?? option.value ?? ''),
+				value: String(option.value ?? option.id ?? option._id ?? option.label ?? ''),
+			}
+		}
+		return { label: '', value: '' }
+	})
 
 	// Build full options array including defaults
 	const allOptions: { label: string; value: string }[] = []
@@ -46,8 +64,11 @@ const SelectField: React.FC<Props> = ({
 		allOptions.push({ label: 'Opening Time', value: 'Opening Time' })
 	} else if (defaultClosing) {
 		allOptions.push({ label: 'Closing Time', value: 'Closing Time' })
-	} else if (!formattedOptions.some((opt) => opt.value === 'Select' || opt.value === '')) {
-		allOptions.push({ label: 'Select', value: '' })
+	} else if (
+		!hideDefaultOption &&
+		!formattedOptions.some((opt) => opt.value === 'Select' || opt.value === '')
+	) {
+		allOptions.push({ label: defaultLabel || 'Select', value: '' })
 	}
 	formattedOptions.forEach((opt) => {
 		allOptions.push(opt)
@@ -79,7 +100,9 @@ const SelectField: React.FC<Props> = ({
 				value: selectedValues,
 			},
 		} as unknown as React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
-		onChange(syntheticEvent)
+		if (onChange) {
+			onChange(syntheticEvent)
+		}
 	}
 
 	const handleOptionSelect = (optionValue: string) => {
@@ -89,22 +112,36 @@ const SelectField: React.FC<Props> = ({
 				value: optionValue,
 			},
 		} as unknown as React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
-		onChange(syntheticEvent)
+		if (onChange) {
+			onChange(syntheticEvent)
+		}
 		setIsOpen(false)
 		setSearchTerm('')
 	}
 
 	// Current label to show in trigger
-	const currentVal = typeof value === 'string' ? value : ''
+	const currentVal = value !== undefined && value !== null ? String(value) : ''
 	const currentOption = allOptions.find((opt) => opt.value === currentVal)
+	const placeholderText = defaultOpening
+		? 'Opening Time'
+		: defaultClosing
+		? 'Closing Time'
+		: defaultLabel || 'Select'
+
 	const displayLabel = currentOption
 		? currentOption.label
-		: currentVal || (defaultOpening ? 'Opening Time' : defaultClosing ? 'Closing Time' : 'Select')
+		: currentVal || placeholderText
+
+	const showSearch = searchable !== false && (searchable === true || allOptions.length > 6)
 
 	const filteredOptions = allOptions.filter((opt) => {
 		if (!searchTerm) return true
 		return opt.label.toLowerCase().includes(searchTerm.toLowerCase())
 	})
+
+	const triggerStyle: React.CSSProperties = height
+		? { height, minHeight: height }
+		: {}
 
 	return (
 		<div className={`fv-row ${marginRemove ? `mb-0` : `mb-md-7 mb-3`} ${className}`}>
@@ -140,6 +177,7 @@ const SelectField: React.FC<Props> = ({
 						className={`gz-custom-select-trigger ${isOpen ? 'is-open' : ''} ${
 							disabled ? 'is-disabled' : ''
 						}`}
+						style={triggerStyle}
 						onClick={() => {
 							if (!disabled) setIsOpen(!isOpen)
 						}}
@@ -147,7 +185,9 @@ const SelectField: React.FC<Props> = ({
 						tabIndex={0}>
 						<span
 							className={`gz-select-trigger-text ${
-								!currentVal || currentVal === 'Select' ? 'is-placeholder' : ''
+								!currentVal || currentVal === 'Select' || (Boolean(defaultLabel) && displayLabel === defaultLabel)
+									? 'is-placeholder'
+									: ''
 							}`}>
 							{displayLabel}
 						</span>
@@ -157,7 +197,7 @@ const SelectField: React.FC<Props> = ({
 					{/* Custom Dropdown Popup Menu */}
 					{isOpen && !disabled && (
 						<div className='gz-custom-select-dropdown'>
-							{allOptions.length > 6 && (
+							{showSearch && (
 								<div className='gz-select-search-box'>
 									<i className='bi bi-search'></i>
 									<input
@@ -200,4 +240,3 @@ const SelectField: React.FC<Props> = ({
 }
 
 export default SelectField
-

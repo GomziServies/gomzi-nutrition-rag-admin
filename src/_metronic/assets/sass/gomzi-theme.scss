@@ -493,8 +493,13 @@ textarea:focus-visible,
 	}
 }
 
-/* --- SIDEBAR MENU SCROLL CONTAINER --- */
-.aside-menu,
+/* --- SIDEBAR MENU SCROLL CONTAINER (Smooth scrolling without visible scrollbar) --- */
+.aside-menu {
+	flex: 1 1 auto !important;
+	min-height: 0 !important;
+	overflow: hidden !important;
+}
+
 #kt_aside_menu_wrapper,
 .aside .hover-scroll-overlay-y {
 	flex: 1 1 auto !important;
@@ -502,38 +507,37 @@ textarea:focus-visible,
 	overflow-y: auto !important;
 	overflow-x: hidden !important;
 	padding: 8px 6px !important;
-	scrollbar-width: thin !important;
-	scrollbar-color: #cbd5e1 transparent !important;
-	transition: scrollbar-color 0.2s ease;
+	scrollbar-width: none !important; /* Firefox */
+	-ms-overflow-style: none !important; /* IE and Edge */
 
 	&::-webkit-scrollbar {
-		width: 3px !important;
+		display: none !important;
+		width: 0 !important;
+		height: 0 !important;
 	}
 	&::-webkit-scrollbar-track {
+		display: none !important;
 		background: transparent !important;
 	}
 	&::-webkit-scrollbar-thumb {
-		background: #cbd5e1 !important;
-		border-radius: 4px !important;
-		transition: background 0.2s ease;
+		display: none !important;
+		background: transparent !important;
 	}
 	&::-webkit-scrollbar-button {
 		display: none !important;
 		width: 0 !important;
 		height: 0 !important;
 	}
-
-	&:hover,
-	.aside:hover & {
-		scrollbar-color: #94a3b8 transparent !important;
-
-		&::-webkit-scrollbar-thumb {
-			background: #94a3b8 !important;
-		}
-	}
 }
 
-/* Suppress all native scrollbar buttons/arrows everywhere inside aside */
+/* Suppress all native scrollbar buttons/arrows/tracks everywhere inside aside */
+.aside *::-webkit-scrollbar,
+#kt_aside *::-webkit-scrollbar {
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+}
+
 .aside *::-webkit-scrollbar-button,
 #kt_aside *::-webkit-scrollbar-button {
 	display: none !important;
@@ -541,7 +545,7 @@ textarea:focus-visible,
 	height: 0 !important;
 }
 
-/* Collapsed sidebar: Ultra-thin sleek scrollbar (2.5px) with no arrows/buttons */
+/* Collapsed sidebar: Also keep completely clean without visible scrollbar */
 body.aside-minimize .aside #kt_aside_menu_wrapper,
 body.gz-aside-collapsed .aside #kt_aside_menu_wrapper,
 body[data-kt-aside-minimize='on'] .aside #kt_aside_menu_wrapper,
@@ -551,33 +555,21 @@ body[data-kt-aside-minimize='on'] .aside .aside-menu,
 body.aside-minimize .aside .hover-scroll-overlay-y,
 body.gz-aside-collapsed .aside .hover-scroll-overlay-y,
 body[data-kt-aside-minimize='on'] .aside .hover-scroll-overlay-y {
-	scrollbar-width: thin !important;
-	scrollbar-color: #cbd5e1 transparent !important;
+	scrollbar-width: none !important;
+	-ms-overflow-style: none !important;
 
 	&::-webkit-scrollbar {
-		display: block !important;
-		width: 2.5px !important;
-	}
-	&::-webkit-scrollbar-track {
-		background: transparent !important;
-	}
-	&::-webkit-scrollbar-thumb {
-		background: #cbd5e1 !important;
-		border-radius: 4px !important;
-	}
-	&::-webkit-scrollbar-button {
 		display: none !important;
 		width: 0 !important;
 		height: 0 !important;
 	}
-
-	&:hover,
-	.aside:hover & {
-		scrollbar-color: #94a3b8 transparent !important;
-
-		&::-webkit-scrollbar-thumb {
-			background: #94a3b8 !important;
-		}
+	&::-webkit-scrollbar-track {
+		display: none !important;
+		background: transparent !important;
+	}
+	&::-webkit-scrollbar-thumb {
+		display: none !important;
+		background: transparent !important;
 	}
 }
 
@@ -964,14 +956,18 @@ body:not(.aside-minimize):not(.gz-aside-collapsed):not([data-kt-aside-minimize='
 }
 .header-brand,
 #kt_header .header-brand {
-	display: none !important;
+	display: none;
 }
 @media (max-width: 991.98px) {
 	.header-brand,
 	#kt_header .header-brand {
 		display: flex !important;
+		align-items: center;
 		background-color: var(--gz-sidebar) !important;
 		border-bottom: 1px solid var(--gz-border) !important;
+		border-right: none;
+		height: 100%;
+		padding: 0 16px;
 	}
 }
 .header-brand img {

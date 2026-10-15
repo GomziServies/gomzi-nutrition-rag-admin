@@ -5,7 +5,8 @@ const SearchFilter: React.FC<{
 	style?: React.CSSProperties
 	placeholder?: string
 	setSearchTerm: React.Dispatch<React.SetStateAction<string>>
-}> = ({ searchTerm, setSearchTerm, style, placeholder = 'Search...' }) => {
+	className?: string
+}> = ({ searchTerm, setSearchTerm, style, placeholder = 'Search...', className = '' }) => {
 	const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm)
 
 	useEffect(() => {
@@ -20,7 +21,7 @@ const SearchFilter: React.FC<{
 
 	return (
 		<div
-			className='gz-top-search-bar gz-search-filter-box'
+			className={`gz-top-search-bar gz-search-filter-box ${className}`.trim()}
 			style={{
 				width: '100%',
 				height: '38px',

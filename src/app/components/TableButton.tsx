@@ -1,9 +1,12 @@
 import {
 	faCheck,
+	faCompass,
 	faEye,
 	faPaperPlane,
 	faPencil,
 	faPlus,
+	faQrcode,
+	faStar,
 	faTrash,
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
@@ -11,12 +14,25 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { CSSProperties, FC } from 'react'
 import { Link } from 'react-router-dom'
 
+type ActionType =
+	| 'add'
+	| 'edit'
+	| 'remove'
+	| 'view'
+	| 'assign'
+	| 'approve'
+	| 'send'
+	| 'qr'
+	| 'star'
+	| 'explore'
+
 type Props = {
-	action: 'add' | 'edit' | 'remove' | 'view' | 'assign' | 'approve' | 'send';
+	action: ActionType
 	onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
 	to?: string
 	className?: string
 	text?: string
+	title?: string
 	showIcon?: boolean
 	backgroundDark?: boolean
 	disabled?: boolean
@@ -30,6 +46,7 @@ const TableButton: FC<Props> = ({
 	to,
 	className,
 	text,
+	title,
 	showIcon = true,
 	backgroundDark = false,
 	disabled = false,
@@ -53,6 +70,12 @@ const TableButton: FC<Props> = ({
 					return 'btn-light-success gz-table-text-btn'
 				case 'send':
 					return 'btn-light-success gz-table-text-btn'
+				case 'qr':
+					return 'btn-light-dark gz-table-text-btn'
+				case 'star':
+					return 'btn-light-warning gz-table-text-btn'
+				case 'explore':
+					return 'btn-light-info gz-table-text-btn'
 				default:
 					return 'btn-light-primary gz-table-text-btn'
 			}
@@ -77,12 +100,19 @@ const TableButton: FC<Props> = ({
 				return faCheck
 			case 'send':
 				return faPaperPlane
+			case 'qr':
+				return faQrcode
+			case 'star':
+				return faStar
+			case 'explore':
+				return faCompass
 			default:
 				return faPlus
 		}
 	}
 
-	const getTitle = (action: string, text?: string) => {
+	const getTitle = (action: string, text?: string, customTitle?: string) => {
+		if (customTitle) return customTitle
 		if (text) return text
 		switch (action) {
 			case 'add':
@@ -99,6 +129,12 @@ const TableButton: FC<Props> = ({
 				return 'Approve'
 			case 'send':
 				return 'Send'
+			case 'qr':
+				return 'QR Code'
+			case 'star':
+				return 'Rating'
+			case 'explore':
+				return 'Explore'
 			default:
 				return 'Action'
 		}
@@ -109,7 +145,7 @@ const TableButton: FC<Props> = ({
 		disabled ? 'disabled' : ''
 	}`
 	const icon = getIcon(action)
-	const titleText = getTitle(action, text)
+	const titleText = getTitle(action, text, title)
 
 	const handleClick = onClick ? (e: React.MouseEvent<HTMLButtonElement>) => onClick(e) : undefined
 
@@ -147,4 +183,3 @@ const TableButton: FC<Props> = ({
 }
 
 export default TableButton
-

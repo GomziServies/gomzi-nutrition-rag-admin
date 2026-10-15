@@ -59,24 +59,23 @@ const AsideToolbar = () => {
 
 	return (
 		<div className={`gz-aside-top ${isMinimized ? 'gz-aside-top-minimized' : ''}`}>
-			<div
-				className='gz-brand-lockup'
-				onClick={isMinimized ? toggleSidebar : undefined}
-				title={isMinimized ? 'Click to expand sidebar' : undefined}
-				style={{ cursor: isMinimized ? 'pointer' : 'default' }}>
+			<a
+				href='/rag/dashboard'
+				className='gz-brand-lockup d-flex align-items-center'
+				onClick={isMinimized ? (e) => { e.preventDefault(); toggleSidebar(); } : undefined}
+				title={isMinimized ? 'Click to expand sidebar' : 'RAG Admin'}
+				style={{ cursor: isMinimized ? 'pointer' : 'default', textDecoration: 'none' }}>
 				<img
-					alt='GOMZI'
-					src={toAbsoluteUrl('/media/logos/rag-favicon-logo.png')}
+					alt='RAG Logo'
+					src={toAbsoluteUrl('/media/logos/rag-logo.webp')}
 					className='gz-brand-logo'
+					style={{
+						height: isMinimized ? '28px' : '38px',
+						maxWidth: isMinimized ? '28px' : '170px',
+						objectFit: 'contain',
+					}}
 				/>
-				<div className='gz-brand-details'>
-					<div className='gz-brand-title'>
-						GOMZI<span className='gz-brand-tm'>™</span>
-					</div>
-					<div className='gz-brand-sub'>SUPPLEMENTS</div>
-					<div className='gz-brand-tagline'>THE LEGACY OF RAG</div>
-				</div>
-			</div>
+			</a>
 			<button
 				type='button'
 				className='gz-aside-collapse-btn'

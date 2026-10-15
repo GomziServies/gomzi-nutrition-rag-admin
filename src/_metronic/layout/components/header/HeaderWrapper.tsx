@@ -39,17 +39,21 @@ export function HeaderWrapper() {
 			className={clsx('header', classes.header.join(' '), 'align-items-stretch')}
 			{...attributes.headerMenu}>
 			{/* begin::Brand (mobile only toggle & logo) */}
-			<div className='header-brand d-lg-none'>
+			<div className='header-brand d-lg-none d-flex align-items-center flex-shrink-0 px-4'>
 				{/* begin::Logo */}
-				<div className='d-flex align-items-center'>
-					<div>
+				<div className='d-flex align-items-center me-3'>
+					<a
+						href='/rag/dashboard'
+						className='d-flex align-items-center'
+						title='RAG Admin'>
 						<img
-							alt='Logo'
-							src={toAbsoluteUrl('/media/logos/gomzi-nutrition.png')}
-							className='h-25px h-lg-40px'
+							alt='RAG Logo'
+							src={toAbsoluteUrl('/media/logos/rag-logo.webp')}
+							className='h-30px'
+							style={{ objectFit: 'contain' }}
 						/>
-					</div>
-					<div>
+					</a>
+					<div className='ms-2'>
 						{process.env.REACT_APP_NODE_ENV === 'development' && (
 							<span className='badge badge-light-warning fs-8 m-2'>Test</span>
 						)}
@@ -62,28 +66,9 @@ export function HeaderWrapper() {
 				</div>
 				{/* end::Logo */}
 
-				{aside.minimize && (
-					<div
-						id='kt_aside_toggle'
-						className='btn btn-icon w-auto px-0 btn-active-color-primary aside-minimize'
-						data-kt-toggle='true'
-						data-kt-toggle-state='active'
-						data-kt-toggle-target='body'
-						data-kt-toggle-name='aside-minimize'>
-						<KTIcon
-							iconName='exit-left'
-							className='fs-1 me-n1 minimize-default'
-						/>
-						<KTIcon
-							iconName='entrance-left'
-							className='fs-1 minimize-active'
-						/>
-					</div>
-				)}
-
-				{/* begin::Aside toggle */}
+				{/* begin::Aside mobile toggle */}
 				<div
-					className='d-flex align-items-center d-lg-none ms-n3 me-1'
+					className='d-flex align-items-center ms-auto me-1'
 					title='Show aside menu'>
 					<div
 						className='btn btn-icon btn-active-color-primary w-30px h-30px'
@@ -94,7 +79,7 @@ export function HeaderWrapper() {
 						/>
 					</div>
 				</div>
-				{/* end::Aside toggle */}
+				{/* end::Aside mobile toggle */}
 			</div>
 			{/* end::Brand */}
 			<HeaderToolbar />

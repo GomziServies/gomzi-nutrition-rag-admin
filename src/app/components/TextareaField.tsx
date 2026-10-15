@@ -1,20 +1,12 @@
 import { FC } from 'react'
 
 type Props = {
-<<<<<<< src/app/components/TextareaField.tsx
 	className?: string
-=======
-	className: string
->>>>>>> .merge_backup/TextareaField.tsx
 	label: string
 	placeholder: string
 	name: string
-	value: string
-<<<<<<< src/app/components/TextareaField.tsx
+	value?: string
 	htmlFor?: string
-=======
-	htmlFor: string
->>>>>>> .merge_backup/TextareaField.tsx
 	onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
 	readOnly?: boolean
 	disabled?: boolean
@@ -22,21 +14,13 @@ type Props = {
 }
 
 const TextareaField: FC<Props> = ({
-<<<<<<< src/app/components/TextareaField.tsx
 	className = '',
-=======
-	className,
->>>>>>> .merge_backup/TextareaField.tsx
 	label,
 	placeholder,
-	value,
+	value = '',
 	name,
 	onChange,
-<<<<<<< src/app/components/TextareaField.tsx
 	htmlFor = '',
-=======
-	htmlFor,
->>>>>>> .merge_backup/TextareaField.tsx
 	readOnly,
 	disabled,
 	rows = 4,
@@ -50,11 +34,7 @@ const TextareaField: FC<Props> = ({
 			</label>
 			<textarea
 				name={name}
-<<<<<<< src/app/components/TextareaField.tsx
-				value={value}
-=======
 				value={value ?? ''}
->>>>>>> .merge_backup/TextareaField.tsx
 				onChange={onChange}
 				readOnly={readOnly}
 				rows={rows}
