@@ -84,101 +84,207 @@ const ExpiredEmployeeTable: React.FC<Props> = ({ className }) => {
 		fetchEmployeeData()
 	}, [])
 
-return (
-		<div
-			className={`card ${className}`}
-			style={{ height: '524px' }}>
-			<div className='card-header border-0 pt-5'>
-				<div className='d-flex align-items-start flex-column'>
-					<h3 className='card-label fw-bold fs-2 mb-1'>Employee Documents</h3>
-					<span className='text-muted fw-semibold fs-7'>HR Agreement / Joining Letter per employee</span>
+	const [searchTerm, setSearchTerm] = useState('')
+
+	const filteredEmployees = employeeData.filter((emp: any) => {
+		if (!searchTerm) return true
+		const q = searchTerm.toLowerCase()
+		return (
+			emp.name?.toLowerCase().includes(q) ||
+			emp.position?.toLowerCase().includes(q) ||
+			emp.document_type?.toLowerCase().includes(q) ||
+			emp.mobile?.toString().includes(q)
+		)
+	})
+
+	const getDocStatusBadge = (daysDiff: number) => {
+		if (daysDiff < 0) {
+			return (
+				<span className='badge badge-light-danger fw-bold fs-8 px-2 py-1'>
+					Expired ({Math.abs(daysDiff)}d ago)
+				</span>
+			)
+		}
+		if (daysDiff === 0) {
+			return <span className='badge badge-light-danger fw-bold fs-8 px-2 py-1'>Expires Today</span>
+		}
+		if (daysDiff <= 7) {
+			return (
+				<span className='badge badge-light-warning fw-bold fs-8 px-2 py-1'>
+					Expires in {daysDiff}d
+				</span>
+			)
+		}
+		if (daysDiff <= 30) {
+			return (
+				<span className='badge badge-light-primary fw-bold fs-8 px-2 py-1'>
+					Expires in {daysDiff}d
+				</span>
+			)
+		}
+		return (
+			<span className='badge badge-light fw-bold fs-8 px-2 py-1 text-muted'>
+				{daysDiff} days left
+			</span>
+		)
+	}
+
+	return (
+		<div className={`card ${className}`}>
+			{/* Header */}
+			<div className='card-header border-0 pt-5 pb-3 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+				<div className='d-flex align-items-center gap-3'>
+					<span
+						className='symbol symbol-40px'
+						style={{
+							background: '#fee2e2',
+							color: '#dc2626',
+							borderRadius: '10px',
+							display: 'inline-flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							fontSize: '18px',
+						}}>
+						<i className='bi bi-file-earmark-text-fill'></i>
+					</span>
+					<div>
+						<div className='d-flex align-items-center gap-2'>
+							<h3 className='card-title fw-bold fs-4 m-0 text-dark'>Agreement Expiries</h3>
+							<span className='badge badge-light-danger fw-bold fs-8 px-2 py-1'>
+								{employeeData.length} Records
+							</span>
+						</div>
+						<span className='text-muted fw-semibold fs-7'>
+							Employment agreements, contracts & joining documentation status
+						</span>
+					</div>
+				</div>
+
+				<div className='gz-table-search-bar'>
+					<i className='bi bi-search gz-table-search-icon'></i>
+					<input
+						type='text'
+						className='gz-table-search-input'
+						placeholder='Search employee or document...'
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+					/>
+					{searchTerm && (
+						<button
+							type='button'
+							className='gz-table-search-clear'
+							onClick={() => setSearchTerm('')}
+							title='Clear search'>
+							<i className='bi bi-x-lg' style={{ fontSize: '10px' }}></i>
+						</button>
+					)}
 				</div>
 			</div>
 
+			{/* Body */}
 			<div
-				className='card-body py-3'
-				style={{ maxHeight: '430px', overflowY: 'auto' }}>
+				className='card-body py-2 px-6'
+				style={{ maxHeight: '500px', overflowY: 'auto' }}>
 				<div className='table-responsive'>
-					<table className='table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4'>
+					<table className='table table-row-dashed table-row-gray-200 align-middle gs-0 gy-3'>
 						<thead>
-							<tr className='fw-bold text-muted'>
-								<th className='ps-4 min-w-50px rounded-start'>No.</th>
-								<th className='min-w-200px'>Employee</th>
-								<th className='min-w-120px'>Position</th>
-								<th className='min-w-150px'>Document</th>
-								<th className='min-w-150px'>Joining Date</th>
-								<th className='min-w-150px'>Expire In</th>
-								<th className='min-w-100px text-end rounded-end'>Actions</th>
+							<tr className='fw-bolder text-muted text-uppercase fs-8 border-bottom border-gray-200'>
+								<th className='ps-2 min-w-40px'>#</th>
+								<th className='min-w-220px'>Employee</th>
+								<th className='min-w-140px'>Position</th>
+								<th className='min-w-160px'>Document Type</th>
+								<th className='min-w-120px'>Expiry Date</th>
+								<th className='min-w-150px text-center'>Status</th>
+								<th className='min-w-80px text-end pe-2'>Action</th>
 							</tr>
 						</thead>
 						<tbody>
 							{loading ? (
-								<tr>
-									<td colSpan={6} className='text-center'>
-										<div className='d-flex justify-content-center align-items-center my-10'>
-											<div className='spinner-border text-primary' role='status'>
-												<span className='visually-hidden'>Loading...</span>
-											</div>
-										</div>
-									</td>
-								</tr>
-							) : employeeData.length > 0 ? (
-								employeeData.map((employee: any, index: number) => (
-									<tr key={employee._id} className='hover-elevate-up'>
-										<td className='ps-4'>
-											<span className='text-dark fw-bold mb-1 fs-6'>{index + 1}</span>
+								[1, 2, 3, 4, 5].map((i) => (
+									<tr key={`skel-exp-${i}`}>
+										<td className='ps-2'>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '18px', height: '14px', borderRadius: '4px' }}></span>
 										</td>
 										<td>
 											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
+												<div className='gz-hr-skeleton symbol symbol-40px symbol-circle me-3'></div>
+												<div className='d-flex flex-column gap-1'>
+													<span className='gz-hr-skeleton d-inline-block' style={{ width: '120px', height: '14px', borderRadius: '4px' }}></span>
+													<span className='gz-hr-skeleton d-inline-block' style={{ width: '85px', height: '11px', borderRadius: '4px' }}></span>
+												</div>
+											</div>
+										</td>
+										<td>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '90px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '110px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '95px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td className='text-center'>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '100px', height: '22px', borderRadius: '6px' }}></span>
+										</td>
+										<td className='text-end pe-2'>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '32px', height: '32px', borderRadius: '6px' }}></span>
+										</td>
+									</tr>
+								))
+							) : filteredEmployees.length > 0 ? (
+								filteredEmployees.map((employee: any, index: number) => (
+									<tr key={employee._id} className='hover-elevate-up'>
+										<td className='ps-2'>
+											<span className='text-muted fw-semibold fs-7'>{index + 1}</span>
+										</td>
+										<td>
+											<div className='d-flex align-items-center'>
+												<div className='symbol symbol-40px me-3'>
 													{employee.photo ? (
 														<img
 															src={`https://files.fggroup.in/${employee.photo}`}
 															alt={employee.name}
-															className='rounded-circle'
+															onError={(e) => {
+																const target = e.target as HTMLImageElement
+																target.style.display = 'none'
+															}}
+															className='rounded-circle object-fit-cover'
 														/>
 													) : (
-														<div className='symbol-label fs-3 bg-light-primary text-primary fw-bold'>
-															{employee.name.charAt(0)}
-														</div>
+														<span className='symbol-label bg-light-primary text-primary fw-bold fs-6 rounded-circle'>
+															{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+														</span>
 													)}
 												</div>
-												<div className='d-flex justify-content-start flex-column'>
-													<span className='text-dark fw-bold text-hover-primary fs-6'>
+												<div className='d-flex flex-column'>
+													<span className='text-dark fw-bold text-hover-primary fs-6 mb-0'>
 														{employee.name}
 													</span>
-													<span className='text-muted fw-semibold d-block fs-7'>{employee.mobile}</span>
+													<span className='text-muted fs-8 fw-semibold'>
+														{employee.mobile || employee.email || '-'}
+													</span>
 												</div>
 											</div>
 										</td>
 										<td>
-											<span className='text-dark fw-bold d-block fs-6'>
-												{employee.position}
+											<span className='text-dark fw-semibold fs-7'>
+												{employee.position || 'Employee'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold d-block fs-6'>
-												{employee.document_type}
+											<span className='badge badge-light fw-bold fs-8 px-2 py-1 text-gray-700'>
+												{employee.document_type || 'Document'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold d-block fs-6'>
-												{employee.joining_date ? DayJS(employee.joining_date).format('DD MMM YYYY') : '-'}
+											<span className='text-dark fw-semibold fs-7'>
+												{employee.expiry_date ? DayJS(employee.expiry_date).format('DD MMM YYYY') : '-'}
 											</span>
 										</td>
-										<td>
-											<div className='d-flex flex-column'>
-												<span className='text-dark fw-bold fs-6'>
-													{DayJS(employee.expiry_date).format('DD MMM YYYY')}
-												</span>
-												<span className={`fw-bold fs-7 ${employee.is_expired ? 'text-danger' : 'text-primary'}`}>
-													{employee.days_diff < 0 
-														? `${Math.abs(employee.days_diff)} Days Expired` 
-														: `${employee.days_diff} days`}
-												</span>
-											</div>
+										<td className='text-center'>
+											{getDocStatusBadge(employee.days_diff)}
 										</td>
-										<td className='text-end'>
+										<td className='text-end pe-2'>
 											<TableButton
 												action='view'
 												to={`/hr/employee-view?employee_id=${employee._id}`}
@@ -188,8 +294,11 @@ return (
 								))
 							) : (
 								<tr>
-									<td colSpan={6} className='text-center py-10'>
-										<div className='text-muted fs-6 fw-semibold'>No expired documents found</div>
+									<td colSpan={7} className='text-center py-10'>
+										<div className='text-muted fs-7'>
+											<i className='bi bi-info-circle me-1'></i>
+											{searchTerm ? 'No matching documents found' : 'No expired or expiring documents found'}
+										</div>
 									</td>
 								</tr>
 							)}

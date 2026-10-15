@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import DateFilter from '../../../../app/components/DateRangePicker'
 import { GetMyAuthority } from '../../../../app/Functions/FGGroup/RBAC'
 import { toAbsoluteUrl } from '../../../helpers'
@@ -9,6 +9,7 @@ const HeaderToolbar = () => {
 	const { classes } = useLayout()
 	const [searchQuery, setSearchQuery] = useState('')
 	const [showUserMenu, setShowUserMenu] = useState(false)
+	const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const [userProfile, setUserProfile] = useState<any>(null)
 	const [selectedLogo, setSelectedLogo] = useState('')
 	const [adminType, setAdminType] = useState('')
@@ -147,7 +148,17 @@ const HeaderToolbar = () => {
 				</button>
 
 				{/* User Profile Pill */}
-				<div className='gz-top-user-wrap position-relative'>
+				<div
+					className='gz-top-user-wrap position-relative'
+					onMouseEnter={() => {
+						if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
+						setShowUserMenu(true)
+					}}
+					onMouseLeave={() => {
+						hoverTimeoutRef.current = setTimeout(() => {
+							setShowUserMenu(false)
+						}, 250)
+					}}>
 					<button
 						type='button'
 						className='gz-top-user-btn'
@@ -167,7 +178,7 @@ const HeaderToolbar = () => {
 					{showUserMenu && (
 						<div
 							className='gz-topbar-user-dropdown-menu'
-							onClick={() => setShowUserMenu(false)}>
+							onClick={(e) => e.stopPropagation()}>
 							<HeaderUserMenu />
 						</div>
 					)}

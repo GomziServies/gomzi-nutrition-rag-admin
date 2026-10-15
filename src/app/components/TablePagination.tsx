@@ -44,44 +44,92 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 	}
 
 	return (
-		<div className='row mt-4'>
-			<div className='col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'></div>
-			<div className='col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'>
-				<div id='kt_table_users_paginate'>
-					<ul className='pagination'>
-						<li className={currentPage === 1 ? 'page-item disabled' : 'page-item'}>
-							<button
-								className='page-link'
-								onClick={() => onPageChange(currentPage - 1)}
-								aria-label='Previous'>
-								<span aria-hidden='true'>&laquo;</span>
-							</button>
+		<div className='d-flex align-items-center justify-content-end my-2'>
+			<div id='kt_table_users_paginate'>
+				<ul className='pagination pagination-circle gap-1 m-0 align-items-center'>
+					<li className={currentPage === 1 ? 'page-item disabled' : 'page-item'}>
+						<button
+							className='page-link'
+							style={{
+								borderRadius: '8px',
+								height: '34px',
+								minWidth: '34px',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								fontSize: '13px',
+								fontWeight: 600,
+								border: '1px solid #e2e8f0',
+							}}
+							onClick={() => onPageChange(currentPage - 1)}
+							aria-label='Previous'>
+							<span aria-hidden='true'>&laquo;</span>
+						</button>
+					</li>
+					{getPageNumbers().map((number, index) => (
+						<li
+							key={index}
+							className={currentPage === number ? 'page-item active' : 'page-item'}>
+							{typeof number === 'number' ? (
+								<button
+									className='page-link'
+									style={{
+										borderRadius: '8px',
+										height: '34px',
+										minWidth: '34px',
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										fontSize: '13px',
+										fontWeight: 600,
+										border: '1px solid #e2e8f0',
+										...(currentPage === number
+											? { backgroundColor: '#2563eb', borderColor: '#2563eb', color: '#ffffff' }
+											: { backgroundColor: '#ffffff', color: '#334155' }),
+									}}
+									onClick={() => onPageChange(number)}>
+									{number}
+								</button>
+							) : (
+								<span
+									className='page-link'
+									style={{
+										borderRadius: '8px',
+										height: '34px',
+										minWidth: '34px',
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										fontSize: '13px',
+										border: 'none',
+										background: 'transparent',
+										color: '#94a3b8',
+									}}>
+									{number}
+								</span>
+							)}
 						</li>
-						{getPageNumbers().map((number, index) => (
-							<li
-								key={index}
-								className={currentPage === number ? 'page-item active' : 'page-item'}>
-								{typeof number === 'number' ? (
-									<button
-										className='page-link'
-										onClick={() => onPageChange(number)}>
-										{number}
-									</button>
-								) : (
-									<span className='page-link'>{number}</span>
-								)}
-							</li>
-						))}
-						<li className={currentPage === totalPages ? 'page-item disabled' : 'page-item'}>
-							<button
-								className='page-link'
-								onClick={() => onPageChange(currentPage + 1)}
-								aria-label='Next'>
-								<span aria-hidden='true'>&raquo;</span>
-							</button>
-						</li>
-					</ul>
-				</div>
+					))}
+					<li className={currentPage === totalPages ? 'page-item disabled' : 'page-item'}>
+						<button
+							className='page-link'
+							style={{
+								borderRadius: '8px',
+								height: '34px',
+								minWidth: '34px',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								fontSize: '13px',
+								fontWeight: 600,
+								border: '1px solid #e2e8f0',
+							}}
+							onClick={() => onPageChange(currentPage + 1)}
+							aria-label='Next'>
+							<span aria-hidden='true'>&raquo;</span>
+						</button>
+					</li>
+				</ul>
 			</div>
 		</div>
 	)

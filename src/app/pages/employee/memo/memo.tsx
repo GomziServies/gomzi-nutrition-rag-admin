@@ -1,24 +1,22 @@
 import React, { useState } from 'react'
-import { useIntl } from 'react-intl'
-import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import UsersListPagination from '../../../components/TablePagination'
+import LengthMenu from '../../../components/LengthMenu'
 import InputField from '../../../components/InputField'
 import SelectField from '../../../components/SelectField'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faPlusCircle, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faXmark } from '@fortawesome/free-solid-svg-icons'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 
 const MemoEmployee: React.FC = () => {
-    const intl = useIntl()
     const [searchTerm, setSearchTerm] = useState('')
-    const [loading, setLoading] = useState(false);
-    const [sort, setSort] = useState('createdAt');
-    const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc');
+    const [loading] = useState(false)
+    const [sort, setSort] = useState('createdAt')
+    const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
     const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
-    const [targetData, setTargetData] = useState<any[]>([
+    const [targetData] = useState<any[]>([
         {
             id: 1,
             employee_name: 'Divyesh',
@@ -55,7 +53,7 @@ const MemoEmployee: React.FC = () => {
     }
 
     const filteredtargetData = targetData.filter((sale) =>
-        sale.employee_name.toLowerCase().includes(searchTerm.toLowerCase())
+        (sale.employee_name || '').toLowerCase().includes(searchTerm.toLowerCase())
     )
     const paginatedtargetData = filteredtargetData.slice(
         (pagination.page - 1) * pagination.itemsPerPage,
@@ -80,206 +78,103 @@ const MemoEmployee: React.FC = () => {
 
     return (
         <>
-            <PageTitle breadcrumbs={[]}>Target</PageTitle>
-            <div
-                className='accordion card'
-                id='kt_accordion_1'>
-                <KTCard className='accordion-item mt-5'>
-                    <div id='kt_accordion_1_body_1'
-                        className='accordion-collapse collapse show'>
+            <PageTitle breadcrumbs={[]}>My Memos</PageTitle>
 
-                        <div className='row justify-content-between px-5'>
-                            <div className='col-12 d-flex justify-content-end mt-10'>
-                                <SearchFilter searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-                            </div>
+            <div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+                <div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+                    <div className='d-flex align-items-center gap-3 flex-wrap'>
+                        <div className='d-flex align-items-center position-relative'>
+                            <SearchFilter searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                         </div>
+                    </div>
 
-                        <div className='py-4 card-body'>
-                            <div className='table-responsive'>
+                    <div className='d-flex align-items-center gap-3'>
+                        <LengthMenu
+                            expenseData={targetData}
+                            handleItemsPerPageChange={handlePageChange}
+                        />
+                    </div>
+                </div>
 
-                                <Table
-                                    data={targetData}
-                                    columns={sortableFields}
-                                    sort={sort}
-                                    sortOrder={sortOrder}
-                                    onSortChange={handleSortChange}
-                                    renderRow={(employee: any, index: number, actualIndex: number, isVisible: boolean) => (
-                                        <React.Fragment key={employee._id}>
-                                            <tr
-                                                onClick={() => handleRowClick(employee._id)}
-                                                className='data-row'>
-                                                <td className='text-center'>
-                                                    <div className='d-flex'>
-                                                        <FontAwesomeIcon
-                                                            icon={faPlusCircle}
-                                                            className='mx-2 ms-5 mb-1 plus-icon'
-                                                            style={{ color: '#607D8B', fontSize: '18px' }}
-                                                        />
-                                                        <span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-                                                            {actualIndex}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-                                                        {employee.employee_name}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-                                                        {DayJS(employee.memo_received_date).format('DD/MM/YYYY hh:mm:ss A')}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        className='btn btn-success btn-sm'>
-                                                        <FontAwesomeIcon
-                                                            icon={faEye}
-                                                            className='fs-3 text-white'
-                                                        />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            {isVisible && (
-                                                <tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-                                                    <td colSpan={12}>
-                                                        <div>
-                                                            <strong>{sortableFields[0].title}:</strong> {employee.employee_name}
-                                                            <br />
-                                                            <strong>{sortableFields[1].title}:</strong> {employee.memo_received_date}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </React.Fragment>
+                <div className='card-body py-4 px-6'>
+                    <div className='table-responsive'>
+                        <Table
+                            data={paginatedtargetData}
+                            columns={sortableFields}
+                            sort={sort}
+                            sortOrder={sortOrder}
+                            onSortChange={handleSortChange}
+                            renderRow={(employee: any, index: number, actualIndex: number, isVisible: boolean) => (
+                                <React.Fragment key={employee.id || index}>
+                                    <tr
+                                        onClick={() => handleRowClick(employee.id)}
+                                        className='data-row'
+                                        style={{ verticalAlign: 'middle', borderBottom: '1px solid #f1f1f4' }}>
+                                        <td className='text-center py-3' style={{ width: '60px' }}>
+                                            <span className='badge badge-light-secondary fw-bolder px-2 py-1' style={{ borderRadius: '6px' }}>{actualIndex}</span>
+                                        </td>
+                                        <td className='py-3'>
+                                            <span className='text-gray-900 fw-bold fs-6'>
+                                                {employee.employee_name}
+                                            </span>
+                                        </td>
+                                        <td className='py-3 text-muted fs-7'>
+                                            {DayJS(employee.memo_received_date).format('DD/MM/YYYY, hh:mm A')}
+                                        </td>
+                                        <td className='py-3 text-end pe-4'>
+                                            <button
+                                                className='btn btn-icon btn-sm btn-light-primary'
+                                                style={{ width: '34px', height: '34px', borderRadius: '8px' }}
+                                                title='View Memo'>
+                                                <FontAwesomeIcon
+                                                    icon={faEye}
+                                                />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {isVisible && (
+                                        <tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
+                                            <td colSpan={12} className='p-4 bg-light-primary rounded-3'>
+                                                <div className='fs-7'>
+                                                    <div><strong>Employee Name:</strong> {employee.employee_name}</div>
+                                                    <div><strong>Memo Received Date:</strong> {employee.memo_received_date}</div>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     )}
-                                    visibleDetails={visibleDetails}
-                                    pagination={pagination}
-                                    setPagination={setPagination}
-                                    loading={loading}
-                                />
-                            </div>
-                            {targetData.length === 0 && (
-                                <div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-                                    <b>No records found</b>
-                                </div>
+                                </React.Fragment>
                             )}
-                            {targetData.length > 0 && (
-                                <UsersListPagination
-                                    totalPages={Math.ceil(targetData.length / pagination.itemsPerPage)}
-                                    currentPage={pagination.page}
-                                    onPageChange={handlePageChange}
-                                />
-                            )}
-                        </div>
+                            visibleDetails={visibleDetails}
+                            pagination={pagination}
+                            setPagination={setPagination}
+                            loading={loading}
+                        />
                     </div>
 
-                    {/* target add modal */}
-                    <div
-                        className='modal fade'
-                        id='kt_modal_target_add'
-                        aria-hidden='true'>
-                        <div className='modal-dialog modal-dialog-centered mw-650px'>
-                            <div className='modal-content'>
-                                <div className='modal-header justify-content-between'>
-                                    <h2 className='fw-bolder'>Add New Target</h2>
-                                    <div
-                                        className='btn btn-sm btn-icon btn-active-color-primary'
-                                        data-bs-dismiss='modal'>
-                                        <FontAwesomeIcon
-                                            className='fs-1 position-absolute ms-3'
-                                            icon={faXmark}
-                                        />
-                                    </div>
-                                </div>
-                                <div className='modal-body scroll-y'>
-                                    <div className='col-md-12'>
-                                        <div className='row'>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <SelectField
-                                                    className='col-12 fv-row'
-                                                    name='branch'
-                                                    label='Branch'
-                                                    htmlFor='branch'
-                                                    value={targetAddData.branch}
-                                                    onChange={handleInputChange}
-                                                    options={["Fitness With Gomzi", "FG Meals", "FG IT", "FG Digital"]}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='Target Title'
-                                                    type='text'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='title'
-                                                    label='Target Title'
-                                                    htmlFor='title'
-                                                    value={targetAddData.title}
-                                                    onChange={(e) => handleInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='Description'
-                                                    type='text'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='description'
-                                                    label='Description'
-                                                    htmlFor='description'
-                                                    value={targetAddData.description}
-                                                    onChange={(e) => handleInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='Start Date'
-                                                    type='date'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='start_date'
-                                                    label='Start Date'
-                                                    htmlFor='start_date'
-                                                    value={targetAddData.start_date}
-                                                    onChange={(e) => handleInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='End Date'
-                                                    type='date'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='end_date'
-                                                    label='End Date'
-                                                    htmlFor='end_date'
-                                                    value={targetAddData.end_date}
-                                                    onChange={(e) => handleInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <SelectField
-                                                    className='col-12 fv-row'
-                                                    name='target'
-                                                    label='Set Target For'
-                                                    htmlFor='target'
-                                                    value={targetAddData.target}
-                                                    onChange={handleInputChange}
-                                                    options={["Public Relation [PR]", "Content Writer", "Human Resource [HR]", "General Manager", "Marketing", "Franchise Owner"]}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='modal-footer justify-content-end'>
-                                    <button
-                                        className='btn btn-primary'
-                                        data-bs-dismiss='modal'>
-                                        Add
-                                    </button>
-                                </div>
+                    {filteredtargetData.length === 0 && !loading && (
+                        <div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
+                            <div className='symbol symbol-60px mb-4'>
+                                <span className='symbol-label bg-light-primary text-primary fs-2'>📝</span>
                             </div>
+                            <h5 className='fw-bold text-gray-800 mb-1'>No Memos Found</h5>
+                            <p className='text-muted fs-7 mb-0'>Company memos or official notices issued will appear here.</p>
                         </div>
-                    </div>
+                    )}
 
-                </KTCard>
+                    <div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+                        <div className='text-muted fs-7 fw-semibold'>
+                            Showing {filteredtargetData.length === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
+							{Math.min(pagination.page * pagination.itemsPerPage, filteredtargetData.length)} of {filteredtargetData.length} records
+                        </div>
+                        {filteredtargetData.length > 0 && (
+                            <UsersListPagination
+                                totalPages={Math.ceil(filteredtargetData.length / pagination.itemsPerPage) || 1}
+                                currentPage={pagination.page}
+                                onPageChange={handlePageChange}
+                            />
+                        )}
+                    </div>
+                </div>
             </div>
         </>
     )

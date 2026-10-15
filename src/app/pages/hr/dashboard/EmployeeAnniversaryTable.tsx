@@ -179,137 +179,204 @@ const EmployeeAnniversaryTable: React.FC<Props> = ({ className }) => {
 	// Function to get days until next anniversary for employees without upcoming anniversaries
 	const getDaysUntilNextAnniversary = (joiningDate: string) => {
 		if (!joiningDate) return ''
-		
+
 		const joinDate = new Date(joiningDate)
 		const today = new Date()
-		
-		// Create anniversary date for current year
+
 		const anniversaryThisYear = new Date(today.getFullYear(), joinDate.getMonth(), joinDate.getDate())
-		
-		// If anniversary has passed this year, set to next year
-		const nextAnniversary = anniversaryThisYear < today ? 
-			new Date(today.getFullYear() + 1, joinDate.getMonth(), joinDate.getDate()) : 
-			anniversaryThisYear
-		
-		// Calculate difference in days
+		const nextAnniversary =
+			anniversaryThisYear < today
+				? new Date(today.getFullYear() + 1, joinDate.getMonth(), joinDate.getDate())
+				: anniversaryThisYear
+
 		const diffTime = nextAnniversary.getTime() - today.getTime()
-		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-		
-		return diffDays
+		return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 	}
 
+	const [searchTerm, setSearchTerm] = useState('')
+
+	const filteredEmployees = employeeData.filter((emp: any) => {
+		if (!searchTerm) return true
+		const q = searchTerm.toLowerCase()
+		return (
+			emp.name?.toLowerCase().includes(q) ||
+			emp.position?.toLowerCase().includes(q) ||
+			emp.mobile?.toString().includes(q)
+		)
+	})
+
 	return (
-		<div
-			className={`card ${className}`}
-			style={{ height: '524px' }}>
-			{/* Enhanced Header */}
-			<div className='card-header border-0 pt-5'>
-				<div className='d-flex align-items-start flex-column'>
-					<h3 className='card-label fw-bold fs-2 mb-1'>All Employees - Work Anniversaries</h3>
-					<span className='text-muted fw-semibold fs-7'>Upcoming Work Anniversaries</span>
+		<div className={`card ${className}`}>
+			{/* Header */}
+			<div className='card-header border-0 pt-5 pb-3 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+				<div className='d-flex align-items-center gap-3'>
+					<span
+						className='symbol symbol-40px'
+						style={{
+							background: '#fef3c7',
+							color: '#d97706',
+							borderRadius: '10px',
+							display: 'inline-flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							fontSize: '18px',
+						}}>
+						<i className='bi bi-award-fill'></i>
+					</span>
+					<div>
+						<div className='d-flex align-items-center gap-2'>
+							<h3 className='card-title fw-bold fs-4 m-0 text-dark'>Work Anniversaries</h3>
+							<span className='badge badge-light-warning fw-bold fs-8 px-2 py-1'>
+								{employeeData.length} Records
+							</span>
+						</div>
+						<span className='text-muted fw-semibold fs-7'>
+							Upcoming milestone celebrations & years served
+						</span>
+					</div>
+				</div>
+
+				<div className='gz-table-search-bar'>
+					<i className='bi bi-search gz-table-search-icon'></i>
+					<input
+						type='text'
+						className='gz-table-search-input'
+						placeholder='Search employee or role...'
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+					/>
+					{searchTerm && (
+						<button
+							type='button'
+							className='gz-table-search-clear'
+							onClick={() => setSearchTerm('')}
+							title='Clear search'>
+							<i className='bi bi-x-lg' style={{ fontSize: '10px' }}></i>
+						</button>
+					)}
 				</div>
 			</div>
 
+			{/* Body */}
 			<div
-				className='card-body py-3'
-				style={{ maxHeight: '430px', overflowY: 'auto' }}>
+				className='card-body py-2 px-6'
+				style={{ maxHeight: '500px', overflowY: 'auto' }}>
 				<div className='table-responsive'>
-					<table className='table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4'>
+					<table className='table table-row-dashed table-row-gray-200 align-middle gs-0 gy-3'>
 						<thead>
-							<tr className='fw-bold text-muted'>
-								<th className='ps-4 min-w-50px rounded-start'>No.</th>
-								<th className='min-w-200px'>Employee</th>
-								<th className='min-w-120px'>Position</th>
+							<tr className='fw-bolder text-muted text-uppercase fs-8 border-bottom border-gray-200'>
+								<th className='ps-2 min-w-40px'>#</th>
+								<th className='min-w-220px'>Employee</th>
+								<th className='min-w-140px'>Position</th>
 								<th className='min-w-120px'>Joining Date</th>
-								<th className='min-w-150px text-center'>Years Served</th>
-								<th className='min-w-120px text-center'>Anniversary In</th>
-								<th className='min-w-100px text-end rounded-end'>Actions</th>
+								<th className='min-w-120px text-center'>Tenure</th>
+								<th className='min-w-140px text-center'>Milestone In</th>
+								<th className='min-w-80px text-end pe-2'>Action</th>
 							</tr>
 						</thead>
 						<tbody>
 							{loading ? (
-								<tr>
-									<td
-										colSpan={7}
-										className='text-center'>
-										<div className='d-flex justify-content-center align-items-center mb-4 my-7'>
-											<div
-												className='spinner-border text-primary'
-												role='status'>
-												<span className='visually-hidden'>Loading...</span>
-											</div>
-										</div>
-									</td>
-								</tr>
-							) : employeeData.length > 0 ? (
-								employeeData.map((employee: any, index: number) => (
-									<tr
-										key={employee._id}
-										className='hover-elevate-up'>
-										<td className='ps-4'>
-											<div className='form-check form-check-sm form-check-custom form-check-solid'>
-												<span className='text-dark fw-bold fs-6'>{index + 1}</span>
-											</div>
+								[1, 2, 3, 4, 5].map((i) => (
+									<tr key={`skel-ann-${i}`}>
+										<td className='ps-2'>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '18px', height: '14px', borderRadius: '4px' }}></span>
 										</td>
 										<td>
 											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
-													<img
-														src={`https://files.fggroup.in/${employee.photo}`}
-														alt={employee.name}
-														onError={(e) => {
-															const target = e.target as HTMLImageElement
-															target.src = 'https://via.placeholder.com/150' // fallback image
-														}}
-														className='rounded-circle'
-													/>
+												<div className='gz-hr-skeleton symbol symbol-40px symbol-circle me-3'></div>
+												<div className='d-flex flex-column gap-1'>
+													<span className='gz-hr-skeleton d-inline-block' style={{ width: '120px', height: '14px', borderRadius: '4px' }}></span>
+													<span className='gz-hr-skeleton d-inline-block' style={{ width: '85px', height: '11px', borderRadius: '4px' }}></span>
 												</div>
-												<div className='d-flex justify-content-start flex-column'>
-													<span className='text-dark fw-bold fs-6'>{employee.name}</span>
-													<span className='text-muted fw-semibold d-block fs-7'>
-														{employee.mobile}
+											</div>
+										</td>
+										<td>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '90px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '95px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td className='text-center'>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '60px', height: '22px', borderRadius: '6px' }}></span>
+										</td>
+										<td className='text-center'>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '75px', height: '22px', borderRadius: '6px' }}></span>
+										</td>
+										<td className='text-end pe-2'>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '32px', height: '32px', borderRadius: '6px' }}></span>
+										</td>
+									</tr>
+								))
+							) : filteredEmployees.length > 0 ? (
+								filteredEmployees.map((employee: any, index: number) => (
+									<tr key={employee._id} className='hover-elevate-up'>
+										<td className='ps-2'>
+											<span className='text-muted fw-semibold fs-7'>{index + 1}</span>
+										</td>
+										<td>
+											<div className='d-flex align-items-center'>
+												<div className='symbol symbol-40px me-3'>
+													{employee.photo ? (
+														<img
+															src={`https://files.fggroup.in/${employee.photo}`}
+															alt={employee.name}
+															onError={(e) => {
+																const target = e.target as HTMLImageElement
+																target.style.display = 'none'
+															}}
+															className='rounded-circle object-fit-cover'
+														/>
+													) : (
+														<span className='symbol-label bg-light-primary text-primary fw-bold fs-6 rounded-circle'>
+															{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+														</span>
+													)}
+												</div>
+												<div className='d-flex flex-column'>
+													<span className='text-dark fw-bold text-hover-primary fs-6 mb-0'>
+														{employee.name}
+													</span>
+													<span className='text-muted fs-8 fw-semibold'>
+														{employee.mobile || employee.email || '-'}
 													</span>
 												</div>
 											</div>
 										</td>
 										<td>
-											<div className='text-dark fw-bold d-block fs-6'>{employee.position}</div>
+											<span className='text-dark fw-semibold fs-7'>
+												{employee.position || 'Employee'}
+											</span>
 										</td>
 										<td>
-											<div className='text-dark fw-bold d-block fs-6'>
+											<span className='text-dark fw-semibold fs-7'>
 												{DayJS(employee.joining_date).format('DD MMM YYYY')}
-											</div>
+											</span>
 										</td>
 										<td className='text-center'>
-											<span className='badge badge-light-info fs-7 fw-semibold'>
+											<span className='badge badge-light-primary fw-bold fs-8 px-2 py-1'>
 												{employee.years_of_service}{' '}
 												{employee.years_of_service === 1 ? 'Year' : 'Years'}
 											</span>
 										</td>
 										<td className='text-center'>
-											<div className='d-flex flex-column align-items-center'>
-												<span
-													className={getBadgeClass(
-														employee.joining_date,
-														employee.has_upcoming_anniversary
-													)}>
-													{employee.has_upcoming_anniversary
-														? daysUntilAnniversary(employee.joining_date)
-														: `${getDaysUntilNextAnniversary(employee.joining_date)} days`}
+											<div className='d-flex flex-column align-items-center gap-1'>
+												<span className={getBadgeClass(employee.joining_date, employee.has_upcoming_anniversary)}>
+													{employee.is_anniversary_today ? (
+														<span>🎉 Today!</span>
+													) : employee.has_upcoming_anniversary ? (
+														daysUntilAnniversary(employee.joining_date)
+													) : (
+														`${getDaysUntilNextAnniversary(employee.joining_date)} days`
+													)}
 												</span>
 												{!employee.is_anniversary_today && employee.has_upcoming_anniversary && (
-													<small className='text-muted mt-1'>
-														Completing{' '}
-														{getNextAnniversaryYear(
-															employee.joining_date,
-															employee.years_of_service
-														)}{' '}
-														years
-													</small>
+													<span className='text-muted fs-9 fw-semibold'>
+														Completing {getNextAnniversaryYear(employee.joining_date, employee.years_of_service)} years
+													</span>
 												)}
 											</div>
 										</td>
-										<td className='text-end'>
+										<td className='text-end pe-2'>
 											<TableButton
 												action='view'
 												to={`/hr/employee-view?employee_id=${employee._id}`}
@@ -319,18 +386,10 @@ const EmployeeAnniversaryTable: React.FC<Props> = ({ className }) => {
 								))
 							) : (
 								<tr>
-									<td
-										colSpan={7}
-										className='text-center'>
-										<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center mt-5'>
-											<div className='symbol symbol-100px mb-5'>
-												<KTIcon
-													iconName='crown'
-													className='fs-5x text-muted opacity-50'
-												/>
-											</div>
-											<h4 className='text-muted'>No employees found</h4>
-											<p className='text-muted fs-6'>There are no employees in the system</p>
+									<td colSpan={7} className='text-center py-10'>
+										<div className='text-muted fs-7'>
+											<i className='bi bi-info-circle me-1'></i>
+											{searchTerm ? 'No matching employees found' : 'No employee records found'}
 										</div>
 									</td>
 								</tr>

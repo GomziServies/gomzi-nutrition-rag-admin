@@ -1,26 +1,21 @@
-import { faCheck, faEye, faPencilAlt, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faEdit, faPlus, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
-import { Button, Modal } from 'react-bootstrap'
+import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
-import { Link } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import { KTCard, KTIcon } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import DateFilter from '../../../components/DateRangePicker'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import Table from '../../../components/Table'
-import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { CreateHiringRequest, GetHiringRequests, UpdateHiringRequest } from '../../../Functions/FGGroup/HiringRequest'
-import { useAuth } from '../../../modules/auth'
 import InputField from '../../../components/InputField'
 import TextareaField from '../../../components/TextareaField'
 
 const HiringRequest: React.FC = () => {
-	const { currentUser } = useAuth()
 	const [searchTerm, setSearchTerm] = useState('')
 	const [showModal, setShowModal] = useState(false)
 	const [editingId, setEditingId] = useState<string | null>(null)
@@ -43,23 +38,35 @@ const HiringRequest: React.FC = () => {
 		itemsPerPage: 10,
 	})
 
-	const fetchHiringRequests = async () => {
-		const employeeData: any = localStorage.getItem('fg_group_info')
-		const employee = JSON.parse(employeeData)
+	const getStoredEmployee = () => {
+		try {
+			const raw =
+				localStorage.getItem('fg_group_user_info') ||
+				localStorage.getItem('fg_group_info') ||
+				localStorage.getItem('auth_fg_group')
+			return raw ? JSON.parse(raw) : {}
+		} catch {
+			return {}
+		}
+	}
 
+	const fetchHiringRequests = async () => {
 		setLoading(true)
 		try {
-			const response = await GetHiringRequests({
+			const employee = getStoredEmployee()
+			const empId = employee?.employee_id || employee?._id || employee?.id
+
+			const response: any = await GetHiringRequests({
 				page: pagination.page,
 				limit: pagination.itemsPerPage,
 				search: searchTerm,
 				sort,
 				sortOrder,
-				employee_id: employee?.employee_id || employee?._id,
+				employee_id: empId,
 				start_date: selectedDateRange ? DayJS(selectedDateRange[0]).format('YYYY-MM-DD') : undefined,
 				end_date: selectedDateRange ? DayJS(selectedDateRange[1]).format('YYYY-MM-DD') : undefined,
 			} as any)
-			if (response.data) {
+			if (response?.data) {
 				setHiringRequests(response.data)
 				setMetaData((response.metadata as any)?.pagination)
 			}
@@ -79,7 +86,7 @@ const HiringRequest: React.FC = () => {
 	}
 
 	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value })
+		setPagination({ ...pagination, itemsPerPage: value, page: 1 })
 	}
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -97,8 +104,8 @@ const HiringRequest: React.FC = () => {
 
 		setLoading(true)
 		try {
-			const employeeData: any = localStorage.getItem('fg_group_info')
-			const employee = JSON.parse(employeeData)
+			const employee = getStoredEmployee()
+			const empId = employee?.employee_id || employee?._id || employee?.id
 
 			if (editingId) {
 				await UpdateHiringRequest({
@@ -109,7 +116,7 @@ const HiringRequest: React.FC = () => {
 			} else {
 				const payload = {
 					...formData,
-					employee_id: employee?.employee_id || employee?._id,
+					employee_id: empId,
 				}
 				await CreateHiringRequest(payload)
 				toast.success('Hiring Request Submitted Successfully')
@@ -188,31 +195,30 @@ const HiringRequest: React.FC = () => {
 		{ title: 'Date', field: 'updatedAt' },
 	]
 
+	const totalCount = metaData?.totalCount || hiringRequests.length
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Hiring Requests</PageTitle>
-			<KTCard>
-				<div className='row mx-6 my-4 align-items-center justify-content-between'>
-					<div className='col-md-6 col-12'>
-						<div className='d-md-flex align-items-center'>
+
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div className='d-flex align-items-center gap-3 flex-wrap'>
+						<div className='d-flex align-items-center position-relative'>
 							<SearchFilter searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-							<div className='ms-md-3 mt-md-0 mt-3 d-md-block d-none'>
-								<LengthMenu
-									expenseData={hiringRequests}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-								/>
-							</div>
 						</div>
 					</div>
-					<div className='col-md-6 col-12 px-0 d-flex justify-content-md-end justify-content-center align-items-center mb-md-0 mt-4'>
-						<div className='me-3'>
-							<DateFilter 
-								onDateRangeChange={handleDateRangeChange} 
-								rightValue='0'
-							/>
-						</div>
+					<div className='d-flex align-items-center gap-3 flex-wrap'>
+						<DateFilter 
+							onDateRangeChange={handleDateRangeChange} 
+							rightValue='0'
+						/>
+						<LengthMenu
+							expenseData={hiringRequests}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+						/>
 						<button
-							className='btn btn-sm py-4 btn-primary'
+							className='btn btn-primary rounded-pill px-5 fw-bold d-inline-flex align-items-center gap-2'
 							onClick={() => {
 								setEditingId(null)
 								setFormData({
@@ -222,15 +228,14 @@ const HiringRequest: React.FC = () => {
 									employee_remarks: '',
 								})
 								setShowModal(true)
-							}}
-						>
-							<KTIcon iconName='plus' className='fs-2' />
-							Add Request
+							}}>
+							<FontAwesomeIcon icon={faPlus} />
+							<span>Add Request</span>
 						</button>
 					</div>
 				</div>
 
-				<div className='py-4 card-body'>
+				<div className='card-body py-4 px-6'>
 					<div className='table-responsive'>
 						<Table
 							data={hiringRequests}
@@ -239,22 +244,24 @@ const HiringRequest: React.FC = () => {
 							sortOrder={sortOrder}
 							onSortChange={handleSortChange}
 							renderRow={(item: any, index: number, actualIndex: number) => (
-								<tr key={item._id} className='data-row'>
-									<td className='text-center'>
-										<div className='d-flex justify-content-center'>
-											<span className='text-dark fw-bold d-block mb-1 fs-6'>{actualIndex}</span>
-										</div>
+								<tr key={item._id} className='data-row' style={{ verticalAlign: 'middle', borderBottom: '1px solid #f1f1f4' }}>
+									<td className='text-center py-3' style={{ width: '60px' }}>
+										<span className='badge badge-light-secondary fw-bolder px-2 py-1' style={{ borderRadius: '6px' }}>
+											{actualIndex}
+										</span>
 									</td>
-									<td>
-										<span className='text-dark fw-bold d-block mb-1 fs-6'>{item.position}</span>
+									<td className='py-3'>
+										<span className='text-gray-900 fw-bold fs-6'>{item.position}</span>
 									</td>
-									<td>
-										<span className='text-dark fw-bold d-block mb-1 fs-6'>{item.budget}</span>
+									<td className='py-3'>
+										<span className='text-gray-800 fw-semibold fs-7'>₹{item.budget}</span>
 									</td>
-									<td>
-										<span className='text-dark fw-bold d-block mb-1 fs-6'>{item.experience}</span>
+									<td className='py-3'>
+										<span className='badge badge-light-info fw-semibold px-2 py-1' style={{ borderRadius: '6px' }}>
+											{item.experience}
+										</span>
 									</td>
-									<td>
+									<td className='py-3'>
 										<span
 											className={`badge badge-light-${
 												item.request_status?.toLowerCase() === 'approved'
@@ -264,52 +271,49 @@ const HiringRequest: React.FC = () => {
 													: item.request_status?.toLowerCase() === 'completed'
 													? 'primary'
 													: 'warning'
-											} fw-bold fs-7 px-3 py-2`}>
-											{item.request_status?.toUpperCase()}
+											} fw-bold fs-7 px-3 py-1`}
+											style={{ borderRadius: '6px' }}>
+											{item.request_status?.toUpperCase() || 'PENDING'}
 										</span>
 									</td>
-									<td>
+									<td className='py-3'>
 										<span 
-											className='text-dark fw-bold d-block mb-1 fs-6 text-truncate' 
-											style={{ maxWidth: '150px' }} 
-											title={item.employee_remarks}
-										>
+											className='text-gray-700 fs-7 d-block text-truncate' 
+											style={{ maxWidth: '180px' }} 
+											title={item.employee_remarks}>
 											{item.employee_remarks || '-'}
 										</span>
 									</td>
-									<td>
+									<td className='py-3'>
 										<span 
-											className='text-dark fw-bold d-block mb-1 fs-6 text-truncate' 
-											style={{ maxWidth: '150px' }} 
-											title={item.remarks}
-										>
+											className='text-gray-700 fs-7 d-block text-truncate' 
+											style={{ maxWidth: '180px' }} 
+											title={item.remarks}>
 											{item.request_status?.toLowerCase() !== 'pending' && item.remarks ? item.remarks : '-'}
 										</span>
 									</td>
-									<td>
-										<div className='d-flex flex-column'>
-											<span className='text-dark fw-bold mb-1 fs-6'>
-												{DayJS(item.updatedAt).format('DD MMM YYYY')}
-											</span>
-											<span className='text-muted fs-7'>
-												{DayJS(item.updatedAt).format('hh:mm A')}
-											</span>
-										</div>
+									<td className='py-3 text-muted fs-7'>
+										{DayJS(item.updatedAt).format('DD/MM/YYYY, hh:mm A')}
 									</td>
-									<td>
-										<div className='d-flex gap-2 justify-content-start'>
+									<td className='py-3 text-end pe-4'>
+										<div className='d-flex gap-2 justify-content-end'>
 											{item.request_status === 'Pending' && (
-												<TableButton
-													action='edit'
+												<button
+													className='btn btn-icon btn-sm btn-light-success'
+													style={{ width: '34px', height: '34px', borderRadius: '8px' }}
 													onClick={() => handleEdit(item)}
-												/>
+													title='Edit Request'>
+													<FontAwesomeIcon icon={faEdit} />
+												</button>
 											)}
 											{item.request_status === 'Approved' && (
-												<TableButton
-													action='approve'
-													onClick={() => handleMarkAsDone(item._id)}
-													text='Done'
-												/>
+												<button
+													className='btn btn-sm btn-light-primary fw-semibold px-3 py-1 d-inline-flex align-items-center gap-1'
+													style={{ borderRadius: '8px' }}
+													onClick={() => handleMarkAsDone(item._id)}>
+													<FontAwesomeIcon icon={faCheck} />
+													<span>Done</span>
+												</button>
 											)}
 										</div>
 									</td>
@@ -322,83 +326,114 @@ const HiringRequest: React.FC = () => {
 							removeAction={false}
 						/>
 					</div>
+
 					{hiringRequests.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
+							<div className='symbol symbol-60px mb-4'>
+								<span className='symbol-label bg-light-primary text-primary fs-2'>👥</span>
+							</div>
+							<h5 className='fw-bold text-gray-800 mb-1'>No Hiring Requests Found</h5>
+							<p className='text-muted fs-7 mb-0'>Submit a request when you need team reinforcements.</p>
 						</div>
 					)}
-					{hiringRequests.length > 0 && (
-						<UsersListPagination
-							totalPages={metaData?.totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					)}
+
+					<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+						<div className='text-muted fs-7 fw-semibold'>
+							Showing {totalCount === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
+							{Math.min(pagination.page * pagination.itemsPerPage, totalCount)} of {totalCount} records
+						</div>
+						{totalCount > 0 && (
+							<UsersListPagination
+								totalPages={metaData?.totalPages || Math.ceil(totalCount / pagination.itemsPerPage) || 1}
+								currentPage={pagination.page}
+								onPageChange={handlePageChange}
+							/>
+						)}
+					</div>
 				</div>
 
 				<Modal
 					show={showModal}
 					onHide={() => setShowModal(false)}
 					centered
-				>
-					<Modal.Header closeButton>
-						<Modal.Title>{editingId ? 'Edit' : 'Create'} Hiring Request</Modal.Title>
-					</Modal.Header>
-					<form onSubmit={handleSubmit}>
-						<Modal.Body>
-							<InputField
-								label='Position'
-								placeholder='Enter position'
-								type='text'
-								name='position'
-								htmlFor='position'
-								value={formData.position}
-								onChange={handleInputChange as any}
-								className='mb-7'
-							/>
-							<InputField
-								label='Budget'
-								placeholder='Enter budget'
-								type='text'
-								name='budget'
-								htmlFor='budget'
-								value={formData.budget}
-								onChange={handleInputChange as any}
-								className='mb-7'
-							/>
-							<InputField
-								label='Experience'
-								placeholder='e.g. 2+ Years'
-								type='text'
-								name='experience'
-								htmlFor='experience'
-								value={formData.experience}
-								onChange={handleInputChange as any}
-								className='mb-7'
-							/>
-							<div className='mb-n7'>
-								<TextareaField
-									label='Remarks'
-									placeholder='Enter any specific requirements or remarks'
-									name='employee_remarks'
-									htmlFor='employee_remarks'
-									value={formData.employee_remarks}
-									onChange={handleInputChange as any}
-									className='mb-0'
-								/>
+					dialogClassName='mw-600px'>
+					<div className='modal-content border-0 shadow' style={{ borderRadius: '16px', overflow: 'hidden' }}>
+						<div className='modal-header border-bottom border-gray-200 px-6 py-4 d-flex align-items-center justify-content-between'>
+							<h3 className='fw-bolder text-gray-900 m-0'>{editingId ? 'Edit' : 'Create'} Hiring Request</h3>
+							<button
+								type='button'
+								className='btn btn-sm btn-icon btn-light-danger rounded-circle'
+								onClick={() => setShowModal(false)}>
+								<FontAwesomeIcon icon={faXmark} />
+							</button>
+						</div>
+						<form onSubmit={handleSubmit}>
+							<div className='modal-body p-6'>
+								<div className='row g-4'>
+									<div className='col-12'>
+										<InputField
+											label='Position / Role Title'
+											placeholder='e.g. Senior Frontend Developer'
+											type='text'
+											name='position'
+											htmlFor='position'
+											value={formData.position}
+											onChange={handleInputChange as any}
+										/>
+									</div>
+									<div className='col-md-6'>
+										<InputField
+											label='Allocated Budget (₹)'
+											placeholder='e.g. 45000'
+											type='text'
+											name='budget'
+											htmlFor='budget'
+											value={formData.budget}
+											onChange={handleInputChange as any}
+										/>
+									</div>
+									<div className='col-md-6'>
+										<InputField
+											label='Experience Required'
+											placeholder='e.g. 2+ Years'
+											type='text'
+											name='experience'
+											htmlFor='experience'
+											value={formData.experience}
+											onChange={handleInputChange as any}
+										/>
+									</div>
+									<div className='col-12'>
+										<TextareaField
+											className=''
+											label='Job Remarks / Requirements'
+											placeholder='Enter job description, requirements or notes for HR'
+											name='employee_remarks'
+											htmlFor='employee_remarks'
+											value={formData.employee_remarks}
+											onChange={handleInputChange as any}
+										/>
+									</div>
+								</div>
 							</div>
-						</Modal.Body>
-						<Modal.Footer>
-							<Button variant='secondary' onClick={() => setShowModal(false)}>
-								Cancel
-							</Button>
-							<Button variant='primary' type='submit' disabled={loading}>
-								{loading ? 'Submitting...' : editingId ? 'Update Request' : 'Submit Request'}
-							</Button>
-						</Modal.Footer>
-					</form>
+							<div className='modal-footer border-top border-gray-200 px-6 py-4'>
+								<button
+									type='button'
+									className='btn btn-light rounded-pill px-5 fw-semibold'
+									onClick={() => setShowModal(false)}>
+									Cancel
+								</button>
+								<button
+									className='btn btn-primary rounded-pill px-6 fw-bold'
+									type='submit'
+									disabled={loading}>
+									{loading ? 'Submitting...' : editingId ? 'Update Request' : 'Submit Request'}
+								</button>
+							</div>
+						</form>
+					</div>
 				</Modal>
-			</KTCard>
+			</div>
 		</>
 	)
 }

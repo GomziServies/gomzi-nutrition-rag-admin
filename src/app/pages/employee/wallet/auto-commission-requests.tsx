@@ -320,20 +320,19 @@ const AutoCommissionRequestsPage: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Auto Commission Requests</PageTitle>
 
-			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title d-flex align-items-center gap-3'>
-						<h3 className='card-label fw-bold text-dark mb-0'>Auto Commission Requests</h3>
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+					<div className='card-title d-flex align-items-center gap-3 m-0'>
+						<h3 className='fw-bolder text-gray-900 mb-0'>Auto Commission Requests</h3>
 						{pendingCount > 0 && (
-							<span className='badge badge-danger rounded-pill fs-8'>{pendingCount} Pending</span>
+							<span className='badge badge-light-danger fw-bold rounded-pill px-3 py-1 fs-8'>{pendingCount} Pending</span>
 						)}
 					</div>
-					<div className='card-toolbar'>{/* Optional: Add export buttons here if needed */}</div>
 				</div>
 
-				<div className='card-body py-4'>
-					<div className='d-flex align-items-center mb-4 flex-wrap gap-2'>
-						<div className='w-250px'>
+				<div className='card-body py-4 px-6'>
+					<div className='d-flex align-items-center mb-6 flex-wrap gap-3'>
+						<div className='w-220px'>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
@@ -341,14 +340,15 @@ const AutoCommissionRequestsPage: React.FC = () => {
 						</div>
 
 						<button
-							className='btn btn-primary btn-icon w-35px h-35px'
+							className='btn btn-light-info btn-icon rounded-circle'
+							style={{ width: '38px', height: '38px' }}
 							onClick={handleExport}
 							title='Download Excel'
 							disabled={loading}>
-							<FontAwesomeIcon icon={faDownload} />
+							<FontAwesomeIcon icon={faDownload} className='fs-4' />
 						</button>
 
-						<div className='w-250px'>
+						<div className='w-220px'>
 							<DateFilter
 								onDateRangeChange={(val: any) => {
 									setDateRange(val)
@@ -367,7 +367,8 @@ const AutoCommissionRequestsPage: React.FC = () => {
 
 						{/* Status Filter */}
 						<select
-							className='form-select form-select-sm w-150px inputfield-bg'
+							className='form-select form-select-solid w-150px'
+							style={{ height: '38px', borderRadius: '10px', border: '1px solid #ded8d2', fontSize: '13px' }}
 							value={statusFilter}
 							onChange={(e) => {
 								setStatusFilter(e.target.value)
@@ -381,7 +382,8 @@ const AutoCommissionRequestsPage: React.FC = () => {
 
 						{/* Sales Person Filter */}
 						<select
-							className='form-select form-select-sm w-200px inputfield-bg'
+							className='form-select form-select-solid w-180px'
+							style={{ height: '38px', borderRadius: '10px', border: '1px solid #ded8d2', fontSize: '13px' }}
 							value={salesPersonFilter}
 							onChange={(e) => {
 								setSalesPersonFilter(e.target.value)
@@ -417,40 +419,40 @@ const AutoCommissionRequestsPage: React.FC = () => {
 								const hasBonus = bonusMap[bonusKey]
 								const displayIndex = (currentPage - 1) * itemsPerPage + _index + 1
 								return (
-									<tr key={req._id || actualIndex}>
-										<td className='text-center'>
-											<span className='text-dark fw-bold d-block fs-7'>{displayIndex}</span>
+									<tr key={req._id || actualIndex} className='data-row' style={{ verticalAlign: 'middle', borderBottom: '1px solid #f1f1f4' }}>
+										<td className='text-center py-3' style={{ width: '60px' }}>
+											<span className='badge badge-light-secondary fw-bolder px-2 py-1' style={{ borderRadius: '6px' }}>{displayIndex}</span>
 										</td>
-										<td>
-											<span className='text-dark fw-bold d-block fs-7'>
+										<td className='py-3'>
+											<span className='text-gray-900 fw-bold fs-7'>
 												{req.invoice_number || '—'}
 											</span>
 										</td>
-										<td>
+										<td className='py-3'>
 											<div className='d-flex flex-column'>
-												<span className='text-dark fw-bold fs-7'>
+												<span className='text-gray-900 fw-bold fs-7'>
 													{req.sales_person_name || '—'}
 												</span>
 												{hasBonus && (
-													<span className='badge badge-light-primary fs-9 w-fit-content'>
+													<span className='badge badge-light-primary fs-9 w-fit-content mt-1' style={{ borderRadius: '4px' }}>
 														🎯 Bonus Eligible
 													</span>
 												)}
 											</div>
 										</td>
-										<td>
-											<span className='badge badge-light-info fw-semibold'>
+										<td className='py-3'>
+											<span className='badge badge-light-info fw-semibold px-2 py-1' style={{ borderRadius: '6px' }}>
 												{req.branch || '—'}
 											</span>
 										</td>
-										<td>
-											<span className='text-dark fw-bold d-block fs-7'>
+										<td className='py-3'>
+											<span className='text-gray-900 fw-bold fs-7'>
 												₹{(req.invoice_amount || 0).toLocaleString('en-IN')}
 											</span>
 										</td>
-										<td>
+										<td className='py-3'>
 											<div className='d-flex flex-column'>
-												<span className='text-dark fw-bold fs-7'>
+												<span className='text-gray-900 fw-bold fs-7'>
 													{req.client_name || req.invoice?.name || '—'}
 												</span>
 												<span className='text-muted fs-8'>
@@ -458,39 +460,30 @@ const AutoCommissionRequestsPage: React.FC = () => {
 												</span>
 											</div>
 										</td>
-										<td>
-											<span className='text-success fw-bold d-block fs-7'>
+										<td className='py-3'>
+											<span className='text-success fw-bolder fs-7'>
 												₹{(req.commission_amount || 0).toLocaleString('en-IN')}
 											</span>
 										</td>
-										<td>
+										<td className='py-3'>
 											<div className='d-flex flex-column align-items-center'>
 												{statusBadge(req.status)}
 											</div>
 										</td>
-										<td>
-											<span className='text-muted fw-semibold d-block fs-8'>
-												{new Date(req.createdAt).toLocaleDateString('en-IN', {
-													day: '2-digit',
-													month: 'short',
-													year: 'numeric',
-												})}
-												<br />
-												<span className='fs-9 opacity-75'>
-													{new Date(req.createdAt).toLocaleTimeString('en-IN', {
-														hour: '2-digit',
-														minute: '2-digit',
-														hour12: true,
-													})}
-												</span>
-											</span>
+										<td className='py-3 text-muted fs-8'>
+											{new Date(req.createdAt).toLocaleDateString('en-IN', {
+												day: '2-digit',
+												month: 'short',
+												year: 'numeric',
+											})}
 										</td>
-										<td className='text-end'>
+										<td className='py-3 text-end pe-4'>
 											{/* Admin Actions */}
 											{req.status === 'Pending' && adminType !== 'Employee' ? (
 												<div className='d-flex gap-2 justify-content-end'>
 													<button
-														className='btn btn-icon btn-bg-light btn-active-color-success btn-sm w-30px h-30px'
+														className='btn btn-icon btn-sm btn-light-success'
+														style={{ width: '32px', height: '32px', borderRadius: '8px' }}
 														onClick={() => {
 															setApproveModal(req)
 															setEditAmount(req.commission_amount)
@@ -499,7 +492,8 @@ const AutoCommissionRequestsPage: React.FC = () => {
 														<i className='bi bi-check-lg fs-4'></i>
 													</button>
 													<button
-														className='btn btn-icon btn-bg-light btn-active-color-danger btn-sm w-30px h-30px'
+														className='btn btn-icon btn-sm btn-light-danger'
+														style={{ width: '32px', height: '32px', borderRadius: '8px' }}
 														onClick={() => {
 															setRejectModal(req)
 															setRejectReason('')
@@ -511,9 +505,9 @@ const AutoCommissionRequestsPage: React.FC = () => {
 											) : (
 												<div className='d-flex flex-column align-items-end justify-content-center h-100'>
 													{req.reason ? (
-														<span className='text-danger fs-7 fw-bold me-2'>{req.reason}</span>
+														<span className='text-danger fs-8 fw-bold me-2'>{req.reason}</span>
 													) : (
-														<span className='text-muted fs-7 me-4'>—</span>
+														<span className='text-muted fs-8 me-4'>—</span>
 													)}
 												</div>
 											)}
@@ -524,20 +518,31 @@ const AutoCommissionRequestsPage: React.FC = () => {
 						/>
 					</div>
 
-					{requests.length === 0 && !loading && (
-						<div className='text-center py-10 text-muted'>
-							<i className='bi bi-inbox fs-1 d-block mb-2'></i>
-							No commission requests found
+					{filteredRequests.length === 0 && !loading && (
+						<div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
+							<div className='symbol symbol-60px mb-4'>
+								<span className='symbol-label bg-light-primary text-primary fs-2'>💰</span>
+							</div>
+							<h5 className='fw-bold text-gray-800 mb-1'>No Commission Requests Found</h5>
+							<p className='text-muted fs-7 mb-0'>No commission requests match your current filters.</p>
 						</div>
 					)}
 
-					<UsersListPagination
-						totalPages={totalPages}
-						currentPage={currentPage}
-						onPageChange={setCurrentPage}
-					/>
+					<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+						<div className='text-muted fs-7 fw-semibold'>
+							Showing {filteredRequests.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to{' '}
+							{Math.min(currentPage * itemsPerPage, filteredRequests.length)} of {filteredRequests.length} records
+						</div>
+						{filteredRequests.length > 0 && (
+							<UsersListPagination
+								totalPages={totalPages}
+								currentPage={currentPage}
+								onPageChange={setCurrentPage}
+							/>
+						)}
+					</div>
 				</div>
-			</KTCard>
+			</div>
 
 			{/* ── Approve Confirmation Modal ─────────────────────────────────────── */}
 			{approveModal && (

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Button, Form } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
@@ -28,7 +27,11 @@ export default function DailyReportUpdate() {
 	const fetchDailyReportDetails = async () => {
 		try {
 			if (!reportId) return
-			const employeeData = JSON.parse(localStorage.getItem('fg_group_info') || '{}')
+			const raw =
+				localStorage.getItem('fg_group_user_info') ||
+				localStorage.getItem('fg_group_info') ||
+				localStorage.getItem('auth_fg_group')
+			const employeeData = raw ? JSON.parse(raw) : {}
 			const response = await GetDailyReporting({
 				admin_id: employeeData._id,
 				daily_reporting_id: reportId,
@@ -40,22 +43,17 @@ export default function DailyReportUpdate() {
 				setRemarks(report.remarks || '')
 				setExistingFiles(Array.isArray(report.file_url) ? report.file_url.filter(Boolean) : [])
 
-				// Ensure urls is always an array
 				let urlData = []
 				if (Array.isArray(report.url)) {
-					// Handle case where report.url is an array of arrays
 					if (report.url.length > 0 && Array.isArray(report.url[0])) {
 						urlData = report.url[0]
 					} else {
-						// Handle case where report.url is a flat array
 						urlData = report.url
 					}
 				} else if (report.url && typeof report.url === 'object' && !Array.isArray(report.url)) {
-					// Handle case where report.url is an object
 					urlData = []
 				}
 
-				// Ensure urlData is an array of objects with url_type and link properties
 				const formattedUrls = Array.isArray(urlData)
 					? urlData.map((item) => ({
 							url_type: item.url_type || '',
@@ -78,11 +76,24 @@ export default function DailyReportUpdate() {
 	}, [reportId])
 
 	if (loading) {
-		return <div>Loading...</div>
+		return (
+			<div className='d-flex align-items-center justify-content-center py-20'>
+				<div className='spinner-border text-primary' role='status'>
+					<span className='visually-hidden'>Loading...</span>
+				</div>
+			</div>
+		)
 	}
 
 	if (!dailyReport) {
-		return <div>Report not found</div>
+		return (
+			<div className='card shadow-sm border-0 p-10 text-center' style={{ borderRadius: '14px' }}>
+				<h4 className='text-gray-800 mb-2'>Report not found</h4>
+				<button className='btn btn-sm btn-primary mx-auto mt-3' onClick={() => navigate('/employee/daily-report')}>
+					Back to Daily Reports
+				</button>
+			</div>
+		)
 	}
 
 	const ShowDocument = (document: string) => {
@@ -146,7 +157,6 @@ export default function DailyReportUpdate() {
 		const updatedFiles = newFiles.filter((_, i) => i !== index)
 		setNewFiles(updatedFiles)
 
-		// Update the file input
 		const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
 		if (fileInput) {
 			const dt = new DataTransfer()
@@ -155,7 +165,6 @@ export default function DailyReportUpdate() {
 		}
 	}
 
-	// Add functions for URL management
 	const addNewUrl = () => {
 		setUrls([...urls, { url_type: '', link: '' }])
 	}
@@ -175,19 +184,14 @@ export default function DailyReportUpdate() {
 		)
 	}
 
-	// Function to convert absolute URLs to relative paths
 	const convertToRelativeUrl = (url: string): string => {
 		try {
-			// If it's already a relative URL, return as is
 			if (!url.startsWith('http://') && !url.startsWith('https://')) {
 				return url
 			}
-
-			// Convert absolute URL to relative by removing domain
 			const urlObj = new URL(url)
 			return urlObj.pathname + urlObj.search + urlObj.hash
 		} catch (error) {
-			// If URL parsing fails, return the original
 			return url
 		}
 	}
@@ -201,29 +205,28 @@ export default function DailyReportUpdate() {
 		}
 
 		if (!taskTitle.trim()) {
-			toast.error('Please enter task title')
+			toast.error('Task title is required')
 			return
 		}
 
 		setSubmitLoading(true)
+
 		try {
 			let newFileUrls: string[] = []
 			if (newFiles.length > 0) {
-				const response: any = await FileUploadToFGGroup(newFiles, {
-					directory: 'files',
-				})
-				if (response.data?.fileURLs && Array.isArray(response.data.fileURLs)) {
+				const response: any = await FileUploadToFGGroup(newFiles)
+				if (response?.data?.fileURLs) {
 					newFileUrls = response.data.fileURLs
 				}
-				toast.success('Files uploaded successfully')
 			}
 
-			// Combine existing files that weren't removed with new files
 			const allFileUrls = [...existingFiles, ...newFileUrls]
+			const raw =
+				localStorage.getItem('fg_group_user_info') ||
+				localStorage.getItem('fg_group_info') ||
+				localStorage.getItem('auth_fg_group')
+			const employeeData = raw ? JSON.parse(raw) : {}
 
-			const employeeData = JSON.parse(localStorage.getItem('fg_group_info') || '{}')
-
-			// Process URLs to ensure they are relative
 			const processedUrls = Array.isArray(urls)
 				? urls.map((urlItem) => ({
 						url_type: urlItem.url_type,
@@ -252,363 +255,242 @@ export default function DailyReportUpdate() {
 
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>Daily Report Details</PageTitle>
-			<KTCard>
-				<div className='card-body'>
-					<div className='row mb-4'>
-						<div className='col-md-12'>
-							<div className='row'>
-								<div className='col-md-6'>
-									<Form.Group className='mb-3'>
-										<Form.Label>Task Title</Form.Label>
-										<Form.Control
-											type='text'
-											value={taskTitle}
-											onChange={(e) => setTaskTitle(e.target.value)}
-											className='form-control'
-											placeholder='Enter task title'
-										/>
-									</Form.Group>
-								</div>
-								<div className='col-md-6'>
-									<Form.Group className='mb-3'>
-										<Form.Label>Created Date</Form.Label>
-										<Form.Control
-											type='text'
-											value={DayJS(dailyReport?.createdAt).format('DD/MM/YYYY')}
-											className='inputfield-bg'
-											readOnly
-										/>
-									</Form.Group>
-								</div>
-							</div>
-						</div>
+			<PageTitle breadcrumbs={[]}>Edit Daily Report</PageTitle>
 
-						<div className='col-md-12'>
-							<Form.Group className='mb-3'>
-								<Form.Label>Remarks</Form.Label>
-								<Form.Control
-									as='textarea'
-									rows={3}
-									value={remarks}
-									onChange={(e) => setRemarks(e.target.value)}
-									placeholder='Enter remarks'
-								/>
-							</Form.Group>
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				{/* Modern Header */}
+				<div className='card-header border-0 pt-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div className='d-flex align-items-center gap-3'>
+						<button
+							type='button'
+							className='btn btn-sm btn-light d-flex align-items-center gap-2'
+							style={{ borderRadius: '8px' }}
+							onClick={() => navigate('/employee/daily-report')}
+							disabled={submitLoading}>
+							<i className='bi bi-arrow-left fs-6'></i>
+							<span>Back</span>
+						</button>
+						<div>
+							<h2 className='fw-bolder text-gray-900 mb-0'>Edit Daily Report</h2>
+							<span className='text-muted fs-7'>
+								Submitted originally on {DayJS(dailyReport?.createdAt).format('DD MMMM YYYY')}
+							</span>
 						</div>
+					</div>
 
-						{/* File Upload Section */}
-						<div className='col-md-12'>
-							<div className='mb-4'>
-								<h4 className='mb-3'>Upload Files</h4>
+					<div className='d-flex align-items-center gap-2'>
+						<button
+							type='button'
+							className='btn btn-sm btn-light'
+							style={{ borderRadius: '8px' }}
+							onClick={() => navigate('/employee/daily-report')}
+							disabled={submitLoading}>
+							Cancel
+						</button>
+						<button
+							type='button'
+							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '10px' }}
+							onClick={handleSubmit}
+							disabled={submitLoading}>
+							{submitLoading ? (
+								<>
+									<span className='spinner-border spinner-border-sm' role='status'></span>
+									<span>Saving...</span>
+								</>
+							) : (
+								<>
+									<i className='bi bi-check2 fs-6'></i>
+									<span>Update Report</span>
+								</>
+							)}
+						</button>
+					</div>
+				</div>
+
+				<div className='card-body pt-4'>
+					<Form onSubmit={handleSubmit}>
+						<div className='row g-4 mb-6'>
+							<div className='col-12 col-md-8'>
 								<Form.Group>
+									<Form.Label className='fw-bold text-gray-700 fs-7'>
+										Task Deliverable Title <span className='text-danger'>*</span>
+									</Form.Label>
 									<Form.Control
-										type='file'
-										onChange={handleFileChange}
-										multiple
-										className='mb-2'
+										type='text'
+										value={taskTitle}
+										onChange={(e) => setTaskTitle(e.target.value)}
+										placeholder='Enter task title'
+										style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
+										required
 									/>
-									<small className='text-muted d-block mb-3'>
-										Upload only <strong>images (jpg, png)</strong> or <strong>PDF files</strong>
-									</small>
+								</Form.Group>
+							</div>
 
-									{/* Display new files selected for upload */}
-									{newFiles.length > 0 && (
-										<div className='mb-3'>
-											<h6>New Files to Upload:</h6>
-											<div className='d-flex flex-wrap gap-3'>
-												{newFiles.map((file, index) => {
-													const fileName = file.name
-													const isExcelFile = fileName.toLowerCase().match(/\.(xlsx|xls|csv)$/)
-													const isPdfFile = fileName.toLowerCase().endsWith('.pdf')
-													const isImageFile = fileName
-														.toLowerCase()
-														.match(/\.(jpg|jpeg|png|gif|svg)$/)
-													const isWordFile = fileName.toLowerCase().match(/\.(doc|docx)$/)
+							<div className='col-12 col-md-4'>
+								<Form.Group>
+									<Form.Label className='fw-bold text-gray-700 fs-7'>Submission Date</Form.Label>
+									<Form.Control
+										type='text'
+										value={DayJS(dailyReport?.createdAt).format('DD/MM/YYYY')}
+										readOnly
+										style={{ height: '42px', borderRadius: '8px', background: '#f8fafc', borderColor: '#ded8d2' }}
+									/>
+								</Form.Group>
+							</div>
 
-													const removeBtn = (
-														<button
-															type='button'
-															className='btn btn-icon btn-bg-light btn-active-color-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle'
-															onClick={() => removeNewFile(index)}
-															style={{ zIndex: 10, width: '25px', height: '25px' }}
-															title='Remove file'>
-															<i className='fas fa-times fs-6'></i>
-														</button>
-													)
-
-													return (
-														<div
-															key={index}
-															className='border rounded p-2'>
-															{isPdfFile ? (
-																<div
-																	className='position-relative d-flex flex-column align-items-center p-3 border rounded border-warning bg-light-warning'
-																	style={{ width: '150px' }}>
-																	{removeBtn}
-																	<i className='fas fa-file-pdf text-warning fs-1 mb-2'></i>
-																	<span className='text-warning fw-bold small text-center text-truncate w-100'>
-																		{fileName}
-																	</span>
-																</div>
-															) : isExcelFile ? (
-																<div
-																	className='position-relative d-flex flex-column align-items-center p-3 border rounded border-success bg-light-success'
-																	style={{ width: '150px' }}>
-																	{removeBtn}
-																	<i className='fas fa-file-excel text-success fs-1 mb-2'></i>
-																	<span className='text-success fw-bold small text-center text-truncate w-100'>
-																		{fileName}
-																	</span>
-																</div>
-															) : isImageFile ? (
-																<div
-																	className='position-relative text-center'
-																	style={{ width: '150px', height: '150px' }}>
-																	{removeBtn}
-																	<img
-																		src={URL.createObjectURL(file)}
-																		alt={`New File ${index + 1}`}
-																		style={{ width: '150px', height: '150px', objectFit: 'cover' }}
-																		className='rounded'
-																	/>
-																</div>
-															) : isWordFile ? (
-																<div
-																	className='position-relative d-flex flex-column align-items-center p-3 border rounded border-primary bg-light-primary'
-																	style={{ width: '150px' }}>
-																	{removeBtn}
-																	<i className='fas fa-file-word text-primary fs-1 mb-2'></i>
-																	<span className='text-primary fw-bold small text-center text-truncate w-100'>
-																		{fileName}
-																	</span>
-																</div>
-															) : (
-																<div
-																	className='position-relative d-flex flex-column align-items-center p-3 border rounded border-secondary bg-light'
-																	style={{ width: '150px' }}>
-																	{removeBtn}
-																	<i className='fas fa-file text-secondary fs-1 mb-2'></i>
-																	<span className='text-secondary fw-bold small text-center text-truncate w-100'>
-																		{fileName}
-																	</span>
-																</div>
-															)}
-														</div>
-													)
-												})}
-											</div>
-										</div>
-									)}
+							<div className='col-12'>
+								<Form.Group>
+									<Form.Label className='fw-bold text-gray-700 fs-7'>Detailed Remarks / Progress Notes</Form.Label>
+									<Form.Control
+										as='textarea'
+										rows={4}
+										value={remarks}
+										onChange={(e) => setRemarks(e.target.value)}
+										placeholder='Type your remarks and deliverables summary here'
+										style={{ borderRadius: '8px', borderColor: '#ded8d2' }}
+									/>
 								</Form.Group>
 							</div>
 						</div>
 
-						{/* Existing Files Section */}
-						{existingFiles.length > 0 && (
-							<div className='col-md-12'>
-								<div className='mb-4'>
-									<h4 className='mb-3'>Existing Files</h4>
-									<div className='d-flex flex-wrap gap-3'>
-										{existingFiles.map((file, index) => {
-											const isExcelFile =
-												file.toLowerCase().match(/\.(xlsx|xls|csv)$/) ||
-												file.toLowerCase().includes('spreadsheetml.sheet') ||
-												file.toLowerCase().includes('ms-excel')
-											const isPdfFile = file.toLowerCase().endsWith('.pdf')
-											const isImageFile = file.toLowerCase().match(/\.(jpg|jpeg|png|gif|svg)$/)
-											const isWordFile = file.toLowerCase().match(/\.(doc|docx)$/)
+						{/* File Upload Section */}
+						<div className='mb-6'>
+							<h4 className='fw-bolder text-gray-900 mb-2'>Attach Deliverable Files</h4>
+							<Form.Group className='mb-3'>
+								<Form.Control
+									type='file'
+									onChange={handleFileChange}
+									multiple
+									style={{ borderRadius: '8px' }}
+								/>
+								<small className='text-muted d-block mt-1 fs-8'>
+									Supported formats: PDF, Images (PNG, JPG), spreadsheets, documents.
+								</small>
 
-											const removeBtn = (
-												<button
-													type='button'
-													className='btn btn-icon btn-bg-light btn-active-color-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle'
-													onClick={(e) => {
-														e.stopPropagation()
-														removeExistingFile(index)
-													}}
-													style={{ zIndex: 10, width: '25px', height: '25px' }}
-													title='Remove file'>
-													<i className='fas fa-times fs-6'></i>
-												</button>
-											)
-
-											return (
-												<div
-													key={index}
-													className='border rounded p-2'>
-													{isPdfFile ? (
-														<div
-															className='position-relative d-flex flex-column align-items-center cursor-pointer p-3 border rounded border-warning bg-light-warning'
-															style={{ width: '150px' }}
-															onClick={() => DownloadDocument(file)}>
-															{removeBtn}
-															<i className='fas fa-file-pdf text-warning fs-1 mb-2'></i>
-															<span
-																className='text-warning fw-bold small text-center'
-																style={{
-																	display: '-webkit-box',
-																	WebkitLineClamp: 2,
-																	WebkitBoxOrient: 'vertical',
-																	overflow: 'hidden',
-																	textOverflow: 'ellipsis',
-																	width: '100%',
-																}}
-																title={file.split('/').pop()}>
-																{file.split('/').pop()}
-															</span>
-														</div>
-													) : isExcelFile ? (
-														<div
-															className='position-relative d-flex flex-column align-items-center cursor-pointer p-3 border rounded border-success bg-light-success'
-															style={{ width: '150px' }}
-															onClick={() => DownloadDocument(file)}>
-															{removeBtn}
-															<i className='fas fa-file-excel text-success fs-1 mb-2'></i>
-															<span
-																className='text-success fw-bold small text-center'
-																style={{
-																	display: '-webkit-box',
-																	WebkitLineClamp: 2,
-																	WebkitBoxOrient: 'vertical',
-																	overflow: 'hidden',
-																	textOverflow: 'ellipsis',
-																	width: '100%',
-																}}
-																title={file.split('/').pop()}>
-																{file.split('/').pop()}
-															</span>
-														</div>
-													) : isImageFile ? (
-														<div
-															className='position-relative text-center'
-															style={{ width: '150px', height: '150px' }}>
-															{removeBtn}
-															<img
-																src={`https://files.fggroup.in/${file}`}
-																alt={`File ${index + 1}`}
-																style={{ width: '150px', height: '150px', objectFit: 'cover' }}
-																className='cursor-pointer rounded'
-																onClick={() => ShowDocument(file)}
-															/>
-														</div>
-													) : isWordFile ? (
-														<div
-															className='position-relative d-flex flex-column align-items-center cursor-pointer p-3 border rounded border-primary bg-light-primary'
-															style={{ width: '150px' }}
-															onClick={() => ShowDocument(file)}>
-															{removeBtn}
-															<i className='fas fa-file-word text-primary fs-1 mb-2'></i>
-															<span
-																className='text-primary fw-bold small text-center'
-																style={{
-																	display: '-webkit-box',
-																	WebkitLineClamp: 2,
-																	WebkitBoxOrient: 'vertical',
-																	overflow: 'hidden',
-																	textOverflow: 'ellipsis',
-																	width: '100%',
-																}}
-																title={file.split('/').pop()}>
-																{file.split('/').pop()}
-															</span>
-														</div>
-													) : (
-														<div
-															className='position-relative d-flex flex-column align-items-center cursor-pointer p-3 border rounded border-secondary bg-light'
-															style={{ width: '150px' }}
-															onClick={() => ShowDocument(file)}>
-															{removeBtn}
-															<i className='fas fa-file text-secondary fs-1 mb-2'></i>
-															<span
-																className='text-secondary fw-bold small text-center'
-																style={{
-																	display: '-webkit-box',
-																	WebkitLineClamp: 2,
-																	WebkitBoxOrient: 'vertical',
-																	overflow: 'hidden',
-																	textOverflow: 'ellipsis',
-																	width: '100%',
-																}}
-																title={file.split('/').pop()}>
-																{file.split('/').pop()}
-															</span>
-														</div>
-													)}
+								{/* New Files */}
+								{newFiles.length > 0 && (
+									<div className='mt-3'>
+										<h6 className='fs-8 fw-bold text-gray-700 mb-2'>New Files Staged for Upload:</h6>
+										<div className='d-flex flex-wrap gap-2'>
+											{newFiles.map((file, index) => (
+												<div key={index} className='d-flex align-items-center bg-light border rounded px-3 py-1 gap-2'>
+													<i className='bi bi-file-earmark-plus text-primary'></i>
+													<span className='fs-8 fw-semibold text-gray-800' style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+														{file.name}
+													</span>
+													<button
+														type='button'
+														className='btn btn-icon btn-xs btn-light-danger p-0'
+														style={{ width: '20px', height: '20px', borderRadius: '4px' }}
+														onClick={() => removeNewFile(index)}>
+														<i className='bi bi-x fs-7'></i>
+													</button>
 												</div>
-											)
-										})}
+											))}
+										</div>
 									</div>
+								)}
+							</Form.Group>
+						</div>
+
+						{/* Existing Files */}
+						{existingFiles.length > 0 && (
+							<div className='mb-6'>
+								<h4 className='fw-bolder text-gray-900 mb-3'>Existing Files ({existingFiles.length})</h4>
+								<div className='d-flex flex-wrap gap-3'>
+									{existingFiles.map((file, index) => (
+										<div key={index} className='d-flex align-items-center bg-light border rounded-3 p-3 gap-3 shadow-xs'>
+											<i className='bi bi-paperclip fs-4 text-primary'></i>
+											<div>
+												<span
+													className='fw-bold text-gray-800 fs-7 d-block text-truncate'
+													style={{ maxWidth: '200px' }}
+													title={file.split('/').pop()}>
+													{file.split('/').pop()}
+												</span>
+												<div className='d-flex gap-2 mt-1'>
+													<button
+														type='button'
+														className='btn btn-link p-0 text-primary fs-8'
+														onClick={() => DownloadDocument(file)}>
+														Download
+													</button>
+													<span className='text-muted'>•</span>
+													<button
+														type='button'
+														className='btn btn-link p-0 text-danger fs-8'
+														onClick={() => removeExistingFile(index)}>
+														Remove
+													</button>
+												</div>
+											</div>
+										</div>
+									))}
 								</div>
 							</div>
 						)}
 
 						{/* URLs Section */}
-						<div className='col-md-12'>
-							<div className='mb-4'>
-								<div className='d-flex justify-content-between align-items-center mb-3'>
-									<h4 className='mb-0'>URLs</h4>
-									<Button
-										variant='success'
-										size='sm'
-										onClick={addNewUrl}>
-										<i className='fas fa-plus me-2'></i>Add URL
-									</Button>
-								</div>
-								{Array.isArray(urls) &&
-									urls.map((url, index) => (
-										<div
-											key={index}
-											className='mb-3 border rounded p-3'>
-											<div className='mb-2'>
-												<Form.Label>URL Type</Form.Label>
-												<div className='d-flex gap-2'>
-													<Form.Control
-														type='text'
-														value={url.url_type}
-														onChange={(e) => handleUrlChange(index, 'url_type', e.target.value)}
-														placeholder='e.g., Reference, Design'
-													/>
-													<Button
-														variant='danger'
-														onClick={() => removeUrl(index)}>
-														<i className='fas fa-times'></i>
-													</Button>
-												</div>
+						<div className='mb-6'>
+							<div className='d-flex justify-content-between align-items-center mb-3'>
+								<h4 className='fw-bolder text-gray-900 mb-0'>Deliverable URLs & Links ({urls.length})</h4>
+								<button
+									type='button'
+									className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-3'
+									style={{ borderRadius: '8px' }}
+									onClick={addNewUrl}>
+									<i className='bi bi-plus-lg fs-7'></i>
+									<span>Add URL</span>
+								</button>
+							</div>
+
+							{Array.isArray(urls) && urls.length > 0 ? (
+								urls.map((url, index) => (
+									<div key={index} className='mb-3 border rounded-3 p-3 bg-light'>
+										<div className='row g-3 align-items-end'>
+											<div className='col-md-4'>
+												<Form.Label className='fs-8 fw-bold text-gray-700 mb-1'>Link Type / Label</Form.Label>
+												<Form.Control
+													type='text'
+													value={url.url_type}
+													onChange={(e) => handleUrlChange(index, 'url_type', e.target.value)}
+													placeholder='e.g., Figma, GitHub PR, Google Sheet'
+													style={{ height: '38px', borderRadius: '8px', borderColor: '#ded8d2' }}
+												/>
 											</div>
-											<Form.Group>
-												<Form.Label>URL</Form.Label>
+											<div className='col-md-7'>
+												<Form.Label className='fs-8 fw-bold text-gray-700 mb-1'>Web URL</Form.Label>
 												<Form.Control
 													type='url'
 													value={url.link}
 													onChange={(e) => handleUrlChange(index, 'link', e.target.value)}
-													placeholder='https://example.com'
+													placeholder='https://...'
+													style={{ height: '38px', borderRadius: '8px', borderColor: '#ded8d2' }}
 												/>
-											</Form.Group>
+											</div>
+											<div className='col-md-1 d-flex justify-content-end'>
+												<button
+													type='button'
+													className='btn btn-icon btn-sm btn-light-danger'
+													style={{ width: '38px', height: '38px', borderRadius: '8px' }}
+													onClick={() => removeUrl(index)}
+													title='Delete URL'>
+													<i className='bi bi-trash fs-6'></i>
+												</button>
+											</div>
 										</div>
-									))}
-							</div>
+									</div>
+								))
+							) : (
+								<div className='text-muted fs-8 p-3 bg-light rounded-3 text-center'>
+									No external links added. Click "Add URL" to attach links to pull requests, documents, or demos.
+								</div>
+							)}
 						</div>
-					</div>
-
-					{/* Update and Cancel Buttons */}
-					<div className='row mt-4'>
-						<div className='col-12 d-flex justify-content-end gap-2'>
-							<Button
-								variant='secondary'
-								onClick={() => navigate('/employee/daily-report')}>
-								Cancel
-							</Button>
-							<Button
-								variant='primary'
-								onClick={handleSubmit}
-								disabled={submitLoading}>
-								{submitLoading ? 'Updating...' : 'Update Report'}
-							</Button>
-						</div>
-					</div>
+					</Form>
 				</div>
-			</KTCard>
+			</div>
 		</>
 	)
 }

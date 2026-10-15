@@ -224,52 +224,72 @@ const AttendenceList = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Attendance</PageTitle>
-			<div className='card'>
-				<div className='row justify-content-between mt-7 mx-6'>
-					<div className='col-md-9'>
-						<h3 className='card-title align-items-start flex-column'>
-							<span className='card-label fw-bold fs-3 mb-1'>Employee Sheet</span>
-						</h3>
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px' }}>
+				{/* Card Header & Controls */}
+				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div className='d-flex flex-column'>
+						<div className='d-flex align-items-center gap-2'>
+							<h3 className='card-title fw-bold text-gray-900 fs-3 m-0'>GLS Attendance Sheet</h3>
+							{attendanceData?.length > 0 && (
+								<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
+									{attendanceData.length} Staff
+								</span>
+							)}
+						</div>
+						<span className='text-muted fs-7 fw-semibold mt-1'>
+							Track GLS workforce presence, half days, absences, and attendance logs
+						</span>
 					</div>
-				</div>
 
-				<div className='card-header border-0 pt-6'>
-					<div className='row w-100 align-items-center'>
-						<div className='col-md-4'>
+					<div className='d-flex align-items-center flex-wrap gap-3'>
+						<div style={{ minWidth: '220px' }}>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
+								placeholder='Search employee name...'
 							/>
 						</div>
-						<div className='col-md-8 d-flex justify-content-md-end justify-content-between mt-md-0 mt-3'>
-							<div className='d-flex align-items-center'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									leftValue='-600px'
-								/>
-								{attendanceData?.length > 0 && (
-									<select
-										className='form-select form-select-sm mx-3'
-										style={{ width: '80px' }}
-										value={pagination.itemsPerPage}
-										onChange={(e) =>
-											setPagination((prev) => ({
-												...prev,
-												itemsPerPage: Number(e.target.value),
-												page: 1,
-											}))
-										}>
-										<option value='10'>10</option>
-										<option value='50'>50</option>
-										<option value='100'>100</option>
-									</select>
-								)}
+
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							leftValue='-600px'
+						/>
+
+						{attendanceData?.length > 0 && (
+							<div className='d-flex align-items-center gap-2'>
+								<span className='fs-8 text-muted fw-semibold d-none d-sm-inline'>Show:</span>
+								<select
+									className='form-select form-select-sm gz-pagination-select'
+									style={{ width: '82px' }}
+									value={pagination.itemsPerPage}
+									onChange={(e) =>
+										setPagination((prev) => ({
+											...prev,
+											itemsPerPage: Number(e.target.value),
+											page: 1,
+										}))
+									}>
+									<option value='10'>10</option>
+									<option value='50'>50</option>
+									<option value='100'>100</option>
+								</select>
 							</div>
-						</div>
+						)}
+
+						<button
+							type='button'
+							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '10px' }}
+							onClick={handleSyncButton}
+							disabled={isRotating}>
+							<i className={`bi bi-arrow-repeat fs-6 text-white ${isRotating ? 'rotate' : ''}`}></i>
+							<span className='fw-semibold'>Sync</span>
+						</button>
 					</div>
 				</div>
 
-				<div className='card-body py-3'>
+				{/* Table Body */}
+				<div className='card-body py-2 px-6'>
 					<div className='table-responsive'>
 						<Table
 							data={attendanceData}
@@ -283,23 +303,21 @@ const AttendenceList = () => {
 								actualIndex: number,
 								isVisible: boolean
 							) => (
-								<React.Fragment key={attendance?._id}>
+								<React.Fragment key={attendance?._id || index}>
 									<tr
 										onClick={() => handleRowClick(attendance?._id)}
-										className='data-row'>
-										<td className='text-center'>
-											<div className='d-flex'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>{actualIndex}</span>
-											</div>
+										className='data-row'
+										style={{ transition: 'background-color 0.15s ease' }}>
+										<td className='text-center ps-4'>
+											<span className='text-muted fw-bold fs-7'>
+												{actualIndex}
+											</span>
 										</td>
 										<td>
-											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
+											<div className='d-flex align-items-center gap-3'>
+												<div
+													className='symbol symbol-45px symbol-circle overflow-hidden flex-shrink-0'
+													style={{ border: '2px solid #e2e8f0' }}>
 													<img
 														src={
 															attendance?.photo
@@ -307,43 +325,41 @@ const AttendenceList = () => {
 																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 														}
 														alt={attendance?.Name}
-														style={{ width: '50px', height: '50px' }}
+														className='w-100 h-100 object-fit-cover'
 													/>
 												</div>
-												<div className='d-flex justify-content-start flex-column'>
-													<span className='text-dark fw-bold  fs-6'>{attendance?.Name}</span>
-													<span className='text-muted fw-semibold text-muted d-block fs-7'>
-														{attendance?.mobile}
+												<div className='d-flex flex-column'>
+													<span className='text-gray-900 fw-bold fs-6'>{attendance?.Name}</span>
+													<span className='text-muted fs-7'>
+														{attendance?.mobile || 'No contact'}
 													</span>
 												</div>
 											</div>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span className='badge badge-light-secondary text-dark fw-bold fs-7 px-3 py-2'>
 												{attendance?.employee_code ? attendance?.employee_code : 'N/A'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span className='badge badge-light-success fw-bold fs-7 px-3 py-2'>
 												{attendance?.half_day === 0
-													? attendance?.total_present
-														? attendance?.total_present
-														: '0'
-													: attendance?.total_present
-													? attendance?.total_present + ` ( ${attendance?.half_day} Half Day )`
-													: '0'}
+													? attendance?.total_present || '0'
+													: `${attendance?.total_present || 0} (${attendance?.half_day} Half Day)`}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span className='badge badge-light-danger fw-bold fs-7 px-3 py-2'>
 												{attendance?.total_absent ? attendance?.total_absent : '0'}
 											</span>
 										</td>
 
 										<td>
-											<TableButton
-												action='view'
-												// to={`/hr/attendance-view?employee_code=${attendance?.employee_code}`}
+											<button
+												type='button'
+												className='btn btn-icon btn-sm btn-light-primary'
+												style={{ width: '34px', height: '34px', borderRadius: '8px' }}
+												title='View Details'
 												onClick={() => {
 													if (selectedDateRange) {
 														localStorage.setItem(
@@ -355,78 +371,32 @@ const AttendenceList = () => {
 														)
 													}
 													window.location.href = `/hr/gls-attendance-view?employee_code=${attendance?.employee_code}`
-												}}
-											/>
+												}}>
+												<i className='bi bi-calendar2-check fs-5'></i>
+											</button>
 										</td>
 									</tr>
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-											<td colSpan={12}>
-												<div>
-													<div className='d-flex align-items-center'>
-														<div className='symbol symbol-45px me-5'>
-															<img
-																src={
-																	attendance?.profile_image
-																		? `https://files.fggroup.in/${attendance?.profile_image}`
-																		: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-																}
-																alt={attendance?.Name}
-																style={{ width: '50px', height: '50px' }}
-															/>
-														</div>
-														<div className='d-flex justify-content-start flex-column'>
-															<span className='text-dark fw-bold  fs-6'>{attendance?.Name}</span>
-															<span className='text-muted fw-semibold text-muted d-block fs-7'>
-																{attendance?._id}
-															</span>
-														</div>
+											<td colSpan={12} className='bg-light-subtle p-4'>
+												<div className='d-flex align-items-center gap-4'>
+													<div className='symbol symbol-50px symbol-circle'>
+														<img
+															src={
+																attendance?.photo
+																	? `https://files.fggroup.in/${attendance?.photo}`
+																	: toAbsoluteUrl('/media/logos/fgiit-logo.png')
+															}
+															alt={attendance?.Name}
+														/>
 													</div>
-													<strong>{sortableFields[1].title}:</strong>{' '}
-													{attendance?.employee_code ? attendance?.employee_code : 'N/A'}
-													<br />
-													<strong>{sortableFields[2].title}:</strong>{' '}
-													{attendance?.INTime ? attendance?.INTime : 'N/A'}
-													<br />
-													<strong>{sortableFields[3].title}:</strong>{' '}
-													{attendance?.OUTTime ? attendance?.OUTTime : 'N/A'}
-													<br />
-													<strong>{sortableFields[4].title}:</strong>{' '}
-													{attendance?.OverTime ? attendance?.OverTime : 'N/A'}
-													<br />
-													<strong>{sortableFields[5].title}:</strong>{' '}
-													{attendance?.Late_In ? attendance?.Late_In : 'N/A'}
-													<br />
-													<strong>{sortableFields[7].title}:</strong>{' '}
-													{attendance?.createdAt
-														? DayJS(attendance?.createdAt).format('DD/MM/YYYY hh:mm:ss A')
-														: 'N/A'}
-													<br />
-													<div className='d-flex my-1'>
-														<strong className='mt-2 me-2'>{sortableFields[6].title}:</strong>{' '}
-														<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-															{attendance?.halfDay ? (
-																attendance?.Status === 'Leave' || attendance?.Status === 'A' ? (
-																	<span className='badge badge-light-danger py-3 px-4 fs-7'>
-																		Half Day{' / '}
-																		{attendance?.Status}
-																	</span>
-																) : (
-																	<span className='badge badge-light-success py-3 px-4 fs-7'>
-																		Half Day{' / '}
-																		{attendance?.Status}
-																	</span>
-																)
-															) : attendance?.Status === 'Leave' || attendance?.Status === 'A' ? (
-																<span className='badge badge-light-danger py-3 px-4 fs-7'>
-																	{attendance?.Status}
-																</span>
-															) : (
-																<span className='badge badge-light-success py-3 px-4 fs-7'>
-																	{attendance?.Status}
-																</span>
-															)}
-														</span>
+													<div>
+														<div className='fw-bold fs-6 text-gray-900'>{attendance?.Name}</div>
+														<div className='text-muted fs-7'>Code: {attendance?.employee_code} | Contact: {attendance?.mobile}</div>
+														<div className='mt-2 d-flex gap-2'>
+															<span className='badge badge-light-success'>Present: {attendance?.total_present || 0}</span>
+															<span className='badge badge-light-danger'>Absent: {attendance?.total_absent || 0}</span>
+														</div>
 													</div>
 												</div>
 											</td>
@@ -441,16 +411,24 @@ const AttendenceList = () => {
 						/>
 					</div>
 					{attendanceData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
+							<i className='bi bi-calendar-x text-muted fs-2x mb-2'></i>
+							<span className='text-gray-700 fw-bold fs-6'>No attendance records found</span>
+							<span className='text-muted fs-7'>Try selecting another date range or employee search</span>
 						</div>
 					)}
 					{attendanceData.length > 0 && (
-						<UsersListPagination
-							totalPages={metaData?.totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
+						<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+							<div className='text-muted fs-7 fw-semibold'>
+								Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, filteredEmployeeData.length)} to{' '}
+								{Math.min(pagination.page * pagination.itemsPerPage, filteredEmployeeData.length)} of {filteredEmployeeData.length} records
+							</div>
+							<UsersListPagination
+								totalPages={metaData?.totalPages || Math.ceil(filteredEmployeeData.length / pagination.itemsPerPage)}
+								currentPage={pagination.page}
+								onPageChange={handlePageChange}
+							/>
+						</div>
 					)}
 				</div>
 			</div>

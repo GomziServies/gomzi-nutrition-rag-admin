@@ -416,50 +416,51 @@ export const Transactions: React.FC = () => {
 				</div>
 			</div>
 
-			<KTCard>
-				<div className='card-header border-0 pt-6 flex-wrap'>
-					<div className='card-title align-items-start flex-column'>
-						<span className='card-label fw-bold fs-3 mb-1'>All Transactions</span>
-						<span className='text-muted mt-1 fw-semibold fs-7'>
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-header border-0 pt-6 pb-4 px-6 flex-wrap d-flex align-items-center justify-content-between gap-3'>
+					<div className='card-title align-items-start flex-column m-0'>
+						<h3 className='fw-bolder text-gray-900 m-0'>All Transactions</h3>
+						<span className='text-muted mt-1 fs-7'>
 							Complete ledger of all credits, debits, and payouts
 						</span>
 					</div>
 					<div className='card-toolbar'>
 						<button
-							className='btn btn-light-primary fw-bold'
+							className='btn btn-primary rounded-pill px-5 fw-bold d-inline-flex align-items-center gap-2'
 							onClick={() => setIsModalOpen(true)}>
-							<FontAwesomeIcon
-								icon={faMoneyBillWave}
-								className='me-2'
-							/>
-							Withdrawal
+							<FontAwesomeIcon icon={faMoneyBillWave} />
+							<span>Request Withdrawal</span>
 						</button>
 					</div>
-					<div className='card-toolbar w-100 mt-4'>
-						<div className='d-flex align-items-end justify-content-between w-100 flex-wrap gap-3'>
-							<div className='d-flex align-items-end flex-wrap gap-3'>
-								<div className='w-250px'>
+
+					<div className='w-100 mt-4 pt-3 border-top border-gray-100'>
+						<div className='d-flex align-items-center justify-content-between w-100 flex-wrap gap-3'>
+							<div className='d-flex align-items-center flex-wrap gap-3'>
+								<div className='w-220px'>
 									<SearchFilter
 										searchTerm={searchTerm}
 										setSearchTerm={setSearchTerm}
 									/>
 								</div>
 								<button
-									className='btn btn-primary btn-icon'
+									className='btn btn-light-info btn-icon rounded-circle'
+									style={{ width: '38px', height: '38px' }}
 									onClick={downloadExcel}
+									title='Export Excel'
 									disabled={loading || exporting}>
 									<FontAwesomeIcon
 										icon={faDownload}
-										className='fs-3'
+										className='fs-4'
 									/>
 								</button>
 								<LengthMenu
 									expenseData={filteredTransactions}
 									handleItemsPerPageChange={handleItemsPerPageChange}
 								/>
-								<div className='w-200px'>
+								<div className='w-160px'>
 									<select
-										className='form-select form-select-solid w-200px'
+										className='form-select form-select-solid'
+										style={{ height: '38px', borderRadius: '10px', border: '1px solid #ded8d2', fontSize: '13px' }}
 										value={typeFilter}
 										onChange={(e) => setTypeFilter(e.target.value)}>
 										<option value='All'>All Types</option>
@@ -467,9 +468,10 @@ export const Transactions: React.FC = () => {
 										<option value='Debit'>Debit</option>
 									</select>
 								</div>
-								<div className='w-200px'>
+								<div className='w-160px'>
 									<select
-										className='form-select form-select-solid w-200px'
+										className='form-select form-select-solid'
+										style={{ height: '38px', borderRadius: '10px', border: '1px solid #ded8d2', fontSize: '13px' }}
 										value={statusFilter}
 										onChange={(e) => setStatusFilter(e.target.value)}>
 										<option value='All'>All Status</option>
@@ -478,7 +480,7 @@ export const Transactions: React.FC = () => {
 										<option value='Failed'>Failed</option>
 									</select>
 								</div>
-								<div className='w-250px'>
+								<div className='w-220px'>
 									<DateFilter
 										onDateRangeChange={handleDateRangeChange}
 										rightValue='0'
@@ -486,9 +488,10 @@ export const Transactions: React.FC = () => {
 								</div>
 							</div>
 						</div>
-					</div>{' '}
-				</div>{' '}
-				<div className='py-4 card-body'>
+					</div>
+				</div>
+
+				<div className='card-body py-4 px-6'>
 					<div className='table-responsive'>
 						<Table
 							data={paginatedTransactions}
@@ -497,49 +500,48 @@ export const Transactions: React.FC = () => {
 							sortOrder={sortOrder}
 							onSortChange={handleSortChange}
 							renderRow={(txn: any, index: number) => (
-								<tr key={txn._id || index}>
-									<td className='text-center'>
-										<span className='text-dark fw-bold d-block fs-7'>
+								<tr key={txn._id || index} className='data-row' style={{ verticalAlign: 'middle', borderBottom: '1px solid #f1f1f4' }}>
+									<td className='text-center py-3' style={{ width: '60px' }}>
+										<span className='badge badge-light-secondary fw-bolder px-2 py-1' style={{ borderRadius: '6px' }}>
 											{(pagination.page - 1) * pagination.itemsPerPage + index + 1}
 										</span>
 									</td>
-									<td>
+									<td className='py-3'>
 										<span
 											className={`badge badge-light-${
 												txn.type === 'Credit' ? 'success' : 'danger'
-											}`}>
+											} fw-bold px-3 py-1`}
+											style={{ borderRadius: '6px' }}>
 											{txn.type}
 										</span>
 									</td>
-									<td>
+									<td className='py-3'>
 										<span
-											className={`fw-bold d-block fs-6 ${
+											className={`fw-bolder d-block fs-6 ${
 												txn.type === 'Credit' ? 'text-success' : 'text-danger'
 											}`}>
-											{txn.type === 'Credit' ? '+' : '-'} ₹ {txn.amount.toLocaleString()}
+											{txn.type === 'Credit' ? '+' : '-'} ₹{txn.amount.toLocaleString()}
 										</span>
 									</td>
-									<td>
-										<span className='text-dark fw-semibold d-block fs-7'>
-											{new Date(txn.date).toLocaleString('en-GB', {
-												day: '2-digit',
-												month: 'short',
-												year: 'numeric',
-												hour: '2-digit',
-												minute: '2-digit',
-												hour12: true,
-											})}
-										</span>
+									<td className='py-3 text-muted fs-7'>
+										{new Date(txn.date).toLocaleString('en-GB', {
+											day: '2-digit',
+											month: 'short',
+											year: 'numeric',
+											hour: '2-digit',
+											minute: '2-digit',
+											hour12: true,
+										})}
 									</td>
-									<td>
-										<span className='text-muted fw-semibold d-block fs-7'>{txn.description}</span>
+									<td className='py-3'>
+										<span className='text-gray-900 fw-semibold fs-7'>{txn.description}</span>
 									</td>
-									<td>
-										<span className='text-muted fw-semibold d-block fs-7'>
+									<td className='py-3'>
+										<span className='text-muted fs-7'>
 											{txn.reason ? txn.reason : '-'}
 										</span>
 									</td>
-									<td>
+									<td className='py-3 text-end pe-4'>
 										<span
 											className={`badge badge-light-${
 												txn.status === 'Completed'
@@ -547,7 +549,8 @@ export const Transactions: React.FC = () => {
 													: txn.status === 'Failed'
 													? 'danger'
 													: 'warning'
-											}`}>
+											} fw-bold px-3 py-1`}
+											style={{ borderRadius: '6px' }}>
 											{txn.status}
 										</span>
 									</td>
@@ -560,50 +563,62 @@ export const Transactions: React.FC = () => {
 							removeAction={true}
 						/>
 					</div>
-					{filteredTransactions.length > 0 && (
-						<UsersListPagination
-							totalPages={totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					)}
+
 					{filteredTransactions.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No transactions found</b>
+						<div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
+							<div className='symbol symbol-60px mb-4'>
+								<span className='symbol-label bg-light-primary text-primary fs-2'>💳</span>
+							</div>
+							<h5 className='fw-bold text-gray-800 mb-1'>No Transactions Found</h5>
+							<p className='text-muted fs-7 mb-0'>No ledger entries matching your active filter criteria.</p>
 						</div>
 					)}
+
+					<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+						<div className='text-muted fs-7 fw-semibold'>
+							Showing {filteredTransactions.length === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
+							{Math.min(pagination.page * pagination.itemsPerPage, filteredTransactions.length)} of {filteredTransactions.length} records
+						</div>
+						{filteredTransactions.length > 0 && (
+							<UsersListPagination
+								totalPages={totalPages}
+								currentPage={pagination.page}
+								onPageChange={handlePageChange}
+							/>
+						)}
+					</div>
 				</div>
-			</KTCard>
+			</div>
 
 			{isModalOpen && (
 				<div
 					className='modal fade show d-block'
 					tabIndex={-1}
 					style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-					<div className='modal-dialog modal-dialog-centered'>
-						<div className='modal-content'>
-							<div className='modal-header'>
-								<h3 className='modal-title fw-bold'>Withdrawal Request</h3>
+					<div className='modal-dialog modal-dialog-centered mw-500px'>
+						<div className='modal-content border-0 shadow' style={{ borderRadius: '16px', overflow: 'hidden' }}>
+							<div className='modal-header border-bottom border-gray-200 px-6 py-4 d-flex align-items-center justify-content-between'>
+								<h3 className='fw-bolder text-gray-900 m-0'>Withdrawal Request</h3>
 								<button
 									type='button'
 									className='btn-close'
 									onClick={() => setIsModalOpen(false)}></button>
 							</div>
-							<div className='modal-body'>
-								<div className='mb-5'>
-									<label className='form-label fw-bold'>Amount (₹)</label>
+							<div className='modal-body p-6'>
+								<div className='mb-4'>
+									<label className='form-label fw-bold text-gray-800'>Amount (₹)</label>
 									<input
 										type='number'
-										className='form-control form-control-solid'
+										className='form-control rounded-3'
 										placeholder='Enter withdrawal amount'
 										value={withdrawAmount}
 										onChange={(e) => setWithdrawAmount(e.target.value)}
 									/>
-									<div className='text-danger fs-7 mt-2'>
+									<div className='text-muted fs-7 mt-2'>
 										{totalBalance > 0 ? (
 											<>
 												You can withdraw up to{' '}
-												<b className='text-danger'>₹ {totalBalance.toLocaleString()}</b>.
+												<b className='text-primary'>₹ {totalBalance.toLocaleString()}</b>.
 											</>
 										) : (
 											<b className='text-danger'>
@@ -613,17 +628,17 @@ export const Transactions: React.FC = () => {
 									</div>
 								</div>
 							</div>
-							<div className='modal-footer'>
+							<div className='modal-footer border-top border-gray-200 px-6 py-4'>
 								<button
 									type='button'
-									className='btn btn-light'
+									className='btn btn-light rounded-pill px-5 fw-semibold'
 									onClick={() => setIsModalOpen(false)}
 									disabled={isSubmitting}>
 									Cancel
 								</button>
 								<button
 									type='button'
-									className='btn btn-primary'
+									className='btn btn-primary rounded-pill px-6 fw-bold'
 									onClick={handleWithdrawalRequest}
 									disabled={isSubmitting}>
 									{isSubmitting ? (

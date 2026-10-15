@@ -1,10 +1,8 @@
-import { faStar } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faClock, faStar, faTasks } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
-import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
-import InputField from '../../../components/InputField'
 import { GetEmployeeRating } from '../../../Functions/FGGroup/Employee'
 import { Charts1 } from '../../hr/reports/Charts1'
 
@@ -17,12 +15,28 @@ const EmployeeRatingManager: React.FC = () => {
 		setSelectedDateRange(range)
 	}
 
+	const getStoredEmployee = () => {
+		try {
+			const raw =
+				localStorage.getItem('fg_group_user_info') ||
+				localStorage.getItem('fg_group_info') ||
+				localStorage.getItem('auth_fg_group')
+			return raw ? JSON.parse(raw) : {}
+		} catch {
+			return {}
+		}
+	}
+
 	const fetchRatingData = async () => {
 		setLoading(true)
-		const employeeData: any = localStorage.getItem('fg_group_info')
-		const employee = JSON.parse(employeeData)
-
 		try {
+			const employee = getStoredEmployee()
+			const empId = employee?._id || employee?.id
+			if (!empId) {
+				setLoading(false)
+				return
+			}
+
 			let startDate: any
 			let endDate: any
 
@@ -34,21 +48,17 @@ const EmployeeRatingManager: React.FC = () => {
 				endDate.setHours(23, 59, 59, 999)
 			} else {
 				const now = new Date()
-				// Get of This month
-				// startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-				// endDate = new Date()
-
-				// Get of last month
 				startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 				endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
 			}
-			const response = await GetEmployeeRating({
-				admin_id: employee._id,
+
+			const response: any = await GetEmployeeRating({
+				admin_id: empId,
 				from_date: startDate,
 				to_date: endDate,
 			})
-			let data: any = response.data
-			setRattingData(data[0])
+			const data: any = response?.data || []
+			setRattingData(data[0] || {})
 		} catch (error) {
 			console.error(error)
 		}
@@ -57,138 +67,145 @@ const EmployeeRatingManager: React.FC = () => {
 
 	useEffect(() => {
 		fetchRatingData()
-	}, [])
+	}, [selectedDateRange])
+
+	const totalTasks = parseInt(rattingData?.total_task || '0', 10)
+	const completedTasks = parseInt(rattingData?.completed_task || '0', 10)
+	const pendingTasks = Math.max(0, totalTasks - completedTasks)
+	const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+	const ratingValue = Number(rattingData?.rating || 0)
 
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>Rating</PageTitle>
-			<div
-				className='accordion card'
-				id='kt_accordion_1'>
-				<KTCard className='accordion-item'>
-					<h2
-						className='accordion-header'
-						id='kt_accordion_1_header_1'>
-						<div className='col-md-4'>
-							<button
-								className='accordion-button fs-2 fw-bold collapsed'
-								type='button'
-								data-bs-toggle='collapse'
-								data-bs-target='#kt_accordion_1_body_1'
-								aria-expanded='false'
-								aria-controls='kt_accordion_1_body_1'>
-								Rating Manager
-							</button>
-						</div>
+			<PageTitle breadcrumbs={[]}>Performance & Rating</PageTitle>
 
-						<div className='col-md-4'>
-							<div className='fv-row'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									leftValue='-270px'
-									lastMonth={true}
-								/>
+			<div className='card shadow-sm border-0 mb-6' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div>
+						<h3 className='fw-bolder text-gray-900 m-0'>Performance Overview</h3>
+						<span className='text-muted fs-7'>View your task completion metrics and manager ratings</span>
+					</div>
+					<div className='d-flex align-items-center gap-3'>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							leftValue='-270px'
+							lastMonth={true}
+						/>
+					</div>
+				</div>
+
+				<div className='card-body py-4 px-6'>
+					{loading ? (
+						<div className='d-flex justify-content-center align-items-center py-12'>
+							<div className='spinner-border text-primary' role='status'>
+								<span className='visually-hidden'>Loading...</span>
 							</div>
 						</div>
-					</h2>
-					<div
-						id='kt_accordion_1_body_1'
-						className='accordion-collapse collapse show'
-						aria-labelledby='kt_accordion_1_header_1'
-						data-bs-parent='#kt_accordion_1'>
-						{Object.keys(rattingData || {}).length === 0 && !loading ? (
-							<div className='d-flex text-center w-100 my-5 mb-7 align-content-center justify-content-center mt-5'>
-								<b>No records found</b>
+					) : Object.keys(rattingData || {}).length === 0 ? (
+						<div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
+							<div className='symbol symbol-60px mb-4'>
+								<span className='symbol-label bg-light-warning text-warning fs-2'>⭐</span>
 							</div>
-						) : loading ? (
-							<div className='d-flex justify-content-center align-items-center mb-4 my-7'>
-								<div
-									className='spinner-border text-primary'
-									role='status'>
-									<span className='visually-hidden'>Loading...</span>
-								</div>
-							</div>
-						) : (
-							<div className='px-5 mb-5'>
-								<div className='row pb-5 border-bottom justify-content-between align-items-center'>
-									<div className='col-md-10 fv-row mb-2 d-flex flex-column'>
-										<div className='row mt-6'>
-											<div className='col-12 mt-3'>
-												<b className='fs-4'>Rating : </b>
-												{rattingData?.rating > 0 ? (
-													Array.from({ length: rattingData.rating }).map((_, i) => (
-														<FontAwesomeIcon
-															key={i}
-															icon={faStar}
-															className='fs-2 text-warning'
-															id='rating'
-														/>
-													))
-												) : (
-													<span className='ms-3'>
-														<b>No rating found</b>
-													</span>
-												)}
+							<h5 className='fw-bold text-gray-800 mb-1'>No Rating Records Found</h5>
+							<p className='text-muted fs-7 mb-0'>Try selecting a different date range to view your rating report.</p>
+						</div>
+					) : (
+						<>
+							{/* Top Rating Banner */}
+							<div className='p-5 mb-6 rounded-3' style={{ background: 'linear-gradient(135deg, #f8faff 0%, #eef2ff 100%)', border: '1px solid #e0e7ff' }}>
+								<div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
+									<div className='d-flex align-items-center gap-4'>
+										<div className='d-flex align-items-center justify-content-center bg-white shadow-sm' style={{ width: '64px', height: '64px', borderRadius: '14px' }}>
+											<FontAwesomeIcon icon={faStar} className='text-warning fs-1' />
+										</div>
+										<div>
+											<div className='fs-7 text-muted text-uppercase fw-bolder tracking-wider'>Manager Rating</div>
+											<div className='d-flex align-items-center gap-2 mt-1'>
+												<span className='fs-2hx fw-bolder text-gray-900'>{ratingValue > 0 ? ratingValue.toFixed(1) : 'N/A'}</span>
+												<span className='fs-4 text-muted fw-bold'>/ 5.0</span>
+												<div className='ms-3 d-flex align-items-center gap-1'>
+													{ratingValue > 0 ? (
+														Array.from({ length: Math.round(ratingValue) }).map((_, i) => (
+															<FontAwesomeIcon key={i} icon={faStar} className='text-warning fs-4' />
+														))
+													) : (
+														<span className='badge badge-light-secondary fs-8'>Unrated</span>
+													)}
+												</div>
 											</div>
 										</div>
 									</div>
-								</div>
-								<div className='row justify-content-center'>
-									<div className='col-11 d-flex row'></div>
-									<div className='col-md-5'>
-										<div className='row'>
-											<div className='col-md-12 fv-row'>
-												<InputField
-													placeholder='Total Task'
-													type='text'
-													className='col-12 fv-row'
-													name='ebook_id'
-													label='Total Task :'
-													htmlFor='ebook_id'
-													value={rattingData?.total_task}
-													disabled
-												/>
-											</div>
-											<div className='col-md-12 fv-row'>
-												<InputField
-													placeholder='Completed Task'
-													type='text'
-													className='col-12 fv-row'
-													name='ebook_id'
-													label='Completed Task :'
-													htmlFor='ebook_id'
-													value={rattingData?.completed_task}
-													disabled
-												/>
-											</div>
-											<div className='col-md-12 fv-row'>
-												<InputField
-													placeholder='Pending Task'
-													type='text'
-													className='col-12 fv-row'
-													name='ebook_id'
-													label='Pending Task :'
-													htmlFor='ebook_id'
-													value={`${
-														parseInt(rattingData?.total_task) -
-														parseInt(rattingData?.completed_task)
-													}`}
-													disabled
-												/>
-											</div>
+									<div className='d-flex align-items-center gap-3'>
+										<div className='text-end'>
+											<div className='fs-7 text-muted fw-semibold'>Overall Efficiency</div>
+											<div className='fs-3 fw-bolder text-primary'>{completionRate}%</div>
 										</div>
-									</div>
-									<div className='col-md-7 d-flex justify-content-center align-items-center'>
-										<Charts1
-											rattingData={rattingData}
-											className=' mb-xl-8'
-										/>
+										<div className='progress w-100px bg-secondary' style={{ height: '8px', borderRadius: '4px' }}>
+											<div
+												className='progress-bar bg-primary'
+												role='progressbar'
+												style={{ width: `${completionRate}%` }}
+												aria-valuenow={completionRate}
+												aria-valuemin={0}
+												aria-valuemax={100}
+											/>
+										</div>
 									</div>
 								</div>
 							</div>
-						)}
-					</div>
-				</KTCard>
+
+							{/* 3 KPI Metric Cards */}
+							<div className='row g-4 mb-6'>
+								<div className='col-md-4'>
+									<div className='card border border-gray-200 shadow-none p-5 h-100' style={{ borderRadius: '12px' }}>
+										<div className='d-flex align-items-center justify-content-between mb-3'>
+											<span className='text-muted fs-7 fw-bolder text-uppercase'>Total Tasks</span>
+											<span className='badge badge-light-primary p-2 rounded-circle'>
+												<FontAwesomeIcon icon={faTasks} className='text-primary fs-5' />
+											</span>
+										</div>
+										<div className='fs-2hx fw-bolder text-gray-900 mb-1'>{totalTasks}</div>
+										<span className='text-muted fs-8'>Total assigned tasks in period</span>
+									</div>
+								</div>
+
+								<div className='col-md-4'>
+									<div className='card border border-gray-200 shadow-none p-5 h-100' style={{ borderRadius: '12px' }}>
+										<div className='d-flex align-items-center justify-content-between mb-3'>
+											<span className='text-muted fs-7 fw-bolder text-uppercase'>Completed Tasks</span>
+											<span className='badge badge-light-success p-2 rounded-circle'>
+												<FontAwesomeIcon icon={faCheckCircle} className='text-success fs-5' />
+											</span>
+										</div>
+										<div className='fs-2hx fw-bolder text-success mb-1'>{completedTasks}</div>
+										<span className='text-muted fs-8'>Successfully delivered</span>
+									</div>
+								</div>
+
+								<div className='col-md-4'>
+									<div className='card border border-gray-200 shadow-none p-5 h-100' style={{ borderRadius: '12px' }}>
+										<div className='d-flex align-items-center justify-content-between mb-3'>
+											<span className='text-muted fs-7 fw-bolder text-uppercase'>Pending Tasks</span>
+											<span className='badge badge-light-warning p-2 rounded-circle'>
+												<FontAwesomeIcon icon={faClock} className='text-warning fs-5' />
+											</span>
+										</div>
+										<div className='fs-2hx fw-bolder text-warning mb-1'>{pendingTasks}</div>
+										<span className='text-muted fs-8'>In progress or awaiting review</span>
+									</div>
+								</div>
+							</div>
+
+							{/* Chart Section */}
+							<div className='card border border-gray-200 shadow-none p-5' style={{ borderRadius: '12px' }}>
+								<h4 className='fw-bold text-gray-800 mb-4'>Task Completion Breakdown</h4>
+								<div className='d-flex justify-content-center align-items-center'>
+									<Charts1 rattingData={rattingData} className='w-100' />
+								</div>
+							</div>
+						</>
+					)}
+				</div>
 			</div>
 		</>
 	)

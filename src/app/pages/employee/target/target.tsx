@@ -2,7 +2,6 @@ import { faPlusCircle, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import LengthMenu from '../../../components/LengthMenu'
@@ -40,19 +39,49 @@ const EmployeeTarget: React.FC = () => {
         page: 1,
         itemsPerPage: 10,
     })
-    const employeeData: any = localStorage.getItem('fg_group_info')
+
+    const getStoredEmployee = () => {
+        try {
+            const raw =
+                localStorage.getItem('fg_group_user_info') ||
+                localStorage.getItem('fg_group_info') ||
+                localStorage.getItem('auth_fg_group')
+            return raw ? JSON.parse(raw) : {}
+        } catch {
+            return {}
+        }
+    }
 
     const fetchAssignTaskData = async () => {
         setLoading(true)
         try {
-            const employee = JSON.parse(employeeData)
-            const positionData: any = await GetEmployees({ id: employee._id })
-            const response = await GetTarget()
-            let filteredData: any = response.data
+            const employee = getStoredEmployee()
+            const empId = employee?._id || employee?.id
+            let empPosition = employee?.position
 
-            filteredData = filteredData.filter(
-                (el: any) => el.position == positionData.data[0]?.employee?.position
-            )
+            if (empId) {
+                try {
+                    const positionData: any = await GetEmployees({ id: empId })
+                    if (positionData?.data?.[0]?.employee?.position) {
+                        empPosition = positionData.data[0].employee.position
+                    }
+                } catch (posErr) {
+                    console.warn('Could not fetch employee profile position:', posErr)
+                }
+            }
+
+            const response: any = await GetTarget()
+            let filteredData: any[] = response?.data || []
+
+            if (empPosition) {
+                const targetMatches = filteredData.filter(
+                    (el: any) => !el.position || el.position.toLowerCase() === empPosition.toLowerCase()
+                )
+                // If filtered data has items, use it; otherwise show all targets
+                if (targetMatches.length > 0) {
+                    filteredData = targetMatches
+                }
+            }
             setTargetData(filteredData)
         } catch (error) {
             console.error(error)
@@ -77,11 +106,11 @@ const EmployeeTarget: React.FC = () => {
             }
 
             await CreateTarget(payload)
-            toast.success('Task Created Successfully')
+            toast.success('Target Created Successfully')
 
             fetchAssignTaskData()
         } catch (error: any) {
-            toast.error(error.message)
+            toast.error(error.message || 'Failed to create target')
             console.error(error)
         }
     }
@@ -101,11 +130,11 @@ const EmployeeTarget: React.FC = () => {
             }
 
             await UpdateTarget(payload)
-            toast.success('Task Update Successfully')
+            toast.success('Target Updated Successfully')
 
             fetchAssignTaskData()
         } catch (error: any) {
-            toast.error(error.message)
+            toast.error(error.message || 'Failed to update target')
             console.error(error)
         }
     }
@@ -127,7 +156,9 @@ const EmployeeTarget: React.FC = () => {
     }
 
     const filteredtargetData = targetData.filter((sale) =>
-        sale.target_title.toLowerCase().includes(searchTerm.toLowerCase())
+        (sale.target_title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (sale.target_description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (sale.position || '').toLowerCase().includes(searchTerm.toLowerCase())
     )
     const paginatedtargetData = filteredtargetData.slice(
         (pagination.page - 1) * pagination.itemsPerPage,
@@ -156,334 +187,320 @@ const EmployeeTarget: React.FC = () => {
 
     return (
         <>
-            <PageTitle breadcrumbs={[]}>Services</PageTitle>
-            <div
-                className='accordion card'
-                id='kt_accordion_1'>
-                <KTCard className='accordion-item mt-5'>
-                    <div id='kt_accordion_1_body_1'
-                        className='accordion-collapse collapse show'>
-                        <div className='row'>
-                            <div className='col-12'>
-                                <div className='d-md-flex mx-6 my-4 align-items-center justify-content-between'>
-                                    <div className="order-1">
-                                        <SearchFilter
-                                            searchTerm={searchTerm}
-                                            setSearchTerm={setSearchTerm}
-                                        />
-                                    </div>
-                                    <div className='order-0 d-flex mt-md-0 mt-4'>
-                                        <LengthMenu
-                                            expenseData={targetData}
-                                            handleItemsPerPageChange={handlePageChange}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className='py-4 card-body'>
-                            <div className='table-responsive'>
+            <PageTitle breadcrumbs={[]}>My Targets</PageTitle>
 
-                                <Table
-                                    data={paginatedtargetData}
-                                    columns={sortableFields}
-                                    sort={sort}
-                                    sortOrder={sortOrder}
-                                    removeAction={true}
-                                    onSortChange={handleSortChange}
-                                    renderRow={(target: any, index: number, actualIndex: number, isVisible: boolean) => (
-                                        <React.Fragment key={target._id}>
-                                            <tr
-                                                onClick={() => handleRowClick(target._id)}
-                                                className='data-row'>
-                                                <td className='text-center'>
-                                                    <div className='d-flex'>
-                                                        <FontAwesomeIcon
-                                                            icon={faPlusCircle}
-                                                            className='mx-2 ms-5 mb-1 plus-icon'
-                                                            style={{ color: '#607D8B', fontSize: '18px' }}
-                                                        />
-                                                        <span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-                                                            {actualIndex}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-                                                        {target.target_title ? target.target_title : 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-                                                        {target.target_description ? target.target_description : 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-                                                        {target.position ? target.position : 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-                                                        {target.createdAt ? DayJS(target.createdAt).format('DD/MM/YYYY, hh:mm:ss A') : 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-                                                        {target.updatedAt ? DayJS(target.updatedAt).format('DD/MM/YYYY, hh:mm:ss A') : 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className='text-dark fw-bold text-hover-primary d-md-block d-none mb-1 fs-6'>
-                                                        {target.createdAt && target.updatedAt ? DayJS(target.updatedAt).diff(DayJS(target.createdAt), 'day') : 'N/A'} Days
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            {isVisible && (
-                                                <tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-                                                    <td colSpan={12}>
-                                                        <div>
-                                                            <strong>{sortableFields[0].title}:</strong> {target.target_title ? target.target_title : 'N/A'}
-                                                            <br />
-                                                            <strong>{sortableFields[1].title}:</strong> {target.target_description ? target.target_description : 'N/A'}
-                                                            <br />
-                                                            <strong>{sortableFields[2].title}:</strong> {target.position ? target.position : 'N/A'}
-                                                            <br />
-                                                            <strong>{sortableFields[3].title}:</strong> {target.createdAt ? DayJS(target.createdAt).format('DD/MM/YYYY, hh:mm:ss A') : 'N/A'}
-                                                            <br />
-                                                            <strong>{sortableFields[4].title}:</strong> {target.updatedAt ? DayJS(target.updatedAt).format('DD/MM/YYYY, hh:mm:ss A') : 'N/A'}
-                                                            <br />
-                                                            <strong>{sortableFields[5].title}:</strong> {target.createdAt && target.updatedAt ? DayJS(target.updatedAt).diff(DayJS(target.createdAt), 'day') : 'N/A'} Days
-                                                            <br />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </React.Fragment>
+            <div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+                <div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+                    <div className='d-flex align-items-center gap-3 flex-wrap'>
+                        <div className='d-flex align-items-center position-relative'>
+                            <SearchFilter
+                                searchTerm={searchTerm}
+                                setSearchTerm={setSearchTerm}
+                            />
+                        </div>
+                    </div>
+                    <div className='d-flex align-items-center gap-3'>
+                        <LengthMenu
+                            expenseData={targetData}
+                            handleItemsPerPageChange={handlePageChange}
+                        />
+                    </div>
+                </div>
+
+                <div className='card-body py-4 px-6'>
+                    <div className='table-responsive'>
+                        <Table
+                            data={paginatedtargetData}
+                            columns={sortableFields}
+                            sort={sort}
+                            sortOrder={sortOrder}
+                            removeAction={true}
+                            onSortChange={handleSortChange}
+                            renderRow={(target: any, index: number, actualIndex: number, isVisible: boolean) => (
+                                <React.Fragment key={target._id || index}>
+                                    <tr
+                                        onClick={() => handleRowClick(target._id)}
+                                        className='data-row'
+                                        style={{ verticalAlign: 'middle', borderBottom: '1px solid #f1f1f4' }}>
+                                        <td className='text-center py-3'>
+                                            <div className='d-flex align-items-center justify-content-center'>
+                                                <span className='badge badge-light-secondary fw-bolder px-2 py-1' style={{ borderRadius: '6px' }}>
+                                                    {actualIndex}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className='py-3'>
+                                            <span className='text-gray-900 fw-bold fs-6'>
+                                                {target.target_title || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className='py-3'>
+                                            <span className='text-gray-700 fs-7'>
+                                                {target.target_description || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className='py-3'>
+                                            <span className='badge badge-light-primary fw-semibold px-3 py-1' style={{ borderRadius: '6px' }}>
+                                                {target.position || 'All Roles'}
+                                            </span>
+                                        </td>
+                                        <td className='py-3 text-muted fs-7'>
+                                            {target.createdAt ? DayJS(target.createdAt).format('DD/MM/YYYY, hh:mm A') : 'N/A'}
+                                        </td>
+                                        <td className='py-3 text-muted fs-7'>
+                                            {target.updatedAt ? DayJS(target.updatedAt).format('DD/MM/YYYY, hh:mm A') : 'N/A'}
+                                        </td>
+                                        <td className='py-3'>
+                                            <span className='badge badge-light-info fw-bold px-3 py-1' style={{ borderRadius: '6px' }}>
+                                                {target.createdAt && target.updatedAt ? DayJS(target.updatedAt).diff(DayJS(target.createdAt), 'day') : '0'} Days
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {isVisible && (
+                                        <tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
+                                            <td colSpan={12} className='p-4 bg-light-primary rounded-3'>
+                                                <div className='fs-7'>
+                                                    <div><strong>Target Title:</strong> {target.target_title || 'N/A'}</div>
+                                                    <div><strong>Description:</strong> {target.target_description || 'N/A'}</div>
+                                                    <div><strong>Position:</strong> {target.position || 'N/A'}</div>
+                                                    <div><strong>Start Date:</strong> {target.createdAt ? DayJS(target.createdAt).format('DD/MM/YYYY, hh:mm:ss A') : 'N/A'}</div>
+                                                    <div><strong>End Date:</strong> {target.updatedAt ? DayJS(target.updatedAt).format('DD/MM/YYYY, hh:mm:ss A') : 'N/A'}</div>
+                                                    <div><strong>Target Days:</strong> {target.createdAt && target.updatedAt ? DayJS(target.updatedAt).diff(DayJS(target.createdAt), 'day') : 'N/A'} Days</div>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     )}
-                                    visibleDetails={visibleDetails}
-                                    pagination={pagination}
-                                    setPagination={setPagination}
-                                    loading={loading}
-                                />
-                            </div>
-                            {targetData.length === 0 && !loading && (
-                                <div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-                                    <b>No records found</b>
-                                </div>
+                                </React.Fragment>
                             )}
-                            {targetData.length > 0 && (
-                                <UsersListPagination
-                                    totalPages={Math.ceil(targetData.length / pagination.itemsPerPage)}
-                                    currentPage={pagination.page}
-                                    onPageChange={handlePageChange}
-                                />
-                            )}
-                        </div>
+                            visibleDetails={visibleDetails}
+                            pagination={pagination}
+                            setPagination={setPagination}
+                            loading={loading}
+                        />
                     </div>
 
-                    {/* target add modal */}
-                    <div
-                        className='modal fade'
-                        id='kt_modal_target_add'
-                        aria-hidden='true'>
-                        <div className='modal-dialog modal-dialog-centered mw-650px'>
-                            <div className='modal-content'>
-                                <div className='modal-header justify-content-between'>
-                                    <h2 className='fw-bolder'>Add New Target</h2>
-                                    <div
-                                        className='btn btn-sm btn-icon btn-active-color-primary'
-                                        data-bs-dismiss='modal'>
-                                        <FontAwesomeIcon
-                                            className='fs-1 position-absolute ms-3'
-                                            icon={faXmark}
-                                        />
-                                    </div>
-                                </div>
-                                <div className='modal-body scroll-y'>
-                                    <div className='col-md-12'>
-                                        <div className='row'>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='Target Title'
-                                                    type='text'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='target_title'
-                                                    label='Target Title'
-                                                    htmlFor='target_title'
-                                                    value={targetAddData.target_title}
-                                                    onChange={(e) => handleInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='Target Description'
-                                                    type='text'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='target_description'
-                                                    label='Target Description'
-                                                    htmlFor='target_description'
-                                                    value={targetAddData.target_description}
-                                                    onChange={(e) => handleInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='From Date'
-                                                    type='date'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='from_date'
-                                                    label='From Date'
-                                                    htmlFor='from_date'
-                                                    value={targetAddData.from_date}
-                                                    onChange={(e) => handleInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='To Date'
-                                                    type='date'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='to_date'
-                                                    label='To Date'
-                                                    htmlFor='to_date'
-                                                    value={targetAddData.to_date}
-                                                    onChange={(e) => handleInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <SelectField
-                                                    className='col-12 fv-row'
-                                                    name='position'
-                                                    label='Set position For'
-                                                    htmlFor='position'
-                                                    value={targetAddData.position}
-                                                    onChange={handleInputChange}
-                                                    options={[
-                                                        'Developer',
-                                                        'Marketing',
-                                                        'Franchise Owner',
-                                                        'Graphic Designer',
-                                                        'Telecalling',
-                                                    ]}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='modal-footer justify-content-end'>
-                                    <button
-                                        className='btn btn-primary'
-                                        data-bs-dismiss='modal'
-                                        onClick={() => handleSubmit()}>
-                                        Add
-                                    </button>
-                                </div>
+                    {filteredtargetData.length === 0 && !loading && (
+                        <div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
+                            <div className='symbol symbol-60px mb-4'>
+                                <span className='symbol-label bg-light-primary text-primary fs-2'>🎯</span>
                             </div>
+                            <h5 className='fw-bold text-gray-800 mb-1'>No Targets Assigned</h5>
+                            <p className='text-muted fs-7 mb-0'>Targets assigned to your role or position will appear here.</p>
                         </div>
-                    </div>
+                    )}
 
-                    {/* target Update modal */}
-                    <div
-                        className='modal fade'
-                        id='kt_modal_target_update'
-                        aria-hidden='true'>
-                        <div className='modal-dialog modal-dialog-centered mw-650px'>
-                            <div className='modal-content'>
-                                <div className='modal-header justify-content-between'>
-                                    <h2 className='fw-bolder'>Update Target</h2>
-                                    <div
-                                        className='btn btn-sm btn-icon btn-active-color-primary'
-                                        data-bs-dismiss='modal'>
-                                        <FontAwesomeIcon
-                                            className='fs-1 position-absolute ms-3'
-                                            icon={faXmark}
-                                        />
-                                    </div>
+                    <div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+                        <div className='text-muted fs-7 fw-semibold'>
+                            Showing {filteredtargetData.length === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
+                            {Math.min(pagination.page * pagination.itemsPerPage, filteredtargetData.length)} of {filteredtargetData.length} records
+                        </div>
+                        {filteredtargetData.length > 0 && (
+                            <UsersListPagination
+                                totalPages={Math.ceil(filteredtargetData.length / pagination.itemsPerPage) || 1}
+                                currentPage={pagination.page}
+                                onPageChange={handlePageChange}
+                            />
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* target add modal */}
+            <div
+                className='modal fade'
+                id='kt_modal_target_add'
+                aria-hidden='true'>
+                <div className='modal-dialog modal-dialog-centered mw-650px'>
+                    <div className='modal-content border-0 shadow' style={{ borderRadius: '16px', overflow: 'hidden' }}>
+                        <div className='modal-header border-bottom border-gray-200 px-6 py-4 d-flex align-items-center justify-content-between'>
+                            <h3 className='fw-bolder text-gray-900 m-0'>Add New Target</h3>
+                            <button
+                                type='button'
+                                className='btn btn-sm btn-icon btn-light-danger rounded-circle'
+                                data-bs-dismiss='modal'>
+                                <FontAwesomeIcon icon={faXmark} />
+                            </button>
+                        </div>
+                        <div className='modal-body p-6'>
+                            <div className='row g-4'>
+                                <div className='col-md-6'>
+                                    <InputField
+                                        placeholder='Target Title'
+                                        type='text'
+                                        name='target_title'
+                                        label='Target Title'
+                                        htmlFor='target_title'
+                                        value={targetAddData.target_title}
+                                        onChange={(e) => handleInputChange(e)}
+                                    />
                                 </div>
-                                <div className='modal-body scroll-y'>
-                                    <div className='col-md-12'>
-                                        <div className='row'>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='Target Title'
-                                                    type='text'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='target_title'
-                                                    label='Target Title'
-                                                    htmlFor='target_title'
-                                                    value={targetUpdateData.target_title}
-                                                    onChange={(e) => handleUpdateInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='Target Description'
-                                                    type='text'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='target_description'
-                                                    label='Target Description'
-                                                    htmlFor='target_description'
-                                                    value={targetUpdateData.target_description}
-                                                    onChange={(e) => handleUpdateInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='From Date'
-                                                    type='date'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='from_date'
-                                                    label='From Date'
-                                                    htmlFor='from_date'
-                                                    value={DayJS(targetUpdateData.from_date).format('YYYY-MM-DD')}
-                                                    onChange={(e) => handleUpdateInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <InputField
-                                                    placeholder='To Date'
-                                                    type='date'
-                                                    className='col-12 fv-row mb-7'
-                                                    name='to_date'
-                                                    label='To Date'
-                                                    htmlFor='to_date'
-                                                    value={DayJS(targetUpdateData.to_date).format('YYYY-MM-DD')}
-                                                    onChange={(e) => handleUpdateInputChange(e)}
-                                                />
-                                            </div>
-                                            <div className='col-md-6 fv-row mb-7'>
-                                                <SelectField
-                                                    className='col-12 fv-row'
-                                                    name='position'
-                                                    label='Set position For'
-                                                    htmlFor='position'
-                                                    value={targetUpdateData.position}
-                                                    onChange={(e) => handleUpdateInputChange(e)}
-                                                    options={[
-                                                        'Developer',
-                                                        'Marketing',
-                                                        'Franchise Owner',
-                                                        'Graphic Designer',
-                                                        'Telecalling',
-                                                    ]}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className='col-md-6'>
+                                    <InputField
+                                        placeholder='Target Description'
+                                        type='text'
+                                        name='target_description'
+                                        label='Target Description'
+                                        htmlFor='target_description'
+                                        value={targetAddData.target_description}
+                                        onChange={(e) => handleInputChange(e)}
+                                    />
                                 </div>
-                                <div className='modal-footer justify-content-end'>
-                                    <button
-                                        className='btn btn-primary'
-                                        data-bs-dismiss='modal'
-                                        onClick={() => handleUpdate()}>
-                                        Update
-                                    </button>
+                                <div className='col-md-6'>
+                                    <InputField
+                                        placeholder='From Date'
+                                        type='date'
+                                        name='from_date'
+                                        label='From Date'
+                                        htmlFor='from_date'
+                                        value={targetAddData.from_date}
+                                        onChange={(e) => handleInputChange(e)}
+                                    />
+                                </div>
+                                <div className='col-md-6'>
+                                    <InputField
+                                        placeholder='To Date'
+                                        type='date'
+                                        name='to_date'
+                                        label='To Date'
+                                        htmlFor='to_date'
+                                        value={targetAddData.to_date}
+                                        onChange={(e) => handleInputChange(e)}
+                                    />
+                                </div>
+                                <div className='col-md-12'>
+                                    <SelectField
+                                        className=''
+                                        name='position'
+                                        label='Set position For'
+                                        htmlFor='position'
+                                        value={targetAddData.position}
+                                        onChange={handleInputChange}
+                                        options={[
+                                            'Developer',
+                                            'Marketing',
+                                            'Franchise Owner',
+                                            'Graphic Designer',
+                                            'Telecalling',
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </div>
+                        <div className='modal-footer border-top border-gray-200 px-6 py-4'>
+                            <button
+                                type='button'
+                                className='btn btn-light rounded-pill px-5 fw-semibold'
+                                data-bs-dismiss='modal'>
+                                Cancel
+                            </button>
+                            <button
+                                className='btn btn-primary rounded-pill px-6 fw-bold'
+                                data-bs-dismiss='modal'
+                                onClick={() => handleSubmit()}>
+                                Save Target
+                            </button>
+                        </div>
                     </div>
-                </KTCard>
+                </div>
+            </div>
+
+            {/* target Update modal */}
+            <div
+                className='modal fade'
+                id='kt_modal_target_update'
+                aria-hidden='true'>
+                <div className='modal-dialog modal-dialog-centered mw-650px'>
+                    <div className='modal-content border-0 shadow' style={{ borderRadius: '16px', overflow: 'hidden' }}>
+                        <div className='modal-header border-bottom border-gray-200 px-6 py-4 d-flex align-items-center justify-content-between'>
+                            <h3 className='fw-bolder text-gray-900 m-0'>Update Target</h3>
+                            <button
+                                type='button'
+                                className='btn btn-sm btn-icon btn-light-danger rounded-circle'
+                                data-bs-dismiss='modal'>
+                                <FontAwesomeIcon icon={faXmark} />
+                            </button>
+                        </div>
+                        <div className='modal-body p-6'>
+                            <div className='row g-4'>
+                                <div className='col-md-6'>
+                                    <InputField
+                                        placeholder='Target Title'
+                                        type='text'
+                                        name='target_title'
+                                        label='Target Title'
+                                        htmlFor='target_title'
+                                        value={targetUpdateData.target_title}
+                                        onChange={(e) => handleUpdateInputChange(e)}
+                                    />
+                                </div>
+                                <div className='col-md-6'>
+                                    <InputField
+                                        placeholder='Target Description'
+                                        type='text'
+                                        name='target_description'
+                                        label='Target Description'
+                                        htmlFor='target_description'
+                                        value={targetUpdateData.target_description}
+                                        onChange={(e) => handleUpdateInputChange(e)}
+                                    />
+                                </div>
+                                <div className='col-md-6'>
+                                    <InputField
+                                        placeholder='From Date'
+                                        type='date'
+                                        name='from_date'
+                                        label='From Date'
+                                        htmlFor='from_date'
+                                        value={targetUpdateData.from_date ? DayJS(targetUpdateData.from_date).format('YYYY-MM-DD') : ''}
+                                        onChange={(e) => handleUpdateInputChange(e)}
+                                    />
+                                </div>
+                                <div className='col-md-6'>
+                                    <InputField
+                                        placeholder='To Date'
+                                        type='date'
+                                        name='to_date'
+                                        label='To Date'
+                                        htmlFor='to_date'
+                                        value={targetUpdateData.to_date ? DayJS(targetUpdateData.to_date).format('YYYY-MM-DD') : ''}
+                                        onChange={(e) => handleUpdateInputChange(e)}
+                                    />
+                                </div>
+                                <div className='col-md-12'>
+                                    <SelectField
+                                        className=''
+                                        name='position'
+                                        label='Set position For'
+                                        htmlFor='position'
+                                        value={targetUpdateData.position}
+                                        onChange={(e) => handleUpdateInputChange(e)}
+                                        options={[
+                                            'Developer',
+                                            'Marketing',
+                                            'Franchise Owner',
+                                            'Graphic Designer',
+                                            'Telecalling',
+                                        ]}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className='modal-footer border-top border-gray-200 px-6 py-4'>
+                            <button
+                                type='button'
+                                className='btn btn-light rounded-pill px-5 fw-semibold'
+                                data-bs-dismiss='modal'>
+                                Cancel
+                            </button>
+                            <button
+                                className='btn btn-primary rounded-pill px-6 fw-bold'
+                                data-bs-dismiss='modal'
+                                onClick={() => handleUpdate()}>
+                                Update Target
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </>
     )

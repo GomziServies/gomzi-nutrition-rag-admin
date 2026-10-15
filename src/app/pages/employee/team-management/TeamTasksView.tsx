@@ -500,114 +500,114 @@ const TeamTasksView: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>{`Team Tasks: ${teamPosition}`}</PageTitle>
-			<KTCard>
-				<h2 className='m-6 mb-0'>Currently Running Tasks</h2>
-				<div className='row card-header border-0 pt-0 align-items-end ms-0 mx-md-6 p-0'>
-					<div className='col-md-9'>
-						<div className='row justify-content-between align-items-end'>
-							<div className='col-md-3 fv-row ps-md-0'>
-								<SelectField
-									className='fv-row m-0'
-									label='Select Employee'
-									name='employee'
-									value={selectedEmployee?.name}
-									onChange={handleEmployeeSelect}
-									htmlFor='employee'
-									options={employeeData.map((el: any) => el.name)}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-2 fv-row ps-md-2'>
-								<SelectField
-									className='fv-row m-0'
-									label='Status'
-									name='hrStatus'
-									value={hrStatus}
-									onChange={handleStatusChange}
-									htmlFor='hrStatus'
-									options={['Select', 'Pending', 'Employee Done', 'HR Done']}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-7 d-flex justify-content-end align-items-end card-toolbar mb-3 mb-lg-0'>
-								<div className='d-md-flex'>
-									<div className='d-md-flex me-3 d-none'>
-										<LengthMenu
-											expenseData={assignTaskData}
-											handleItemsPerPageChange={(pageSize) =>
-												setPagination((prev) => ({ ...prev, itemsPerPage: pageSize }))
-											}
-										/>
-									</div>
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div>
+						<h3 className='fw-bolder text-gray-900 m-0'>Currently Running Tasks</h3>
+						<span className='text-muted fs-7'>Monitor and review tasks across your team members</span>
+					</div>
+					<div className='d-flex align-items-center gap-3 flex-wrap'>
+						<button
+							onClick={() => handleNavigate('add')}
+							className='btn btn-primary rounded-pill px-5 fw-bold d-inline-flex align-items-center gap-2'>
+							<KTIcon iconName='plus' className='fs-2' />
+							<span>Add Task</span>
+						</button>
+					</div>
+
+					<div className='w-100 mt-2 pt-3 border-top border-gray-100'>
+						<div className='d-flex align-items-center justify-content-between flex-wrap gap-3'>
+							<div className='d-flex align-items-center flex-wrap gap-3'>
+								<div className='w-220px'>
+									<SearchFilter
+										searchTerm={searchTerm}
+										setSearchTerm={setSearchTerm}
+									/>
+								</div>
+
+								<div className='w-200px'>
+									<SelectField
+										className='fv-row m-0'
+										name='employee'
+										label='Employee'
+										showLabel={false}
+										value={selectedEmployee?.name}
+										onChange={handleEmployeeSelect}
+										htmlFor='employee'
+										options={['All Members', ...employeeData.map((el: any) => el.name)]}
+										marginRemove={true}
+									/>
+								</div>
+
+								<div className='w-160px'>
+									<SelectField
+										className='fv-row m-0'
+										name='hrStatus'
+										label='HR Status'
+										showLabel={false}
+										value={hrStatus}
+										onChange={handleStatusChange}
+										htmlFor='hrStatus'
+										options={['Select', 'Pending', 'Employee Done', 'HR Done']}
+										marginRemove={true}
+									/>
+								</div>
+
+								<div className='w-220px'>
 									<DateFilter
 										onDateRangeChange={handleDateRangeChange}
 										leftValue='-270px'
 									/>
-									<div className='mt-md-0 mt-4 me-md-3 me-0'>
-										<button
-											onClick={() => handleNavigate('add')}
-											className='ms-md-3 mt-md-1 btn btn-primary btn-sm w-md-20 w-100'>
-											<KTIcon
-												iconName='plus'
-												className='fs-2'
-											/>
-											Add Task
-										</button>
-									</div>
 								</div>
+
+								<LengthMenu
+									expenseData={assignTaskData}
+									handleItemsPerPageChange={(pageSize) =>
+										setPagination((prev) => ({ ...prev, itemsPerPage: pageSize }))
+									}
+								/>
 							</div>
 						</div>
-					</div>
-					<div className='col-md-3 mt-md-0 mt-2 d-flex align-items-end position-relative ps-0 mb-3 mb-lg-0'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-						/>
 					</div>
 				</div>
 
 				{assignTaskData.some(
 					(task) => task.status === 'COMPLETED' && task.hr_status === 'pending'
 				) && (
-					<div className='row align-items-center ms-0 mx-md-6 p-0 my-6'>
-						<div className='col-md-6'>
-							<div className='d-flex align-items-center mt-3'>
-								<input
-									type='checkbox'
-									id='selectAll'
-									checked={selectAll}
-									onChange={(e) => handleSelectAll(e.target.checked)}
-									className='form-check-input me-2'
-								/>
-								<label
-									htmlFor='selectAll'
-									className='form-check-label fw-bold'>
-									Select All Pending Tasks (
-									{
-										assignTaskData.filter(
-											(t) => t.status === 'COMPLETED' && t.hr_status === 'pending'
-										).length
-									}
-									)
-								</label>
-							</div>
+					<div className='mx-6 my-3 p-3 bg-light-warning rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+						<div className='d-flex align-items-center'>
+							<input
+								type='checkbox'
+								id='selectAll'
+								checked={selectAll}
+								onChange={(e) => handleSelectAll(e.target.checked)}
+								className='form-check-input me-3'
+							/>
+							<label
+								htmlFor='selectAll'
+								className='form-check-label fw-bold text-gray-800 fs-7'>
+								Select All Pending Completion (
+								{
+									assignTaskData.filter(
+										(t) => t.status === 'COMPLETED' && t.hr_status === 'pending'
+									).length
+								}
+								)
+							</label>
 						</div>
-						<div className='col-md-6 text-end'>
+						<div>
 							<button
 								onClick={handleBulkTaskCompletion}
-								className={`btn btn-success btn-sm ${selectedTasks.length > 0 ? '' : 'invisible'}`}
+								className={`btn btn-success btn-sm rounded-pill px-4 fw-bold ${selectedTasks.length > 0 ? '' : 'invisible'}`}
 								disabled={submitLoading}>
-								<KTIcon
-									iconName='check'
-									className='fs-2 me-1'
-								/>
-								Complete {selectedTasks.length} task(s)
+								<KTIcon iconName='check' className='fs-2 me-1' />
+								Complete {selectedTasks.length} Task(s)
 							</button>
 						</div>
 					</div>
 				)}
 
-				<div className='py-4 card-body'>
+				<div className='card-body py-4 px-6'>
 					<div className='table-responsive'>
 						<Table
 							data={paginatedTaskData}
@@ -628,18 +628,12 @@ const TeamTasksView: React.FC = () => {
 								<React.Fragment key={task._id}>
 									<tr
 										onClick={() => handleRowClick(task._id)}
-										className='data-row'>
-										<td className='text-center'>
-											<div className='d-flex'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
-												<span className='text-dark fw-bold d-block mb-1 fs-6'>{actualIndex}</span>
-											</div>
+										className='data-row'
+										style={{ verticalAlign: 'middle', borderBottom: '1px solid #f1f1f4' }}>
+										<td className='text-center py-3' style={{ width: '60px' }}>
+											<span className='badge badge-light-secondary fw-bolder px-2 py-1' style={{ borderRadius: '6px' }}>{actualIndex}</span>
 										</td>
-										<td className='text-center'>
+										<td className='text-center py-3'>
 											{task.status === 'COMPLETED' && task.hr_status === 'pending' ? (
 												<input
 													type='checkbox'
@@ -648,55 +642,51 @@ const TeamTasksView: React.FC = () => {
 													className='form-check-input'
 												/>
 											) : (
-												<span>-</span>
+												<span className='text-muted'>-</span>
 											)}
 										</td>
 										{!selectedEmployee && (
-											<td>
-												<span className='text-dark fw-bold d-block mb-1 fs-6'>
+											<td className='py-3'>
+												<span className='text-gray-900 fw-bold fs-7'>
 													{employeeData.find((emp) => emp.id === task.admin_id)?.name || '-'}
 												</span>
 											</td>
 										)}
-										<td>
-											<span className='text-dark fw-bold d-block mb-1 fs-6'>{task.task_title}</span>
+										<td className='py-3'>
+											<span className='text-gray-900 fw-bold fs-7'>{task.task_title}</span>
 										</td>
-										<td>
-											<span className='text-dark fw-bold d-block mb-1 fs-6'>
-												{DayJS(task.start_date).format('DD/MM/YYYY')}
-											</span>
+										<td className='py-3 text-muted fs-8'>
+											{DayJS(task.start_date).format('DD/MM/YYYY')}
 										</td>
-										<td>
-											<span className='text-dark fw-bold d-block mb-1 fs-6'>
-												{DayJS(task.end_date).format('DD/MM/YYYY')}
-											</span>
+										<td className='py-3 text-muted fs-8'>
+											{DayJS(task.end_date).format('DD/MM/YYYY')}
 										</td>
-										<td>
+										<td className='py-3'>
 											<span
-												className={`fw-bold d-block mb-1 fs-6 ${
-													task.status === 'PENDING' ? 'text-warning' : 'text-success'
-												}`}>
+												className={`badge badge-light-${
+													task.status === 'PENDING' ? 'warning' : 'success'
+												} fw-bold px-2 py-1 fs-8`}
+												style={{ borderRadius: '6px' }}>
 												{task.status.charAt(0).toUpperCase() + task.status.slice(1).toLowerCase()}
 											</span>
 										</td>
-										<td>
+										<td className='py-3'>
 											<span
-												className={`fw-bold d-block mb-1 fs-6 ${
-													task.hr_status === 'complete' ? 'text-success' : 'text-warning'
-												}`}>
+												className={`badge badge-light-${
+													task.hr_status === 'complete' ? 'success' : 'warning'
+												} fw-bold px-2 py-1 fs-8`}
+												style={{ borderRadius: '6px' }}>
 												{task.hr_status.charAt(0).toUpperCase() +
 													task.hr_status.slice(1).toLowerCase()}
 											</span>
 										</td>
-										<td>
-											<span className='text-dark fw-bold d-block mb-1 fs-6'>
-												{task.completed_date
-													? DayJS(task.completed_date).format('DD/MM/YYYY')
-													: '-'}
-											</span>
+										<td className='py-3 text-muted fs-8'>
+											{task.completed_date
+												? DayJS(task.completed_date).format('DD/MM/YYYY')
+												: '-'}
 										</td>
-										<td>
-											<div className='d-flex'>
+										<td className='py-3 text-end pe-4'>
+											<div className='d-flex gap-2 justify-content-end'>
 												<TableButton
 													action='view'
 													onClick={() =>
@@ -776,15 +766,32 @@ const TeamTasksView: React.FC = () => {
 							loading={loading}
 						/>
 					</div>
-					{paginatedTaskData.length > 0 && (
-						<UsersListPagination
-							totalPages={Math.ceil(assignTaskData.length / pagination.itemsPerPage)}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
+
+					{assignTaskData.length === 0 && !loading && (
+						<div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
+							<div className='symbol symbol-60px mb-4'>
+								<span className='symbol-label bg-light-primary text-primary fs-2'>📋</span>
+							</div>
+							<h5 className='fw-bold text-gray-800 mb-1'>No Team Tasks Found</h5>
+							<p className='text-muted fs-7 mb-0'>No running tasks found matching the filter criteria.</p>
+						</div>
 					)}
+
+					<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+						<div className='text-muted fs-7 fw-semibold'>
+							Showing {assignTaskData.length === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
+							{Math.min(pagination.page * pagination.itemsPerPage, assignTaskData.length)} of {assignTaskData.length} records
+						</div>
+						{assignTaskData.length > 0 && (
+							<UsersListPagination
+								totalPages={Math.ceil(assignTaskData.length / pagination.itemsPerPage) || 1}
+								currentPage={pagination.page}
+								onPageChange={handlePageChange}
+							/>
+						)}
+					</div>
 				</div>
-			</KTCard>
+			</div>
 		</>
 	)
 }

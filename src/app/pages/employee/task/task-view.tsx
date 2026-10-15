@@ -41,7 +41,11 @@ export function TaskView() {
 	const fetchTaskDetails = async () => {
 		try {
 			if (!taskId) return
-			const employeeData = JSON.parse(localStorage.getItem('fg_group_info') || '{}')
+			const raw =
+				localStorage.getItem('fg_group_user_info') ||
+				localStorage.getItem('fg_group_info') ||
+				localStorage.getItem('auth_fg_group')
+			const employeeData = raw ? JSON.parse(raw) : {}
 			const response = await GetTask({
 				admin_id: adminIdParam || employeeData._id,
 				task_id: taskId,
@@ -345,45 +349,62 @@ export function TaskView() {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Task Details</PageTitle>
-			<KTCard>
-				<div className='card-body'>
-					<div className='row mb-6 mt-2 pb-5 border-bottom border-secondary justify-content-between align-items-center'>
-						<div className='col-md-9 '>
-							<h2 className='m-0'>{task.task_title}</h2>
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				{/* Modern Header */}
+				<div className='card-header border-0 pt-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div className='d-flex align-items-center gap-3'>
+						<button
+							type='button'
+							className='btn btn-sm btn-light d-flex align-items-center gap-2'
+							style={{ borderRadius: '8px' }}
+							onClick={() => window.history.back()}>
+							<i className='bi bi-arrow-left fs-6'></i>
+							<span>Back</span>
+						</button>
+						<div>
+							<h2 className='fw-bolder text-gray-900 mb-0'>{task.task_title}</h2>
+							<span className='text-muted fs-7'>
+								Task Timeline: {DayJS(task?.start_date).format('DD/MM/YYYY')} - {DayJS(task?.end_date).format('DD/MM/YYYY')}
+							</span>
 						</div>
-						{/* <div className='col-md-3 text-end'>
-							<div className='d-flex gap-2 justify-content-end'>
-								{task.status === 'PENDING' && (
+					</div>
+
+					<div className='d-flex align-items-center gap-2'>
+						{task.status === 'PENDING' && (
+							<>
+								{(!task.employee_status || task.employee_status === 'pending') && (
 									<>
-										{(!task.employee_status || task.employee_status === 'pending') && (
-											<>
-												<Button
-													variant='success'
-													size='sm'
-													onClick={handleAccept}>
-													Accept
-												</Button>
-												<Button
-													variant='danger'
-													size='sm'
-													onClick={handleReject}>
-													Reject
-												</Button>
-											</>
-										)}
-										{task.employee_status === 'accepted' && (
-											<Button
-												variant='primary'
-												size='sm'
-												onClick={() => setShowActionModal(true)}>
-													Complete Task
-											</Button>
-										)}
+										<Button
+											variant='success'
+											size='sm'
+											style={{ borderRadius: '8px' }}
+											onClick={handleAccept}>
+											Accept Task
+										</Button>
+										<Button
+											variant='danger'
+											size='sm'
+											style={{ borderRadius: '8px' }}
+											onClick={handleReject}>
+											Reject
+										</Button>
 									</>
 								)}
-							</div>
-						</div> */}
+								{task.employee_status === 'accepted' && (
+									<Button
+										variant='primary'
+										size='sm'
+										style={{ borderRadius: '8px' }}
+										onClick={() => setShowActionModal(true)}>
+										Complete Task
+									</Button>
+								)}
+							</>
+						)}
 					</div>
+				</div>
+
+				<div className='card-body pt-4'>
 
 					<div className='row mb-4'>
 						<div className='col-md-6'>
@@ -923,7 +944,7 @@ export function TaskView() {
 						)}
 					</div>
 				</div>
-			</KTCard>
+			</div>
 
 			{/* Extension Request Modal */}
 			<Modal

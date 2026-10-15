@@ -358,7 +358,7 @@ const TeamRatingView: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>{`Team Rating: ${teamName}`}</PageTitle>
 
-			<KTCard>
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
 				<div className='row g-5 mx-5 my-3'>
 					<div className='col-xl-4'>
 						<div
@@ -576,15 +576,21 @@ const TeamRatingView: React.FC = () => {
 							</div>
 						)}
 					</div>
-					{ratings.length > 0 && (
-						<UsersListPagination
-							totalPages={Math.ceil(totalItems / pagination.itemsPerPage) || 1}
-							currentPage={pagination.page}
-							onPageChange={(p) => setPagination({ ...pagination, page: p })}
-						/>
-					)}
+					<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+						<div className='text-muted fs-7 fw-semibold'>
+							Showing {ratings.length === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
+							{Math.min(pagination.page * pagination.itemsPerPage, totalItems || ratings.length)} of {totalItems || ratings.length} records
+						</div>
+						{ratings.length > 0 && (
+							<UsersListPagination
+								totalPages={Math.ceil((totalItems || ratings.length) / pagination.itemsPerPage) || 1}
+								currentPage={pagination.page}
+								onPageChange={(p) => setPagination({ ...pagination, page: p })}
+							/>
+						)}
+					</div>
 				</div>
-			</KTCard>
+			</div>
 
 			<Modal
 				show={showModal}

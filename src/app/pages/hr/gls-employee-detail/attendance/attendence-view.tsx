@@ -1,7 +1,7 @@
 import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { toAbsoluteUrl } from '../../../../../_metronic/helpers'
 import { PageTitle } from '../../../../../_metronic/layout/core'
@@ -242,142 +242,121 @@ const AttendenceView = () => {
     return (
         <>
             <PageTitle breadcrumbs={[]}>Attendance Details</PageTitle>
-            <div className='row mb-6'>
-                <div className='col-12 mt-3'>
-                    <div className='card py-5'>
-                        <h3 className='ms-8'>Employee Detail:</h3>
-                        <div className='card-body'>
-                            <div className='row'>
-                                <div className='col-3 d-md-block d-none text-center'>
-                                    <img
-                                        src={
-                                            employeeData?.photo
-                                                ? `https://files.fggroup.in/${employeeData?.photo}`
-                                                : toAbsoluteUrl('/media/logos/fgiit-logo.png')
-                                        }
-                                        alt={employeeData?.Name}
-                                        style={{ borderRadius: '10px', width: '90%' }}
-                                    />
-                                </div>
-                                <div className='col-12 d-md-none d-block mb-5 text-center'>
-                                    <img
-                                        src={
-                                            employeeData?.photo
-                                                ? `https://files.fggroup.in/${employeeData?.photo}`
-                                                : toAbsoluteUrl('/media/logos/fgiit-logo.png')
-                                        }
-                                        alt={employeeData?.Name}
-                                        style={{ borderRadius: '5px', width: '50%' }}
-                                    />
-                                </div>
-                                <div className='col-md-9'>
-                                    <div className='row'>
-                                        <div className='col-md-6 fv-row'>
-                                            <CopyableInput
-                                                placeholder='Employee Code'
-                                                type='text'
-                                                className='col-12 fv-row'
-                                                name='employee_code'
-                                                label='Employee Code'
-                                                htmlFor='employee_code'
-                                                value={employeeData?.employee_code}
-                                                onChange={handleInputChange}
-                                                disabled
-                                            />
-                                        </div>
-                                        <div className='col-md-6 fv-row'>
-                                            <InputField
-                                                placeholder='Name'
-                                                type='text'
-                                                className='col-12 fv-row'
-                                                name='Name'
-                                                label='Name'
-                                                htmlFor='Name'
-                                                value={employeeData?.Name}
-                                                onChange={handleInputChange}
-                                                disabled
-                                            />
-                                        </div>
-                                        <div className='col-md-6 fv-row'>
-                                            <InputField
-                                                placeholder='Mobile'
-                                                type='text'
-                                                className='col-12 fv-row'
-                                                name='mobile'
-                                                label='Mobile'
-                                                htmlFor='mobile'
-                                                value={employeeData?.mobile}
-                                                onChange={handleInputChange}
-                                                disabled
-                                            />
-                                        </div>
-                                    </div>
+
+            {/* Top Bar with Back Link */}
+            <div className='d-flex align-items-center justify-content-between mb-5'>
+                <Link
+                    to='/hr/gls-attendance'
+                    className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2'
+                    style={{ borderRadius: '9px', height: '36px' }}>
+                    <i className='bi bi-arrow-left fs-6'></i>
+                    <span className='fw-semibold'>Back to Attendance List</span>
+                </Link>
+
+                <div className='d-flex align-items-center gap-2'>
+                    {employeeData?.employee_code && (
+                        <span className='badge badge-light-secondary text-dark fw-bold px-3 py-2 fs-7'>
+                            {employeeData.employee_code}
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {/* Employee Profile Header Card */}
+            <div className='card shadow-sm border-0 mb-6' style={{ borderRadius: '14px' }}>
+                <div className='card-body p-6'>
+                    <div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
+                        <div className='d-flex align-items-center gap-4'>
+                            <div
+                                className='symbol symbol-70px symbol-circle overflow-hidden flex-shrink-0'
+                                style={{ border: '2px solid #e2e8f0' }}>
+                                <img
+                                    src={
+                                        employeeData?.photo
+                                            ? `https://files.fggroup.in/${employeeData?.photo}`
+                                            : toAbsoluteUrl('/media/logos/fgiit-logo.png')
+                                    }
+                                    alt={employeeData?.Name || 'Employee'}
+                                    className='w-100 h-100 object-fit-cover'
+                                />
+                            </div>
+                            <div>
+                                <h3 className='fw-bold text-gray-900 fs-3 mb-1'>
+                                    {employeeData?.Name || 'GLS Staff Attendance Log'}
+                                </h3>
+                                <div className='d-flex align-items-center gap-3 text-muted fs-7'>
+                                    <span>
+                                        <i className='bi bi-person-badge text-primary me-1'></i>
+                                        {employeeData?.employee_code || '-'}
+                                    </span>
+                                    <span>•</span>
+                                    <span>
+                                        <i className='bi bi-telephone text-primary me-1'></i>
+                                        {employeeData?.mobile || 'No contact'}
+                                    </span>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className='d-flex align-items-center gap-2'>
+                            <button
+                                type='button'
+                                className='btn btn-sm btn-light-success d-flex align-items-center gap-2 px-4'
+                                style={{ height: '38px', borderRadius: '10px' }}
+                                onClick={downloadExcel}
+                                disabled={loading}>
+                                <i className='bi bi-file-earmark-excel-fill text-success fs-5'></i>
+                                <span className='fw-semibold'>Export Excel</span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className='card'>
-                <h3 className='ms-8 mt-5'>Attendance Detail:</h3>
-                <div className='card-header row border-0 pt-6'>
-                    <div className='col-md-4 d-flex'>
-                        <div className='d-md-block d-none'>
-                            <LengthMenu
-                                expenseData={attendanceData}
-                                handleItemsPerPageChange={handleItemsPerPageChange}
-                            />
+            {/* Attendance Logs Table Card */}
+            <div className='card shadow-sm border-0' style={{ borderRadius: '14px' }}>
+                <div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+                    <div className='d-flex flex-column'>
+                        <div className='d-flex align-items-center gap-2'>
+                            <h3 className='card-title fw-bold text-gray-900 fs-3 m-0'>Daily Attendance Log</h3>
+                            {attendanceData?.length > 0 && (
+								<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
+									{attendanceData.length} Entries
+								</span>
+							)}
                         </div>
+                        <span className='text-muted fs-7 fw-semibold mt-1'>
+                            In-time, out-time, overtime, and daily presence history
+                        </span>
                     </div>
-                    <div className='col-md-8 pe-md-6'>
-                        <div className='row'>
-                            <div className='col-md-2 d-none d-md-flex justify-content-end'>
-                                <button
-                                    className='btn btn-primary mb-7'
-                                    onClick={downloadExcel}
-                                    disabled={loading}>
-                                    <FontAwesomeIcon
-                                        icon={faDownload}
-                                        className='fs-3'
-                                    />
-                                </button>
-                            </div>
-                            <div className='col-md-5 my-md-0 my-5 pe-0'>
-                                <DateFilter onDateRangeChange={handleDateRangeChange} rightValue='0'/>
-                            </div>
 
-                            <div className='col-md-5 pe-0 d-flex justify-content-end'>
-                                <SelectField
-                                    className='col-12 mb-md-7'
-                                    label='Select Status'
-                                    showLabel={false}
-                                    name='selectedStatus'
-                                    value={selectedStatus}
-                                    onChange={handleChangeStatus}
-                                    htmlFor='selectedStatus'
-                                    options={['Present', 'Absent', 'Leave']}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div className='col-md-3 d-flex d-md-none justify-content-between p-0'>
+                    <div className='d-flex align-items-center flex-wrap gap-3'>
                         <LengthMenu
                             expenseData={attendanceData}
                             handleItemsPerPageChange={handleItemsPerPageChange}
                         />
-                        <button
-                            className='btn btn-primary mb-4'
-                            onClick={downloadExcel}
-                            disabled={loading}>
-                            <FontAwesomeIcon
-                                icon={faDownload}
-                                className='fs-3'
+
+                        <DateFilter
+                            onDateRangeChange={handleDateRangeChange}
+                            rightValue='0'
+                        />
+
+                        <div style={{ minWidth: '150px' }}>
+                            <SelectField
+                                className='mb-0'
+                                label='Filter Status'
+                                showLabel={false}
+                                name='selectedStatus'
+                                value={selectedStatus}
+                                onChange={handleChangeStatus}
+                                htmlFor='selectedStatus'
+                                options={['Present', 'Absent', 'Leave']}
                             />
-                        </button>
+                        </div>
                     </div>
                 </div>
-                <div className='py-4 card-body'>
+
+                <div className='card-body py-2 px-6'>
                     <div className='table-responsive'>
                         <Table
                             data={attendanceData}
@@ -392,153 +371,87 @@ const AttendenceView = () => {
                                 actualIndex: number,
                                 isVisible: boolean
                             ) => (
-                                <React.Fragment key={attendance?._id}>
+                                <React.Fragment key={attendance?._id || index}>
                                     <tr
                                         onClick={() => handleRowClick(attendance?._id)}
-                                        className='data-row'>
-                                        <td className='text-center'>
-                                            <div className='d-flex justify-content-center'>
-                                                <FontAwesomeIcon
-                                                    icon={faPlusCircle}
-                                                    className='mx-2 ms-5 mb-1 plus-icon'
-                                                    style={{ color: '#607D8B', fontSize: '18px' }}
-                                                />
-                                                <span className='text-dark fw-bold  d-block mb-1 fs-6'>{actualIndex}</span>
-                                            </div>
+                                        className='data-row'
+                                        style={{ transition: 'background-color 0.15s ease' }}>
+                                        <td className='text-center ps-4'>
+                                            <span className='text-muted fw-bold fs-7'>
+                                                {actualIndex}
+                                            </span>
                                         </td>
                                         <td>
-                                            <span className='text-dark fw-bold  d-block mb-1 fs-6'>
+                                            <span className='text-gray-900 fw-bold fs-7'>
                                                 {attendance?.DateString
-                                                    ? DayJS(attendance?.DateString).format('DD/MM/YYYY')
+                                                    ? DayJS(attendance?.DateString).format('DD MMM YYYY')
                                                     : 'N/A'}
                                             </span>
-                                        </td>
-                                        <td>
-                                            <span className='text-dark fw-bold  d-block mb-1 fs-6'>
-                                                {attendance?.INTime
-                                                    ? attendance?.INTime !== '--:--'
-                                                        ? attendance?.INTime
-                                                        : '-'
-                                                    : 'N/A'}
+                                            <span className='text-muted fs-8 d-block'>
+                                                {attendance?.DateString ? DayJS(attendance?.DateString).format('dddd') : ''}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className='text-dark fw-bold  d-block mb-1 fs-6'>
-                                                {attendance?.OUTTime
-                                                    ? attendance?.OUTTime !== '--:--'
-                                                        ? attendance?.OUTTime
-                                                        : '-'
-                                                    : 'N/A'}
+                                            <span className='badge badge-light-success text-success fw-bold fs-7 px-3 py-1.5'>
+                                                {attendance?.INTime && attendance?.INTime !== '--:--'
+                                                    ? attendance?.INTime
+                                                    : '-'}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className='text-dark fw-bold  d-block mb-1 fs-6'>
-                                                {attendance?.OverTime
-                                                    ? attendance?.OverTime !== '00:00'
-                                                        ? attendance?.OverTime
-                                                        : '-'
-                                                    : 'N/A'}
+                                            <span className='badge badge-light-secondary text-dark fw-bold fs-7 px-3 py-1.5'>
+                                                {attendance?.OUTTime && attendance?.OUTTime !== '--:--'
+                                                    ? attendance?.OUTTime
+                                                    : '-'}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className='text-dark fw-bold  d-block mb-1 fs-6'>
-                                                {attendance?.Late_In
-                                                    ? attendance?.Late_In !== '00:00'
-                                                        ? attendance?.Late_In
-                                                        : '-'
-                                                    : 'N/A'}
+                                            <span className='text-gray-800 fw-semibold fs-7'>
+                                                {attendance?.OverTime && attendance?.OverTime !== '00:00'
+                                                    ? attendance?.OverTime
+                                                    : '-'}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className='text-dark fw-bold  d-block mb-1 fs-6'>
-                                                {attendance?.halfDay ? (
-                                                    attendance?.status === 'Leave' || attendance?.status === 'A' ? (
-                                                        <span className='badge badge-light-danger py-3 px-4 fs-7'>
-                                                            Half Day
-                                                        </span>
-                                                    ) : (
-                                                        <span className='badge badge-light-success py-3 px-4 fs-7'>
-                                                            Half Day
-                                                        </span>
-                                                    )
-                                                ) : (
-                                                    '-'
-                                                )}
+                                            <span className='text-gray-800 fw-semibold fs-7'>
+                                                {attendance?.Late_In && attendance?.Late_In !== '00:00'
+                                                    ? attendance?.Late_In
+                                                    : '-'}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className='text-dark fw-bold  d-block mb-1 fs-6'>
-                                                {attendance?.Status === 'Leave' || attendance?.Status === 'A' ? (
-                                                    DayJS(attendance.DateString).format('dddd') == 'Sunday' ? (
-                                                        <span className='badge badge-light-danger py-3 px-4 fs-7'>
-                                                            {DayJS(attendance.DateString).format('dddd')}
-                                                        </span>
-                                                    ) : (
-                                                        <span className='badge badge-light-danger py-3 px-4 fs-7'>
-                                                            {attendance?.Status}
-                                                        </span>
-                                                    )
-                                                ) : DayJS(attendance.DateString).format('dddd') == 'Sunday' ? (
-                                                    <>
-                                                        <span className='badge badge-light-success py-3 px-4 fs-7'>
-                                                            {DayJS(attendance.DateString).format('dddd')} - {attendance?.Status}
-                                                        </span>
-                                                    </>
-                                                ) : (
-                                                    <span className='badge badge-light-success py-3 px-4 fs-7'>
-                                                        {attendance?.Status}
-                                                    </span>
-                                                )}
-                                            </span>
+                                            {attendance?.halfDay ? (
+                                                <span className='badge badge-light-warning fw-bold fs-7 px-3 py-1.5'>
+                                                    Half Day
+                                                </span>
+                                            ) : (
+                                                <span className='text-muted fs-7'>-</span>
+                                            )}
+                                        </td>
+                                        <td>
+                                            {attendance?.Status === 'Leave' || attendance?.Status === 'A' ? (
+                                                <span className='badge badge-light-danger fw-bold fs-7 px-3 py-1.5'>
+                                                    {DayJS(attendance.DateString).format('dddd') === 'Sunday' ? 'Sunday' : attendance?.Status || 'Absent'}
+                                                </span>
+                                            ) : DayJS(attendance.DateString).format('dddd') === 'Sunday' ? (
+                                                <span className='badge badge-light-info fw-bold fs-7 px-3 py-1.5'>
+                                                    Sunday
+                                                </span>
+                                            ) : (
+                                                <span className='badge badge-light-success fw-bold fs-7 px-3 py-1.5'>
+                                                    {attendance?.Status || 'Present'}
+                                                </span>
+                                            )}
                                         </td>
                                     </tr>
                                     {isVisible && (
                                         <tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-                                            <td colSpan={12}>
-                                                <div>
-                                                    <strong>{sortableFields[0].title}:</strong>{' '}
-                                                    {attendance?.createdAt
-                                                        ? DayJS(attendance?.createdAt).format('DD/MM/YYYY hh:mm:ss A')
-                                                        : 'N/A'}
-                                                    <br />
-                                                    <strong>{sortableFields[1].title}:</strong>{' '}
-                                                    {attendance?.INTime ? attendance?.INTime : 'N/A'}
-                                                    <br />
-                                                    <strong>{sortableFields[2].title}:</strong>{' '}
-                                                    {attendance?.OUTTime ? attendance?.OUTTime : 'N/A'}
-                                                    <br />
-                                                    <strong>{sortableFields[3].title}:</strong>{' '}
-                                                    {attendance?.OverTime ? attendance?.OverTime : 'N/A'}
-                                                    <br />
-                                                    <strong>{sortableFields[4].title}:</strong>{' '}
-                                                    {attendance?.Late_In ? attendance?.Late_In : 'N/A'}
-                                                    <br />
-                                                    <div className='d-flex my-1'>
-                                                        <strong className='mt-2 me-2'>{sortableFields[5].title}:</strong>{' '}
-                                                        <span className='text-dark fw-bold  d-block mb-1 fs-6'>
-                                                            {attendance?.halfDay ? (
-                                                                attendance?.Status === 'Leave' || attendance?.Status === 'A' ? (
-                                                                    <span className='badge badge-light-danger py-3 px-4 fs-7'>
-                                                                        Half Day{' / '}
-                                                                        {attendance?.Status}
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className='badge badge-light-success py-3 px-4 fs-7'>
-                                                                        Half Day{' / '}
-                                                                        {attendance?.Status}
-                                                                    </span>
-                                                                )
-                                                            ) : attendance?.Status === 'Leave' || attendance?.Status === 'A' ? (
-                                                                <span className='badge badge-light-danger py-3 px-4 fs-7'>
-                                                                    {attendance?.Status}
-                                                                </span>
-                                                            ) : (
-                                                                <span className='badge badge-light-success py-3 px-4 fs-7'>
-                                                                    {attendance?.Status}
-                                                                </span>
-                                                            )}
-                                                        </span>
-                                                    </div>
+                                            <td colSpan={12} className='bg-light-subtle p-3'>
+                                                <div className='d-flex flex-wrap gap-4 text-muted fs-7'>
+                                                    <div><strong>In:</strong> {attendance?.INTime || '-'}</div>
+                                                    <div><strong>Out:</strong> {attendance?.OUTTime || '-'}</div>
+                                                    <div><strong>Overtime:</strong> {attendance?.OverTime || '-'}</div>
+                                                    <div><strong>Late:</strong> {attendance?.Late_In || '-'}</div>
                                                 </div>
                                             </td>
                                         </tr>
@@ -552,16 +465,24 @@ const AttendenceView = () => {
                         />
                     </div>
                     {attendanceData.length === 0 && !loading && (
-                        <div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-                            <b>No records found</b>
+                        <div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
+                            <i className='bi bi-calendar-check text-muted fs-2x mb-2'></i>
+                            <span className='text-gray-700 fw-bold fs-6'>No attendance logs found for this period</span>
+                            <span className='text-muted fs-7'>Try selecting a different date range or status filter</span>
                         </div>
                     )}
                     {attendanceData.length > 0 && (
-                        <UsersListPagination
-                            totalPages={metaData?.totalPages}
-                            currentPage={pagination.page}
-                            onPageChange={handlePageChange}
-                        />
+                        <div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+                            <div className='text-muted fs-7 fw-semibold'>
+                                Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, attendanceData.length)} to{' '}
+                                {Math.min(pagination.page * pagination.itemsPerPage, attendanceData.length)} of {attendanceData.length} records
+                            </div>
+                            <UsersListPagination
+                                totalPages={metaData?.totalPages || Math.ceil(attendanceData.length / pagination.itemsPerPage)}
+                                currentPage={pagination.page}
+                                onPageChange={handlePageChange}
+                            />
+                        </div>
                     )}
                 </div>
             </div>

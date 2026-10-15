@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
-import { Button, Form, Card, Row, Col } from 'react-bootstrap'
+import { Button, Form, Row, Col } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
-import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
 import { CreateExpenseReport } from '../../../Functions/FGGroup/ExpenseReport'
@@ -12,7 +11,7 @@ interface ExpenseItem {
     type: string
     description: string
     amount: string
-    file_url?: string // Add file_url to expense item
+    file_url?: string
 }
 
 interface SelectedFile {
@@ -26,49 +25,42 @@ const EmployeeExpenseCreate: React.FC = () => {
     const [purpose, setPurpose] = useState('')
     const [remarks, setRemarks] = useState('')
     const [expenses, setExpenses] = useState<ExpenseItem[]>([{ type: '', description: '', amount: '' }])
-    const [selectedFiles, setSelectedFiles] = useState<{[key: number]: SelectedFile[]}>({}) // Store selected files per expense
+    const [selectedFiles, setSelectedFiles] = useState<{[key: number]: SelectedFile[]}>({})
     const [uploading, setUploading] = useState(false)
     const [loading, setLoading] = useState(false)
     
-    // Form validation errors
     const [errors, setErrors] = useState({
         purpose: '',
         expenses: '',
         files: ''
     })
 
-    // Handle adding a new expense item
     const handleAddExpense = () => {
         setExpenses([...expenses, { type: '', description: '', amount: '' }])
     }
 
-    // Handle removing an expense item
     const handleRemoveExpense = (index: number) => {
         if (expenses.length > 1) {
             const newExpenses = [...expenses]
             newExpenses.splice(index, 1)
             setExpenses(newExpenses)
             
-            // Remove associated files
             const newSelectedFiles = {...selectedFiles}
             delete newSelectedFiles[index]
             setSelectedFiles(newSelectedFiles)
         }
     }
 
-    // Handle expense item change
     const handleExpenseChange = (index: number, field: keyof ExpenseItem, value: string) => {
         const newExpenses = [...expenses]
         newExpenses[index][field] = value
         setExpenses(newExpenses)
         
-        // Clear error when user starts typing
         if (errors.expenses) {
             setErrors(prev => ({ ...prev, expenses: '' }))
         }
     }
 
-    // Handle file selection for a specific expense
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, expenseIndex: number) => {
         const files = e.target.files
         if (!files || files.length === 0) return
@@ -76,7 +68,6 @@ const EmployeeExpenseCreate: React.FC = () => {
         const newSelectedFiles: SelectedFile[] = []
         for (let i = 0; i < files.length; i++) {
             const file = files[i]
-            // Create a preview URL for display
             const previewUrl = URL.createObjectURL(file)
             newSelectedFiles.push({ file, previewUrl })
         }
@@ -85,14 +76,12 @@ const EmployeeExpenseCreate: React.FC = () => {
             ...prev,
             [expenseIndex]: [...(prev[expenseIndex] || []), ...newSelectedFiles]
         }))
-        e.target.value = '' // Reset file input
+        e.target.value = ''
     }
 
-    // Handle file removal for a specific expense
     const handleRemoveFile = (expenseIndex: number, fileIndex: number) => {
         const newSelectedFiles = {...selectedFiles}
         const removedFile = newSelectedFiles[expenseIndex].splice(fileIndex, 1)[0]
-        // Revoke the preview URL to free memory
         URL.revokeObjectURL(removedFile.previewUrl)
         
         if (newSelectedFiles[expenseIndex].length === 0) {
@@ -102,18 +91,15 @@ const EmployeeExpenseCreate: React.FC = () => {
         setSelectedFiles(newSelectedFiles)
     }
 
-    // Validate form
     const validateForm = () => {
         let isValid = true
         const newErrors = { purpose: '', expenses: '', files: '' }
 
-        // Validate purpose
         if (!purpose.trim()) {
             newErrors.purpose = 'Purpose is required'
             isValid = false
         }
 
-        // Validate expenses
         let hasValidExpense = false
         for (const expense of expenses) {
             if (expense.type.trim() && expense.amount && parseFloat(expense.amount) > 0) {
@@ -131,7 +117,6 @@ const EmployeeExpenseCreate: React.FC = () => {
         return isValid
     }
 
-    // Calculate total amount
     const calculateTotalAmount = () => {
         return expenses.reduce((total, expense) => {
             const amount = parseFloat(expense.amount) || 0
@@ -139,7 +124,6 @@ const EmployeeExpenseCreate: React.FC = () => {
         }, 0)
     }
 
-    // Upload files for a specific expense and return their URLs
     const uploadFilesForExpense = async (expenseIndex: number): Promise<string[]> => {
         const files = selectedFiles[expenseIndex]
         if (!files || files.length === 0) return []
@@ -148,13 +132,11 @@ const EmployeeExpenseCreate: React.FC = () => {
         
         try {
             for (const selectedFile of files) {
-                // Pass the file as an array to FileUploadToFGGroup
                 const response: any = await FileUploadToFGGroup([selectedFile.file])
                 if (response && response.status === 200 && response.data?.fileURLs) {
-                    // The file upload returns an array of file URLs, we take the first one
                     uploadedUrls.push(response.data.fileURLs[0])
                 } else {
-                    throw new Error(`Failed to upload file: ${selectedFile.file.name} - ${response?.message || 'Unknown error'}`)
+                    throw new Error(`Failed to upload file: ${selectedFile.file.name}`)
                 }
             }
         } catch (error) {
@@ -165,7 +147,6 @@ const EmployeeExpenseCreate: React.FC = () => {
         return uploadedUrls
     }
 
-    // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         
@@ -178,37 +159,39 @@ const EmployeeExpenseCreate: React.FC = () => {
         setUploading(true)
         
         try {
-            // Get employee ID from localStorage
-            const fgGroupInfo = localStorage.getItem('fg_group_info')
+            const fgGroupInfo =
+                localStorage.getItem('fg_group_user_info') ||
+                localStorage.getItem('fg_group_info') ||
+                localStorage.getItem('auth_fg_group')
             let employeeId = null
             if (fgGroupInfo) {
-                const parsedInfo = JSON.parse(fgGroupInfo)
-                employeeId = parsedInfo._id
+                try {
+                    const parsedInfo = JSON.parse(fgGroupInfo)
+                    employeeId = parsedInfo._id || parsedInfo.employee_id
+                } catch (e) {
+                    console.error(e)
+                }
             }
 
             if (!employeeId) {
                 throw new Error('Employee ID not found')
             }
 
-            // Upload files for each expense
             const expenseItems = []
             for (let i = 0; i < expenses.length; i++) {
                 const expense = expenses[i]
                 if (expense.type.trim() && expense.amount && parseFloat(expense.amount) > 0) {
-                    // Upload files for this expense
                     const fileUrls = await uploadFilesForExpense(i)
                     
-                    // Prepend base URL to file paths to create valid URIs
                     const fullFileUrls = fileUrls.map(url => 
                         url.startsWith('http') ? url : `${FG_GROUP_FILE_BASE_URL}/${url}`
                     )
                     
-                    // Add expense with file URLs
                     expenseItems.push({
                         type: expense.type,
                         description: expense.description,
                         amount: parseFloat(expense.amount),
-                        file_url: fullFileUrls.length > 0 ? fullFileUrls[0] : undefined // Take first file URL if exists
+                        file_url: fullFileUrls.length > 0 ? fullFileUrls[0] : undefined
                     })
                 }
             }
@@ -238,22 +221,53 @@ const EmployeeExpenseCreate: React.FC = () => {
     return (
         <>
             <PageTitle breadcrumbs={[]}>Create Expense Report</PageTitle>
-            <KTCard>
-                <div className='card-header border-0 pt-6'>
-                    <div className='card-title'>
-                        <h2>Create Expense Report</h2>
+
+            <div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+                {/* Header */}
+                <div className='card-header border-0 pt-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+                    <div className='d-flex align-items-center gap-3'>
+                        <button
+                            type='button'
+                            className='btn btn-sm btn-light d-flex align-items-center gap-2'
+                            style={{ borderRadius: '8px' }}
+                            onClick={() => navigate('/employee/expenses-list')}
+                            disabled={uploading || loading}>
+                            <i className='bi bi-arrow-left fs-6'></i>
+                            <span>Back</span>
+                        </button>
+                        <div>
+                            <h2 className='fw-bolder text-gray-900 mb-0'>New Expense Report</h2>
+                            <span className='text-muted fs-7'>
+                                Submit a new reimbursement claim with itemized expenses & receipts
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className='d-flex align-items-center gap-3'>
+                        <span className='fs-7 text-muted'>Total Amount:</span>
+                        <span className='fs-4 fw-bolder text-primary'>
+                            ₹{calculateTotalAmount().toLocaleString('en-IN', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}
+                        </span>
                     </div>
                 </div>
-                <div className='card-body'>
+
+                <div className='card-body pt-4'>
                     <Form onSubmit={handleSubmit}>
-                        <Row>
-                            <Col md={12}>
-                                <Form.Group className='mb-6'>
-                                    <Form.Label>Purpose<span className='text-danger'>*</span></Form.Label>
+                        {/* Purpose & Remarks Row */}
+                        <div className='row g-4 mb-6'>
+                            <div className='col-12 col-md-6'>
+                                <Form.Group>
+                                    <Form.Label className='fw-bold text-gray-700 fs-7'>
+                                        Purpose / Report Title <span className='text-danger'>*</span>
+                                    </Form.Label>
                                     <Form.Control
                                         type='text'
-                                        placeholder='Enter purpose of expense report'
+                                        placeholder='e.g., Client Visit Surat, Client Dinner'
                                         value={purpose}
+                                        style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
                                         onChange={(e) => {
                                             setPurpose(e.target.value)
                                             if (errors.purpose) setErrors(prev => ({ ...prev, purpose: '' }))
@@ -264,160 +278,202 @@ const EmployeeExpenseCreate: React.FC = () => {
                                         {errors.purpose}
                                     </Form.Control.Feedback>
                                 </Form.Group>
-                            </Col>
-                        </Row>
+                            </div>
 
-                        <Row>
-                            <Col md={12}>
-                                <Form.Group className='mb-6'>
-                                    <Form.Label>Remarks</Form.Label>
+                            <div className='col-12 col-md-6'>
+                                <Form.Group>
+                                    <Form.Label className='fw-bold text-gray-700 fs-7'>Remarks / Notes (Optional)</Form.Label>
                                     <Form.Control
-                                        as='textarea'
-                                        rows={3}
-                                        placeholder='Enter any additional remarks'
+                                        type='text'
+                                        placeholder='Enter any additional context or notes'
                                         value={remarks}
+                                        style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
                                         onChange={(e) => setRemarks(e.target.value)}
                                     />
                                 </Form.Group>
-                            </Col>
-                        </Row>
+                            </div>
+                        </div>
 
-                        <Card className='mb-6'>
-                            <Card.Header>
-                                <div className='card-title'>
-                                    <h3>Expenses</h3>
+                        {/* Expense Items Box */}
+                        <div className='card border mb-6' style={{ borderRadius: '12px', background: '#fafbfc' }}>
+                            <div className='card-header border-0 pt-4 pb-2 d-flex align-items-center justify-content-between'>
+                                <div className='d-flex align-items-center gap-2'>
+                                    <i className='bi bi-list-check text-primary fs-5'></i>
+                                    <h4 className='fw-bolder text-gray-900 mb-0'>Line Items ({expenses.length})</h4>
                                 </div>
-                                <div className='card-toolbar'>
-                                    <Button 
-                                        variant='primary' 
-                                        onClick={handleAddExpense}
-                                        size='sm'
-                                    >
-                                        <i className='fas fa-plus me-1'></i>Add Expense
-                                    </Button>
-                                </div>
-                            </Card.Header>
-                            <Card.Body>
+                                <button 
+                                    type='button'
+                                    className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-3' 
+                                    onClick={handleAddExpense}
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    <i className='bi bi-plus-lg fs-7'></i>
+                                    <span>Add Expense Item</span>
+                                </button>
+                            </div>
+
+                            <div className='card-body pt-2'>
                                 {expenses.map((expense, index) => (
-                                    <Card key={index} className='mb-4'>
-                                        <Card.Body>
-                                            <Row>
-                                                <Col md={4}>
-                                                    <Form.Group className='mb-3'>
-                                                        <Form.Label>Type<span className='text-danger'>*</span></Form.Label>
-                                                        <Form.Control
-                                                            type='text'
-                                                            placeholder='e.g., Travel, Meal, etc.'
-                                                            value={expense.type}
-                                                            onChange={(e) => handleExpenseChange(index, 'type', e.target.value)}
-                                                        />
-                                                    </Form.Group>
-                                                </Col>
-                                                <Col md={4}>
-                                                    <Form.Group className='mb-3'>
-                                                        <Form.Label>Description</Form.Label>
-                                                        <Form.Control
-                                                            type='text'
-                                                            placeholder='Enter description'
-                                                            value={expense.description}
-                                                            onChange={(e) => handleExpenseChange(index, 'description', e.target.value)}
-                                                        />
-                                                    </Form.Group>
-                                                </Col>
-                                                <Col md={3}>
-                                                    <Form.Group className='mb-3'>
-                                                        <Form.Label>Amount (₹)<span className='text-danger'>*</span></Form.Label>
-                                                        <Form.Control
-                                                            type='number'
-                                                            placeholder='0.00'
-                                                            min='0'
-                                                            step='0.01'
-                                                            value={expense.amount}
-                                                            onChange={(e) => handleExpenseChange(index, 'amount', e.target.value)}
-                                                        />
-                                                    </Form.Group>
-                                                </Col>
-                                                <Col md={1} className='d-flex align-items-center mt-4'>
-                                                    {expenses.length > 1 && (
-                                                        <Button
-                                                            variant='danger'
-                                                            size='sm'
-                                                            onClick={() => handleRemoveExpense(index)}
-                                                        >
-                                                            <i className='fas fa-trash'></i>
-                                                        </Button>
-                                                    )}
-                                                </Col>
-                                            </Row>
+                                    <div 
+                                        key={index} 
+                                        className='p-4 mb-4 rounded-3 border bg-white shadow-xs'
+                                        style={{ borderColor: '#e2e8f0' }}
+                                    >
+                                        <div className='d-flex align-items-center justify-content-between mb-3'>
+                                            <span className='badge badge-light-primary fw-bold fs-7'>
+                                                Item #{index + 1}
+                                            </span>
+                                            {expenses.length > 1 && (
+                                                <button
+                                                    type='button'
+                                                    className='btn btn-icon btn-sm btn-light-danger'
+                                                    style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+                                                    onClick={() => handleRemoveExpense(index)}
+                                                    title='Remove item'
+                                                >
+                                                    <i className='bi bi-trash fs-6'></i>
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <Row className='g-3'>
+                                            <Col md={4}>
+                                                <Form.Group>
+                                                    <Form.Label className='fs-7 fw-semibold text-gray-700'>
+                                                        Expense Type <span className='text-danger'>*</span>
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type='text'
+                                                        placeholder='e.g., Travel, Meal, Fuel'
+                                                        value={expense.type}
+                                                        style={{ height: '38px', borderRadius: '8px', borderColor: '#ded8d2' }}
+                                                        onChange={(e) => handleExpenseChange(index, 'type', e.target.value)}
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+
+                                            <Col md={5}>
+                                                <Form.Group>
+                                                    <Form.Label className='fs-7 fw-semibold text-gray-700'>Description</Form.Label>
+                                                    <Form.Control
+                                                        type='text'
+                                                        placeholder='Brief explanation of expense'
+                                                        value={expense.description}
+                                                        style={{ height: '38px', borderRadius: '8px', borderColor: '#ded8d2' }}
+                                                        onChange={(e) => handleExpenseChange(index, 'description', e.target.value)}
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+
+                                            <Col md={3}>
+                                                <Form.Group>
+                                                    <Form.Label className='fs-7 fw-semibold text-gray-700'>
+                                                        Amount (₹) <span className='text-danger'>*</span>
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type='number'
+                                                        placeholder='0.00'
+                                                        min='0'
+                                                        step='0.01'
+                                                        value={expense.amount}
+                                                        style={{ height: '38px', borderRadius: '8px', borderColor: '#ded8d2' }}
+                                                        onChange={(e) => handleExpenseChange(index, 'amount', e.target.value)}
+                                                    />
+                                                </Form.Group>
+                                            </Col>
+                                        </Row>
+                                        
+                                        {/* File upload for this specific expense */}
+                                        <div className='mt-3 pt-3 border-top border-gray-200'>
+                                            <div className='d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2'>
+                                                <label className='fs-7 fw-semibold text-muted mb-0'>
+                                                    <i className='bi bi-paperclip me-1'></i>
+                                                    Attach receipt/bill (image or PDF)
+                                                </label>
+                                            </div>
+                                            <Form.Control
+                                                type='file'
+                                                multiple
+                                                onChange={(e) => handleFileSelect(e as any, index)}
+                                                disabled={uploading || loading}
+                                                style={{ borderRadius: '8px' }}
+                                            />
                                             
-                                            {/* File upload for this specific expense */}
-                                            <Row>
-                                                <Col md={12}>
-                                                    <Form.Group className='mb-3'>
-                                                        <Form.Label>Upload Receipts/Documents for this expense</Form.Label>
-                                                        <Form.Control
-                                                            type='file'
-                                                            multiple
-                                                            onChange={(e) => handleFileSelect(e as any, index)}
-                                                            disabled={uploading || loading}
-                                                        />
-                                                    </Form.Group>
-                                                    
-                                                    {selectedFiles[index] && selectedFiles[index].length > 0 && (
-                                                        <div className='mt-2'>
-                                                            <h6>Selected Files:</h6>
-                                                            <div className='d-flex flex-wrap gap-2'>
-                                                                {selectedFiles[index].map((selectedFile, fileIndex) => (
-                                                                    <div key={fileIndex} className='d-flex align-items-center border rounded p-2'>
-                                                                        <span className='me-2'>{selectedFile.file.name}</span>
-                                                                        <Button
-                                                                            variant='danger'
-                                                                            size='sm'
-                                                                            onClick={() => handleRemoveFile(index, fileIndex)}
-                                                                            disabled={uploading || loading}
-                                                                        >
-                                                                            <i className='fas fa-times'></i>
-                                                                        </Button>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
+                                            {selectedFiles[index] && selectedFiles[index].length > 0 && (
+                                                <div className='mt-2 d-flex flex-wrap gap-2'>
+                                                    {selectedFiles[index].map((selectedFile, fileIndex) => (
+                                                        <div 
+                                                            key={fileIndex} 
+                                                            className='d-flex align-items-center bg-light border rounded px-3 py-1 gap-2'
+                                                        >
+                                                            <i className='bi bi-file-earmark-check text-success'></i>
+                                                            <span className='fs-8 fw-semibold text-gray-800' style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {selectedFile.file.name}
+                                                            </span>
+                                                            <button
+                                                                type='button'
+                                                                className='btn btn-icon btn-xs btn-light-danger p-0'
+                                                                style={{ width: '20px', height: '20px', borderRadius: '4px' }}
+                                                                onClick={() => handleRemoveFile(index, fileIndex)}
+                                                                disabled={uploading || loading}
+                                                            >
+                                                                <i className='bi bi-x fs-7'></i>
+                                                            </button>
                                                         </div>
-                                                    )}
-                                                </Col>
-                                            </Row>
-                                        </Card.Body>
-                                    </Card>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 ))}
                                 
                                 {errors.expenses && (
-                                    <div className='text-danger mb-3'>{errors.expenses}</div>
+                                    <div className='alert alert-danger py-2 px-3 fs-7 mb-3'>{errors.expenses}</div>
                                 )}
-                                
-                                <div className='d-flex justify-content-end'>
-                                    <h4>Total Amount: ₹{calculateTotalAmount().toFixed(2)}</h4>
-                                </div>
-                            </Card.Body>
-                        </Card>
+                            </div>
+                        </div>
 
-                        <div className='d-flex justify-content-end gap-3'>
-                            <Button 
-                                variant='secondary' 
-                                onClick={() => navigate('/employee/expenses-list')}
-                                disabled={uploading || loading}
-                            >
-                                Cancel
-                            </Button>
-                            <Button 
-                                variant='primary' 
-                                type='submit'
-                                disabled={uploading || loading}
-                            >
-                                {uploading ? 'Creating...' : 'Create Expense Report'}
-                            </Button>
+                        {/* Footer Action Buttons */}
+                        <div className='d-flex align-items-center justify-content-between pt-4 border-top'>
+                            <div className='d-flex align-items-center gap-2'>
+                                <span className='text-muted fs-7'>Total Claim:</span>
+                                <span className='fs-3 fw-bolder text-primary'>
+                                    ₹{calculateTotalAmount().toLocaleString('en-IN', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })}
+                                </span>
+                            </div>
+
+                            <div className='d-flex gap-3'>
+                                <Button 
+                                    variant='light' 
+                                    onClick={() => navigate('/employee/expenses-list')}
+                                    disabled={uploading || loading}
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    variant='primary' 
+                                    type='submit'
+                                    disabled={uploading || loading}
+                                    style={{ borderRadius: '8px', minWidth: '150px' }}
+                                >
+                                    {uploading || loading ? (
+                                        <span className='d-flex align-items-center gap-2'>
+                                            <span className='spinner-border spinner-border-sm' role='status' aria-hidden='true'></span>
+                                            <span>Submitting...</span>
+                                        </span>
+                                    ) : (
+                                        'Create Expense Report'
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </Form>
                 </div>
-            </KTCard>
+            </div>
         </>
     )
 }

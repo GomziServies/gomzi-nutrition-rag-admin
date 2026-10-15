@@ -9,6 +9,7 @@ import DateFilter from '../../../components/DateRangePicker'
 import SearchFilter from '../../../components/SearchFilter'
 import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
+import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import {
@@ -528,24 +529,22 @@ const ExpenseReportsList: React.FC = () => {
 												{DayJS(report.createdAt).format('DD/MM/YYYY')}
 											</span>
 										</td>
-										<td>
-											<div className='d-flex align-items-center gap-2'>
-												<button
-													className='btn btn-info btn-sm'
+										<td className='text-center py-4'>
+											<div className='d-flex align-items-center justify-content-center gap-2'>
+												<TableButton
+													action='view'
 													onClick={(e) => {
 														e.stopPropagation()
 														handleViewReport(report._id)
-													}}>
-													<i className='fas fa-eye p-0'></i>
-												</button>
-												<button
-													className='btn btn-danger btn-sm'
+													}}
+												/>
+												<TableButton
+													action='remove'
 													onClick={(e) => {
 														e.stopPropagation()
 														handleDeleteReport(report._id, report.purpose)
-													}}>
-													<i className='fas fa-trash p-0'></i>
-												</button>
+													}}
+												/>
 											</div>
 										</td>
 									</tr>

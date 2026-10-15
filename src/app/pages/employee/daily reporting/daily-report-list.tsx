@@ -1,22 +1,36 @@
-import { faPlusCircle, faStar } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faPlusCircle, faStar } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Form, Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import * as XLSX from 'xlsx'
 import { KTCard, KTIcon } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
-import InputField from '../../../components/InputField'
+import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
+import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { FileUploadToFGGroup, GetEmployeeRating } from '../../../Functions/FGGroup'
 import {
 	CreateDailyReporting,
 	GetDailyReporting,
 } from '../../../Functions/FGGroup/DailyTaskReporting'
+
+const getStoredEmployee = () => {
+	try {
+		const raw =
+			localStorage.getItem('fg_group_user_info') ||
+			localStorage.getItem('fg_group_info') ||
+			localStorage.getItem('auth_fg_group')
+		return raw ? JSON.parse(raw) : {}
+	} catch {
+		return {}
+	}
+}
 
 interface PaginationState {
 	page: number
@@ -108,8 +122,10 @@ const DailyReportList: React.FC = () => {
 		}
 
 		try {
+			const employee = getStoredEmployee()
+			const adminId = employee._id || employee.employee_id || ''
 			const response = await GetDailyReporting({
-				admin_id: JSON.parse(localStorage.getItem('fg_group_info') || '{}')._id,
+				admin_id: adminId,
 				page: page || pagination?.page || 1,
 				limit: pagination?.itemsPerPage || 10,
 				search: searchTerm || '',
@@ -162,8 +178,7 @@ const DailyReportList: React.FC = () => {
 
 	const [rattingData, setRattingData] = useState<any>([])
 	const fetchRattingData = async () => {
-		let employeeData: any = localStorage.getItem('fg_group_info')
-		employeeData = JSON.parse(employeeData)
+		const employeeData: any = getStoredEmployee()
 		setLoading(true)
 		try {
 			let startDate: any = null
@@ -260,7 +275,7 @@ const DailyReportList: React.FC = () => {
 				task_title: taskName,
 				remarks: remark,
 				file_url: fileUrls,
-				admin_id: JSON.parse(localStorage.getItem('fg_group_info') || '{}')._id,
+				admin_id: getStoredEmployee()._id,
 				url: urls, // urls array already contains objects with url_type and link
 			}
 
@@ -433,72 +448,198 @@ const DailyReportList: React.FC = () => {
 		navigate(`/employee/daily-report-view?id=${taskId}`)
 	}
 
+	const handleExportExcel = () => {
+		if (!filteredTaskData || filteredTaskData.length === 0) {
+			toast.error('No reports found to export')
+			return
+		}
+		const worksheetData = filteredTaskData.map((task: any, index: number) => {
+			let filesCount = 0
+			if (Array.isArray(task.file_url)) {
+				filesCount = task.file_url.filter(Boolean).length
+			} else if (task.file_url) {
+				filesCount = 1
+			}
+			let urlsCount = 0
+			if (Array.isArray(task.url)) {
+				urlsCount = task.url.reduce((subAcc: number, item: any) => {
+					return subAcc + (Array.isArray(item) ? item.length : 1)
+				}, 0)
+			}
+
+			return {
+				'No.': index + 1,
+				'Task Title': task.task_title || '-',
+				'Remarks': task.remarks || '-',
+				'Created Date': task.createdAt ? DayJS(task.createdAt).format('DD/MM/YYYY hh:mm A') : '-',
+				'Files Attached': filesCount,
+				'Links Attached': urlsCount,
+			}
+		})
+		const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+		const workbook = XLSX.utils.book_new()
+		XLSX.utils.book_append_sheet(workbook, worksheet, 'Daily Work Reports')
+		XLSX.writeFile(workbook, `Daily_Work_Reports_${DayJS().format('YYYY-MM-DD')}.xlsx`)
+		toast.success('Excel downloaded successfully')
+	}
+
+	const rawRating = Array.isArray(rattingData) ? rattingData[0]?.rating : rattingData?.rating
+	const ratingScore =
+		rawRating !== undefined && rawRating !== null && rawRating !== '' && !isNaN(Number(rawRating))
+			? Number(rawRating) <= 5
+				? `${Number(rawRating).toFixed(1)} / 5`
+				: `${(Number(rawRating) / 20).toFixed(1)} / 5`
+			: 'N/A'
+
+	const totalLinksAndFiles = (assignTaskData || []).reduce((acc: number, task: any) => {
+		let filesCount = 0
+		if (Array.isArray(task.file_url)) {
+			filesCount = task.file_url.filter(Boolean).length
+		} else if (task.file_url) {
+			filesCount = 1
+		}
+		let urlsCount = 0
+		if (Array.isArray(task.url)) {
+			urlsCount = task.url.reduce((subAcc: number, item: any) => {
+				return subAcc + (Array.isArray(item) ? item.length : 1)
+			}, 0)
+		}
+		return acc + filesCount + urlsCount
+	}, 0)
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Daily Reporting</PageTitle>
-			<KTCard>
-				<h2 className='m-6 mb-0'>Daily Reports</h2>
-				<div className='row card-header border-0 pt-0 align-items-center ms-0 mx-md-6 p-0'>
-					<div className='col-md-9'>
-						<div className='row mt-3 justify-content-between'>
-							<div className='col-md-12 mt-md-7 d-flex justify-content-between align-items-center card-toolbar'>
-								<div className='col-md-4 col-lg-3 fv-row'>
-									<label className='form-label fs-7 fw-bold text-gray-700 mb-1 d-block'>
-										Task Rating
-									</label>
-									{(() => {
-										const raw = Array.isArray(rattingData) ? rattingData[0]?.rating : rattingData?.rating
-										const num = raw !== undefined && raw !== null && raw !== '' && !isNaN(Number(raw)) ? Number(raw) : null
-										const stars = num !== null ? (num <= 5 ? Math.round(num) : Math.max(0, Math.min(5, Math.round((num / 100) * 5)))) : 0
-										return (
-											<div
-												className='d-flex align-items-center rounded px-3 py-2 border'
-												style={{ minHeight: '40px', background: '#faf8f5', borderColor: 'var(--gz-border)' }}>
-												<div className='d-flex align-items-center gap-1'>
-													{[1, 2, 3, 4, 5].map((s) => (
-														<FontAwesomeIcon
-															key={s}
-															icon={faStar as any}
-															className='fs-6'
-															style={{ color: s <= stars ? '#f59e0b' : '#d1d5db' }}
-														/>
-													))}
-												</div>
-												<span className='ms-2 fs-7 fw-bold text-gray-800'>
-													{num !== null ? `${num <= 5 ? num : Math.round(num / 20)}/5` : 'No rating'}
-												</span>
-											</div>
-										)
-									})()}
-								</div>
-								<div className='d-md-flex'>
-									<DateFilter
-										onDateRangeChange={handleDateRangeChange}
-										leftValue='-270px'
-									/>
-									<div className='mt-md-0 mt-4 me-md-3 me-0'>
-										<button
-											onClick={() => setShowModal(true)}
-											className='ms-md-3 mt-md-1 btn btn-primary btn-sm w-md-20 w-100'>
-											<KTIcon
-												iconName='plus'
-												className='fs-2'
-											/>
-											Add Daily Report
-										</button>
-									</div>
-								</div>
-							</div>
+
+			{/* Top Header Card */}
+			<div className='card shadow-sm border-0 mb-6' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-body p-5 d-flex flex-wrap align-items-center justify-content-between gap-4'>
+					<div className='d-flex align-items-center gap-3'>
+						<div
+							className='rounded-3 d-flex align-items-center justify-content-center'
+							style={{
+								width: '46px',
+								height: '46px',
+								backgroundColor: '#eff6ff',
+								color: '#2563eb',
+							}}>
+							<i className='bi bi-file-earmark-text fs-2 text-primary'></i>
+						</div>
+						<div>
+							<h3 className='fw-bold text-gray-900 fs-3 mb-1'>Daily Work Reports</h3>
+							<span className='text-muted fs-7'>
+								Log daily work summaries, submit proof of work, and track performance scores
+							</span>
 						</div>
 					</div>
-					<div className='col-md-3 mt-md-7 mt-2 d-flex align-items-center position-relative ps-0'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-						/>
+
+					<button
+						onClick={() => setShowModal(true)}
+						className='btn btn-primary d-flex align-items-center gap-2 px-5 py-2.5 fw-bold'
+						style={{
+							height: '38px',
+							borderRadius: '10px',
+							fontSize: '14px',
+						}}>
+						<i className='bi bi-plus-lg fs-6'></i>
+						<span>Add Daily Report</span>
+					</button>
+				</div>
+			</div>
+
+			{/* Metric KPI Cards */}
+			<div className='row g-4 mb-6'>
+				<div className='col-12 col-md-4'>
+					<div
+						className='card border-0 shadow-sm h-100 p-5'
+						style={{ borderRadius: '14px', background: '#ffffff' }}>
+						<div className='d-flex align-items-center justify-content-between mb-2'>
+							<span className='text-muted fs-8 fw-boldest text-uppercase letter-spacing-1'>Total Reports</span>
+							<div
+								className='rounded-3 d-flex align-items-center justify-content-center'
+								style={{ width: '34px', height: '34px', backgroundColor: '#eff6ff' }}>
+								<i className='bi bi-file-earmark-text fs-6 text-primary'></i>
+							</div>
+						</div>
+						<div className='fs-2hx fw-boldest text-gray-900'>{assignTaskData?.length || 0}</div>
 					</div>
 				</div>
 
+				<div className='col-12 col-md-4'>
+					<div
+						className='card border-0 shadow-sm h-100 p-5'
+						style={{ borderRadius: '14px', background: '#ffffff' }}>
+						<div className='d-flex align-items-center justify-content-between mb-2'>
+							<span className='text-muted fs-8 fw-boldest text-uppercase letter-spacing-1'>Task Rating Score</span>
+							<div
+								className='rounded-3 d-flex align-items-center justify-content-center'
+								style={{ width: '34px', height: '34px', backgroundColor: '#fffbeb' }}>
+								<i className='bi bi-star-fill fs-6 text-warning'></i>
+							</div>
+						</div>
+						<div className='fs-2hx fw-boldest text-gray-900'>{ratingScore}</div>
+					</div>
+				</div>
+
+				<div className='col-12 col-md-4'>
+					<div
+						className='card border-0 shadow-sm h-100 p-5'
+						style={{ borderRadius: '14px', background: '#ffffff' }}>
+						<div className='d-flex align-items-center justify-content-between mb-2'>
+							<span className='text-muted fs-8 fw-boldest text-uppercase letter-spacing-1'>Submitted Links/Files</span>
+							<div
+								className='rounded-3 d-flex align-items-center justify-content-center'
+								style={{ width: '34px', height: '34px', backgroundColor: '#f0fdfa' }}>
+								<i className='bi bi-link-45deg fs-5 text-info'></i>
+							</div>
+						</div>
+						<div className='fs-2hx fw-boldest text-gray-900'>{totalLinksAndFiles}</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Filter Toolbar Card with Specific Sequence */}
+			<div className='card shadow-sm border-0 mb-6' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-body p-4 d-flex align-items-center flex-wrap gap-3'>
+					{/* 1. Searchbar */}
+					<div style={{ minWidth: '220px', maxWidth: '320px', flex: '1 1 220px' }}>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search...'
+						/>
+					</div>
+
+					{/* 2. Pagination Dropdown */}
+					<LengthMenu
+						expenseData={filteredTaskData}
+						handleItemsPerPageChange={(val) => setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))}
+					/>
+
+					{/* 3. Excel Download Button */}
+					<button
+						type='button'
+						className='gz-toolbar-icon-btn'
+						title='Download Excel'
+						onClick={handleExportExcel}>
+						<FontAwesomeIcon icon={faDownload} />
+					</button>
+
+					{/* Spacer */}
+					<div className='d-none d-md-block' style={{ flexGrow: 1 }}></div>
+
+					{/* 5. Date Filter (at last) */}
+					<div>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							leftValue='-270px'
+						/>
+					</div>
+				</div>
+			</div>
+
+			{/* Table Card */}
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
 				{submitLoading && (
 					<div className='loader-background'>
 						<div
@@ -523,49 +664,44 @@ const DailyReportList: React.FC = () => {
 								<React.Fragment key={task._id}>
 									<tr
 										onClick={() => handleRowClick(task._id)}
-										className='data-row'>
-										<td className='text-center'>
-											<div className='d-flex'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
+										className='data-row'
+										style={{ verticalAlign: 'middle', borderBottom: '1px dashed #e4e6ef' }}>
+										<td className='text-center py-4'>
+											<span className='fw-bold text-gray-800 fs-7'>
+												{actualIndex}
+											</span>
+										</td>
+										<td className='py-4'>
+											<span
+												className='text-gray-900 fw-bold fs-7 cursor-pointer text-hover-primary'
+												onClick={() => handlenavigate(task._id)}>
+												{task.task_title || '-'}
+											</span>
+										</td>
+										<td className='py-4'>
+											<span className='text-muted fs-7' title={task.remarks} style={{ maxWidth: '420px', display: 'inline-block' }}>
+												{truncateString(task.remarks, 75) || '-'}
+											</span>
+										</td>
+										<td className='py-4 text-gray-700 fs-7'>
+											{task.createdAt ? DayJS(task.createdAt).format('DD/MM/YYYY') : '-'}
+										</td>
+										<td className='text-center py-4'>
+											<div className='d-flex align-items-center justify-content-center gap-2'>
+												<TableButton
+													action='view'
+													onClick={(e) => {
+														e.stopPropagation()
+														handlenavigate(task._id)
+													}}
 												/>
-												<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-													{actualIndex}
-												</span>
-											</div>
-										</td>
-										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-												{task.task_title}
-											</span>
-										</td>
-										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-												{task.remarks}
-											</span>
-										</td>
-										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-												{DayJS(task.createdAt).format('DD/MM/YYYY')}
-											</span>
-										</td>
-										<td>
-											<div className='d-flex align-items-center gap-2'>
-												<button
-													className='btn btn-info btn-sm'
-													onClick={() => handlenavigate(task._id)}>
-													<i className='fas fa-eye p-0'></i>
-												</button>
-												<button
-													className='btn btn-success btn-sm'
+												<TableButton
+													action='edit'
 													onClick={(e) => {
 														e.stopPropagation()
 														navigate(`/employee/daily-report-update?id=${task._id}`)
-													}}>
-													<i className='fas fa-pencil p-0'></i>
-												</button>
+													}}
+												/>
 											</div>
 										</td>
 									</tr>
@@ -755,211 +891,176 @@ const DailyReportList: React.FC = () => {
 					)}
 
 					{paginatedTaskData.length > 0 && (
-						<UsersListPagination
-							totalPages={Math.ceil((filteredTaskData?.length || 0) / pagination.itemsPerPage)}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
+						<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+							<div className='text-muted fs-7 fw-semibold'>
+								Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, filteredTaskData.length)} to{' '}
+								{Math.min(pagination.page * pagination.itemsPerPage, filteredTaskData.length)} of {filteredTaskData.length} reports
+							</div>
+							<UsersListPagination
+								totalPages={Math.ceil((filteredTaskData?.length || 0) / pagination.itemsPerPage)}
+								currentPage={pagination.page}
+								onPageChange={handlePageChange}
+							/>
+						</div>
 					)}
 				</div>
-			</KTCard>
+			</div>
 
 			<Modal
 				show={showModal}
 				onHide={() => setShowModal(false)}
-				centered>
-				<Modal.Header closeButton>
-					<Modal.Title>Add Daily Report</Modal.Title>
+				centered
+				size='lg'>
+				<Modal.Header closeButton className='border-0 pb-0 pt-6 px-6'>
+					<div>
+						<Modal.Title className='fw-bolder text-gray-900 fs-4 mb-1'>Add Daily Report</Modal.Title>
+						<span className='text-muted fs-7'>Submit your daily deliverables, work progress notes, and proof files</span>
+					</div>
 				</Modal.Header>
-				<Modal.Body>
-					{/* Form fields */}
+				<Modal.Body className='px-6 py-4'>
 					<Form onSubmit={handleSubmit}>
-						<Form.Group
-							className='mb-3'
-							controlId='taskTitle'>
-							<Form.Label>Task Title</Form.Label>
+						<Form.Group className='mb-4' controlId='taskTitle'>
+							<Form.Label className='fw-bold text-gray-700 fs-7'>
+								Task Deliverable Title <span className='text-danger'>*</span>
+							</Form.Label>
 							<Form.Control
 								type='text'
-								placeholder='Enter task title'
+								placeholder='e.g., Completed API integration for expenses module'
 								name='taskName'
 								value={taskFormData.taskName}
 								onChange={handleInputTask}
+								style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
 								required
 							/>
 						</Form.Group>
 
-						<Form.Group
-							className='mb-3'
-							controlId='remark'>
-							<Form.Label>Remarks</Form.Label>
+						<Form.Group className='mb-4' controlId='remark'>
+							<Form.Label className='fw-bold text-gray-700 fs-7'>
+								Remarks / Deliverables Summary <span className='text-danger'>*</span>
+							</Form.Label>
 							<Form.Control
 								as='textarea'
-								rows={10} // you can adjust number of visible rows
-								placeholder='Type your remarks here'
+								rows={5}
+								placeholder='Type your remarks and deliverables summary here...'
 								name='remark'
 								value={taskFormData.remark}
 								onChange={handleInputTask}
+								style={{ borderRadius: '8px', borderColor: '#ded8d2' }}
 								required
 							/>
 						</Form.Group>
 
-						<Form.Group controlId='file'>
-							<Form.Label>File Upload</Form.Label>
+						<Form.Group controlId='file' className='mb-4'>
+							<Form.Label className='fw-bold text-gray-700 fs-7'>File Upload (Optional)</Form.Label>
 							<Form.Control
 								type='file'
 								name='file'
 								onChange={handleInputTask}
 								multiple
 								ref={fileInputRef}
+								style={{ borderRadius: '8px' }}
 							/>
-							<small className='text-muted'>
-								Upload only <strong>images (jpg, png)</strong> or <strong>PDF files</strong>.
+							<small className='text-muted mt-1 d-block fs-8'>
+								Upload only <strong>images (jpg, png)</strong> or <strong>PDF/docs/sheets</strong>.
 							</small>
 							{taskFormData.files.length > 0 && (
-								<div className='mt-2'>
-									<p className='mb-2'>Selected Files ({taskFormData.files.length}):</p>
-									<div className='d-flex flex-wrap gap-3'>
-										{taskFormData.files.map((file, index) => {
-											const fileName = file.name
-											const isExcelFile = fileName.toLowerCase().match(/\.(xlsx|xls|csv)$/)
-											const isPdfFile = fileName.toLowerCase().endsWith('.pdf')
-											const isImageFile = fileName.toLowerCase().match(/\.(jpg|jpeg|png|gif|svg)$/)
-											const isWordFile = fileName.toLowerCase().match(/\.(doc|docx)$/)
-
-											const removeBtn = (
+								<div className='mt-3'>
+									<p className='fs-8 fw-bold text-gray-700 mb-2'>Selected Files ({taskFormData.files.length}):</p>
+									<div className='d-flex flex-wrap gap-2'>
+										{taskFormData.files.map((file, index) => (
+											<div key={index} className='d-flex align-items-center bg-light border rounded px-3 py-1 gap-2'>
+												<i className='bi bi-file-earmark-check text-primary'></i>
+												<span className='fs-8 fw-semibold text-gray-800' style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+													{file.name}
+												</span>
 												<button
 													type='button'
-													className='btn btn-icon btn-bg-light btn-active-color-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle'
-													onClick={() => removeFile(index)}
-													style={{ zIndex: 10, width: '25px', height: '25px' }}
-													title='Remove file'>
-													<i className='fas fa-times fs-6'></i>
+													className='btn btn-icon btn-xs btn-light-danger p-0'
+													style={{ width: '20px', height: '20px', borderRadius: '4px' }}
+													onClick={() => removeFile(index)}>
+													<i className='bi bi-x fs-7'></i>
 												</button>
-											)
-
-											return (
-												<div
-													key={index}
-													className='border rounded p-2'>
-													{isPdfFile ? (
-														<div
-															className='position-relative d-flex flex-column align-items-center p-3 border rounded border-warning bg-light-warning'
-															style={{ width: '150px' }}>
-															{removeBtn}
-															<i className='fas fa-file-pdf text-warning fs-1 mb-2'></i>
-															<span className='text-warning fw-bold small text-center text-truncate w-100'>
-																{fileName}
-															</span>
-														</div>
-													) : isExcelFile ? (
-														<div
-															className='position-relative d-flex flex-column align-items-center p-3 border rounded border-success bg-light-success'
-															style={{ width: '150px' }}>
-															{removeBtn}
-															<i className='fas fa-file-excel text-success fs-1 mb-2'></i>
-															<span className='text-success fw-bold small text-center text-truncate w-100'>
-																{fileName}
-															</span>
-														</div>
-													) : isImageFile ? (
-														<div
-															className='position-relative text-center'
-															style={{ width: '150px', height: '150px' }}>
-															{removeBtn}
-															<img
-																src={URL.createObjectURL(file)}
-																alt={`Selected File ${index + 1}`}
-																style={{ width: '150px', height: '150px', objectFit: 'cover' }}
-																className='rounded'
-															/>
-														</div>
-													) : isWordFile ? (
-														<div
-															className='position-relative d-flex flex-column align-items-center p-3 border rounded border-primary bg-light-primary'
-															style={{ width: '150px' }}>
-															{removeBtn}
-															<i className='fas fa-file-word text-primary fs-1 mb-2'></i>
-															<span className='text-primary fw-bold small text-center text-truncate w-100'>
-																{fileName}
-															</span>
-														</div>
-													) : (
-														<div
-															className='position-relative d-flex flex-column align-items-center p-3 border rounded border-secondary bg-light'
-															style={{ width: '150px' }}>
-															{removeBtn}
-															<i className='fas fa-file text-secondary fs-1 mb-2'></i>
-															<span className='text-secondary fw-bold small text-center text-truncate w-100'>
-																{fileName}
-															</span>
-														</div>
-													)}
-												</div>
-											)
-										})}
+											</div>
+										))}
 									</div>
 								</div>
 							)}
 						</Form.Group>
 
 						{/* URL Section */}
-						<div className='mt-4'>
+						<div className='mt-4 pt-3 border-top'>
 							<div className='d-flex justify-content-between align-items-center mb-3'>
-								<Form.Label>URLs</Form.Label>
-								<Button
-									variant='success'
-									size='sm'
+								<div>
+									<Form.Label className='fw-bold text-gray-700 fs-7 mb-0'>Deliverable Web URLs</Form.Label>
+									<span className='text-muted fs-8 d-block'>Attach PR links, Figma links, or cloud docs</span>
+								</div>
+								<button
+									type='button'
+									className='btn btn-sm btn-light-primary d-flex align-items-center gap-1 px-3'
+									style={{ borderRadius: '8px' }}
 									onClick={addNewUrl}>
-									<i className='fas fa-plus p-0'></i> Add URL
-								</Button>
+									<i className='bi bi-plus-lg fs-7'></i>
+									<span>Add URL</span>
+								</button>
 							</div>
 							{urls.map((url, index) => (
-								<div
-									key={index}
-									className='mb-3 border rounded p-3 position-relative'>
-									<div className='mb-2'>
-										<Form.Label>File Name</Form.Label>
-										<div className='d-flex gap-2 align-items-center'>
+								<div key={index} className='mb-3 border rounded-3 p-3 bg-light'>
+									<div className='row g-2 align-items-end'>
+										<div className='col-md-4'>
+											<Form.Label className='fs-8 fw-bold text-gray-700 mb-1'>Link Label</Form.Label>
 											<Form.Control
 												type='text'
-												placeholder='e.g., reference, design'
+												placeholder='e.g., Figma, Pull Request'
 												value={url.url_type}
 												onChange={(e) => handleUrlChange(index, 'url_type', e.target.value)}
+												style={{ height: '36px', borderRadius: '8px', borderColor: '#ded8d2' }}
 											/>
-											<Button
-												variant='danger'
-												size='sm'
-												className=' m-2'
-												onClick={() => removeUrl(index)}>
-												<i className='fas fa-times p-0'></i>
-											</Button>
 										</div>
-									</div>
-
-									<div>
-										<Form.Label>URL</Form.Label>
-										<Form.Control
-											type='url'
-											placeholder='https://example.com'
-											value={url.link}
-											onChange={(e) => handleUrlChange(index, 'link', e.target.value)}
-										/>
+										<div className='col-md-7'>
+											<Form.Label className='fs-8 fw-bold text-gray-700 mb-1'>URL</Form.Label>
+											<Form.Control
+												type='url'
+												placeholder='https://...'
+												value={url.link}
+												onChange={(e) => handleUrlChange(index, 'link', e.target.value)}
+												style={{ height: '36px', borderRadius: '8px', borderColor: '#ded8d2' }}
+											/>
+										</div>
+										<div className='col-md-1 d-flex justify-content-end'>
+											<button
+												type='button'
+												className='btn btn-icon btn-sm btn-light-danger'
+												style={{ width: '36px', height: '36px', borderRadius: '8px' }}
+												onClick={() => removeUrl(index)}>
+												<i className='bi bi-trash fs-7'></i>
+											</button>
+										</div>
 									</div>
 								</div>
 							))}
 						</div>
 					</Form>
 				</Modal.Body>
-				<Modal.Footer>
+				<Modal.Footer className='border-0 pt-0 pb-6 px-6'>
 					<Button
-						variant='secondary'
+						variant='light'
+						style={{ borderRadius: '8px' }}
 						onClick={() => setShowModal(false)}>
-						Close
+						Cancel
 					</Button>
 					<Button
 						variant='primary'
-						onClick={handleSubmit}>
-						Add Daily Report
+						style={{ borderRadius: '8px', minWidth: '150px' }}
+						onClick={handleSubmit}
+						disabled={submitLoading}>
+						{submitLoading ? (
+							<span className='d-flex align-items-center gap-2'>
+								<span className='spinner-border spinner-border-sm' role='status' aria-hidden='true'></span>
+								<span>Saving...</span>
+							</span>
+						) : (
+							'Add Daily Report'
+						)}
 					</Button>
 				</Modal.Footer>
 			</Modal>

@@ -439,43 +439,46 @@ const NutritionTotalSalesList: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Total Sales</PageTitle>
-			<div className='row g-5 g-xl-8'>
+			<div className='row g-4 mb-6'>
 				<div
-					className='col-lg-3'
+					className='col-12 col-md-4'
 					role='button'
 					onClick={() => getFilterAmount('Total Amount')}>
 					<StatisticsWidget2
-						className='card-xl-stretch mb-5 mb-xl-8'
+						className={`h-100 ${selectedFilter === 'Total Amount' ? 'gz-card-active' : ''}`}
 						Icon={faBuildingColumns}
 						color='primary'
-						title={dataInsight?.total_amount ? dataInsight?.total_amount : '0/-'}
+						title={dataInsight?.total_amount ? dataInsight?.total_amount : 0}
 						description='Total Amount'
+						badgeText={selectedFilter === 'Total Amount' ? 'Filtered' : undefined}
 					/>
 				</div>
 
 				<div
-					className='col-lg-3'
+					className='col-12 col-md-4'
 					role='button'
 					onClick={() => getFilterAmount('Paid Amount')}>
 					<StatisticsWidget2
-						className='card-xl-stretch mb-xl-8'
+						className={`h-100 ${selectedFilter === 'Paid Amount' ? 'gz-card-active' : ''}`}
 						Icon={faDollarSign}
-						color='primary'
-						title={dataInsight?.total_paid_amount ? dataInsight?.total_paid_amount : '0/-'}
+						color='success'
+						title={dataInsight?.total_paid_amount ? dataInsight?.total_paid_amount : 0}
 						description='Paid Amount'
+						badgeText={selectedFilter === 'Paid Amount' ? 'Filtered' : undefined}
 					/>
 				</div>
 
 				<div
-					className='col-lg-3'
+					className='col-12 col-md-4'
 					role='button'
 					onClick={() => getFilterAmount('Due Amount')}>
 					<StatisticsWidget2
-						className='card-xl-stretch mb-xl-8'
+						className={`h-100 ${selectedFilter === 'Due Amount' ? 'gz-card-active' : ''}`}
 						Icon={faCircleDollarToSlot}
-						color='primary'
-						title={dataInsight?.total_unpaid_amount ? dataInsight?.total_unpaid_amount : '0/-'}
+						color='danger'
+						title={dataInsight?.total_unpaid_amount ? dataInsight?.total_unpaid_amount : 0}
 						description='Due Amount'
+						badgeText={selectedFilter === 'Due Amount' ? 'Filtered' : undefined}
 					/>
 				</div>
 			</div>
@@ -525,11 +528,11 @@ const NutritionTotalSalesList: React.FC = () => {
 				</div>
 
 				{/* Filters */}
-				<div className='card-body pt-2 pb-4 px-6'>
-					<div className='row g-4 align-items-end'>
+				<div className='card-body pt-2 pb-5 px-6'>
+					<div className='row g-3 align-items-end'>
 						{/* Search */}
-						<div className='col-12 col-md-4 col-lg-3'>
-							<label className='form-label fw-bold'>Search</label>
+						<div className='col-12 col-md-6 col-lg-3'>
+							<label className='form-label fw-bold gz-filter-label'>Search</label>
 
 							<SearchFilter
 								searchTerm={searchTerm}
@@ -540,15 +543,14 @@ const NutritionTotalSalesList: React.FC = () => {
 
 						{/* Store */}
 						{adminType !== 'Store' && (
-							<div className='col-12 col-md-4 col-lg-3'>
-								<label className='form-label fw-bold'>Select Store</label>
+							<div className='col-12 col-md-6 col-lg-3'>
+								<label className='form-label fw-bold gz-filter-label'>Select Store</label>
 
 								<select
 									name='Select Store'
-									className='form-select'
+									className='form-select gz-filter-select'
 									value={selectedBranch}
-									onChange={(e) => handleSetStoreInvoice(e.target.value)}
-									style={{ height: '48px' }}>
+									onChange={(e) => handleSetStoreInvoice(e.target.value)}>
 									<option value='default'>Select Store</option>
 
 									{branchesData.map((branch: any) => (
@@ -563,15 +565,14 @@ const NutritionTotalSalesList: React.FC = () => {
 						)}
 
 						{/* Sales Person */}
-						<div className='col-12 col-md-4 col-lg-3'>
-							<label className='form-label fw-bold'>Sales Person</label>
+						<div className='col-12 col-md-6 col-lg-3'>
+							<label className='form-label fw-bold gz-filter-label'>Sales Person</label>
 
 							<select
 								name='Select Sales Person'
-								className='form-select'
+								className='form-select gz-filter-select'
 								value={selectedSalesPerson}
-								onChange={(e) => setSelectedSalesPerson(e.target.value)}
-								style={{ height: '48px' }}>
+								onChange={(e) => setSelectedSalesPerson(e.target.value)}>
 								<option value='default'>Select Sales Person</option>
 
 								{salesPersonList.map((item: any) => (
@@ -585,10 +586,10 @@ const NutritionTotalSalesList: React.FC = () => {
 						</div>
 
 						{/* Date Range */}
-						<div className='col-12 col-md-4 col-lg-3'>
-							<label className='form-label fw-bold'>Purchase Date</label>
+						<div className='col-12 col-md-6 col-lg-3'>
+							<label className='form-label fw-bold gz-filter-label'>Purchase Date</label>
 
-							<div style={{ height: '48px' }}>
+							<div className='w-100'>
 								<DateFilter
 									onDateRangeChange={handleDateRangeChange}
 									rightValue='0'

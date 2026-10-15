@@ -39,83 +39,159 @@ const TablesWidget: React.FC<Props> = ({ className }) => {
 		fetchEmployeeData()
 	}, [])
 
+	const [searchTerm, setSearchTerm] = useState('')
+
+	const filteredEmployees = employeeData.filter((emp: any) => {
+		if (!searchTerm) return true
+		const q = searchTerm.toLowerCase()
+		return (
+			emp.name?.toLowerCase().includes(q) ||
+			emp.position?.toLowerCase().includes(q) ||
+			emp.email?.toLowerCase().includes(q) ||
+			emp.mobile?.toString().includes(q)
+		)
+	})
+
 	return (
-		<div
-			className={`card ${className}`}
-			style={{ height: '524px' }}>
-			<div className='card-header border-0 pt-5'>
-				<h3 className='card-title align-items-start flex-column'>
-					<span className='card-label fw-bold fs-3 mb-1'>Employee Statistics</span>
-					<span className='text-muted mt-1 fw-semibold fs-7'>Employee</span>
-				</h3>
+		<div className={`card ${className}`}>
+			{/* Header */}
+			<div className='card-header border-0 pt-5 pb-3 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+				<div className='d-flex align-items-center gap-3'>
+					<span
+						className='symbol symbol-40px'
+						style={{
+							background: '#eff6ff',
+							color: '#2563eb',
+							borderRadius: '10px',
+							display: 'inline-flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							fontSize: '18px',
+						}}>
+						<i className='bi bi-person-lines-fill'></i>
+					</span>
+					<div>
+						<div className='d-flex align-items-center gap-2'>
+							<h3 className='card-title fw-bold fs-4 m-0 text-dark'>Employee Directory</h3>
+							<span className='badge badge-light-primary fw-bold fs-8 px-2 py-1'>
+								{employeeData.length} Staff
+							</span>
+						</div>
+						<span className='text-muted fw-semibold fs-7'>
+							Active team members, roles & contact details
+						</span>
+					</div>
+				</div>
+
+				<div className='gz-table-search-bar'>
+					<i className='bi bi-search gz-table-search-icon'></i>
+					<input
+						type='text'
+						className='gz-table-search-input'
+						placeholder='Search by name, role, email...'
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+					/>
+					{searchTerm && (
+						<button
+							type='button'
+							className='gz-table-search-clear'
+							onClick={() => setSearchTerm('')}
+							title='Clear search'>
+							<i className='bi bi-x-lg' style={{ fontSize: '10px' }}></i>
+						</button>
+					)}
+				</div>
 			</div>
 
+			{/* Body */}
 			<div
-				className='card-body py-3'
-				style={{ maxHeight: '430px', overflowY: 'auto' }}>
+				className='card-body py-2 px-6'
+				style={{ maxHeight: '500px', overflowY: 'auto' }}>
 				<div className='table-responsive'>
-					<table className='table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4'>
+					<table className='table table-row-dashed table-row-gray-200 align-middle gs-0 gy-3'>
 						<thead>
-							<tr className='fw-bold text-muted'>
-								<th>No.</th>
-								<th>Name</th>
-								<th>Role</th>
-								<th>Email</th>
-								<th>Actions</th>
+							<tr className='fw-bolder text-muted text-uppercase fs-8 border-bottom border-gray-200'>
+								<th className='ps-2 min-w-40px'>#</th>
+								<th className='min-w-220px'>Employee</th>
+								<th className='min-w-160px'>Role / Designation</th>
+								<th className='min-w-200px'>Email Address</th>
+								<th className='min-w-80px text-end pe-2'>Action</th>
 							</tr>
 						</thead>
 						<tbody>
 							{loading ? (
-								<tr>
-									<td
-										colSpan={12}
-										className='text-center'>
-										<div className='d-flex justify-content-center align-items-center mb-4 my-7'>
-											<div
-												className='spinner-border text-primary'
-												role='status'>
-												<span className='visually-hidden'>Loading...</span>
-											</div>
-										</div>
-									</td>
-								</tr>
-							) : (
-								employeeData.map((employee: any, index: any) => (
-									<tr key={index}>
-										<td>
-											<div className='form-check form-check-sm form-check-custom form-check-solid'>
-												{index + 1}
-											</div>
+								[1, 2, 3, 4, 5].map((i) => (
+									<tr key={`skel-dir-${i}`}>
+										<td className='ps-2'>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '18px', height: '14px', borderRadius: '4px' }}></span>
 										</td>
 										<td>
 											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
-													<img
-														src={`https://files.fggroup.in/` + employee.photo}
-														alt={employee.name}
-													/>
+												<div className='gz-hr-skeleton symbol symbol-40px symbol-circle me-3'></div>
+												<div className='d-flex flex-column gap-1'>
+													<span className='gz-hr-skeleton d-inline-block' style={{ width: '130px', height: '14px', borderRadius: '4px' }}></span>
+													<span className='gz-hr-skeleton d-inline-block' style={{ width: '90px', height: '11px', borderRadius: '4px' }}></span>
 												</div>
-												<div className='d-flex justify-content-start flex-column'>
-													<span className='text-dark fw-bold  fs-6'>
+											</div>
+										</td>
+										<td>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '100px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '140px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td className='text-end pe-2'>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '32px', height: '32px', borderRadius: '6px' }}></span>
+										</td>
+									</tr>
+								))
+							) : filteredEmployees.length > 0 ? (
+								filteredEmployees.map((employee: any, index: number) => (
+									<tr key={employee._id || index} className='hover-elevate-up'>
+										<td className='ps-2'>
+											<span className='text-muted fw-semibold fs-7'>{index + 1}</span>
+										</td>
+										<td>
+											<div className='d-flex align-items-center'>
+												<div className='symbol symbol-40px me-3'>
+													{employee.photo ? (
+														<img
+															src={`https://files.fggroup.in/${employee.photo}`}
+															alt={employee.name}
+															onError={(e) => {
+																const target = e.target as HTMLImageElement
+																target.style.display = 'none'
+															}}
+															className='rounded-circle object-fit-cover'
+														/>
+													) : (
+														<span className='symbol-label bg-light-primary text-primary fw-bold fs-6 rounded-circle'>
+															{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+														</span>
+													)}
+												</div>
+												<div className='d-flex flex-column'>
+													<span className='text-dark fw-bold text-hover-primary fs-6 mb-0'>
 														{employee.name}
 													</span>
-													<span className='text-muted fw-semibold text-muted d-block fs-7'>
-														{employee.mobile}
+													<span className='text-muted fs-8 fw-semibold'>
+														{employee.mobile || '-'}
 													</span>
 												</div>
 											</div>
 										</td>
 										<td>
-											<div className='text-dark fw-bold  d-block fs-6'>
-												{employee.position}
-											</div>
+											<span className='text-dark fw-semibold fs-7'>
+												{employee.position || 'Staff'}
+											</span>
 										</td>
 										<td>
-											<div className='text-dark fw-bold  d-block fs-6'>
-												{employee.email}
-											</div>
+											<span className='text-muted fw-semibold fs-7'>
+												{employee.email || '-'}
+											</span>
 										</td>
-										<td>
+										<td className='text-end pe-2'>
 											<TableButton
 												action='view'
 												to={`/hr/employee-detail?employee_id=${employee._id}`}
@@ -123,22 +199,19 @@ const TablesWidget: React.FC<Props> = ({ className }) => {
 										</td>
 									</tr>
 								))
+							) : (
+								<tr>
+									<td colSpan={5} className='text-center py-10'>
+										<div className='text-muted fs-7'>
+											<i className='bi bi-info-circle me-1'></i>
+											{searchTerm ? 'No matching employees found' : 'No employee records found'}
+										</div>
+									</td>
+								</tr>
 							)}
 						</tbody>
 					</table>
 				</div>
-				{employeeData.length === 0 && !loading && (
-					<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center mt-5'>
-						<div>
-							<img
-								src={errorImg}
-								alt='demo'
-								width='50%'
-							/>
-						</div>
-						<h5>No records found</h5>
-					</div>
-				)}
 			</div>
 		</div>
 	)

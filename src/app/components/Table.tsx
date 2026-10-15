@@ -68,11 +68,15 @@ const Table: React.FC<TableProps> = ({
 		<>
 			<table
 				id='kt_table_users'
-				className='table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer table-row-dashed table-row-gray-300 align-middle'
+				className='table align-middle table-row-dashed fs-6 gy-3 dataTable no-footer table-row-gray-200'
+				style={{ borderCollapse: 'separate', borderSpacing: 0 }}
 			>
 				<thead className='table-hide-th'>
-					<tr className='fw-bold text-muted bg-light border-bottom-0'>
-						<th className='text-center ps-4 rounded-start'>No.</th>
+					<tr
+						className='fw-bolder text-muted text-uppercase fs-8 border-bottom border-gray-200'
+						style={{ background: '#f8fafc', height: '42px', verticalAlign: 'middle' }}
+					>
+						<th className='text-center ps-4 rounded-start' style={{ width: '50px' }}>No.</th>
 						{columns.map((field) => {
 							let className = 'hide-on-mobile'
 							if (columns.indexOf(field) === columns.length - 1) className += ' hide-on-1024'
@@ -86,9 +90,10 @@ const Table: React.FC<TableProps> = ({
 								<th
 									key={field.field}
 									onClick={() => isSortable && handleSort(field.field)}
-									className={`sortable ${field.field} ${className}`}
+									className={`sortable ${field.field} ${className} py-3`}
+									style={{ cursor: isSortable ? 'pointer' : 'default', userSelect: 'none' }}
 								>
-									{field.title}
+									<span>{field.title}</span>
 									{isSortable && (
 										<FontAwesomeIcon
 											icon={
@@ -99,12 +104,17 @@ const Table: React.FC<TableProps> = ({
 													: faSort
 											}
 											className='ms-2'
+											style={{
+												fontSize: '11px',
+												color: sort === field.field ? '#2563eb' : '#9ca3af',
+												verticalAlign: 'middle',
+											}}
 										/>
 									)}
 								</th>
 							)
 						})}
-						<th className='ps-4 rounded-end'>{removeAction ? '' : 'Action'}</th>
+						<th className='text-center pe-4 rounded-end' style={{ width: '130px' }}>{removeAction ? '' : 'Action'}</th>
 					</tr>
 				</thead>
 				<tbody>

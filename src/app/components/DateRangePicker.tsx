@@ -1,7 +1,8 @@
-import { faCalendarDays } from '@fortawesome/free-solid-svg-icons'
+import { faCalendarDays, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { addDays, endOfMonth, startOfMonth, subDays } from 'date-fns'
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { DateRangePicker } from 'react-date-range'
 import 'react-date-range/dist/styles.css'
 import 'react-date-range/dist/theme/default.css'
@@ -20,8 +21,6 @@ type DateFilterProps = {
 
 const DateFilter: React.FC<DateFilterProps> = ({
 	onDateRangeChange,
-	leftValue,
-	rightValue,
 	setMonth,
 	lastMonth,
 	storageKey,
@@ -41,18 +40,6 @@ const DateFilter: React.FC<DateFilterProps> = ({
 	const [selectedRange, setSelectedRange] = useState<DateRange>(defaultRange)
 	const [tempRange, setTempRange] = useState<DateRange | null>(null)
 	const datePickerRef = useRef<HTMLDivElement>(null)
-
-	// Predefined ranges (optional)
-	const predefinedRanges = [
-		{
-			label: 'All Dates',
-			range: {
-				startDate: new Date(2015, 0, 1), // Start from January 1, 2015
-				endDate: new Date(),
-				key: 'selection',
-			},
-		},
-	]
 
 	const staticRanges = [
 		{
@@ -170,13 +157,6 @@ const DateFilter: React.FC<DateFilterProps> = ({
 		return `${start} - ${end}`
 	}
 
-	const handleSelectRange = (range: any) => {
-		setSelectedRange([range.startDate, range.endDate])
-		onDateRangeChange([range.startDate, range.endDate])
-		// Persistence is now handled by a dedicated useEffect
-		setShowDatePicker(false)
-	}
-
 	// Handle date range change from the picker
 	const handleDateRangeChange = (ranges: any) => {
 		const { selection } = ranges
@@ -184,37 +164,25 @@ const DateFilter: React.FC<DateFilterProps> = ({
 			const startDate = selection.startDate
 			const endDate = selection.endDate
 			setTempRange([startDate, endDate])
-			if (startDate && endDate && startDate !== endDate) {
-				setSelectedRange([startDate, endDate])
-				onDateRangeChange([startDate, endDate])
-				setShowDatePicker(false)
-			}
 		} else {
-			setSelectedRange(defaultRange)
-			onDateRangeChange(defaultRange)
-			setShowDatePicker(false)
+			setTempRange(defaultRange)
 		}
+	}
+
+	const handleApplyRange = () => {
+		const finalRange = tempRange || selectedRange
+		setSelectedRange(finalRange)
+		onDateRangeChange(finalRange)
+		setShowDatePicker(false)
 	}
 
 	// Toggle date picker visibility
 	const toggleDatePicker = () => {
+		if (!showDatePicker) {
+			setTempRange(selectedRange)
+		}
 		setShowDatePicker((prev) => !prev)
 	}
-
-	// Close picker if clicked outside
-	const handleClickOutside = (event: MouseEvent) => {
-		if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
-			setShowDatePicker(false)
-		}
-	}
-
-	useEffect(() => {
-		// Set up click outside handler
-		document.addEventListener('mousedown', handleClickOutside)
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside)
-		}
-	}, [])
 
 	useEffect(() => {
 		const storedDateRange = localStorage.getItem(key)
@@ -233,7 +201,6 @@ const DateFilter: React.FC<DateFilterProps> = ({
 				console.error('Error parsing stored date range:', error)
 			}
 		} else {
-			// If nothing stored, notify parent of default
 			onDateRangeChange(defaultRange)
 		}
 	}, [key])
@@ -248,6 +215,8 @@ const DateFilter: React.FC<DateFilterProps> = ({
 		}
 	}, [selectedRange, key])
 
+	const activeRangeDisplay = tempRange ? tempRange : selectedRange
+
 	return (
 		<div
 			ref={datePickerRef}
@@ -257,49 +226,112 @@ const DateFilter: React.FC<DateFilterProps> = ({
 				onClick={toggleDatePicker}
 				style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
 				<input
-					className='form-control'
-					style={{ paddingRight: '2.5rem' }}
+					className='form-control gz-filter-date-input'
+					style={{ paddingRight: '2.5rem', cursor: 'pointer' }}
 					readOnly
 					placeholder='Select Date'
-					value={formatDateRange(selectedRange)} // Show default or selected date range
+					value={formatDateRange(selectedRange)}
 				/>
 				<FontAwesomeIcon
 					icon={faCalendarDays as any}
 					style={{
 						position: 'absolute',
-						right: '0.75rem',
+						right: '0.85rem',
+						top: '50%',
+						transform: 'translateY(-50%)',
 						pointerEvents: 'none',
-						color: '#999',
+						color: '#94a3b8',
+						fontSize: '13.5px',
 					}}
 				/>
 			</div>
-			{showDatePicker && (
-				<div
-					style={{
-						position: 'absolute',
-						top: 'calc(100% + 5px)',
-						...(rightValue ? { right: rightValue } : { left: leftValue ? leftValue : '-500px' }),
-						zIndex: 1000,
-						backgroundColor: 'white',
-						boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-						borderRadius: '8px',
-					}}>
-					<DateRangePicker
-						ranges={[
-							{
-								startDate: tempRange ? tempRange[0] : defaultRange[0],
-								endDate: tempRange ? tempRange[1] : defaultRange[1],
-								key: 'selection',
-							},
-						]}
-						onChange={handleDateRangeChange}
-						months={2}
-						direction='horizontal'
-						staticRanges={staticRanges}
-						inputRanges={inputRanges}
-					/>
-				</div>
-			)}
+
+			{/* Centered Modal Backdrop via createPortal */}
+			{showDatePicker &&
+				createPortal(
+					<div
+						className='gz-datepicker-overlay'
+						onClick={() => setShowDatePicker(false)}>
+						<div
+							className='gz-datepicker-modal'
+							onClick={(e) => e.stopPropagation()}>
+							{/* Modal Header */}
+							<div className='d-flex align-items-center justify-content-between px-5 py-3 border-bottom border-gray-200 bg-light'>
+								<div className='d-flex align-items-center gap-2'>
+									<span
+										className='symbol symbol-30px'
+										style={{
+											background: '#eff6ff',
+											color: '#2563eb',
+											borderRadius: '8px',
+											display: 'inline-flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											width: '32px',
+											height: '32px',
+										}}>
+										<FontAwesomeIcon icon={faCalendarDays as any} />
+									</span>
+									<div>
+										<h5 className='m-0 fw-bold fs-6 text-dark'>Select Date Range</h5>
+										<span className='text-muted fs-8'>Filter data by predefined or custom date range</span>
+									</div>
+								</div>
+								<button
+									type='button'
+									className='btn btn-icon btn-sm btn-light'
+									onClick={() => setShowDatePicker(false)}>
+									<FontAwesomeIcon icon={faXmark as any} />
+								</button>
+							</div>
+
+							{/* Modal Body with DateRangePicker */}
+							<div
+								className='p-2'
+								style={{ overflowX: 'auto', overflowY: 'auto' }}>
+								<DateRangePicker
+									ranges={[
+										{
+											startDate: activeRangeDisplay[0],
+											endDate: activeRangeDisplay[1],
+											key: 'selection',
+										},
+									]}
+									onChange={handleDateRangeChange}
+									months={2}
+									direction='horizontal'
+									staticRanges={staticRanges}
+									inputRanges={inputRanges}
+								/>
+							</div>
+
+							{/* Modal Footer with Actions */}
+							<div className='d-flex align-items-center justify-content-between px-5 py-3 border-top border-gray-200 bg-light flex-wrap gap-2'>
+								<div className='d-flex align-items-center gap-1'>
+									<span className='text-muted fs-7'>Selected Range:</span>
+									<span className='badge badge-light-primary fw-bold fs-7 px-2 py-1'>
+										{formatDateRange(activeRangeDisplay)}
+									</span>
+								</div>
+								<div className='d-flex gap-2'>
+									<button
+										type='button'
+										className='btn btn-sm btn-light'
+										onClick={() => setShowDatePicker(false)}>
+										Cancel
+									</button>
+									<button
+										type='button'
+										className='btn btn-sm btn-primary'
+										onClick={handleApplyRange}>
+										Apply Filter
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>,
+					document.body
+				)}
 		</div>
 	)
 }

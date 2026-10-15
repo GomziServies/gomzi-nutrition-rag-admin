@@ -67,6 +67,19 @@ const AsideMenuItemWithSub: React.FC<Props & WithChildren> = ({
 
 	const tipId = `aside-sub-tip-${(to || title).replace(/[^a-zA-Z0-9_-]/g, '')}`
 
+	const handleMenuClick = () => {
+		const isMinimized =
+			document.body.classList.contains('aside-minimize') ||
+			document.body.classList.contains('gz-aside-collapsed') ||
+			document.body.getAttribute('data-kt-aside-minimize') === 'on'
+		if (isMinimized) {
+			document.body.classList.remove('aside-minimize')
+			document.body.classList.remove('gz-aside-collapsed')
+			document.body.removeAttribute('data-kt-aside-minimize')
+			window.dispatchEvent(new Event('resize'))
+		}
+	}
+
 	return (
 		<div
 			className={clsx('menu-item', { 'here show': isActive }, 'menu-accordion')}
@@ -79,7 +92,7 @@ const AsideMenuItemWithSub: React.FC<Props & WithChildren> = ({
 						{title}
 					</Tooltip>
 				}>
-				<span className='menu-link'>
+				<span className='menu-link' onClick={handleMenuClick}>
 					{hasBullet && (
 						<span className='menu-bullet'>
 							<span className='bullet bullet-dot'></span>

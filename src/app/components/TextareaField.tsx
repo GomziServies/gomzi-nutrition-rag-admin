@@ -1,12 +1,12 @@
 import { FC } from 'react'
 
 type Props = {
-	className: string
+	className?: string
 	label: string
 	placeholder: string
 	name: string
 	value: string
-	htmlFor: string
+	htmlFor?: string
 	onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
 	readOnly?: boolean
 	disabled?: boolean
@@ -14,13 +14,13 @@ type Props = {
 }
 
 const TextareaField: FC<Props> = ({
-	className,
+	className = '',
 	label,
 	placeholder,
 	value,
 	name,
 	onChange,
-	htmlFor,
+	htmlFor = '',
 	readOnly,
 	disabled,
 	rows = 4,

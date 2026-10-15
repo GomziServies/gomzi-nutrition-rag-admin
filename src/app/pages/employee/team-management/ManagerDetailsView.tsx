@@ -504,15 +504,19 @@ const ManagerDetailsView: React.FC = () => {
 						)}
 					</div>
 
-					{filteredAssignedTeams.length > 0 && (
-						<div className='mt-5'>
+					<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-4'>
+						<div className='text-muted fs-7 fw-semibold'>
+							Showing {filteredAssignedTeams.length === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
+							{Math.min(pagination.page * pagination.itemsPerPage, filteredAssignedTeams.length)} of {filteredAssignedTeams.length} records
+						</div>
+						{filteredAssignedTeams.length > 0 && (
 							<UsersListPagination
-								totalPages={metaData.totalPages}
+								totalPages={metaData?.totalPages || Math.ceil(filteredAssignedTeams.length / pagination.itemsPerPage) || 1}
 								currentPage={pagination.page}
 								onPageChange={(p) => setPagination({ ...pagination, page: p })}
 							/>
-						</div>
-					)}
+						)}
+					</div>
 				</Card.Body>
 			</Card>
 

@@ -1,15 +1,15 @@
-import { faCheck, faPlusCircle, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faDownload, faFileAlt, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
-import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
+import LengthMenu from '../../../components/LengthMenu'
+import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
-import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { CompleteSOP, GetSOP } from '../../../Functions/FGGroup/SOP'
 
 const EmployeeSOP: React.FC = () => {
@@ -18,7 +18,6 @@ const EmployeeSOP: React.FC = () => {
 	const [sort, setSort] = useState('createdAt')
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
-	const [employeeData, setEmployeeData] = useState<any[]>([]) // Correct initialization
 	const [targetData, setTargetData] = useState<any[]>([])
 	const [showModal, setShowModal] = useState(false)
 	const [sopData, setSopData] = useState({
@@ -40,19 +39,36 @@ const EmployeeSOP: React.FC = () => {
 		itemsPerPage: 10,
 	})
 
-	const fetchAssignSOPsData = async (page?: number) => {
+	const getStoredEmployee = () => {
+		try {
+			const raw =
+				localStorage.getItem('fg_group_user_info') ||
+				localStorage.getItem('fg_group_info') ||
+				localStorage.getItem('auth_fg_group')
+			return raw ? JSON.parse(raw) : {}
+		} catch {
+			return {}
+		}
+	}
+
+	const fetchAssignSOPsData = async () => {
 		setLoading(true)
 		try {
-			const response = await GetSOP()
-			const filteredData: any = response.data
+			const employee = getStoredEmployee()
+			const empId = employee?._id || employee?.id
+			const response: any = await GetSOP()
+			const filteredData: any[] = response?.data || []
 			const combinedData: any[] = []
 
 			filteredData.forEach((el: any) => {
-				const serviceDetails = el.service_details.map((row: any) => ({
+				const isAssigned = !el.employee_ids || el.employee_ids.length === 0 || (empId && el.employee_ids.includes(empId))
+				if (!isAssigned) return
+
+				const serviceDetails = (el.service_details || []).map((row: any) => ({
 					title: row.title,
 					description: row.description,
 					services_id: row._id,
-					completed_by: row.completed_by,
+					completed_by: row.completed_by || [],
 					createdAt: row.createdAt,
 					updatedAt: row.updatedAt,
 				}))
@@ -73,26 +89,9 @@ const EmployeeSOP: React.FC = () => {
 		setLoading(false)
 	}
 
-	const fetchEmployeeData = async (page?: number) => {
-		try {
-			const response = await GetEmployees({
-				page: page || pagination.page,
-				limit: pagination.itemsPerPage,
-				search: searchTerm,
-			})
-			const filteredData: any = response.data
-			setEmployeeData(
-				filteredData.map((el: any) => ({ name: el.name, id: el._id, position: el.position }))
-			)
-		} catch (error) {
-			console.error(error)
-		}
-	}
-
 	useEffect(() => {
 		fetchAssignSOPsData()
-		fetchEmployeeData()
-	}, [searchTerm, pagination.page])
+	}, [searchTerm])
 
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { id, name, value } = event.target
@@ -115,8 +114,10 @@ const EmployeeSOP: React.FC = () => {
 		setPagination({ ...pagination, page })
 	}
 
-	const filteredtargetData = targetData.filter((sale) =>
-		sale.title.toLowerCase().includes(searchTerm.toLowerCase())
+	const filteredtargetData = targetData.filter((item) =>
+		(item.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+		(item.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+		(item.service_name || '').toLowerCase().includes(searchTerm.toLowerCase())
 	)
 	const paginatedtargetData = filteredtargetData.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
@@ -126,6 +127,7 @@ const EmployeeSOP: React.FC = () => {
 	const sortableFields = [
 		{ title: 'Title', field: 'title' },
 		{ title: 'Description', field: 'description' },
+		{ title: 'Status & Completion', field: 'completed_by' },
 	]
 
 	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
@@ -140,11 +142,18 @@ const EmployeeSOP: React.FC = () => {
 	}
 
 	const handleOpenModal = (services_id: string, sop_id: string) => {
-		const data: any = {
+		setSopData({
 			services_id: services_id,
 			sop_id: sop_id,
-		}
-		setSopData(data)
+		})
+		setTargetAddData({
+			remark: '',
+			file: '',
+			upload_photo: '',
+			file_url: '',
+			editImage: false,
+			selectedFile: null,
+		})
 		setShowModal(true)
 	}
 
@@ -156,7 +165,7 @@ const EmployeeSOP: React.FC = () => {
 				const fileUrl: any = await FileUploadToFGGroup([targetAddData.selectedFile], {
 					directory: 'documents',
 				})
-				documentUrl = fileUrl.data?.fileURLs[0]
+				documentUrl = fileUrl.data?.fileURLs?.[0] || ''
 				toast.success('Document uploaded successfully')
 			}
 
@@ -168,210 +177,233 @@ const EmployeeSOP: React.FC = () => {
 			}
 
 			await CompleteSOP(payload)
-			toast.success('SOP Update Successfully')
+			toast.success('SOP marked as completed successfully!')
 			setShowModal(false)
 
 			fetchAssignSOPsData()
 		} catch (error: any) {
-			toast.error(error.message)
+			toast.error(error.message || 'Failed to update SOP')
 			console.error(error)
 		}
 	}
 
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>SOP</PageTitle>
-			<div
-				className='accordion card'
-				id='kt_accordion_1'>
-				<KTCard className='accordion-item mt-5'>
-					<div
-						id='kt_accordion_1_body_1'
-						className='accordion-collapse collapse show'>
-						<div className='py-4 card-body'>
-							<div className='table-responsive'>
-								<Table
-									data={paginatedtargetData}
-									columns={sortableFields}
-									sort={sort}
-									sortOrder={sortOrder}
-									onSortChange={handleSortChange}
-									renderRow={(
-										employee: any,
-										index: number,
-										actualIndex: number,
-										isVisible: boolean
-									) => (
-										<React.Fragment key={employee._id}>
-											<tr
-												onClick={() => handleRowClick(employee._id)}
-												className='data-row'>
-												<td className='text-center'>
-													<div className='d-flex'>
-														<FontAwesomeIcon
-															icon={faPlusCircle}
-															className='mx-2 ms-5 mb-1 plus-icon'
-															style={{ color: '#607D8B', fontSize: '18px' }}
-														/>
-														<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-															{actualIndex}
-														</span>
-													</div>
-												</td>
-												<td>
-													<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-														{employee.title}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-														{employee.description}
-													</span>
-												</td>
-												<td>
-													{employee.completed_by && employee.completed_by.length > 0 ? (
-														<div>
-															<strong>Remark:</strong> {employee.completed_by[0].remarks}
-															<br />
-															{employee.completed_by[0].file_url && (
-																<div>
-																	<strong>File:</strong>{' '}
-																	<a
-																		href={employee.completed_by[0].file_url}
-																		target='_blank'
-																		rel='noopener noreferrer'>
-																		View File
-																	</a>
-																</div>
-															)}
-														</div>
-													) : (
-														<button
-															className='btn btn-success btn-sm'
-															onClick={(e) => {
-																e.stopPropagation()
-																handleOpenModal(employee.services_id, employee.sop_id)
-															}}>
-															<FontAwesomeIcon
-																icon={faCheck}
-																className='fs-3 text-white'
-															/>
-														</button>
-													)}
-												</td>
-											</tr>
-											{isVisible && (
-												<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-													<td colSpan={12}>
-														<div>
-															<strong>{sortableFields[0].title}:</strong> {employee.title}
-															<br />
-															<strong>{sortableFields[1].title}:</strong> {employee.description}
-															<br />
-															{employee.completed_by && employee.completed_by.length > 0 && (
-																<div className='mt-3'>
-																	<strong>Completion Details:</strong>
-																	<br />
-																	<strong>Remark:</strong> {employee.completed_by[0].remarks}
-																	<br />
-																	{employee.completed_by[0].file_url && (
-																		<div>
-																			<strong>File:</strong>{' '}
-																			<a
-																				href={employee.completed_by[0].file_url}
-																				target='_blank'
-																				rel='noopener noreferrer'>
-																				View File
-																			</a>
-																		</div>
-																	)}
-																</div>
-															)}
-														</div>
-													</td>
-												</tr>
-											)}
-										</React.Fragment>
-									)}
-									visibleDetails={visibleDetails}
-									pagination={pagination}
-									setPagination={setPagination}
-									loading={loading}
-								/>
-							</div>
-							{targetData.length === 0 && !loading && (
-								<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-									<b>No records found</b>
-								</div>
-							)}
-							{targetData.length > 0 && (
-								<UsersListPagination
-									totalPages={Math.ceil(targetData.length / pagination.itemsPerPage)}
-									currentPage={pagination.page}
-									onPageChange={handlePageChange}
-								/>
-							)}
+			<PageTitle breadcrumbs={[]}>Standard Operating Procedures (SOP)</PageTitle>
+
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div className='d-flex align-items-center gap-3 flex-wrap'>
+						<div className='d-flex align-items-center position-relative'>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+							/>
 						</div>
 					</div>
+					<div className='d-flex align-items-center gap-3'>
+						<LengthMenu
+							expenseData={targetData}
+							handleItemsPerPageChange={handlePageChange}
+						/>
+					</div>
+				</div>
 
-					{/* target add modal */}
-					<Modal
-						show={showModal}
-						onHide={() => setShowModal(false)}
-						className='modal fade'>
-						<div className='modal-content'>
-							<div className='modal-header justify-content-between'>
-								<h2 className='fw-bolder'>Details:</h2>
-								<button
-									className='btn btn-sm btn-icon btn-active-color-primary'
-									onClick={() => setShowModal(false)}>
-									<FontAwesomeIcon
-										className='fs-1 position-absolute ms-3'
-										icon={faXmark}
-									/>
-								</button>
+				<div className='card-body py-4 px-6'>
+					<div className='table-responsive'>
+						<Table
+							data={paginatedtargetData}
+							columns={sortableFields}
+							sort={sort}
+							sortOrder={sortOrder}
+							onSortChange={handleSortChange}
+							renderRow={(
+								item: any,
+								index: number,
+								actualIndex: number,
+								isVisible: boolean
+							) => {
+								const isCompleted = item.completed_by && item.completed_by.length > 0
+								const completionInfo = isCompleted ? item.completed_by[0] : null
+
+								return (
+									<React.Fragment key={item.services_id || index}>
+										<tr
+											onClick={() => handleRowClick(item.services_id)}
+											className='data-row'
+											style={{ verticalAlign: 'middle', borderBottom: '1px solid #f1f1f4' }}>
+											<td className='text-center py-3' style={{ width: '60px' }}>
+												<span className='badge badge-light-secondary fw-bolder px-2 py-1' style={{ borderRadius: '6px' }}>
+													{actualIndex}
+												</span>
+											</td>
+											<td className='py-3'>
+												<span className='text-gray-900 fw-bold fs-6 d-block'>
+													{item.title}
+												</span>
+												{item.service_name && (
+													<span className='badge badge-light-primary fw-semibold px-2 py-1 mt-1' style={{ fontSize: '11px', borderRadius: '4px' }}>
+														{item.service_name}
+													</span>
+												)}
+											</td>
+											<td className='py-3'>
+												<span className='text-gray-700 fs-7'>
+													{item.description}
+												</span>
+											</td>
+											<td className='py-3 text-end pe-4'>
+												{isCompleted ? (
+													<div className='d-inline-flex flex-column align-items-end'>
+														<span className='badge badge-light-success fw-bold px-3 py-1 mb-1' style={{ borderRadius: '6px' }}>
+															<FontAwesomeIcon icon={faCheck} className='me-1' /> Completed
+														</span>
+														{completionInfo?.remarks && (
+															<span className='text-muted fs-8 text-end' style={{ maxWidth: '220px' }}>
+																{completionInfo.remarks}
+															</span>
+														)}
+														{completionInfo?.file_url && (
+															<a
+																href={completionInfo.file_url}
+																target='_blank'
+																rel='noopener noreferrer'
+																className='btn btn-link btn-color-primary btn-active-color-primary p-0 fs-8 fw-semibold mt-1'>
+																<FontAwesomeIcon icon={faFileAlt} className='me-1' /> View Proof
+															</a>
+														)}
+													</div>
+												) : (
+													<button
+														className='btn btn-sm btn-light-success fw-semibold px-3 py-2 d-inline-flex align-items-center gap-2'
+														style={{ borderRadius: '8px' }}
+														onClick={(e) => {
+															e.stopPropagation()
+															handleOpenModal(item.services_id, item.sop_id)
+														}}>
+														<FontAwesomeIcon icon={faCheck} />
+														<span>Mark Complete</span>
+													</button>
+												)}
+											</td>
+										</tr>
+										{isVisible && (
+											<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
+												<td colSpan={12} className='p-4 bg-light-primary rounded-3'>
+													<div className='fs-7'>
+														<div><strong>Title:</strong> {item.title}</div>
+														<div><strong>Description:</strong> {item.description}</div>
+														{isCompleted && (
+															<div className='mt-2'>
+																<strong>Remark:</strong> {completionInfo?.remarks}
+																{completionInfo?.file_url && (
+																	<div className='mt-1'>
+																		<a
+																			href={completionInfo.file_url}
+																			target='_blank'
+																			rel='noopener noreferrer'
+																			className='btn btn-sm btn-light-primary'>
+																			<FontAwesomeIcon icon={faDownload} className='me-1' /> Download File
+																		</a>
+																	</div>
+																)}
+															</div>
+														)}
+													</div>
+												</td>
+											</tr>
+										)}
+									</React.Fragment>
+								)
+							}}
+							visibleDetails={visibleDetails}
+							pagination={pagination}
+							setPagination={setPagination}
+							loading={loading}
+						/>
+					</div>
+
+					{filteredtargetData.length === 0 && !loading && (
+						<div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
+							<div className='symbol symbol-60px mb-4'>
+								<span className='symbol-label bg-light-primary text-primary fs-2'>📋</span>
 							</div>
-							<div className='modal-body scroll-y'>
-								<div className='col-md-12'>
-									<div className='row'>
-										<div className='col-md-12 fv-row'>
-											<InputField
-												placeholder='Enter remark'
-												type='text'
-												className='col-12 fv-row mb-7'
-												name='remark'
-												label='Remark'
-												htmlFor='Remark'
-												value={targetAddData.remark}
-												onChange={(e) => handleInputChange(e)}
-											/>
-										</div>
-										<div className='col-md-12 fv-row'>
-											<InputField
-												placeholder='Upload File'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='upload_photo'
-												id='fileInput'
-												label='Upload File'
-												htmlFor='upload_photo'
-												onChange={(e) => handleInputChange(e)}
-											/>
-										</div>
-									</div>
-								</div>
+							<h5 className='fw-bold text-gray-800 mb-1'>No SOPs Found</h5>
+							<p className='text-muted fs-7 mb-0'>Operating procedures assigned to your role will appear here.</p>
+						</div>
+					)}
+
+					<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+						<div className='text-muted fs-7 fw-semibold'>
+							Showing {filteredtargetData.length === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
+							{Math.min(pagination.page * pagination.itemsPerPage, filteredtargetData.length)} of {filteredtargetData.length} records
+						</div>
+						{filteredtargetData.length > 0 && (
+							<UsersListPagination
+								totalPages={Math.ceil(filteredtargetData.length / pagination.itemsPerPage) || 1}
+								currentPage={pagination.page}
+								onPageChange={handlePageChange}
+							/>
+						)}
+					</div>
+				</div>
+			</div>
+
+			{/* Target complete SOP modal */}
+			<Modal
+				show={showModal}
+				onHide={() => setShowModal(false)}
+				centered
+				dialogClassName='mw-600px'>
+				<div className='modal-content border-0 shadow' style={{ borderRadius: '16px', overflow: 'hidden' }}>
+					<div className='modal-header border-bottom border-gray-200 px-6 py-4 d-flex align-items-center justify-content-between'>
+						<h3 className='fw-bolder text-gray-900 m-0'>Complete Procedure Step</h3>
+						<button
+							className='btn btn-sm btn-icon btn-light-danger rounded-circle'
+							onClick={() => setShowModal(false)}>
+							<FontAwesomeIcon icon={faXmark} />
+						</button>
+					</div>
+					<div className='modal-body p-6'>
+						<div className='row g-4'>
+							<div className='col-12'>
+								<InputField
+									placeholder='Enter completion remark or observation'
+									type='text'
+									name='remark'
+									label='Completion Remarks'
+									htmlFor='Remark'
+									value={targetAddData.remark}
+									onChange={(e) => handleInputChange(e)}
+								/>
 							</div>
-							<div className='modal-footer justify-content-end'>
-								<button
-									className='btn btn-primary'
-									onClick={() => handleUpdateSOP()}>
-									Complete SOP
-								</button>
+							<div className='col-12'>
+								<InputField
+									placeholder='Upload proof or document'
+									type='file'
+									name='upload_photo'
+									id='fileInput'
+									label='Supporting Document / Screenshot (Optional)'
+									htmlFor='upload_photo'
+									onChange={(e) => handleInputChange(e)}
+								/>
 							</div>
 						</div>
-					</Modal>
-				</KTCard>
-			</div>
+					</div>
+					<div className='modal-footer border-top border-gray-200 px-6 py-4'>
+						<button
+							className='btn btn-light rounded-pill px-5 fw-semibold'
+							onClick={() => setShowModal(false)}>
+							Cancel
+						</button>
+						<button
+							className='btn btn-primary rounded-pill px-6 fw-bold'
+							onClick={() => handleUpdateSOP()}>
+							Confirm Completion
+						</button>
+					</div>
+				</div>
+			</Modal>
 		</>
 	)
 }

@@ -2,7 +2,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import { FC } from 'react'
 import { useLayout } from '../../core'
-import { AsideFooter } from './AsideFooter'
 import { AsideMenu } from './AsideMenu'
 import { AsideToolbar } from './AsideToolbar'
 
@@ -32,11 +31,6 @@ const AsideDefault: FC = () => {
 				<AsideMenu asideMenuCSSClasses={classes.asideMenu} />
 			</div>
 			{/* end::Aside menu */}
-			{/* begin::Aside footer */}
-			<div className='aside-footer flex-column-auto'>
-				<AsideFooter />
-			</div>
-			{/* end::Aside footer */}
 		</div>
 	)
 }

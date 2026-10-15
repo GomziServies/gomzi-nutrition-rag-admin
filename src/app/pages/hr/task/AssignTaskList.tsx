@@ -326,10 +326,9 @@ const HRAssignTaskList: React.FC = () => {
 				setAssignTaskData([])
 			}
 
-			if (response.metadata) {
+			if (response?.metadata) {
 				setMetaData(response.metadata as any)
 			}
-			setMetaData(metaData.pagination)
 		} catch (error) {
 			console.error(error)
 		}
@@ -930,13 +929,13 @@ const HRAssignTaskList: React.FC = () => {
 										onClick={() => handleRowClick(task._id)}
 										className='data-row'>
 										<td className='text-center'>
-											<div className='d-flex'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>{actualIndex}</span>
+											<div className='d-flex align-items-center justify-content-center gap-1'>
+												<span
+													className={`badge badge-circle ${isVisible ? 'badge-primary' : 'badge-light-primary'} me-1`}
+													style={{ width: '20px', height: '20px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+													<i className={`bi bi-${isVisible ? 'dash' : 'plus'} fs-7`}></i>
+												</span>
+												<span className='text-dark fw-bold fs-7'>{actualIndex}</span>
 											</div>
 										</td>
 
@@ -950,46 +949,46 @@ const HRAssignTaskList: React.FC = () => {
 													className='form-check-input'
 												/>
 											) : (
-												<span>-</span>
+												<span className='text-muted'>-</span>
 											)}
 										</td>
 
 										{!selectedEmployee && (
 											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+												<span className='text-dark fw-semibold fs-7'>
 													{employeeData.find((emp: any) => emp.id === task.admin_id)?.name || '-'}
 												</span>
 											</td>
 										)}
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span className='text-dark fw-bold fs-7'>
 												{task.task_title}
 											</span>
 										</td>
 
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span className='text-dark fw-semibold fs-7'>
 												{DayJS(task.start_date).format('DD/MM/YYYY')}
 											</span>
 										</td>
 										<td>
-											<div className='d-flex align-items-center'>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<div className='d-flex align-items-center gap-1'>
+												<span className='text-dark fw-semibold fs-7'>
 													{DayJS(task.end_date).format('DD/MM/YYYY')}
 												</span>
 												{task.extends_dates &&
 													task.extends_dates.some((ext: any) => ext.status === 'accepted') && (
 														<button
-															className='btn btn-sm mb-1 btn-info py-1 ms-2 rounded-circle d-flex align-items-center justify-content-center'
-															style={{ width: '16px', height: '16px', padding: '0' }}
+															type='button'
+															className='btn btn-icon btn-xs btn-light-info rounded-circle ms-1'
+															style={{ width: '20px', height: '20px' }}
+															title='View Extension Details'
 															onClick={(e) => {
 																e.stopPropagation()
-																// Find the latest approved extension date
 																const approvedExtensions = task.extends_dates.filter(
 																	(ext: any) => ext.status === 'accepted'
 																)
 																if (approvedExtensions.length > 0) {
-																	// Sort by date to get the latest
 																	approvedExtensions.sort(
 																		(a: any, b: any) =>
 																			new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -1007,41 +1006,47 @@ const HRAssignTaskList: React.FC = () => {
 																	})
 																}
 															}}>
-															<i
-																className='fas fa-info pt-0 px-0'
-																style={{ fontSize: '8px', paddingBottom: '1px' }}></i>
+															<i className='fas fa-info' style={{ fontSize: '9px' }}></i>
 														</button>
 													)}
 											</div>
 										</td>
 										<td>
-											<span
-												className={`fw-bold d-block mb-1 fs-6 ${
-													task.status === 'PENDING' ? 'text-warning' : 'text-success'
-												}`}
-												style={{
-													cursor: task.employee_status === 'rejected' ? 'pointer' : 'default',
-												}}>
-												{task.status.charAt(0).toUpperCase() + task.status.slice(1).toLowerCase()}
-											</span>
+											<div className='d-flex align-items-center gap-1'>
+												<span
+													className={`badge fw-bold py-1 px-2 fs-8 ${
+														task.status === 'PENDING' ? 'badge-light-warning' : 'badge-light-success'
+													}`}
+													style={{
+														cursor: task.employee_status === 'rejected' ? 'pointer' : 'default',
+													}}>
+													{task.status.charAt(0).toUpperCase() + task.status.slice(1).toLowerCase()}
+												</span>
 
-											{task.employee_status === 'rejected' && (
-												<button
-													className='btn btn-sm btn-info py-1 mt-1'
-													onClick={() => handleRejectReason(task.reject_reason)}>
-													<i className='fas fa-eye p-0 px-1'></i>
-												</button>
-											)}
+												{task.employee_status === 'rejected' && (
+													<button
+														type='button'
+														className='btn btn-icon btn-xs btn-light-danger rounded-circle'
+														style={{ width: '20px', height: '20px' }}
+														title='View Reject Reason'
+														onClick={(e) => {
+															e.stopPropagation()
+															handleRejectReason(task.reject_reason)
+														}}>
+														<i className='fas fa-eye' style={{ fontSize: '9px' }}></i>
+													</button>
+												)}
+											</div>
 										</td>
 
 										<td>
 											<span
-												className={` fw-bold  d-block mb-1 fs-6 ${
+												className={`badge fw-bold py-1 px-2 fs-8 ${
 													task.hr_status === 'complete'
-														? 'text-success'
+														? 'badge-light-success'
 														: task.hr_status === 'rejected'
-														? 'text-danger'
-														: 'text-warning'
+														? 'badge-light-danger'
+														: 'badge-light-warning'
 												}`}>
 												{task.hr_status.charAt(0).toUpperCase() +
 													task.hr_status.slice(1).toLowerCase()}
@@ -1049,31 +1054,21 @@ const HRAssignTaskList: React.FC = () => {
 										</td>
 
 										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+											<span className='text-dark fw-semibold fs-7'>
 												{task.completed_date &&
 													task.status == 'COMPLETED' &&
 													DayJS(task.completed_date).format('DD/MM/YYYY')}
 											</span>
 										</td>
 										<td>
-											<div className='d-flex'>
+											<div className='d-flex align-items-center gap-2'>
 												<TableButton
 													action='view'
-													// onClick={() => {
-													// 	setEditTaskData({
-													// 		id: task._id,
-													// 		taskName: task.task_title,
-													// 		remark: task.remark_by_hr,
-													// 		start_date: task.start_date ? task.start_date : null,
-													// 		end_date: task.end_date ? task.end_date : null,
-													// 	})
-													// 	setShowUpdateModal(true)
-													// }}
 													onClick={() =>
 														handleNavigate('view', {
 															id: task._id,
 															taskId: task._id,
-															admin_id: task.admin_id, // Add admin_id from task
+															admin_id: task.admin_id,
 															taskName: task.task_title,
 															remark: task.remark_by_hr,
 															start_date: task.start_date ? task.start_date : null,
@@ -1081,16 +1076,13 @@ const HRAssignTaskList: React.FC = () => {
 														})
 													}
 												/>
-												{task.status == 'COMPLETED' ? (
+												{task.status == 'COMPLETED' && (
 													<TableButton
 														action='assign'
 														text='Re-assign'
 														onClick={() => openActionModal(task._id)}
-														className='ms-2 d-flex'
 														showIcon={false}
 													/>
-												) : (
-													''
 												)}
 											</div>
 										</td>

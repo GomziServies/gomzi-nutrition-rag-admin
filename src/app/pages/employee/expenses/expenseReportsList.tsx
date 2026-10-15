@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
+import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
+import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { DeleteExpenseReport, GetExpenseReports } from '../../../Functions/FGGroup/ExpenseReport'
 
@@ -54,11 +55,18 @@ const EmployeeExpenseReportsList: React.FC = () => {
 	const fetchExpenseReports = async (page?: number) => {
 		setLoading(true)
 		try {
-			const fgGroupInfo = localStorage.getItem('fg_group_info')
+			const rawInfo =
+				localStorage.getItem('fg_group_user_info') ||
+				localStorage.getItem('fg_group_info') ||
+				localStorage.getItem('auth_fg_group')
 			let employeeId = null
-			if (fgGroupInfo) {
-				const parsedInfo = JSON.parse(fgGroupInfo)
-				employeeId = parsedInfo._id
+			if (rawInfo) {
+				try {
+					const parsedInfo = JSON.parse(rawInfo)
+					employeeId = parsedInfo._id || parsedInfo.employee_id
+				} catch (e) {
+					console.error('Error parsing employee info:', e)
+				}
 			}
 
 			if (!employeeId) {
@@ -102,17 +110,6 @@ const EmployeeExpenseReportsList: React.FC = () => {
 		fetchExpenseReports()
 	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder, selectedDateRange, searchTerm])
 
-	const isFirstRender = React.useRef(true)
-
-	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false
-			return
-		}
-		localStorage.setItem('emp_expense_report_searchTerm', searchTerm)
-		setPagination((prev) => ({ ...prev, page: 1 }))
-	}, [searchTerm])
-
 	useEffect(() => {
 		if (selectedDateRange) {
 			localStorage.setItem(
@@ -123,6 +120,10 @@ const EmployeeExpenseReportsList: React.FC = () => {
 			localStorage.removeItem('emp_expense_report_selectedDateRange')
 		}
 	}, [selectedDateRange])
+
+	useEffect(() => {
+		localStorage.setItem('emp_expense_report_searchTerm', searchTerm)
+	}, [searchTerm])
 
 	useEffect(() => {
 		localStorage.setItem('emp_expense_report_pagination', JSON.stringify(pagination))
@@ -198,72 +199,65 @@ const EmployeeExpenseReportsList: React.FC = () => {
 	const getStatusBadgeClass = (status: string) => {
 		switch (status) {
 			case 'Approved':
-				return 'badge badge-success'
+				return 'badge badge-light-success px-3 py-2 fs-7 fw-semibold'
 			case 'Rejected':
-				return 'badge badge-danger'
+				return 'badge badge-light-danger px-3 py-2 fs-7 fw-semibold'
 			case 'Pending':
-				return 'badge badge-warning'
+				return 'badge badge-light-warning px-3 py-2 fs-7 fw-semibold'
 			default:
-				return 'badge badge-secondary'
+				return 'badge badge-light-secondary px-3 py-2 fs-7 fw-semibold'
 		}
 	}
 
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>My Expense Reports</PageTitle>
-			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title'>
-						<h2>My Expense Reports</h2>
+
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				{/* Modern Header */}
+				<div className='card-header border-0 pt-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div>
+						<div className='d-flex align-items-center gap-2'>
+							<h2 className='fw-bolder text-gray-900 mb-0'>My Expense Reports</h2>
+							<span className='badge badge-light-primary fw-bold fs-8'>
+								{metaData?.totalDocs || expenseReports.length} records
+							</span>
+						</div>
+						<span className='text-muted fs-7 fw-semibold mt-1'>
+							Submit expense claims, track reimbursement approvals, and review disbursements
+						</span>
 					</div>
-					<div className='card-toolbar'>
+
+					<div className='d-flex align-items-center flex-wrap gap-3'>
+						<LengthMenu
+							expenseData={expenseReports}
+							handleItemsPerPageChange={(val) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))
+							}
+						/>
+
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							leftValue='-270px'
+							storageKey='emp_expense_report_selectedDateRange'
+						/>
+
+						<div style={{ minWidth: '220px' }}>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								placeholder='Search expense reports...'
+							/>
+						</div>
+
 						<button
 							type='button'
-							className='btn btn-primary'
+							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '10px' }}
 							onClick={handleCreateReport}>
-							<i className='fas fa-plus-circle me-2'></i>
-							Create Expense Report
+							<i className='bi bi-plus-lg fs-6'></i>
+							<span>Create Report</span>
 						</button>
-					</div>
-				</div>
-				<div className='row card-header border-0 pt-0 align-items-center ms-0 mx-md-6 p-0'>
-					<div className='col-md-12'>
-						<div className='row mt-3 justify-content-between'>
-							<div className='col-md-4 mt-md-7 mb-0 d-flex card-toolbar p-0'>
-								<div className='d-md-flex'>
-									<div className='d-md-flex me-3'>
-										{expenseReports?.length > 0 && (
-											<select
-												className='form-select form-select-sm mx-3'
-												style={{ width: '80px' }}
-												value={pagination.itemsPerPage}
-												onChange={(e) =>
-													setPagination((prev) => ({
-														...prev,
-														itemsPerPage: Number(e.target.value),
-														page: 1,
-													}))
-												}>
-												<option value='10'>10</option>
-												<option value='50'>50</option>
-												<option value='100'>100</option>
-											</select>
-										)}
-									</div>
-									<DateFilter
-										onDateRangeChange={handleDateRangeChange}
-										leftValue='-270px'
-										storageKey='emp_expense_report_selectedDateRange'
-									/>
-								</div>
-							</div>
-							<div className='col-md-3 mt-md-7 mt-2 mb-0 d-flex p-0 justify-content-end position-relative'>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-								/>
-							</div>
-						</div>
 					</div>
 				</div>
 
@@ -292,8 +286,11 @@ const EmployeeExpenseReportsList: React.FC = () => {
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-												₹{report.total_amount?.toFixed(2) || '0.00'}
+											<span className='text-dark fw-bolder d-block mb-1 fs-6 text-primary'>
+												₹{Number(report.total_amount || 0).toLocaleString('en-IN', {
+													minimumFractionDigits: 2,
+													maximumFractionDigits: 2,
+												})}
 											</span>
 										</td>
 										<td>
@@ -306,53 +303,81 @@ const EmployeeExpenseReportsList: React.FC = () => {
 												{DayJS(report.createdAt).format('DD/MM/YYYY')}
 											</span>
 										</td>
-										<td>
-											<div className='d-flex align-items-center gap-2'>
-												<button
-													className='btn btn-info btn-sm'
-													onClick={() => handleViewReport(report._id)}>
-													<i className='fas fa-eye p-0'></i>
-												</button>
-												<button
-													className='btn btn-danger btn-sm'
+										<td className='text-center py-4'>
+											<div className='d-flex align-items-center justify-content-center gap-2'>
+												<TableButton
+													action='view'
 													onClick={(e) => {
 														e.stopPropagation()
-														handleDeleteReport(report._id, report.purpose)
-													}}>
-													<i className='fas fa-trash p-0'></i>
-												</button>
+														handleViewReport(report._id)
+													}}
+												/>
+												{report.status === 'Pending' && (
+													<>
+														<TableButton
+															action='edit'
+															onClick={(e) => {
+																e.stopPropagation()
+																navigate(`/employee/expense-edit?id=${report._id}`)
+															}}
+														/>
+														<TableButton
+															action='remove'
+															onClick={(e) => {
+																e.stopPropagation()
+																handleDeleteReport(report._id, report.purpose)
+															}}
+														/>
+													</>
+												)}
 											</div>
 										</td>
 									</tr>
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12}>
-												<div>
-													<strong>Purpose:</strong> {report.purpose}
-													<br />
-													<strong>Total Amount:</strong> ₹
-													{report.total_amount?.toFixed(2) || '0.00'}
-													<br />
-													<strong>Status:</strong>
-													<span className={getStatusBadgeClass(report.status || 'Pending')}>
-														{report.status || 'Pending'}
-													</span>
-													<br />
-													<strong>Created At:</strong>{' '}
-													{DayJS(report.createdAt).format('DD/MM/YYYY HH:mm')}
-													<br />
-													{report.remarks && (
-														<>
-															<strong>Remarks:</strong> {report.remarks}
-															<br />
-														</>
-													)}
-													{report.rejected_reason && (
-														<>
-															<strong>Rejection Reason:</strong> {report.rejected_reason}
-															<br />
-														</>
-													)}
+												<div className='p-3 bg-light rounded-3'>
+													<div className='row g-3'>
+														<div className='col-md-4'>
+															<strong className='text-gray-700'>Purpose:</strong>
+															<div className='text-gray-900'>{report.purpose}</div>
+														</div>
+														<div className='col-md-4'>
+															<strong className='text-gray-700'>Total Amount:</strong>
+															<div className='text-primary fw-bold'>
+																₹{Number(report.total_amount || 0).toLocaleString('en-IN', {
+																	minimumFractionDigits: 2,
+																	maximumFractionDigits: 2,
+																})}
+															</div>
+														</div>
+														<div className='col-md-4'>
+															<strong className='text-gray-700'>Status:</strong>
+															<div>
+																<span className={getStatusBadgeClass(report.status || 'Pending')}>
+																	{report.status || 'Pending'}
+																</span>
+															</div>
+														</div>
+														<div className='col-md-4'>
+															<strong className='text-gray-700'>Created At:</strong>
+															<div className='text-gray-800'>
+																{DayJS(report.createdAt).format('DD/MM/YYYY HH:mm')}
+															</div>
+														</div>
+														{report.remarks && (
+															<div className='col-md-8'>
+																<strong className='text-gray-700'>Remarks:</strong>
+																<div className='text-gray-800'>{report.remarks}</div>
+															</div>
+														)}
+														{report.rejected_reason && (
+															<div className='col-12'>
+																<strong className='text-danger'>Rejection Reason:</strong>
+																<div className='text-danger'>{report.rejected_reason}</div>
+															</div>
+														)}
+													</div>
 												</div>
 											</td>
 										</tr>
@@ -365,21 +390,36 @@ const EmployeeExpenseReportsList: React.FC = () => {
 							loading={loading}
 						/>
 					</div>
+
 					{expenseReports.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No expense reports found</b>
+						<div className='d-flex flex-column align-items-center justify-content-center text-center py-10 w-100'>
+							<div
+								className='rounded-circle d-flex align-items-center justify-content-center mb-3'
+								style={{ width: '56px', height: '56px', background: '#eff6ff' }}>
+								<i className='bi bi-receipt fs-2' style={{ color: '#2563EB' }}></i>
+							</div>
+							<span className='fw-bold text-gray-700 fs-6'>No expense reports found</span>
+							<span className='text-muted fs-7'>No expense reports recorded for the selected date range.</span>
 						</div>
 					)}
 
-					{metaData && expenseReports.length > 0 && (
-						<UsersListPagination
-							totalPages={metaData.totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
+					{expenseReports.length > 0 && (
+						<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+							<div className='text-muted fs-7 fw-semibold'>
+								Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, metaData?.totalDocs || expenseReports.length)} to{' '}
+								{Math.min(pagination.page * pagination.itemsPerPage, metaData?.totalDocs || expenseReports.length)} of {metaData?.totalDocs || expenseReports.length} records
+							</div>
+							{metaData && (
+								<UsersListPagination
+									totalPages={metaData.totalPages}
+									currentPage={pagination.page}
+									onPageChange={handlePageChange}
+								/>
+							)}
+						</div>
 					)}
 				</div>
-			</KTCard>
+			</div>
 		</>
 	)
 }

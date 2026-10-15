@@ -1,18 +1,22 @@
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import * as XLSX from 'xlsx'
 import { toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetSalary } from '../../../Functions/FGGroup/Attendance'
 import { GetTask } from '../../../Functions/FGGroup/TaskManagement'
 import { GetExpenseReports } from '../../../Functions/FGGroup/ExpenseReport'
 import { getProfile } from '../../../Functions/FGGroup'
+import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import NumberTicker from '../../../components/NumberTicker'
 
 type QuerySortOptions = 'asc' | 'desc'
@@ -24,7 +28,7 @@ const Report: React.FC = () => {
 
     const getStoredEmployee = () => {
         try {
-            const raw = localStorage.getItem('fg_group_info') || localStorage.getItem('fg_group_user_info') || localStorage.getItem('auth_fg_group')
+            const raw = localStorage.getItem('fg_group_user_info') || localStorage.getItem('fg_group_info') || localStorage.getItem('auth_fg_group')
             return raw ? JSON.parse(raw) : null
         } catch {
             return null
@@ -53,25 +57,51 @@ const Report: React.FC = () => {
     const [loadingExpenses, setLoadingExpenses] = useState(false)
     const [activeTab, setActiveTab] = useState<ReportViewTab>('payroll')
     const [copiedField, setCopiedField] = useState<string | null>(null)
+    const [showOptionsDropdown, setShowOptionsDropdown] = useState(false)
+    const optionsDropdownRef = useRef<HTMLDivElement>(null)
 
-    // Ensure employee profile exists even if localStorage was emptied
+    // Close dropdown on click outside
     useEffect(() => {
-        if (!employee) {
-            getProfile()
-                .then((res: any) => {
-                    if (res?.data) {
-                        localStorage.setItem('fg_group_info', JSON.stringify(res.data))
-                        setEmployee(res.data)
-                    }
-                })
-                .catch((err) => console.error('Error auto-fetching profile:', err))
+        const handleClickOutside = (event: MouseEvent) => {
+            if (optionsDropdownRef.current && !optionsDropdownRef.current.contains(event.target as Node)) {
+                setShowOptionsDropdown(false)
+            }
         }
-    }, [employee])
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    // Ensure real employee profile is fetched and loaded
+    useEffect(() => {
+        const loadEmployeeProfile = async () => {
+            try {
+                if (queryEmployeeId) {
+                    const empRes: any = await GetEmployees({ id: queryEmployeeId })
+                    if (empRes?.data) {
+                        const targetEmp = Array.isArray(empRes.data) ? empRes.data[0] : empRes.data
+                        if (targetEmp) {
+                            setEmployee(targetEmp)
+                            return
+                        }
+                    }
+                }
+                const res: any = await getProfile()
+                if (res?.data) {
+                    localStorage.setItem('fg_group_user_info', JSON.stringify(res.data))
+                    setEmployee((prev: any) => ({ ...prev, ...res.data }))
+                }
+            } catch (err) {
+                console.error('Error fetching employee profile:', err)
+            }
+        }
+        loadEmployeeProfile()
+    }, [queryEmployeeId])
 
     const copyToClipboard = (text: string, fieldName: string) => {
-        if (!text) return
+        if (!text || text === '—') return
         navigator.clipboard?.writeText(text)
         setCopiedField(fieldName)
+        toast.success(`Copied to clipboard`)
         setTimeout(() => setCopiedField(null), 2000)
     }
 
@@ -104,6 +134,7 @@ const Report: React.FC = () => {
             const response: any = await GetSalary({
                 from_date: startDate,
                 to_date: endDate,
+                employee_id: employee_id,
             })
 
             const filteredData = response.data
@@ -114,7 +145,7 @@ const Report: React.FC = () => {
             if (data && data.length > 0) {
                 setEmployeeData(data[0])
 
-                const joiningDate = data[0]?.joining_date
+                const joiningDate = data[0]?.joining_date || employee?.joining_date
                 let joiningDuration = ''
                 if (joiningDate) {
                     const start = DayJS(joiningDate)
@@ -128,7 +159,7 @@ const Report: React.FC = () => {
                     else joiningDuration = `${days} D`
                 }
 
-                setJoiningTime(joiningDuration)
+                setJoiningTime(joiningDuration || null)
                 setSalaryData(data[0].attendance || [])
             } else {
                 setSalaryData([])
@@ -137,6 +168,30 @@ const Report: React.FC = () => {
             console.error('Error fetching salary data:', error)
         }
         setLoading(false)
+    }
+
+    const handleExportStatement = () => {
+        try {
+            const attendanceRows = (salaryData || []).map((s: any, idx: number) => ({
+                '#': idx + 1,
+                Date: DayJS(s.date).format('DD/MM/YYYY'),
+                Status: s.status || 'Present',
+                Type: s.halfDay ? 'Half Day' : 'Full Day',
+                'Work Hours': s.WorkTime || '—',
+                'Over Time': s.OverTime || '00:00',
+            }))
+
+            const workbook = XLSX.utils.book_new()
+            const worksheet = XLSX.utils.json_to_sheet(
+                attendanceRows.length > 0 ? attendanceRows : [{ Note: 'No attendance records logged for this period' }]
+            )
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance Records')
+            XLSX.writeFile(workbook, `Employee_Report_${employeeData?.employee_code || employee?.employee_code || 'Report'}_${DayJS().format('YYYY-MM-DD')}.xlsx`)
+            toast.success('Statement downloaded successfully!')
+        } catch (err) {
+            console.error('Export error:', err)
+            toast.error('Failed to export statement')
+        }
     }
 
     const fetchExpenseData = async () => {
@@ -294,9 +349,9 @@ const Report: React.FC = () => {
     }
 
     // Calculations
-    const baseSalary = Number(employeeData?.total_salary || 0)
+    const baseSalary = Number(employeeData?.total_salary || employee?.total_salary || employee?.salary || 0)
     const oneDaySalary = baseSalary > 0 ? Math.round(baseSalary / 26) : 0
-    const finalSalary = Number(employeeData?.final_salary || 0)
+    const finalSalary = Number(employeeData?.final_salary || (baseSalary > 0 ? baseSalary : 0))
     const absentSalary = Number(employeeData?.absent_cutting_salary?.[0]?.salary || 0)
     const absentDays = employeeData?.absent_cutting_salary?.[0]?.absent || 0
     const halfDaySalary = Number(employeeData?.half_day_salary?.[0]?.salary || 0)
@@ -312,43 +367,35 @@ const Report: React.FC = () => {
     const totalDeductions = absentSalary + halfDaySalary + (taskRatingType === 'minus' ? taskRatingSalary : 0) + tenPercentHold
     const grossEarnings = baseSalary + (taskRatingType === 'plus' ? taskRatingSalary : 0) + approvedExpensesTotal
 
-    const totalAttendanceLogs = salaryData?.length || 26
+    const totalAttendanceLogs = salaryData?.length || 0
     const presentCount = salaryData?.filter((s: any) => s.status === 'P' || s.status === 'Present').length || 0
     const attendancePercentage = totalAttendanceLogs > 0 ? (presentCount / totalAttendanceLogs) * 100 : 0
     const circumference = 2 * Math.PI * 46
     const strokeDashoffset = circumference - (attendancePercentage / 100) * circumference
 
-    const fullName = employeeData?.full_name || employee?.full_name || 'chiragFWG'
-    const employeeCode = employeeData?.employee_code || employee?.employee_code || 'ID: —'
-    const firstInitial = fullName ? fullName.charAt(0).toUpperCase() : 'C'
+    const fullName = employeeData?.full_name || employee?.full_name || employee?.name || 'Employee'
+    const employeeCode = employeeData?.employee_code || employee?.employee_code || 'EMP-—'
+    const email = employeeData?.email || employee?.email || '—'
+    const mobile = employeeData?.mobile || employee?.phone || employee?.mobile || '—'
+    const firstInitial = fullName && fullName !== 'Employee' ? fullName.charAt(0).toUpperCase() : 'E'
 
     return (
         <>
             <PageTitle breadcrumbs={[]}>Report</PageTitle>
 
             {/* =========================================================================
-                1. TOP EXECUTIVE PROFILE CARD (EXACT MATCH TO REFERENCE)
+                1. TOP EXECUTIVE PROFILE CARD
                ========================================================================= */}
             <div className='gz-report-profile-card'>
-                {/* Top Row: Left Avatar & Stats, Right Buttons & Doodles */}
+                {/* Top Row: Left Avatar & Stats, Right Buttons */}
                 <div className='d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-4'>
-                    {/* Left Identity: Handwritten Doodle + Circular Avatar + Identity & Stats */}
+                    {/* Left Identity: Avatar + Details & Stats */}
                     <div className='d-flex align-items-center gap-3 gap-md-4 flex-wrap'>
-                        {/* Left Doodle "Good Work! ✨" pointing to avatar */}
-                        <div className='gz-doodle-good-work d-none d-md-flex'>
-                            <div className='gz-doodle-text'>
-                                Good<br />Work! ✨
-                            </div>
-                            <svg width='34' height='38' viewBox='0 0 34 38' fill='none' style={{ marginTop: '2px', marginLeft: '12px' }}>
-                                <path d='M4 2C12 10 24 16 28 28M28 28L21 26M28 28L28 20' stroke='#64748B' strokeWidth='1.6' strokeLinecap='round' strokeLinejoin='round'/>
-                            </svg>
-                        </div>
-
                         {/* Circular Avatar */}
                         <div className='gz-avatar-hero'>
-                            {employeeData?.photo ? (
+                            {employeeData?.photo || employee?.photo ? (
                                 <img
-                                    src={`https://files.fggroup.in/${employeeData.photo}`}
+                                    src={`https://files.fggroup.in/${employeeData?.photo || employee?.photo}`}
                                     alt={fullName}
                                     style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                                 />
@@ -373,7 +420,7 @@ const Report: React.FC = () => {
                             <div className='d-flex align-items-center flex-wrap gap-2 gap-sm-0 my-3'>
                                 <div className='gz-stat-col ps-0 text-start'>
                                     <div className='gz-stat-number'>
-                                        <NumberTicker value={totalAttendanceLogs || 26} />
+                                        <NumberTicker value={totalAttendanceLogs} />
                                     </div>
                                     <div className='gz-stat-label'>Working Days</div>
                                 </div>
@@ -401,71 +448,135 @@ const Report: React.FC = () => {
 
                                 <div className='gz-stat-col pe-0'>
                                     <div className='gz-stat-number'>
-                                        <NumberTicker text={joiningTime || '1+ YR'} />
+                                        <NumberTicker text={joiningTime || '—'} />
                                     </div>
                                     <div className='gz-stat-label'>At GOMZI</div>
                                 </div>
                             </div>
 
-                            {/* Meta & Quote */}
+                            {/* Meta */}
                             <div className='d-flex align-items-center gap-3 text-muted fs-8 flex-wrap mt-2'>
                                 <span className='d-inline-flex align-items-center gap-1 text-gray-700'>
                                     <i className='bi bi-person-badge text-gray-500'></i> Employee
                                 </span>
                                 <span>|</span>
-                                <span className='text-gray-700'>{employeeCode}</span>
+                                <span className='text-gray-700 font-monospace'>{employeeCode}</span>
                                 <span>|</span>
                                 <span className='d-inline-flex align-items-center gap-1 text-gray-700'>
-                                    Joined {employeeData?.joining_date ? DayJS(employeeData.joining_date).format('DD-MM-YYYY') : 'dd-mm-yyyy'}
+                                    Joined {employeeData?.joining_date || employee?.joining_date ? DayJS(employeeData?.joining_date || employee?.joining_date).format('DD-MM-YYYY') : '—'}
                                 </span>
-                            </div>
-
-                            <div className='text-muted fs-8 fst-italic mt-2'>
-                                “Discipline today, stronger tomorrow.”
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Buttons & Doodle */}
+                    {/* Right Buttons with 3-Dots Dropdown */}
                     <div className='d-flex flex-column align-items-lg-end gap-2'>
-                        {/* Action Buttons */}
                         <div className='d-flex align-items-center gap-2 flex-wrap'>
                             <button
                                 type='button'
                                 onClick={() => window.print()}
-                                className='btn btn-sm text-white fw-bold px-3'
-                                style={{ background: '#0F172A', borderRadius: '6px' }}>
-                                View Payslip
+                                className='gz-report-btn-payslip'>
+                                <i className='bi bi-file-earmark-text fs-7'></i>
+                                <span>View Payslip</span>
                             </button>
 
                             <button
                                 type='button'
-                                onClick={() => window.print()}
-                                className='btn btn-sm btn-light border text-gray-800 fw-medium d-inline-flex align-items-center gap-1 px-3'
-                                style={{ borderRadius: '6px' }}>
-                                <i className='bi bi-download fs-8'></i> Download Statement
+                                onClick={handleExportStatement}
+                                className='gz-report-btn-download'>
+                                <i className='bi bi-download fs-7'></i>
+                                <span>Download Statement</span>
                             </button>
 
-                            <button
-                                type='button'
-                                onClick={() => {
-                                    fetchSalaryData()
-                                    fetchExpenseData()
-                                    fetchAssignTaskData()
-                                }}
-                                className='btn btn-sm btn-light border text-gray-700 px-2'
-                                style={{ borderRadius: '6px' }}
-                                title='Options / Refresh'>
-                                <i className='bi bi-three-dots-vertical'></i>
-                            </button>
-                        </div>
+                            <div className='position-relative' ref={optionsDropdownRef}>
+                                <button
+                                    type='button'
+                                    onClick={() => setShowOptionsDropdown((prev) => !prev)}
+                                    className='gz-report-btn-dots'
+                                    title='More Options'>
+                                    <i className='bi bi-three-dots-vertical fs-6'></i>
+                                </button>
 
-                        {/* Right Doodle "All your payroll info in one place." */}
-                        <div className='gz-doodle-payroll-info d-none d-xl-flex'>
-                            <svg width='32' height='36' viewBox='0 0 32 36' fill='none'>
-                                <path d='M6 4C18 8 26 18 20 30M20 30L14 26M20 30L25 25' stroke='#64748B' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round'/>
-                            </svg>
-                            <div>All your<br />payroll info<br />in one place.</div>
+                                {showOptionsDropdown && (
+                                    <div
+                                        className='dropdown-menu show shadow-lg border-0 py-2'
+                                        style={{
+                                            position: 'absolute',
+                                            top: '100%',
+                                            right: 0,
+                                            marginTop: '6px',
+                                            minWidth: '220px',
+                                            borderRadius: '12px',
+                                            zIndex: 1050,
+                                            background: '#ffffff',
+                                            border: '1px solid #e2e8f0',
+                                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08)',
+                                        }}>
+                                        <button
+                                            type='button'
+                                            className='dropdown-item d-flex align-items-center gap-2 py-2 px-4 fs-7 text-gray-800'
+                                            onClick={() => {
+                                                setShowOptionsDropdown(false)
+                                                fetchSalaryData()
+                                                fetchExpenseData()
+                                                fetchAssignTaskData()
+                                                toast.success('Report data refreshed successfully!')
+                                            }}>
+                                            <i className='bi bi-arrow-clockwise text-primary fs-6'></i>
+                                            <span>Refresh Report Data</span>
+                                        </button>
+
+                                        <button
+                                            type='button'
+                                            className='dropdown-item d-flex align-items-center gap-2 py-2 px-4 fs-7 text-gray-800'
+                                            onClick={() => {
+                                                setShowOptionsDropdown(false)
+                                                copyToClipboard(employeeCode, 'code')
+                                            }}>
+                                            <i className='bi bi-clipboard text-gray-600 fs-6'></i>
+                                            <span>Copy Employee Code</span>
+                                        </button>
+
+                                        <button
+                                            type='button'
+                                            className='dropdown-item d-flex align-items-center gap-2 py-2 px-4 fs-7 text-gray-800'
+                                            onClick={() => {
+                                                setShowOptionsDropdown(false)
+                                                if (typeof window !== 'undefined') {
+                                                    navigator.clipboard.writeText(window.location.href)
+                                                    toast.success('Report URL copied to clipboard!')
+                                                }
+                                            }}>
+                                            <i className='bi bi-link-45deg text-gray-600 fs-6'></i>
+                                            <span>Copy Report Link</span>
+                                        </button>
+
+                                        <div className='dropdown-divider my-1'></div>
+
+                                        <button
+                                            type='button'
+                                            className='dropdown-item d-flex align-items-center gap-2 py-2 px-4 fs-7 text-gray-800'
+                                            onClick={() => {
+                                                setShowOptionsDropdown(false)
+                                                setActiveTab('attendance')
+                                            }}>
+                                            <i className='bi bi-calendar-check text-success fs-6'></i>
+                                            <span>View Attendance Logs</span>
+                                        </button>
+
+                                        <button
+                                            type='button'
+                                            className='dropdown-item d-flex align-items-center gap-2 py-2 px-4 fs-7 text-gray-800'
+                                            onClick={() => {
+                                                setShowOptionsDropdown(false)
+                                                setActiveTab('details')
+                                            }}>
+                                            <i className='bi bi-person-vcard text-info fs-6'></i>
+                                            <span>View Personnel Details</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -534,20 +645,12 @@ const Report: React.FC = () => {
                             <h3 className='fw-bold fs-4 text-gray-900 mb-1'>Daily Attendance Punch Records</h3>
                             <span className='text-muted fs-8'>Detailed working hours, punch times, and status logs</span>
                         </div>
-                        <div className='d-flex align-items-center gap-3'>
-                            <input
-                                type='text'
-                                className='form-control form-control-sm ps-3 bg-light border'
-                                placeholder='Search date...'
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                        <div style={{ width: '240px' }}>
+                            <SearchFilter
+                                searchTerm={searchTerm}
+                                setSearchTerm={setSearchTerm}
+                                placeholder='Search date or status...'
                             />
-                            <button
-                                type='button'
-                                className='btn btn-sm btn-light border text-gray-700'
-                                onClick={() => setActiveTab('payroll')}>
-                                ← Back to Overview
-                            </button>
                         </div>
                     </div>
                     <div className='card-body p-5'>
@@ -591,18 +694,12 @@ const Report: React.FC = () => {
             )}
 
             {activeTab === 'expenses' && (
-                <div className='card mb-6 shadow-sm border-0' style={{ borderRadius: '12px', border: '1px solid var(--gz-border)' }}>
+                <div className='card mb-6 shadow-sm border-0' style={{ borderRadius: '14px', border: '1px solid #e2e8f0', background: '#ffffff' }}>
                     <div className='d-flex flex-wrap align-items-center justify-content-between p-5 border-bottom'>
                         <div>
                             <h3 className='fw-bold fs-4 text-gray-900 mb-1'>Approved Expense Claims</h3>
                             <span className='text-muted fs-8'>Reimbursed out-of-pocket operational claims</span>
                         </div>
-                        <button
-                            type='button'
-                            className='btn btn-sm btn-light border text-gray-700'
-                            onClick={() => setActiveTab('payroll')}>
-                            ← Back to Overview
-                        </button>
                     </div>
                     <div className='card-body p-5'>
                         <table className='table align-middle'>
@@ -643,56 +740,160 @@ const Report: React.FC = () => {
                 </div>
             )}
 
+            {/* My Personnel Details (Modern Executive Redesign) */}
             {activeTab === 'details' && (
-                <div className='card mb-6 shadow-sm border-0' style={{ borderRadius: '12px', border: '1px solid var(--gz-border)' }}>
+                <div className='card mb-6 shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff', border: '1px solid #e2e8f0' }}>
                     <div className='d-flex flex-wrap align-items-center justify-content-between p-5 border-bottom'>
-                        <div>
-                            <h3 className='fw-bold fs-4 text-gray-900 mb-1'>My Personnel Details</h3>
-                            <span className='text-muted fs-8'>Registered employee credentials and contractual rates</span>
+                        <div className='d-flex align-items-center gap-3'>
+                            <div
+                                className='rounded-3 d-flex align-items-center justify-content-center'
+                                style={{ width: '42px', height: '42px', backgroundColor: '#eff6ff', color: '#2563eb' }}>
+                                <i className='bi bi-person-vcard fs-3 text-primary'></i>
+                            </div>
+                            <div>
+                                <h3 className='fw-bold fs-4 text-gray-900 mb-0'>My Personnel Details</h3>
+                                <span className='text-muted fs-8'>Registered employment profile, official credentials, and contractual compensation rates</span>
+                            </div>
                         </div>
-                        <button
-                            type='button'
-                            className='btn btn-sm btn-light border text-gray-700'
-                            onClick={() => setActiveTab('payroll')}>
-                            ← Back to Overview
-                        </button>
+                        <div className='d-flex align-items-center gap-2'>
+                            <span className='badge bg-light-success text-success fw-bold px-3 py-2 fs-8' style={{ borderRadius: '6px' }}>
+                                <i className='bi bi-patch-check-fill me-1'></i> Active Employment
+                            </span>
+                        </div>
                     </div>
-                    <div className='card-body p-5'>
-                        <div className='row g-4'>
-                            <div className='col-md-4'>
-                                <div className='p-3 bg-light rounded-2 border'>
-                                    <span className='text-muted fs-8 d-block'>Employee Code</span>
-                                    <span className='fw-bold fs-6'>{employeeCode}</span>
+
+                    <div className='card-body p-6'>
+                        {/* Section 1: Contact & Identification */}
+                        <div className='mb-6'>
+                            <div className='d-flex align-items-center gap-2 mb-4'>
+                                <span className='text-uppercase fs-8 fw-bold text-muted letter-spacing-1'>Contact & Identification</span>
+                                <div className='flex-grow-1 border-bottom' style={{ borderColor: '#f1f5f9' }}></div>
+                            </div>
+
+                            <div className='row g-4'>
+                                {/* Employee Code */}
+                                <div className='col-12 col-md-6 col-lg-3'>
+                                    <div
+                                        className='p-4 rounded-3 h-100 d-flex flex-column justify-content-between'
+                                        style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                        <div className='d-flex align-items-center justify-content-between mb-2'>
+                                            <span className='text-muted fs-8 fw-semibold text-uppercase'>Employee Code</span>
+                                            <button
+                                                type='button'
+                                                onClick={() => copyToClipboard(employeeCode, 'code')}
+                                                className='btn btn-icon btn-xs btn-light'
+                                                style={{ width: '24px', height: '24px', borderRadius: '4px' }}
+                                                title='Copy code'>
+                                                <i className={`bi ${copiedField === 'code' ? 'bi-check2 text-success' : 'bi-clipboard text-muted'} fs-8`}></i>
+                                            </button>
+                                        </div>
+                                        <div className='fs-5 fw-bold text-gray-900 font-monospace'>{employeeCode}</div>
+                                    </div>
+                                </div>
+
+                                {/* Full Name */}
+                                <div className='col-12 col-md-6 col-lg-3'>
+                                    <div
+                                        className='p-4 rounded-3 h-100 d-flex flex-column justify-content-between'
+                                        style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                        <div className='d-flex align-items-center justify-content-between mb-2'>
+                                            <span className='text-muted fs-8 fw-semibold text-uppercase'>Full Name</span>
+                                            <i className='bi bi-person text-gray-400 fs-7'></i>
+                                        </div>
+                                        <div className='fs-5 fw-bold text-gray-900'>{fullName}</div>
+                                    </div>
+                                </div>
+
+                                {/* Email Address */}
+                                <div className='col-12 col-md-6 col-lg-3'>
+                                    <div
+                                        className='p-4 rounded-3 h-100 d-flex flex-column justify-content-between'
+                                        style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                        <div className='d-flex align-items-center justify-content-between mb-2'>
+                                            <span className='text-muted fs-8 fw-semibold text-uppercase'>Email Address</span>
+                                            <button
+                                                type='button'
+                                                onClick={() => copyToClipboard(email, 'email')}
+                                                className='btn btn-icon btn-xs btn-light'
+                                                style={{ width: '24px', height: '24px', borderRadius: '4px' }}
+                                                title='Copy email'>
+                                                <i className={`bi ${copiedField === 'email' ? 'bi-check2 text-success' : 'bi-clipboard text-muted'} fs-8`}></i>
+                                            </button>
+                                        </div>
+                                        <div className='fs-6 fw-bold text-gray-900 text-truncate' title={email}>
+                                            {email}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Mobile Phone */}
+                                <div className='col-12 col-md-6 col-lg-3'>
+                                    <div
+                                        className='p-4 rounded-3 h-100 d-flex flex-column justify-content-between'
+                                        style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                        <div className='d-flex align-items-center justify-content-between mb-2'>
+                                            <span className='text-muted fs-8 fw-semibold text-uppercase'>Mobile Phone</span>
+                                            <button
+                                                type='button'
+                                                onClick={() => copyToClipboard(mobile, 'mobile')}
+                                                className='btn btn-icon btn-xs btn-light'
+                                                style={{ width: '24px', height: '24px', borderRadius: '4px' }}
+                                                title='Copy mobile'>
+                                                <i className={`bi ${copiedField === 'mobile' ? 'bi-check2 text-success' : 'bi-clipboard text-muted'} fs-8`}></i>
+                                            </button>
+                                        </div>
+                                        <div className='fs-5 fw-bold text-gray-900'>{mobile}</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className='col-md-4'>
-                                <div className='p-3 bg-light rounded-2 border'>
-                                    <span className='text-muted fs-8 d-block'>Full Name</span>
-                                    <span className='fw-bold fs-6'>{fullName}</span>
-                                </div>
+                        </div>
+
+                        {/* Section 2: Compensation Structure */}
+                        <div>
+                            <div className='d-flex align-items-center gap-2 mb-4'>
+                                <span className='text-uppercase fs-8 fw-bold text-muted letter-spacing-1'>Compensation Structure</span>
+                                <div className='flex-grow-1 border-bottom' style={{ borderColor: '#f1f5f9' }}></div>
                             </div>
-                            <div className='col-md-4'>
-                                <div className='p-3 bg-light rounded-2 border'>
-                                    <span className='text-muted fs-8 d-block'>Email</span>
-                                    <span className='fw-bold fs-6'>{employeeData?.email || '—'}</span>
+
+                            <div className='row g-4'>
+                                {/* Monthly Base Salary */}
+                                <div className='col-12 col-md-6'>
+                                    <div
+                                        className='p-5 rounded-3 d-flex align-items-center justify-content-between'
+                                        style={{ background: '#eff6ff', border: '1px solid #dbeafe' }}>
+                                        <div>
+                                            <span className='text-primary fw-bold fs-8 text-uppercase letter-spacing-1'>Monthly Base Salary</span>
+                                            <div className='fs-2hx fw-boldest text-gray-900 mt-1'>
+                                                ₹{baseSalary.toLocaleString()} /-
+                                            </div>
+                                            <span className='text-muted fs-8 mt-1 d-block'>Fixed contractual gross earnings per billing month</span>
+                                        </div>
+                                        <div
+                                            className='rounded-circle d-flex align-items-center justify-content-center'
+                                            style={{ width: '48px', height: '48px', backgroundColor: '#ffffff', color: '#2563eb', boxShadow: '0 2px 6px rgba(37, 99, 235, 0.15)' }}>
+                                            <i className='bi bi-cash-stack fs-4'></i>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className='col-md-4'>
-                                <div className='p-3 bg-light rounded-2 border'>
-                                    <span className='text-muted fs-8 d-block'>Mobile</span>
-                                    <span className='fw-bold fs-6'>{employeeData?.mobile || '—'}</span>
-                                </div>
-                            </div>
-                            <div className='col-md-4'>
-                                <div className='p-3 bg-light rounded-2 border'>
-                                    <span className='text-muted fs-8 d-block'>Monthly Base Salary</span>
-                                    <span className='fw-bold fs-6'>₹{baseSalary.toLocaleString()} /-</span>
-                                </div>
-                            </div>
-                            <div className='col-md-4'>
-                                <div className='p-3 bg-light rounded-2 border'>
-                                    <span className='text-muted fs-8 d-block'>Daily Baseline Rate</span>
-                                    <span className='fw-bold fs-6'>₹{oneDaySalary} / day</span>
+
+                                {/* Daily Baseline Rate */}
+                                <div className='col-12 col-md-6'>
+                                    <div
+                                        className='p-5 rounded-3 d-flex align-items-center justify-content-between'
+                                        style={{ background: '#f0fdf4', border: '1px solid #dcfce7' }}>
+                                        <div>
+                                            <span className='text-success fw-bold fs-8 text-uppercase letter-spacing-1'>Daily Baseline Rate</span>
+                                            <div className='fs-2hx fw-boldest text-gray-900 mt-1'>
+                                                ₹{oneDaySalary.toLocaleString()} <span className='fs-6 fw-normal text-muted'>/ day</span>
+                                            </div>
+                                            <span className='text-muted fs-8 mt-1 d-block'>Computed at Base Pay ÷ 26 standard working days</span>
+                                        </div>
+                                        <div
+                                            className='rounded-circle d-flex align-items-center justify-content-center'
+                                            style={{ width: '48px', height: '48px', backgroundColor: '#ffffff', color: '#16a34a', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.15)' }}>
+                                            <i className='bi bi-calendar-check fs-4'></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -701,26 +902,18 @@ const Report: React.FC = () => {
             )}
 
             {activeTab === 'tasks' && (
-                <div className='card mb-6 shadow-sm border-0' style={{ borderRadius: '12px', border: '1px solid var(--gz-border)' }}>
+                <div className='card mb-6 shadow-sm border-0' style={{ borderRadius: '14px', border: '1px solid #e2e8f0', background: '#ffffff' }}>
                     <div className='d-flex flex-wrap align-items-center justify-content-between p-5 border-bottom'>
                         <div>
                             <h3 className='fw-bold fs-4 text-gray-900 mb-1'>Assigned Tasks & Deliverables</h3>
                             <span className='text-muted fs-8'>Operational deliverables, deadlines, and completion ratings affecting monthly performance bonus</span>
                         </div>
-                        <div className='d-flex align-items-center gap-3'>
-                            <input
-                                type='text'
-                                className='form-control form-control-sm ps-3 bg-light border'
+                        <div style={{ width: '260px' }}>
+                            <SearchFilter
+                                searchTerm={searchTerm}
+                                setSearchTerm={setSearchTerm}
                                 placeholder='Search tasks...'
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
                             />
-                            <button
-                                type='button'
-                                className='btn btn-sm btn-light border text-gray-700'
-                                onClick={() => setActiveTab('payroll')}>
-                                ← Back to Overview
-                            </button>
                         </div>
                     </div>
                     <div className='card-body p-5'>
@@ -787,170 +980,378 @@ const Report: React.FC = () => {
             )}
 
             {activeTab === 'salary' && (
-                <div className='card mb-6 shadow-sm border-0' style={{ borderRadius: '12px', border: '1px solid var(--gz-border)' }}>
-                    <div className='d-flex flex-wrap align-items-center justify-content-between p-5 border-bottom'>
-                        <div>
-                            <h3 className='fw-bold fs-4 text-gray-900 mb-1'>Detailed Salary Breakdown & Statement</h3>
-                            <span className='text-muted fs-8'>Itemized compensation ledger: base rates, daily baseline formula, attendance cutting, retention hold, and net take-home pay</span>
+                <div className='card mb-6 shadow-sm border-0' style={{ borderRadius: '16px', border: '1px solid var(--gz-border)' }}>
+                    {/* Header */}
+                    <div className='d-flex flex-wrap align-items-center justify-content-between p-5 p-lg-6 border-bottom gap-3'>
+                        <div className='d-flex align-items-center gap-3'>
+                            <div
+                                className='d-flex align-items-center justify-content-center rounded-3'
+                                style={{ width: '44px', height: '44px', background: 'rgba(37, 99, 235, 0.08)', color: '#2563EB' }}>
+                                <i className='bi bi-calculator fs-4'></i>
+                            </div>
+                            <div>
+                                <h3 className='fw-bold fs-4 text-gray-900 mb-1'>Detailed Salary Breakdown & Statement</h3>
+                                <span className='text-muted fs-8'>Itemized compensation ledger: base rates, daily baseline formula, attendance cutting, retention hold, and net take-home pay</span>
+                            </div>
                         </div>
-                        <div className='d-flex align-items-center gap-2'>
+
+                        <div className='d-flex align-items-center gap-2 flex-wrap'>
                             <button
                                 type='button'
                                 onClick={() => window.print()}
-                                className='btn btn-sm text-white fw-bold px-3'
-                                style={{ background: '#0F172A', borderRadius: '6px' }}>
-                                <i className='bi bi-printer me-1 text-white'></i> Print Payslip
+                                className='gz-report-btn-payslip'>
+                                <i className='bi bi-printer fs-7'></i>
+                                <span>Print Payslip</span>
                             </button>
+
                             <button
                                 type='button'
-                                className='btn btn-sm btn-light border text-gray-700'
-                                onClick={() => setActiveTab('payroll')}>
-                                ← Back to Overview
+                                onClick={handleExportStatement}
+                                className='gz-report-btn-download'>
+                                <i className='bi bi-download fs-7'></i>
+                                <span>Export Excel</span>
+                            </button>
+
+                            <button
+                                type='button'
+                                onClick={() => setActiveTab('payroll')}
+                                className='btn btn-sm btn-light border text-gray-700 fw-semibold px-3'
+                                style={{ borderRadius: '10px' }}>
+                                <i className='bi bi-arrow-left me-1'></i> Overview
                             </button>
                         </div>
                     </div>
 
-                    <div className='card-body p-6'>
-                        {/* 3 Summary Stat Callouts */}
+                    <div className='card-body p-5 p-lg-6'>
+                        {/* 3 Modern Summary Stat Cards */}
                         <div className='row g-4 mb-6'>
+                            {/* 1. Baseline Gross */}
                             <div className='col-12 col-md-4'>
-                                <div className='p-4 rounded-3 border bg-light-primary border-primary border-opacity-25'>
-                                    <span className='text-muted fs-8 fw-semibold d-block text-uppercase' style={{ letterSpacing: '0.05em' }}>Baseline Gross Earnings</span>
-                                    <div className='fs-2x fw-bolder text-gray-900 mt-1'>₹{grossEarnings.toLocaleString()} /-</div>
-                                    <span className='text-primary fs-8 mt-1 d-block'>Base: ₹{baseSalary.toLocaleString()} + Additions: ₹{(grossEarnings - baseSalary).toLocaleString()}</span>
+                                <div className='gz-salary-stat-card gz-salary-stat-earnings'>
+                                    <div className='d-flex align-items-center justify-content-between mb-3'>
+                                        <div
+                                            className='d-flex align-items-center justify-content-center rounded-3'
+                                            style={{ width: '38px', height: '38px', background: '#DCFCE7', color: '#16A34A' }}>
+                                            <i className='bi bi-wallet2 fs-5'></i>
+                                        </div>
+                                        <span className='badge bg-light-success text-success fw-bold px-2 py-1 fs-9'>
+                                            Credited
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className='text-muted fs-8 fw-bold d-block text-uppercase' style={{ letterSpacing: '0.06em' }}>
+                                            Baseline Gross Earnings
+                                        </span>
+                                        <div className='fs-2x fw-bolder text-gray-900 mt-1' style={{ letterSpacing: '-0.02em' }}>
+                                            <NumberTicker value={grossEarnings} prefix='₹' suffix=' /-' />
+                                        </div>
+                                        <div className='d-flex align-items-center gap-1 text-muted fs-8 mt-2 flex-wrap'>
+                                            <span className='badge bg-white text-gray-700 border px-2 py-1 fs-9'>
+                                                Base: ₹{baseSalary.toLocaleString('en-IN')}
+                                            </span>
+                                            {grossEarnings - baseSalary > 0 && (
+                                                <span className='badge bg-white text-success border px-2 py-1 fs-9'>
+                                                    +₹{(grossEarnings - baseSalary).toLocaleString('en-IN')} Extra
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* 2. Total Deductions */}
                             <div className='col-12 col-md-4'>
-                                <div className='p-4 rounded-3 border bg-light-danger border-danger border-opacity-25'>
-                                    <span className='text-muted fs-8 fw-semibold d-block text-uppercase' style={{ letterSpacing: '0.05em' }}>Total Deductions & Retentions</span>
-                                    <div className='fs-2x fw-bolder text-danger mt-1'>- ₹{totalDeductions.toLocaleString()} /-</div>
-                                    <span className='text-danger fs-8 mt-1 d-block'>Absent + Half-day + 10% Security Hold</span>
+                                <div className='gz-salary-stat-card gz-salary-stat-deductions'>
+                                    <div className='d-flex align-items-center justify-content-between mb-3'>
+                                        <div
+                                            className='d-flex align-items-center justify-content-center rounded-3'
+                                            style={{ width: '38px', height: '38px', background: '#FEE2E2', color: '#DC2626' }}>
+                                            <i className='bi bi-dash-circle fs-5'></i>
+                                        </div>
+                                        <span className='badge bg-light-danger text-danger fw-bold px-2 py-1 fs-9'>
+                                            Debited
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className='text-muted fs-8 fw-bold d-block text-uppercase' style={{ letterSpacing: '0.06em' }}>
+                                            Total Deductions & Retentions
+                                        </span>
+                                        <div className='fs-2x fw-bolder text-danger mt-1' style={{ letterSpacing: '-0.02em' }}>
+                                            <NumberTicker value={totalDeductions} prefix='- ₹' suffix=' /-' />
+                                        </div>
+                                        <div className='d-flex align-items-center gap-1 text-muted fs-8 mt-2 flex-wrap'>
+                                            <span className='badge bg-white text-danger border px-2 py-1 fs-9'>
+                                                Absent: {absentDays}d
+                                            </span>
+                                            <span className='badge bg-white text-warning border px-2 py-1 fs-9'>
+                                                Half: {halfDays}d
+                                            </span>
+                                            <span className='badge bg-white text-gray-700 border px-2 py-1 fs-9'>
+                                                10% Security Hold
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* 3. Net Payout Hero */}
                             <div className='col-12 col-md-4'>
-                                <div className='p-4 rounded-3 border' style={{ background: '#0F172A', color: '#FFFFFF' }}>
-                                    <span className='text-white-50 fs-8 fw-semibold d-block text-uppercase' style={{ letterSpacing: '0.05em' }}>Net Payout Amount</span>
-                                    <div className='fs-2x fw-bolder text-white mt-1'>₹{finalSalary.toLocaleString()} /-</div>
-                                    <span className='text-white-50 fs-8 mt-1 d-block'>Rate: ₹{oneDaySalary} / day (26-day basis)</span>
+                                <div className='gz-salary-stat-card gz-salary-stat-net'>
+                                    <div className='d-flex align-items-center justify-content-between mb-3'>
+                                        <div
+                                            className='d-flex align-items-center justify-content-center rounded-3'
+                                            style={{ width: '38px', height: '38px', background: 'rgba(255, 255, 255, 0.12)', color: '#10B981' }}>
+                                            <i className='bi bi-check2-circle fs-5'></i>
+                                        </div>
+                                        <span className='badge' style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#34D399', fontSize: '11px', fontWeight: 600 }}>
+                                            Disbursable
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className='text-white-50 fs-8 fw-bold d-block text-uppercase' style={{ letterSpacing: '0.06em' }}>
+                                            Net Payout Amount
+                                        </span>
+                                        <div className='fs-2x fw-bolder text-white mt-1' style={{ letterSpacing: '-0.02em' }}>
+                                            <NumberTicker value={finalSalary} prefix='₹' suffix=' /-' />
+                                        </div>
+                                        <div className='text-white-50 fs-8 mt-2 d-flex align-items-center gap-2'>
+                                            <span className='badge' style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#ffffff' }}>
+                                                ₹{oneDaySalary} / day
+                                            </span>
+                                            <span>26-day baseline</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* 2 Detailed Breakdown Ledgers */}
-                        <div className='row g-5'>
+                        {/* 2 Detailed Breakdown Ledgers (Earnings vs Deductions) */}
+                        <div className='row g-4'>
                             {/* Left: Earnings Components */}
                             <div className='col-12 col-lg-6'>
-                                <div className='border rounded-3 p-4 h-100 bg-white'>
-                                    <div className='d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom'>
-                                        <h4 className='fw-bold fs-5 text-gray-900 mb-0'>
-                                            <i className='bi bi-plus-circle-fill text-success me-2'></i>
-                                            Earnings & Reimbursements
-                                        </h4>
-                                        <span className='badge bg-light-success text-success fw-bold'>Credited</span>
+                                <div className='gz-salary-ledger-card'>
+                                    <div className='d-flex align-items-center justify-content-between p-4 border-bottom bg-light bg-opacity-50'>
+                                        <div className='d-flex align-items-center gap-2'>
+                                            <div
+                                                className='d-flex align-items-center justify-content-center rounded-2'
+                                                style={{ width: '32px', height: '32px', background: '#DCFCE7', color: '#16A34A' }}>
+                                                <i className='bi bi-plus-lg fs-6 fw-bold'></i>
+                                            </div>
+                                            <div>
+                                                <h4 className='fw-bold fs-6 text-gray-900 mb-0'>Earnings & Reimbursements</h4>
+                                                <span className='text-muted fs-9'>Itemized additions to baseline pay</span>
+                                            </div>
+                                        </div>
+                                        <span className='badge bg-light-success text-success fw-bold px-2 py-1 fs-9'>
+                                            Total: ₹{grossEarnings.toLocaleString('en-IN')}
+                                        </span>
                                     </div>
 
-                                    <div className='table-responsive'>
-                                        <table className='table table-borderless align-middle mb-0 fs-7'>
-                                            <tbody>
-                                                <tr className='border-bottom'>
-                                                    <td className='ps-0 py-3'>
-                                                        <div className='fw-bold text-gray-900'>Base Monthly Pay</div>
-                                                        <div className='text-muted fs-8'>Contractual baseline salary rate</div>
-                                                    </td>
-                                                    <td className='text-muted fs-8 text-end'>26 Working Days</td>
-                                                    <td className='text-end fw-bold text-gray-900 pe-0'>₹{baseSalary.toLocaleString()} /-</td>
-                                                </tr>
-                                                <tr className='border-bottom'>
-                                                    <td className='ps-0 py-3'>
-                                                        <div className='fw-bold text-gray-900'>Task Performance Bonus</div>
-                                                        <div className='text-muted fs-8'>Score: {employeeData?.task_rating?.rating || 0}% performance rating</div>
-                                                    </td>
-                                                    <td className='text-muted fs-8 text-end'>Incentive</td>
-                                                    <td className='text-end fw-bold text-gray-900 pe-0'>
-                                                        {taskRatingType === 'plus' ? `+ ₹${taskRatingSalary.toLocaleString()} /-` : '₹0 /-'}
-                                                    </td>
-                                                </tr>
-                                                <tr className='border-bottom'>
-                                                    <td className='ps-0 py-3'>
-                                                        <div className='fw-bold text-gray-900'>Approved Expense Reimbursements</div>
-                                                        <div className='text-muted fs-8'>{approvedExpensesCount} out-of-pocket operational claims</div>
-                                                    </td>
-                                                    <td className='text-muted fs-8 text-end'>{approvedExpensesCount} items</td>
-                                                    <td className='text-end fw-bold text-success pe-0'>+ ₹{approvedExpensesTotal.toLocaleString()} /-</td>
-                                                </tr>
-                                                <tr>
-                                                    <td colSpan={2} className='ps-0 pt-4 fw-bold fs-6 text-gray-900'>Total Gross Earnings</td>
-                                                    <td className='text-end pt-4 pe-0 fw-bolder fs-5 text-gray-900'>₹{grossEarnings.toLocaleString()} /-</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <div className='d-flex flex-column'>
+                                        {/* Row 1: Base Pay */}
+                                        <div className='gz-ledger-row'>
+                                            <div className='d-flex align-items-center gap-3'>
+                                                <div className='gz-ledger-icon-wrap' style={{ background: '#EFF6FF', color: '#2563EB' }}>
+                                                    <i className='bi bi-building fs-6'></i>
+                                                </div>
+                                                <div>
+                                                    <div className='fw-bold text-gray-900 fs-7'>Base Monthly Pay</div>
+                                                    <div className='text-muted fs-8'>Contractual baseline salary rate</div>
+                                                </div>
+                                            </div>
+                                            <div className='text-end'>
+                                                <span className='badge bg-light text-gray-700 border px-2 py-1 fs-9 mb-1 d-inline-block'>
+                                                    26 Working Days
+                                                </span>
+                                                <div className='fw-bold text-gray-900 fs-7'>
+                                                    ₹{baseSalary.toLocaleString('en-IN')} /-
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 2: Task Rating Bonus */}
+                                        <div className='gz-ledger-row'>
+                                            <div className='d-flex align-items-center gap-3'>
+                                                <div className='gz-ledger-icon-wrap' style={{ background: '#FFFBEB', color: '#D97706' }}>
+                                                    <i className='bi bi-award fs-6'></i>
+                                                </div>
+                                                <div>
+                                                    <div className='fw-bold text-gray-900 fs-7'>Task Performance Bonus</div>
+                                                    <div className='text-muted fs-8'>Score: {employeeData?.task_rating?.rating || 0}% performance rating</div>
+                                                </div>
+                                            </div>
+                                            <div className='text-end'>
+                                                <span className='badge bg-light-warning text-warning border border-warning border-opacity-25 px-2 py-1 fs-9 mb-1 d-inline-block'>
+                                                    Incentive
+                                                </span>
+                                                <div className='fw-bold text-gray-900 fs-7'>
+                                                    {taskRatingType === 'plus' ? `+ ₹${taskRatingSalary.toLocaleString('en-IN')} /-` : '₹0 /-'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 3: Approved Expenses */}
+                                        <div className='gz-ledger-row'>
+                                            <div className='d-flex align-items-center gap-3'>
+                                                <div className='gz-ledger-icon-wrap' style={{ background: '#ECFDF5', color: '#059669' }}>
+                                                    <i className='bi bi-receipt fs-6'></i>
+                                                </div>
+                                                <div>
+                                                    <div className='fw-bold text-gray-900 fs-7'>Approved Expense Reimbursements</div>
+                                                    <div className='text-muted fs-8'>{approvedExpensesCount} out-of-pocket operational claims</div>
+                                                </div>
+                                            </div>
+                                            <div className='text-end'>
+                                                <span className='badge bg-light-success text-success border border-success border-opacity-25 px-2 py-1 fs-9 mb-1 d-inline-block'>
+                                                    {approvedExpensesCount} Items
+                                                </span>
+                                                <div className='fw-bold text-success fs-7'>
+                                                    + ₹{approvedExpensesTotal.toLocaleString('en-IN')} /-
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer Gross Total */}
+                                    <div className='mt-auto p-4 bg-light d-flex align-items-center justify-content-between border-top'>
+                                        <span className='fw-bold fs-7 text-gray-900'>Total Gross Earnings</span>
+                                        <span className='fw-bolder fs-6 text-gray-900'>
+                                            ₹{grossEarnings.toLocaleString('en-IN')} /-
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Right: Deductions Components */}
                             <div className='col-12 col-lg-6'>
-                                <div className='border rounded-3 p-4 h-100 bg-white'>
-                                    <div className='d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom'>
-                                        <h4 className='fw-bold fs-5 text-gray-900 mb-0'>
-                                            <i className='bi bi-dash-circle-fill text-danger me-2'></i>
-                                            Deductions & Retentions
-                                        </h4>
-                                        <span className='badge bg-light-danger text-danger fw-bold'>Debited</span>
+                                <div className='gz-salary-ledger-card'>
+                                    <div className='d-flex align-items-center justify-content-between p-4 border-bottom bg-light bg-opacity-50'>
+                                        <div className='d-flex align-items-center gap-2'>
+                                            <div
+                                                className='d-flex align-items-center justify-content-center rounded-2'
+                                                style={{ width: '32px', height: '32px', background: '#FEE2E2', color: '#DC2626' }}>
+                                                <i className='bi bi-dash-lg fs-6 fw-bold'></i>
+                                            </div>
+                                            <div>
+                                                <h4 className='fw-bold fs-6 text-gray-900 mb-0'>Deductions & Retentions</h4>
+                                                <span className='text-muted fs-9'>Itemized policy deductions</span>
+                                            </div>
+                                        </div>
+                                        <span className='badge bg-light-danger text-danger fw-bold px-2 py-1 fs-9'>
+                                            Total: -₹{totalDeductions.toLocaleString('en-IN')}
+                                        </span>
                                     </div>
 
-                                    <div className='table-responsive'>
-                                        <table className='table table-borderless align-middle mb-0 fs-7'>
-                                            <tbody>
-                                                <tr className='border-bottom'>
-                                                    <td className='ps-0 py-3'>
-                                                        <div className='fw-bold text-gray-900'>Absent Days Cut</div>
-                                                        <div className='text-muted fs-8'>{absentDays} days × ₹{oneDaySalary} daily rate</div>
-                                                    </td>
-                                                    <td className='text-muted fs-8 text-end'>{absentDays} Days</td>
-                                                    <td className='text-end fw-bold text-danger pe-0'>- ₹{absentSalary.toLocaleString()} /-</td>
-                                                </tr>
-                                                <tr className='border-bottom'>
-                                                    <td className='ps-0 py-3'>
-                                                        <div className='fw-bold text-gray-900'>Half-Day Deductions</div>
-                                                        <div className='text-muted fs-8'>{halfDays} half occurrences × ₹{Math.round(oneDaySalary / 2)} rate</div>
-                                                    </td>
-                                                    <td className='text-muted fs-8 text-end'>{halfDays} Half</td>
-                                                    <td className='text-end fw-bold text-danger pe-0'>- ₹{halfDaySalary.toLocaleString()} /-</td>
-                                                </tr>
-                                                <tr className='border-bottom'>
-                                                    <td className='ps-0 py-3'>
-                                                        <div className='fw-bold text-gray-900'>10% Security Retention Hold</div>
-                                                        <div className='text-muted fs-8'>Company policy standard security deposit</div>
-                                                    </td>
-                                                    <td className='text-muted fs-8 text-end'>Policy Hold</td>
-                                                    <td className='text-end fw-bold text-danger pe-0'>- ₹{tenPercentHold.toLocaleString()} /-</td>
-                                                </tr>
-                                                <tr>
-                                                    <td colSpan={2} className='ps-0 pt-4 fw-bold fs-6 text-gray-900'>Total Deductions</td>
-                                                    <td className='text-end pt-4 pe-0 fw-bolder fs-5 text-danger'>- ₹{totalDeductions.toLocaleString()} /-</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <div className='d-flex flex-column'>
+                                        {/* Row 1: Absent Days */}
+                                        <div className='gz-ledger-row'>
+                                            <div className='d-flex align-items-center gap-3'>
+                                                <div className='gz-ledger-icon-wrap' style={{ background: '#EFF6FF', color: '#2563EB' }}>
+                                                    <i className='bi bi-person-x fs-6'></i>
+                                                </div>
+                                                <div>
+                                                    <div className='fw-bold text-gray-900 fs-7'>Absent Days Cut</div>
+                                                    <div className='text-muted fs-8'>{absentDays} days × ₹{oneDaySalary} daily rate</div>
+                                                </div>
+                                            </div>
+                                            <div className='text-end'>
+                                                <span className='badge bg-light-danger text-danger border border-danger border-opacity-25 px-2 py-1 fs-9 mb-1 d-inline-block'>
+                                                    {absentDays} Days
+                                                </span>
+                                                <div className='fw-bold text-danger fs-7'>
+                                                    - ₹{absentSalary.toLocaleString('en-IN')} /-
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 2: Half-Day */}
+                                        <div className='gz-ledger-row'>
+                                            <div className='d-flex align-items-center gap-3'>
+                                                <div className='gz-ledger-icon-wrap' style={{ background: '#FFFBEB', color: '#D97706' }}>
+                                                    <i className='bi bi-hourglass-split fs-6'></i>
+                                                </div>
+                                                <div>
+                                                    <div className='fw-bold text-gray-900 fs-7'>Half-Day Deductions</div>
+                                                    <div className='text-muted fs-8'>{halfDays} occurrences × ₹{Math.round(oneDaySalary / 2)} rate</div>
+                                                </div>
+                                            </div>
+                                            <div className='text-end'>
+                                                <span className='badge bg-light-warning text-warning border border-warning border-opacity-25 px-2 py-1 fs-9 mb-1 d-inline-block'>
+                                                    {halfDays} Half
+                                                </span>
+                                                <div className='fw-bold text-danger fs-7'>
+                                                    - ₹{halfDaySalary.toLocaleString('en-IN')} /-
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 3: 10% Security Hold */}
+                                        <div className='gz-ledger-row'>
+                                            <div className='d-flex align-items-center gap-3'>
+                                                <div className='gz-ledger-icon-wrap' style={{ background: '#FFF1F2', color: '#E11D48' }}>
+                                                    <i className='bi bi-shield-lock fs-6'></i>
+                                                </div>
+                                                <div>
+                                                    <div className='fw-bold text-gray-900 fs-7'>10% Security Retention Hold</div>
+                                                    <div className='text-muted fs-8'>Company policy standard security deposit</div>
+                                                </div>
+                                            </div>
+                                            <div className='text-end'>
+                                                <span className='badge bg-light text-gray-700 border px-2 py-1 fs-9 mb-1 d-inline-block'>
+                                                    Policy Hold
+                                                </span>
+                                                <div className='fw-bold text-danger fs-7'>
+                                                    - ₹{tenPercentHold.toLocaleString('en-IN')} /-
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer Deductions Total */}
+                                    <div className='mt-auto p-4 bg-light d-flex align-items-center justify-content-between border-top'>
+                                        <span className='fw-bold fs-7 text-gray-900'>Total Deductions</span>
+                                        <span className='fw-bolder fs-6 text-danger'>
+                                            - ₹{totalDeductions.toLocaleString('en-IN')} /-
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Calculation Formula Footer */}
-                        <div className='p-4 rounded-3 border bg-light mt-5 d-flex flex-wrap align-items-center justify-content-between gap-3'>
-                            <div>
-                                <span className='fw-bold text-gray-900 fs-6 d-block'>Net Salary Calculation Formula</span>
-                                <span className='text-muted fs-8'>
-                                    Net Take-Home = Gross Earnings (₹{grossEarnings.toLocaleString()}) - Deductions (₹{totalDeductions.toLocaleString()}) = ₹{finalSalary.toLocaleString()} /-
-                                </span>
+                        {/* Calculation Formula Footer Ribbon */}
+                        <div
+                            className='p-4 rounded-3 mt-5 d-flex flex-wrap align-items-center justify-content-between gap-3'
+                            style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1' }}>
+                            <div className='d-flex align-items-center gap-3'>
+                                <div
+                                    className='d-flex align-items-center justify-content-center rounded-circle flex-shrink-0'
+                                    style={{ width: '36px', height: '36px', background: '#E2E8F0', color: '#334155' }}>
+                                    <i className='bi bi-info-circle fs-6'></i>
+                                </div>
+                                <div>
+                                    <span className='fw-bold text-gray-900 fs-7 d-block'>Net Salary Calculation Formula</span>
+                                    <div className='d-flex align-items-center gap-2 flex-wrap text-muted fs-8 mt-1'>
+                                        <span className='badge bg-white text-gray-800 border px-2 py-1'>
+                                            Gross: ₹{grossEarnings.toLocaleString('en-IN')}
+                                        </span>
+                                        <span className='text-gray-500 fw-bold'>-</span>
+                                        <span className='badge bg-white text-danger border px-2 py-1'>
+                                            Deductions: ₹{totalDeductions.toLocaleString('en-IN')}
+                                        </span>
+                                        <span className='text-gray-500 fw-bold'>=</span>
+                                        <span className='badge bg-dark text-white px-2 py-1 fw-bold'>
+                                            Net: ₹{finalSalary.toLocaleString('en-IN')} /-
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
+
                             <button
                                 type='button'
-                                className='btn btn-sm btn-dark px-4 fw-semibold'
-                                style={{ background: '#0F172A' }}
+                                className='btn btn-sm text-white px-4 fw-semibold'
+                                style={{ background: '#0F172A', borderRadius: '10px' }}
                                 onClick={() => setActiveTab('payroll')}>
-                                Return to Dashboard
+                                <i className='bi bi-arrow-left me-1'></i> Return to Overview
                             </button>
                         </div>
                     </div>
@@ -971,10 +1372,12 @@ const Report: React.FC = () => {
                                     {/* Header line */}
                                     <div className='d-flex align-items-center justify-content-between mb-3'>
                                         <span className='fs-8 fw-bold text-uppercase text-white-50' style={{ letterSpacing: '0.06em' }}>
-                                            OCTOBER 2026
+                                            {selectedDateRange && selectedDateRange[0]
+                                                ? DayJS(selectedDateRange[0]).format('MMMM YYYY').toUpperCase()
+                                                : DayJS().format('MMMM YYYY').toUpperCase()}
                                         </span>
                                         <span className='badge' style={{ background: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', borderRadius: '4px', fontSize: '11px' }}>
-                                            Current Period
+                                            Active Period
                                         </span>
                                     </div>
 
@@ -983,7 +1386,7 @@ const Report: React.FC = () => {
                                         <div>
                                             <div className='text-white-50 fs-7 mb-1'>Net Take-Home Pay</div>
                                             <div className='fs-2x fw-bolder text-white' style={{ letterSpacing: '-0.02em' }}>
-                                                <NumberTicker value={finalSalary} prefix='₹' suffix=' /-' />
+                                                <NumberTicker value={finalSalary} suffix=' /-' />
                                             </div>
                                             <div className='text-white-50 fs-8 mt-1'>
                                                 (₹{oneDaySalary} per day)
@@ -1005,21 +1408,21 @@ const Report: React.FC = () => {
                                     <div className='col-4 pe-2 border-end' style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
                                         <div className='text-white-50 fs-9'>Gross Earnings</div>
                                         <div className='fw-bold fs-7 text-white mt-1'>
-                                            <NumberTicker value={grossEarnings} prefix='₹' suffix=' /-' />
+                                            <NumberTicker value={grossEarnings} suffix=' /-' />
                                         </div>
                                     </div>
 
                                     <div className='col-4 px-2 border-end' style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
                                         <div className='text-white-50 fs-9'>Total Deductions</div>
                                         <div className='fw-bold fs-7 text-white mt-1'>
-                                            <NumberTicker value={totalDeductions} prefix='₹' suffix=' /-' />
+                                            <NumberTicker value={totalDeductions} suffix=' /-' />
                                         </div>
                                     </div>
 
                                     <div className='col-4 ps-2'>
                                         <div className='text-white-50 fs-9'>Approved Expenses</div>
                                         <div className='fw-bold fs-7 text-white mt-1'>
-                                            <NumberTicker value={approvedExpensesTotal} prefix='₹' suffix=' /-' />
+                                            <NumberTicker value={approvedExpensesTotal} suffix=' /-' />
                                         </div>
                                     </div>
                                 </div>
@@ -1061,9 +1464,9 @@ const Report: React.FC = () => {
                                         </svg>
                                         <div className='position-absolute text-center'>
                                             <div className='fs-5 fw-bolder text-gray-900 lh-1'>
-                                                <NumberTicker value={presentCount} /> / <NumberTicker value={totalAttendanceLogs || 26} />
+                                                <NumberTicker value={presentCount} /> / <NumberTicker value={totalAttendanceLogs} />
                                             </div>
-                                            <span className='text-muted fs-9'>Working Days</span>
+                                            <span className='text-muted fs-9'>Logs Count</span>
                                         </div>
                                     </div>
 
@@ -1106,68 +1509,84 @@ const Report: React.FC = () => {
                                         type='button'
                                         onClick={() => setActiveTab('attendance')}
                                         className='btn btn-link p-0 text-muted fs-8 text-decoration-none'>
-                                        View All &rarr;
+                                        View Logs &rarr;
                                     </button>
                                 </div>
 
-                                {/* 4 Activity Line Items */}
+                                {/* Dynamic Real Activity Line Items */}
                                 <div className='d-flex flex-column gap-3'>
-                                    {/* Item 1 */}
+                                    {/* Item 1: Payroll statement status */}
                                     <div className='d-flex align-items-center justify-content-between'>
                                         <div className='d-flex align-items-center gap-3'>
                                             <div className='d-flex align-items-center justify-content-center rounded-2' style={{ width: '36px', height: '36px', background: '#EFF6FF', color: '#2563EB' }}>
                                                 <i className='bi bi-file-earmark-text fs-6'></i>
                                             </div>
                                             <div>
-                                                <div className='fs-8 fw-bold text-gray-900'>Payslip for October 2026 is ready</div>
-                                                <div className='text-muted fs-9'>You can now view your payslip</div>
+                                                <div className='fs-8 fw-bold text-gray-900'>
+                                                    {salaryData && salaryData.length > 0 ? 'Monthly Payslip Synchronized' : 'Payroll Statement Ready'}
+                                                </div>
+                                                <div className='text-muted fs-9'>
+                                                    Net Take-Home: ₹{finalSalary.toLocaleString('en-IN')}
+                                                </div>
                                             </div>
                                         </div>
-                                        <span className='text-muted fs-9'>2h ago</span>
+                                        <span className='badge bg-light text-muted fs-9 border'>
+                                            {selectedDateRange && selectedDateRange[0] ? DayJS(selectedDateRange[0]).format('MMM YYYY') : DayJS().format('MMM YYYY')}
+                                        </span>
                                     </div>
 
-                                    {/* Item 2 */}
+                                    {/* Item 2: Real attendance status */}
                                     <div className='d-flex align-items-center justify-content-between'>
                                         <div className='d-flex align-items-center gap-3'>
                                             <div className='d-flex align-items-center justify-content-center rounded-2' style={{ width: '36px', height: '36px', background: '#ECFDF5', color: '#10B981' }}>
                                                 <i className='bi bi-calendar-check fs-6'></i>
                                             </div>
                                             <div>
-                                                <div className='fs-8 fw-bold text-gray-900'>Attendance updated</div>
-                                                <div className='text-muted fs-9'>26 working days this month</div>
+                                                <div className='fs-8 fw-bold text-gray-900'>Attendance Records Active</div>
+                                                <div className='text-muted fs-9'>
+                                                    {presentCount} present out of {totalAttendanceLogs} logged days
+                                                </div>
                                             </div>
                                         </div>
-                                        <span className='text-muted fs-9'>1d ago</span>
+                                        <span className='badge bg-light-success text-success fs-9'>
+                                            {presentCount} Present
+                                        </span>
                                     </div>
 
-                                    {/* Item 3 */}
+                                    {/* Item 3: Expense claims */}
                                     <div className='d-flex align-items-center justify-content-between'>
                                         <div className='d-flex align-items-center gap-3'>
                                             <div className='d-flex align-items-center justify-content-center rounded-2' style={{ width: '36px', height: '36px', background: '#FFFBEB', color: '#F59E0B' }}>
                                                 <i className='bi bi-receipt fs-6'></i>
                                             </div>
                                             <div>
-                                                <div className='fs-8 fw-bold text-gray-900'>Expense claim approved</div>
+                                                <div className='fs-8 fw-bold text-gray-900'>Expense Claims Tracked</div>
                                                 <div className='text-muted fs-9'>
-                                                    <NumberTicker value={approvedExpensesCount} /> claims
+                                                    {approvedExpensesCount} approved (₹{approvedExpensesTotal.toLocaleString('en-IN')})
                                                 </div>
                                             </div>
                                         </div>
-                                        <span className='text-muted fs-9'>2d ago</span>
+                                        <span className='badge bg-light-warning text-warning fs-9'>
+                                            {expenseData?.length || 0} Total
+                                        </span>
                                     </div>
 
-                                    {/* Item 4 */}
+                                    {/* Item 4: Assigned Tasks or Employee Code */}
                                     <div className='d-flex align-items-center justify-content-between'>
                                         <div className='d-flex align-items-center gap-3'>
                                             <div className='d-flex align-items-center justify-content-center rounded-2' style={{ width: '36px', height: '36px', background: '#F1F5F9', color: '#64748B' }}>
-                                                <i className='bi bi-person fs-6'></i>
+                                                <i className='bi bi-person-badge fs-6'></i>
                                             </div>
                                             <div>
-                                                <div className='fs-8 fw-bold text-gray-900'>Profile details updated</div>
-                                                <div className='text-muted fs-9'>Contact information</div>
+                                                <div className='fs-8 fw-bold text-gray-900'>{fullName || 'Employee Account'}</div>
+                                                <div className='text-muted fs-9'>
+                                                    Code: {employeeCode || '—'} &bull; {assignTaskData?.length || 0} tasks
+                                                </div>
                                             </div>
                                         </div>
-                                        <span className='text-muted fs-9'>1w ago</span>
+                                        <span className='badge bg-light text-primary fs-9 border'>
+                                            Active
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -1204,7 +1623,7 @@ const Report: React.FC = () => {
                                                 </div>
                                             </div>
                                             <span className='fs-8 fw-bold text-gray-900'>
-                                                <NumberTicker value={baseSalary} prefix='₹' suffix=' /-' />
+                                                <NumberTicker value={baseSalary} suffix=' /-' />
                                             </span>
                                         </div>
 
@@ -1245,7 +1664,7 @@ const Report: React.FC = () => {
                                                 </div>
                                             </div>
                                             <span className='fs-8 fw-bold text-success'>
-                                                <NumberTicker value={approvedExpensesTotal} prefix='+ ₹' suffix=' /-' />
+                                                <NumberTicker value={approvedExpensesTotal} suffix=' /-' />
                                             </span>
                                         </div>
                                     </div>
@@ -1255,7 +1674,7 @@ const Report: React.FC = () => {
                                 <div className='d-flex align-items-center justify-content-between pt-3 mt-3 border-top'>
                                     <span className='fw-bold fs-7 text-gray-900'>Gross Total Earnings</span>
                                     <span className='fw-bold fs-6 text-gray-900'>
-                                        <NumberTicker value={grossEarnings} prefix='₹' suffix=' /-' />
+                                        <NumberTicker value={grossEarnings} suffix=' /-' />
                                     </span>
                                 </div>
                             </div>
@@ -1294,7 +1713,7 @@ const Report: React.FC = () => {
                                                 </div>
                                             </div>
                                             <span className='fs-8 fw-bold text-danger'>
-                                                <NumberTicker value={absentSalary} prefix='- ₹' suffix=' /-' />
+                                                <NumberTicker value={absentSalary} suffix=' /-' />
                                             </span>
                                         </div>
 
@@ -1315,7 +1734,7 @@ const Report: React.FC = () => {
                                                 </div>
                                             </div>
                                             <span className='fs-8 fw-bold text-danger'>
-                                                <NumberTicker value={halfDaySalary} prefix='- ₹' suffix=' /-' />
+                                                <NumberTicker value={halfDaySalary} suffix=' /-' />
                                             </span>
                                         </div>
 
@@ -1334,7 +1753,7 @@ const Report: React.FC = () => {
                                                 </div>
                                             </div>
                                             <span className='fs-8 fw-bold text-danger'>
-                                                <NumberTicker value={tenPercentHold} prefix='- ₹' suffix=' /-' />
+                                                <NumberTicker value={tenPercentHold} suffix=' /-' />
                                             </span>
                                         </div>
                                     </div>
@@ -1344,7 +1763,7 @@ const Report: React.FC = () => {
                                 <div className='d-flex align-items-center justify-content-between pt-3 mt-3 border-top'>
                                     <span className='fw-bold fs-7 text-gray-900'>Total Deductions</span>
                                     <span className='fw-bold fs-6 text-danger'>
-                                        <NumberTicker value={totalDeductions} prefix='- ₹' suffix=' /-' />
+                                        <NumberTicker value={totalDeductions} suffix=' /-' />
                                     </span>
                                 </div>
                             </div>
@@ -1358,98 +1777,48 @@ const Report: React.FC = () => {
                                         <h3 className='fw-bold fs-5 text-gray-900 mb-0'>Recent Payroll Periods</h3>
                                         <button
                                             type='button'
-                                            onClick={() => setActiveTab('payroll')}
+                                            onClick={() => setActiveTab('salary')}
                                             className='btn btn-link p-0 text-muted fs-8 text-decoration-none'>
                                             View All &rarr;
                                         </button>
                                     </div>
 
-                                    {/* 4 Periods List */}
+                                    {/* 4 Periods List dynamically generated */}
                                     <div className='d-flex flex-column gap-3'>
-                                        {/* October 2026 */}
-                                        <div className='d-flex align-items-center justify-content-between p-2 rounded-2 hover-bg-light' style={{ cursor: 'pointer' }}>
-                                            <div className='d-flex align-items-center gap-2'>
-                                                <i className='bi bi-calendar-event text-gray-500 fs-7'></i>
-                                                <span className='fs-8 fw-bold text-gray-900'>October 2026</span>
-                                            </div>
-                                            <div className='d-flex align-items-center gap-2'>
-                                                <span className='fs-8 fw-bold text-gray-900'>
-                                                    <NumberTicker value={finalSalary} prefix='₹' suffix=' /-' />
-                                                </span>
-                                                <span className='badge bg-light-success text-success px-2 py-0 fs-9 fw-semibold'>Current</span>
-                                                <i className='bi bi-chevron-right fs-9 text-gray-400'></i>
-                                            </div>
-                                        </div>
-
-                                        {/* September 2026 */}
-                                        <div className='d-flex align-items-center justify-content-between p-2 rounded-2 hover-bg-light' style={{ cursor: 'pointer' }}>
-                                            <div className='d-flex align-items-center gap-2'>
-                                                <i className='bi bi-calendar-event text-gray-500 fs-7'></i>
-                                                <span className='fs-8 fw-bold text-gray-900'>September 2026</span>
-                                            </div>
-                                            <div className='d-flex align-items-center gap-2'>
-                                                <span className='fs-8 fw-bold text-gray-900'>
-                                                    <NumberTicker value={finalSalary} prefix='₹' suffix=' /-' />
-                                                </span>
-                                                <span className='badge bg-light-primary text-primary px-2 py-0 fs-9 fw-semibold'>Paid</span>
-                                                <i className='bi bi-chevron-right fs-9 text-gray-400'></i>
-                                            </div>
-                                        </div>
-
-                                        {/* August 2026 */}
-                                        <div className='d-flex align-items-center justify-content-between p-2 rounded-2 hover-bg-light' style={{ cursor: 'pointer' }}>
-                                            <div className='d-flex align-items-center gap-2'>
-                                                <i className='bi bi-calendar-event text-gray-500 fs-7'></i>
-                                                <span className='fs-8 fw-bold text-gray-900'>August 2026</span>
-                                            </div>
-                                            <div className='d-flex align-items-center gap-2'>
-                                                <span className='fs-8 fw-bold text-gray-900'>
-                                                    <NumberTicker value={finalSalary} prefix='₹' suffix=' /-' />
-                                                </span>
-                                                <span className='badge bg-light-primary text-primary px-2 py-0 fs-9 fw-semibold'>Paid</span>
-                                                <i className='bi bi-chevron-right fs-9 text-gray-400'></i>
-                                            </div>
-                                        </div>
-
-                                        {/* July 2026 */}
-                                        <div className='d-flex align-items-center justify-content-between p-2 rounded-2 hover-bg-light' style={{ cursor: 'pointer' }}>
-                                            <div className='d-flex align-items-center gap-2'>
-                                                <i className='bi bi-calendar-event text-gray-500 fs-7'></i>
-                                                <span className='fs-8 fw-bold text-gray-900'>July 2026</span>
-                                            </div>
-                                            <div className='d-flex align-items-center gap-2'>
-                                                <span className='fs-8 fw-bold text-gray-900'>
-                                                    <NumberTicker value={finalSalary} prefix='₹' suffix=' /-' />
-                                                </span>
-                                                <span className='badge bg-light-primary text-primary px-2 py-0 fs-9 fw-semibold'>Paid</span>
-                                                <i className='bi bi-chevron-right fs-9 text-gray-400'></i>
-                                            </div>
-                                        </div>
+                                        {[0, 1, 2, 3].map((offset) => {
+                                            const periodDate = DayJS().subtract(offset, 'month')
+                                            const periodName = periodDate.format('MMMM YYYY')
+                                            const isCurrent = offset === 0
+                                            return (
+                                                <div
+                                                    key={offset}
+                                                    className='d-flex align-items-center justify-content-between p-2 rounded-2 hover-bg-light'
+                                                    style={{ cursor: 'pointer' }}
+                                                    onClick={() => setActiveTab('salary')}>
+                                                    <div className='d-flex align-items-center gap-2'>
+                                                        <i className='bi bi-calendar-event text-gray-500 fs-7'></i>
+                                                        <span className='fs-8 fw-bold text-gray-900'>{periodName}</span>
+                                                    </div>
+                                                    <div className='d-flex align-items-center gap-2'>
+                                                        <span className='fs-8 fw-bold text-gray-900'>
+                                                            <NumberTicker value={finalSalary} suffix=' /-' />
+                                                        </span>
+                                                        <span
+                                                            className={`badge ${
+                                                                isCurrent
+                                                                    ? 'bg-light-success text-success'
+                                                                    : 'bg-light-primary text-primary'
+                                                            } px-2 py-0 fs-9 fw-semibold`}>
+                                                            {isCurrent ? 'Current' : 'Processed'}
+                                                        </span>
+                                                        <i className='bi bi-chevron-right fs-9 text-gray-400'></i>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* 4. BOTTOM MOTIVATIONAL BANNER */}
-                    <div className='gz-bottom-quote-card'>
-                        <div className='gz-quote-img-box'>
-                            <span>Small<br />steps<br />big results.</span>
-                        </div>
-
-                        <div className='gz-quote-text-box'>
-                            <h4>“Keep showing up. Consistency pays off.”</h4>
-                            <p>Your work, attendance and contributions help us grow together.</p>
-                        </div>
-
-                        <div className='gz-quote-action-box'>
-                            <button
-                                type='button'
-                                onClick={() => setActiveTab('details')}
-                                className='btn btn-sm btn-light border p-2 rounded-circle'
-                                title='View Profile'>
-                                <i className='bi bi-arrow-up-right fs-6'></i>
-                            </button>
                         </div>
                     </div>
                 </>

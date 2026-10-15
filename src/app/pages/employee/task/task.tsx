@@ -9,7 +9,7 @@ import { KTCard, KTIcon } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
-import InputField from '../../../components/InputField'
+import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
@@ -34,8 +34,19 @@ type TaskFormData = {
 	file: File | null
 }
 
+const getStoredEmployee = () => {
+	try {
+		const raw =
+			localStorage.getItem('fg_group_user_info') ||
+			localStorage.getItem('fg_group_info') ||
+			localStorage.getItem('auth_fg_group')
+		return raw ? JSON.parse(raw) : {}
+	} catch {
+		return {}
+	}
+}
+
 const EmployeeTask: React.FC = () => {
-	let employeeData: any = localStorage.getItem('fg_group_info')
 	const [searchTerm, setSearchTerm] = useState(
 		() => localStorage.getItem('emp_task_searchTerm') || ''
 	)
@@ -97,8 +108,9 @@ const EmployeeTask: React.FC = () => {
 	})
 
 	const fetchAssignTaskData = async (page?: number) => {
-		let employeeData: any = localStorage.getItem('fg_group_info')
-		employeeData = JSON.parse(employeeData)
+		const employee = getStoredEmployee()
+		if (!employee?._id) return
+
 		setLoading(true)
 		let startDate: Date | null = null
 		let endDate: Date | null = null
@@ -113,14 +125,6 @@ const EmployeeTask: React.FC = () => {
 		}
 
 		try {
-			let startDate: any = null
-			let endDate: any = null
-
-			if (selectedDateRange) {
-				;[startDate, endDate] = selectedDateRange
-				endDate = new Date(endDate.setHours(23, 59, 59, 999))
-			}
-
 			const formatDate = (date: Date) => {
 				const year = date.getFullYear()
 				const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -129,7 +133,7 @@ const EmployeeTask: React.FC = () => {
 			}
 
 			const response = await GetTask({
-				admin_id: employeeData._id,
+				admin_id: employee._id,
 				page: page || pagination.page,
 				limit: pagination.itemsPerPage,
 				search: searchTerm,
@@ -152,7 +156,6 @@ const EmployeeTask: React.FC = () => {
 	}
 
 	useEffect(() => {
-		employeeData = JSON.parse(employeeData)
 		fetchAssignTaskData()
 	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder, selectedDateRange, searchTerm])
 
@@ -170,8 +173,9 @@ const EmployeeTask: React.FC = () => {
 
 	const [rattingData, setRattingData] = useState<any>([])
 	const fetchRattingData = async () => {
-		let employeeData: any = localStorage.getItem('fg_group_info')
-		employeeData = JSON.parse(employeeData)
+		const employee = getStoredEmployee()
+		if (!employee?._id) return
+
 		setLoading(true)
 		try {
 			let startDate: any = null
@@ -186,16 +190,14 @@ const EmployeeTask: React.FC = () => {
 				endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
 			}
 
-			if (employeeData._id) {
-				const response = await GetEmployeeRating({
-					admin_id: employeeData._id,
-					from_date: startDate,
-					to_date: endDate,
-				})
+			const response = await GetEmployeeRating({
+				admin_id: employee._id,
+				from_date: startDate,
+				to_date: endDate,
+			})
 
-				const data: any = response.data
-				setRattingData(data)
-			}
+			const data: any = response.data
+			setRattingData(data)
 		} catch (error) {
 			console.error(error)
 		}
@@ -234,13 +236,14 @@ const EmployeeTask: React.FC = () => {
 				toast.success('File uploaded successfully')
 			}
 
+			const employee = getStoredEmployee()
 			const payload: any = {
 				task_title: taskName,
 				remark_by_employee: remark,
 				start_date: start_date,
 				end_date: end_date,
 				file_url: fileUrls,
-				admin_id: JSON.parse(employeeData)._id,
+				admin_id: employee._id,
 			}
 
 			await CreateTask(payload)
@@ -561,79 +564,72 @@ const EmployeeTask: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Task Assignment</PageTitle>
-			<KTCard>
-				<h2 className='m-6 mb-0'>Currently Running Tasks</h2>
-				<div className='row card-header border-0 pt-0 align-items-center ms-0 mx-md-6 p-0'>
-					<div className='col-md-9'>
-						<div className='row mt-3 justify-content-between'>
-							<div className='col-md-12 mt-md-7 d-flex justify-content-between align-items-center card-toolbar'>
-								<div className='col-md-4 col-lg-3 fv-row'>
-									<label className='form-label fs-7 fw-bold text-gray-700 mb-1 d-block'>
-										Task Rating
-									</label>
-									<div
-										className='d-flex align-items-center rounded px-3 py-2 border'
-										style={{ minHeight: '40px', background: '#faf8f5', borderColor: 'var(--gz-border)' }}>
-										<div className='d-flex align-items-center gap-1'>
-											{[1, 2, 3, 4, 5].map((star) => (
-												<FontAwesomeIcon
-													key={star}
-													icon={faStar as any}
-													className='fs-6'
-													style={{ color: star <= starCount ? '#f59e0b' : '#d1d5db' }}
-												/>
-											))}
-										</div>
-										<span className='ms-2 fs-7 fw-bold text-gray-800'>
-											{ratingNum !== null
-												? `${ratingNum <= 5 ? ratingNum : Math.round(ratingNum / 20)}/5`
-												: 'No rating'}
-										</span>
-									</div>
-								</div>
-								<div className='d-md-flex'>
-									{assignTaskData?.length > 0 && (
-										<select
-											className='form-select form-select-sm mx-3'
-											style={{ width: '80px' }}
-											value={pagination.itemsPerPage}
-											onChange={(e) =>
-												setPagination((prev) => ({
-													...prev,
-													itemsPerPage: Number(e.target.value),
-													page: 1,
-												}))
-											}>
-											<option value='10'>10</option>
-											<option value='50'>50</option>
-											<option value='100'>100</option>
-										</select>
-									)}
-									<DateFilter
-										onDateRangeChange={handleDateRangeChange}
-										leftValue='-270px'
-										storageKey='emp_task_selectedDateRange'
-									/>
-									<div className='mt-md-0 mt-4 me-md-3 me-0'>
-										<button
-											onClick={() => setShowModal(true)}
-											className='ms-md-3 mt-md-1 btn btn-primary btn-sm w-md-20 w-100'>
-											<KTIcon
-												iconName='plus'
-												className='fs-2'
-											/>
-											Add Task
-										</button>
-									</div>
-								</div>
-							</div>
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				{/* Modern Header */}
+				<div className='card-header border-0 pt-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div>
+						<div className='d-flex align-items-center gap-2'>
+							<h2 className='fw-bolder text-gray-900 mb-0'>Tasks Assignment</h2>
+							<span className='badge badge-light-primary fw-bold fs-8'>
+								{metaData?.totalDocs || assignTaskData.length} tasks
+							</span>
 						</div>
+						<span className='text-muted fs-7 fw-semibold mt-1'>
+							Review assigned tasks, submit completions, and track manager feedback
+						</span>
 					</div>
-					<div className='col-md-3 mt-md-7 mt-2 d-flex align-items-center position-relative ps-0'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
+
+					<div className='d-flex align-items-center flex-wrap gap-3'>
+						{/* Task Rating Widget */}
+						<div
+							className='d-flex align-items-center rounded-3 px-3 py-1 border'
+							style={{ height: '38px', background: '#faf8f5', borderColor: '#ded8d2' }}>
+							<div className='d-flex align-items-center gap-1'>
+								{[1, 2, 3, 4, 5].map((star) => (
+									<FontAwesomeIcon
+										key={star}
+										icon={faStar as any}
+										className='fs-7'
+										style={{ color: star <= starCount ? '#f59e0b' : '#d1d5db' }}
+									/>
+								))}
+							</div>
+							<span className='ms-2 fs-8 fw-bold text-gray-800'>
+								{ratingNum !== null
+									? `${ratingNum <= 5 ? ratingNum : Math.round(ratingNum / 20)}/5`
+									: 'No rating'}
+							</span>
+						</div>
+
+						<LengthMenu
+							expenseData={assignTaskData}
+							handleItemsPerPageChange={(val) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))
+							}
 						/>
+
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							leftValue='-270px'
+							storageKey='emp_task_selectedDateRange'
+						/>
+
+						<div style={{ minWidth: '220px' }}>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								placeholder='Search tasks...'
+							/>
+						</div>
+
+						<button
+							type='button'
+							onClick={() => setShowModal(true)}
+							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '10px' }}>
+							<i className='bi bi-plus-lg fs-6'></i>
+							<span>Add Task</span>
+						</button>
 					</div>
 				</div>
 
@@ -704,16 +700,15 @@ const EmployeeTask: React.FC = () => {
 												{task.extends_dates &&
 													task.extends_dates.some((ext: any) => ext.status === 'accepted') && (
 														<button
-															className='btn btn-sm btn-info mb-1 py-1 ms-2 rounded-circle d-flex align-items-center justify-content-center'
-															style={{ width: '16px', height: '16px', padding: '0' }}
+															className='btn btn-icon btn-sm btn-light-info ms-2'
+															style={{ width: '22px', height: '22px', borderRadius: '6px' }}
+															title='Extension Info'
 															onClick={(e) => {
 																e.stopPropagation()
-																// Find the latest approved extension date
 																const approvedExtensions = task.extends_dates.filter(
 																	(ext: any) => ext.status === 'accepted'
 																)
 																if (approvedExtensions.length > 0) {
-																	// Sort by date to get the latest
 																	approvedExtensions.sort(
 																		(a: any, b: any) =>
 																			new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -731,9 +726,7 @@ const EmployeeTask: React.FC = () => {
 																	})
 																}
 															}}>
-															<i
-																className='fas fa-info pt-0 px-0'
-																style={{ fontSize: '8px', paddingBottom: '2px' }}></i>
+															<i className='bi bi-info-circle fs-8'></i>
 														</button>
 													)}
 											</div>
@@ -741,14 +734,17 @@ const EmployeeTask: React.FC = () => {
 										<td>
 											{task.status === 'PENDING' ? (
 												task.employee_status === 'accepted' ? (
-													<span className='text-success fw-bold fs-6'>Accepted</span>
+													<span className='badge badge-light-success px-2 py-1 fs-7 fw-semibold'>Accepted</span>
 												) : task.employee_status === 'rejected' ? (
-													<>
-														<span className='text-danger fw-bold mb-1 d-block fs-6'>Rejected</span>
+													<div className='d-flex align-items-center gap-1'>
+														<span className='badge badge-light-danger px-2 py-1 fs-7 fw-semibold'>Rejected</span>
 														{task.reject_reason && (
 															<button
-																className='btn btn-sm btn-info py-1'
-																onClick={() => {
+																className='btn btn-icon btn-sm btn-light-danger'
+																style={{ width: '22px', height: '22px', borderRadius: '6px' }}
+																title='View Reason'
+																onClick={(e) => {
+																	e.stopPropagation()
 																	Swal.fire({
 																		title: 'Rejection Reason',
 																		text: task.reject_reason || 'No reason provided.',
@@ -756,15 +752,15 @@ const EmployeeTask: React.FC = () => {
 																		confirmButtonText: 'Close',
 																	})
 																}}>
-																<i className='fas fa-eye p-0 px-1'></i>
+																<i className='bi bi-eye fs-8'></i>
 															</button>
 														)}
-													</>
+													</div>
 												) : (
-													<span className='text-warning fw-bold fs-6'>Pending</span>
+													<span className='badge badge-light-warning px-2 py-1 fs-7 fw-semibold'>Pending</span>
 												)
 											) : (
-												<span className='text-success fw-bold text-hover-primary d-block mb-1 fs-6'>
+												<span className='badge badge-light-primary px-2 py-1 fs-7 fw-semibold'>
 													{task.status.charAt(0).toUpperCase() + task.status.slice(1).toLowerCase()}
 												</span>
 											)}
@@ -772,11 +768,10 @@ const EmployeeTask: React.FC = () => {
 
 										<td>
 											<span
-												className={`fw-bold text-hover-primary d-block mb-1 fs-6 ${
-													task.hr_status === 'complete' ? 'text-success' : 'text-warning'
+												className={`badge px-2 py-1 fs-7 fw-semibold ${
+													task.hr_status === 'complete' ? 'badge-light-success' : 'badge-light-warning'
 												}`}>
-												{task.hr_status.charAt(0).toUpperCase() +
-													task.hr_status.slice(1).toLowerCase()}
+												{task.hr_status ? task.hr_status.charAt(0).toUpperCase() + task.hr_status.slice(1).toLowerCase() : 'Pending'}
 											</span>
 										</td>
 
@@ -790,9 +785,11 @@ const EmployeeTask: React.FC = () => {
 										<td>
 											<div className='d-flex align-items-center gap-2'>
 												<button
-													className='btn btn-info btn-sm'
+													className='btn btn-icon btn-sm btn-light-primary'
+													style={{ width: '34px', height: '34px', borderRadius: '8px' }}
+													title='View Details'
 													onClick={() => handlenavigate(task._id)}>
-													<i className='fas fa-eye p-0'></i>
+													<i className='bi bi-eye fs-6'></i>
 												</button>
 											</div>
 										</td>
@@ -800,7 +797,7 @@ const EmployeeTask: React.FC = () => {
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12}>
-												<div>
+												<div className='p-3 bg-light rounded-3'>
 													<strong>{sortableFields[0].title}:</strong> {task.task_title}
 													<br />
 													<strong>{sortableFields[1].title}:</strong> {task.remark_by_employee}
@@ -846,6 +843,7 @@ const EmployeeTask: React.FC = () => {
 							loading={loading}
 						/>
 					</div>
+
 					{paginatedTaskData.length === 0 && !loading && (
 						<div className='d-flex flex-column align-items-center justify-content-center text-center py-10 w-100'>
 							<div
@@ -859,82 +857,99 @@ const EmployeeTask: React.FC = () => {
 					)}
 
 					{paginatedTaskData.length > 0 && (
-						<UsersListPagination
-							totalPages={metaData?.totalPages || 1}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
+						<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+							<div className='text-muted fs-7 fw-semibold'>
+								Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, metaData?.totalDocs || paginatedTaskData.length)} to{' '}
+								{Math.min(pagination.page * pagination.itemsPerPage, metaData?.totalDocs || paginatedTaskData.length)} of {metaData?.totalDocs || paginatedTaskData.length} records
+							</div>
+							<UsersListPagination
+								totalPages={metaData?.totalPages || 1}
+								currentPage={pagination.page}
+								onPageChange={handlePageChange}
+							/>
+						</div>
 					)}
 				</div>
-			</KTCard>
+			</div>
 
 			<Modal
 				show={showModal}
 				onHide={() => setShowModal(false)}
-				centered>
-				<Modal.Header closeButton>
-					<Modal.Title>Add Task</Modal.Title>
+				centered
+				size='lg'>
+				<Modal.Header closeButton className='border-0 pb-0 pt-6 px-6'>
+					<div>
+						<Modal.Title className='fw-bolder text-gray-900 fs-4 mb-1'>Add Task</Modal.Title>
+						<span className='text-muted fs-7'>Create a new self-assigned or reported task</span>
+					</div>
 				</Modal.Header>
-				<Modal.Body>
-					{/* Form fields */}
+				<Modal.Body className='px-6 py-4'>
 					<Form>
-						<Form.Group
-							className='mb-3'
-							controlId='taskTitle'>
-							<Form.Label>Task Title</Form.Label>
+						<Form.Group className='mb-4' controlId='taskTitle'>
+							<Form.Label className='fw-bold text-gray-700 fs-7'>
+								Task Title <span className='text-danger'>*</span>
+							</Form.Label>
 							<Form.Control
 								type='text'
 								placeholder='Enter task title'
 								name='taskName'
 								value={taskFormData.taskName}
 								onChange={handleInputTask}
+								style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
 								required
 							/>
 						</Form.Group>
 
-						<Form.Group
-							className='mb-3'
-							controlId='remark'>
-							<Form.Label>Remark</Form.Label>
+						<Form.Group className='mb-4' controlId='remark'>
+							<Form.Label className='fw-bold text-gray-700 fs-7'>Remarks / Description</Form.Label>
 							<Form.Control
-								type='text'
-								placeholder='Type your remark here (optional)'
+								as='textarea'
+								rows={3}
+								placeholder='Type your remarks here (optional)'
 								name='remark'
 								value={taskFormData.remark}
 								onChange={handleInputTask}
-								required
+								style={{ borderRadius: '8px', borderColor: '#ded8d2' }}
 							/>
 						</Form.Group>
 
-						<Form.Group
-							className='mb-3'
-							controlId='start_date'>
-							<Form.Label>Start Date</Form.Label>
-							<Form.Control
-								type='date'
-								name='start_date'
-								value={taskFormData.start_date ? taskFormData.start_date : ''}
-								onChange={handleInputTask}
-								required
-							/>
-						</Form.Group>
+						<div className='row g-4 mb-4'>
+							<div className='col-12 col-md-6'>
+								<Form.Group controlId='start_date'>
+									<Form.Label className='fw-bold text-gray-700 fs-7'>
+										Start Date <span className='text-danger'>*</span>
+									</Form.Label>
+									<Form.Control
+										type='date'
+										name='start_date'
+										value={taskFormData.start_date ? taskFormData.start_date : ''}
+										onChange={handleInputTask}
+										style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
+										required
+									/>
+								</Form.Group>
+							</div>
 
-						<Form.Group
-							className='mb-3'
-							controlId='end_date'>
-							<Form.Label>End Date</Form.Label>
-							<Form.Control
-								type='date'
-								name='end_date'
-								value={taskFormData.end_date ? taskFormData.end_date : ''}
-								onChange={handleInputTask}
-								required
-							/>
-						</Form.Group>
+							<div className='col-12 col-md-6'>
+								<Form.Group controlId='end_date'>
+									<Form.Label className='fw-bold text-gray-700 fs-7'>
+										End Date <span className='text-danger'>*</span>
+									</Form.Label>
+									<Form.Control
+										type='date'
+										name='end_date'
+										value={taskFormData.end_date ? taskFormData.end_date : ''}
+										onChange={handleInputTask}
+										style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
+										required
+									/>
+								</Form.Group>
+							</div>
+						</div>
 
-						<Form.Group controlId='uploadOption'>
-							<Form.Label className=' mt-5'>Select File / Audio</Form.Label>
-							<div className='d-flex mb-4'>
+						<Form.Group controlId='uploadOption' className='mb-3'>
+							<Form.Label className='fw-bold text-gray-700 fs-7 d-block mb-2'>Attachment Type</Form.Label>
+							<div className='d-flex gap-4'>
 								<Form.Check
 									type='radio'
 									label='File Upload'
@@ -942,11 +957,10 @@ const EmployeeTask: React.FC = () => {
 									id='fileUpload'
 									checked={selectedOption === 'fileUpload'}
 									onChange={() => setSelectedOption('fileUpload')}
-									className='me-4'
 								/>
 								<Form.Check
 									type='radio'
-									label='Send Audio'
+									label='Voice Note (Audio)'
 									name='uploadOption'
 									id='sendAudio'
 									checked={selectedOption === 'sendAudio'}
@@ -956,75 +970,67 @@ const EmployeeTask: React.FC = () => {
 						</Form.Group>
 
 						{selectedOption === 'fileUpload' && (
-							<Form.Group
-								className='mb-3'
-								controlId='file'>
-								<Form.Label>File Upload</Form.Label>
+							<Form.Group className='mb-3' controlId='file'>
 								<Form.Control
 									type='file'
 									name='file'
 									onChange={handleInputTask}
+									style={{ borderRadius: '8px' }}
 									required
 								/>
 							</Form.Group>
 						)}
 
 						{selectedOption === 'sendAudio' && (
-							<Form.Group
-								className='mb-3'
-								controlId='audio'>
-								<Form.Label>Send Audio</Form.Label>
-								<br />
-								<Button
-									variant='success'
-									size='sm'
-									onClick={startRecording}
-									disabled={isRecording}>
-									Record Audio
-								</Button>
-								<Button
-									variant='info'
-									size='sm'
-									className='mx-3'
-									onClick={startAudio}
-									disabled={!audioURL || isPlaying}>
-									Start Audio
-								</Button>
-								<Button
-									variant='danger'
-									size='sm'
-									onClick={isRecording ? stopRecording : stopAudio}
-									disabled={!isRecording && !isPlaying}>
-									{isRecording ? 'Stop Recording' : 'Stop Audio'}
-								</Button>
+							<div className='p-3 bg-light rounded-3 border mb-3'>
+								<div className='d-flex gap-2 flex-wrap'>
+									<button
+										type='button'
+										className='btn btn-sm btn-success'
+										style={{ borderRadius: '8px' }}
+										onClick={startRecording}
+										disabled={isRecording}>
+										<i className='bi bi-mic me-1'></i> Record Audio
+									</button>
+									<button
+										type='button'
+										className='btn btn-sm btn-info'
+										style={{ borderRadius: '8px' }}
+										onClick={startAudio}
+										disabled={!audioURL || isPlaying}>
+										<i className='bi bi-play me-1'></i> Play Audio
+									</button>
+									<button
+										type='button'
+										className='btn btn-sm btn-danger'
+										style={{ borderRadius: '8px' }}
+										onClick={isRecording ? stopRecording : stopAudio}
+										disabled={!isRecording && !isPlaying}>
+										<i className='bi bi-stop me-1'></i> {isRecording ? 'Stop Recording' : 'Stop Audio'}
+									</button>
+								</div>
 								{audioURL && (
-									<audio
-										controls
-										src={audioURL}
-										className='mt-5'>
-										<track
-											kind='captions'
-											srcLang='en'
-											label='English captions'
-											default
-										/>
+									<audio controls src={audioURL} className='mt-3 w-100'>
 										Your browser does not support the audio element.
 									</audio>
 								)}
-							</Form.Group>
+							</div>
 						)}
 					</Form>
 				</Modal.Body>
-				<Modal.Footer>
+				<Modal.Footer className='border-0 pt-0 pb-6 px-6'>
 					<Button
-						variant='secondary'
+						variant='light'
+						style={{ borderRadius: '8px' }}
 						onClick={() => setShowModal(false)}>
-						Close
+						Cancel
 					</Button>
 					<Button
 						variant='primary'
-						onClick={handleSubmit}>
-						Add Task
+						style={{ borderRadius: '8px', minWidth: '130px' }}
+						onClick={handleSubmit}
+						disabled={submitLoading}>
+						{submitLoading ? 'Saving...' : 'Add Task'}
 					</Button>
 				</Modal.Footer>
 			</Modal>

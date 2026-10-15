@@ -159,10 +159,22 @@ const TaskAdd = () => {
 
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>Task Add</PageTitle>
+			<PageTitle breadcrumbs={[]}>Add Team Task</PageTitle>
 
-			<KTCard>
-				<Form className='m-6'>
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex align-items-center justify-content-between'>
+					<div>
+						<h3 className='fw-bolder text-gray-900 m-0'>Assign New Team Task</h3>
+						<span className='text-muted fs-7'>Create and assign a task to your team member</span>
+					</div>
+					<button
+						className='btn btn-light rounded-pill px-4 fw-semibold'
+						onClick={() => window.history.back()}>
+						Back
+					</button>
+				</div>
+
+				<Form className='p-6 pt-0'>
 					{/* Task Title + Remark */}
 					<div className='row mb-3'>
 						<div className='col-md-6'>
@@ -393,7 +405,7 @@ const TaskAdd = () => {
 						</div>
 					</div>
 				</Form>
-			</KTCard>
+			</div>
 		</>
 	)
 }

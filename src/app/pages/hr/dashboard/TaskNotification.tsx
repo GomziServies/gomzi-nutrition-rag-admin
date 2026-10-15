@@ -19,7 +19,7 @@ type Props = {
 	className: string
 }
 
-const TaskNotification: React.FC<Props> = () => {
+const TaskNotification: React.FC<Props> = ({ className }) => {
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
 	const employeeId: any = searchParams.get('employeeId')
@@ -56,10 +56,9 @@ const TaskNotification: React.FC<Props> = () => {
 						full_name: employee.full_name,
 					}
 				}
-				return task // Return the task as-is if no matching employee found
+				return task
 			})
 
-			// Set the assignTaskData state
 			setAssignTaskData(assignTaskData)
 		} catch (error) {
 			console.error(error)
@@ -128,7 +127,7 @@ const TaskNotification: React.FC<Props> = () => {
 				remarks,
 			}
 			await ActionEmployeeLeave(payload)
-			toast.success(`Leave ${status === 'approved' ? 'Approved' : 'Rejected'} Successfully`)
+			toast.success(`Leave ${status === 'approved' || status === 'APPROVED' ? 'Approved' : 'Rejected'} Successfully`)
 			setStatus('APPROVED')
 			setRemarks('')
 			fetchLeaveData()
@@ -139,252 +138,257 @@ const TaskNotification: React.FC<Props> = () => {
 		handleModalClose()
 	}
 
+	const totalPending = assignTaskData.length + leaveData.length
+
 	return (
 		<>
-			<div
-				className='card mb-5 mb-xl-8'
-				style={{ height: '524px' }}>
-				<div className='my-6 mb-2 ms-2 px-4 border-0'>
-					<h3 className='card-title m-0 fw-bold text-dark'>Task Management</h3>
-				</div>
-				<div
-					className='card-body border-bottom pt-0'
-					style={{ maxHeight: '210px', overflowY: 'auto' }}>
-					{assignTaskData.map((task: any, index: any) => (
-						<Link
-							to={`/hr/task-list`}
-							key={index}>
-							<div className='d-flex align-items-center bg-light-warning rounded p-4 mb-7'>
-								<span className=' text-warning me-5'>
-									<KTIcon
-										iconName='abstract-26'
-										className='text-warning fs-1 me-5'
-									/>
+			<div className={`card ${className || ''}`}>
+				{/* Header */}
+				<div className='card-header border-0 pt-5 pb-3 px-6 d-flex align-items-center justify-content-between'>
+					<div className='d-flex align-items-center gap-3'>
+						<span
+							className='symbol symbol-40px'
+							style={{
+								background: '#ecfdf5',
+								color: '#059669',
+								borderRadius: '10px',
+								display: 'inline-flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								fontSize: '18px',
+							}}>
+							<i className='bi bi-lightning-charge-fill'></i>
+						</span>
+						<div>
+							<div className='d-flex align-items-center gap-2'>
+								<h3 className='card-title fw-bold fs-4 m-0 text-dark'>Action Center</h3>
+								<span className='badge badge-light-success fw-bold fs-8 px-2 py-1'>
+									{totalPending} Pending
 								</span>
-								<div className='flex-grow-1 me-2'>
-									<a
-										href='#'
-										className='fw-bold text-gray-800  fs-6'>
-										{task.full_name}
-									</a>
-									<span className='text-muted fw-semibold d-block text-gray-600'>
-										{task.task_title}
-									</span>
-									<span className='text-muted fw-semibold d-block'>
-										{DayJS(task.start_date).format('DD/MM/YYYY')} -{' '}
-										{DayJS(task.end_date).format('DD/MM/YYYY')}
-									</span>
-								</div>
-								<span className='fw-bold text-warning py-1'>Pending</span>
 							</div>
-						</Link>
-					))}
-					{assignTaskData.length === 0 && !loading && (
-						<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center mt-5'>
-							<div>
-								<img
-									src={errorImg}
-									alt='demo'
-									width='50%'
-								/>
-							</div>
-							<h5>No records found</h5>
+							<span className='text-muted fw-semibold fs-7'>Leaves & task queue</span>
 						</div>
-					)}
+					</div>
 				</div>
 
-				{/* end::Body */}
-
-				<div className=' border-top ms-6'>
-					<h3 className='card-title my-4 mt-5 fw-bold text-dark'>Employee Leave</h3>
-				</div>
-				<div
-					className='mx-4 px-4 mb-4'
-					style={{ maxHeight: '250px', overflowY: 'auto' }}>
-					<div className='my-4'>
-						{leaveData.map((leave: any, index: any) => {
-							const adminName = leave?.admin_id?.full_name || 'Unknown Employee'
-							return (
-							<div
-								key={index}
-								onClick={() => handleApproveAndRejectLeave(leave._id)}
-								className='d-flex align-items-center bg-light-success rounded p-4 mb-7'
-								style={{ cursor: 'pointer' }}>
-								<span className='text-success me-5'>
-									<FontAwesomeIcon
-										icon={faPersonWalking}
-										className='text-success fs-1 me-5'
-									/>
+				<div className='card-body py-2 px-6'>
+					{/* SECTION 1: LEAVE APPROVALS */}
+					<div className='mb-4'>
+						<div className='d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom border-gray-100'>
+							<div className='d-flex align-items-center gap-2'>
+								<i className='bi bi-calendar2-check text-success fs-6'></i>
+								<span className='fw-bold text-dark fs-7'>Leave Requests</span>
+								<span className='badge badge-light-success py-0 px-2 fs-9 fw-bold'>
+									{leaveData.length}
 								</span>
-								<div className='flex-grow-1 me-2'>
-									<div
-										className='fw-bold text-gray-800 d-md-block d-none  fs-6'
-										onClick={(e) => {
-											e.stopPropagation()
-											toggleDescription(index)
-											handleApproveAndRejectLeave(leave._id)
-										}}
-										title={adminName}>
-										{expandedDescription[index]
-											? adminName
-											: truncateString(adminName, 15)}
-									</div>
-									<div
-										className='text-gray-500 d-md-block d-none  fs-6'
-										onClick={(e) => {
-											e.stopPropagation() // Prevent click event propagation to the parent
-											toggleDescription(index)
-										}}
-										title={leave.reason}>
-										{expandedDescription[index] ? leave.reason : truncateString(leave.reason, 15)}
-									</div>
-									<div
-										className='text-gray-500 d-md-none d-block  fs-6'
-										onClick={(e) => {
-											e.stopPropagation() // Prevent click event propagation to the parent
-											toggleDescription(index)
-										}}
-										title={leave.reason}>
-										{expandedDescription[index] ? leave.reason : truncateString(leave.reason, 10)}
-									</div>
-									<span className='text-muted fw-semibold d-block'></span>
-									<span className='text-muted fw-semibold d-block'>
-										{DayJS(leave.from_date).format('DD/MM/YYYY')} -{' '}
-										{DayJS(leave.to_date).format('DD/MM/YYYY')} (
-										{(() => {
-											const fromDate = DayJS(leave.from_date)
-											let toDate = DayJS(leave.to_date)
-
-											const diff = DayJS.duration(toDate.diff(fromDate))
-
-											let days = diff.days()
-											const hours = diff.hours()
-											const minutes = diff.minutes()
-
-											// If the toDate was adjusted, count it as a full day
-											if (toDate.format('HH:mm') === '00:00') {
-												days += 1
-											}
-
-											if (days === 0 && hours === 0 && minutes === 0) {
-												return '0 hours'
-											} else if (days === 0) {
-												return `${hours}:${minutes < 10 ? '0' + minutes : minutes} hours`
-											} else if (hours === 0 && minutes === 0) {
-												return `${days} day${days !== 1 ? 's' : ''}`
-											} else {
-												return `${days} day${days !== 1 ? 's' : ''} ${hours}:${
-													minutes < 10 ? '0' + minutes : minutes
-												} hours`
-											}
-										})()}
-										)
-									</span>
-								</div>
-								<span className='fw-bold text-success py-1'>Pending</span>
 							</div>
-							)
-						})}
+							<Link
+								to='/hr/manual-leave'
+								className='text-primary text-hover-primary fw-semibold fs-8'>
+								View All <i className='bi bi-arrow-right fs-9'></i>
+							</Link>
+						</div>
 
-						{leaveData.length === 0 && !loading && (
-							<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center mt-5'>
-								<div>
-									<img
-										src={errorImg}
-										alt='demo'
-										width='50%'
-									/>
+						<div style={{ maxHeight: '230px', overflowY: 'auto' }}>
+							{loading && leaveData.length === 0 ? (
+								<div className='text-center py-4 text-muted fs-8'>Loading leaves...</div>
+							) : leaveData.length > 0 ? (
+								leaveData.map((leave: any, index: any) => {
+									const adminName = leave?.admin_id?.full_name || 'Employee'
+									const fromDate = DayJS(leave.from_date)
+									const toDate = DayJS(leave.to_date)
+									const diffDays = Math.max(1, toDate.diff(fromDate, 'day') + 1)
+
+									return (
+										<div
+											key={leave._id || index}
+											onClick={() => handleApproveAndRejectLeave(leave._id)}
+											className='gz-hr-leave-item'
+											title='Click to Approve or Reject'>
+											<div className='symbol symbol-35px me-3'>
+												<span className='symbol-label bg-light-success text-success fw-bold fs-7 rounded-circle'>
+													{adminName.charAt(0).toUpperCase()}
+												</span>
+											</div>
+											<div className='flex-grow-1 overflow-hidden me-2'>
+												<div className='d-flex align-items-center justify-content-between gap-1'>
+													<span className='text-dark fw-bold fs-7 text-truncate'>
+														{adminName}
+													</span>
+													<span className='badge badge-light-warning py-0 px-1 fs-9 fw-bold'>
+														{diffDays}d
+													</span>
+												</div>
+												<span className='text-muted fs-8 fw-semibold d-block text-truncate'>
+													{leave.reason || 'Leave requested'}
+												</span>
+												<span className='text-muted fs-9 d-block'>
+													{fromDate.format('DD MMM')} - {toDate.format('DD MMM YYYY')}
+												</span>
+											</div>
+											<button
+												type='button'
+												className='btn btn-xs btn-light-success px-2 py-1 fs-9 fw-bold flex-shrink-0'
+												onClick={(e) => {
+													e.stopPropagation()
+													handleApproveAndRejectLeave(leave._id)
+												}}>
+												Review
+											</button>
+										</div>
+									)
+								})
+							) : (
+								<div className='text-center py-4 text-muted fs-8'>
+									<i className='bi bi-check-circle me-1 text-success'></i>
+									No pending leave requests
 								</div>
-								<h5>No records found</h5>
+							)}
+						</div>
+					</div>
+
+					{/* SECTION 2: TASK MANAGEMENT */}
+					<div>
+						<div className='d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom border-gray-100'>
+							<div className='d-flex align-items-center gap-2'>
+								<i className='bi bi-list-task text-warning fs-6'></i>
+								<span className='fw-bold text-dark fs-7'>Pending Tasks</span>
+								<span className='badge badge-light-warning py-0 px-2 fs-9 fw-bold'>
+									{assignTaskData.length}
+								</span>
 							</div>
-						)}
+							<Link
+								to='/hr/task-list'
+								className='text-primary text-hover-primary fw-semibold fs-8'>
+								View All <i className='bi bi-arrow-right fs-9'></i>
+							</Link>
+						</div>
+
+						<div style={{ maxHeight: '230px', overflowY: 'auto' }}>
+							{loading && assignTaskData.length === 0 ? (
+								<div className='text-center py-4 text-muted fs-8'>Loading tasks...</div>
+							) : assignTaskData.length > 0 ? (
+								assignTaskData.map((task: any, index: any) => (
+									<Link
+										to='/hr/task-list'
+										key={task._id || index}
+										className='text-decoration-none'>
+										<div className='gz-hr-task-item'>
+											<div className='symbol symbol-35px me-3'>
+												<span className='symbol-label bg-light-warning text-warning fw-bold fs-7 rounded-circle'>
+													<i className='bi bi-check2-circle fs-6 text-warning'></i>
+												</span>
+											</div>
+											<div className='flex-grow-1 overflow-hidden me-2'>
+												<span className='text-dark fw-bold fs-7 d-block text-truncate'>
+													{task.task_title || 'Assigned Task'}
+												</span>
+												<span className='text-muted fs-8 fw-semibold d-block text-truncate'>
+													{task.full_name || 'Assigned member'}
+												</span>
+												<span className='text-muted fs-9 d-block'>
+													Due: {DayJS(task.end_date).format('DD MMM YYYY')}
+												</span>
+											</div>
+											<span className='badge badge-light-warning py-1 px-2 fs-9 fw-bold flex-shrink-0'>
+												Pending
+											</span>
+										</div>
+									</Link>
+								))
+							) : (
+								<div className='text-center py-4 text-muted fs-8'>
+									<i className='bi bi-check-circle me-1 text-success'></i>
+									No pending tasks in queue
+								</div>
+							)}
+						</div>
 					</div>
 				</div>
 			</div>
+
 			{/* Modal for Approve/Reject Leave */}
 			<Modal
 				show={showModal}
 				centered
 				onHide={handleModalClose}>
-				<Modal.Header closeButton>
-					<Modal.Title>Approve/Reject Leave</Modal.Title>
+				<Modal.Header closeButton className='border-0 pb-0'>
+					<Modal.Title className='fw-bold fs-4'>Review Employee Leave</Modal.Title>
 				</Modal.Header>
-				<Modal.Body>
+				<Modal.Body className='pt-3'>
 					<Form>
-						<Form.Group
-							className='mb-3'
-							controlId='status'>
-							<Form.Label>Status</Form.Label>
-							<div className='d-flex mt-3'>
-								<Form.Check
-									type='radio'
-									name='status'
-									id='approve'
-									value='APPROVED'
-									checked={status === 'APPROVED'}
-									onChange={(e) => setStatus(e.target.value)}
-									className='d-none'
-								/>
+						<Form.Group className='mb-4' controlId='status'>
+							<Form.Label className='fw-bold fs-7 text-dark mb-2'>Decision</Form.Label>
+							<div className='d-flex gap-3'>
 								<label
 									htmlFor='approve'
-									className='d-flex align-items-center'>
-									<FontAwesomeIcon
-										icon={faCheck}
-										className={`fs-1 ${status === 'APPROVED' ? 'text-success' : 'text-muted'}`}
+									className={`flex-fill p-3 rounded border d-flex align-items-center gap-2 cursor-pointer transition ${
+										status === 'APPROVED'
+											? 'border-success bg-light-success text-success fw-bold'
+											: 'border-gray-200 text-muted'
+									}`}
+									style={{ cursor: 'pointer' }}>
+									<Form.Check
+										type='radio'
+										name='status'
+										id='approve'
+										value='APPROVED'
+										checked={status === 'APPROVED'}
+										onChange={(e) => setStatus(e.target.value)}
+										className='me-1'
 									/>
-									<b
-										className={`ms-2 me-9 ${status === 'APPROVED' ? 'text-success' : 'text-dark'}`}>
-										{' '}
-										Approve
-									</b>
+									<FontAwesomeIcon icon={faCheck} className='fs-6' />
+									<span>Approve Request</span>
 								</label>
 
-								<Form.Check
-									type='radio'
-									name='status'
-									id='reject'
-									value='REJECTED'
-									checked={status === 'REJECTED'}
-									onChange={(e) => setStatus(e.target.value)}
-									className='d-none'
-								/>
 								<label
 									htmlFor='reject'
-									className='d-flex align-items-center'>
-									<FontAwesomeIcon
-										icon={faX}
-										className={`fs-2 ${status === 'REJECTED' ? 'text-danger' : 'text-muted'}`}
+									className={`flex-fill p-3 rounded border d-flex align-items-center gap-2 cursor-pointer transition ${
+										status === 'REJECTED'
+											? 'border-danger bg-light-danger text-danger fw-bold'
+											: 'border-gray-200 text-muted'
+									}`}
+									style={{ cursor: 'pointer' }}>
+									<Form.Check
+										type='radio'
+										name='status'
+										id='reject'
+										value='REJECTED'
+										checked={status === 'REJECTED'}
+										onChange={(e) => setStatus(e.target.value)}
+										className='me-1'
 									/>
-									<b className={`ms-2 me-5 ${status === 'REJECTED' ? 'text-danger' : 'text-dark'}`}>
-										{' '}
-										Reject
-									</b>
+									<FontAwesomeIcon icon={faX} className='fs-6' />
+									<span>Reject Request</span>
 								</label>
 							</div>
 						</Form.Group>
-						<Form.Group
-							className='my-3'
-							controlId='remarks'>
-							<Form.Label className='mt-3'>Remarks</Form.Label>
+
+						<Form.Group className='mb-2' controlId='remarks'>
+							<Form.Label className='fw-bold fs-7 text-dark mb-1'>Remarks / Note</Form.Label>
 							<Form.Control
 								as='textarea'
 								rows={3}
+								placeholder='Add any comments or notes for the employee...'
 								value={remarks}
 								onChange={(e) => setRemarks(e.target.value)}
+								className='fs-7'
 							/>
 						</Form.Group>
 					</Form>
 				</Modal.Body>
-				<Modal.Footer>
+				<Modal.Footer className='border-0 pt-0'>
 					<Button
-						variant='secondary'
+						variant='light'
+						size='sm'
 						onClick={handleModalClose}>
-						Close
+						Cancel
 					</Button>
 					<Button
-						variant='primary'
+						variant={status === 'APPROVED' ? 'success' : 'danger'}
+						size='sm'
 						onClick={handleModalSubmit}>
-						Submit
+						Confirm {status === 'APPROVED' ? 'Approval' : 'Rejection'}
 					</Button>
 				</Modal.Footer>
 			</Modal>

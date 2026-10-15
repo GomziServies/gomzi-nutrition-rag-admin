@@ -36,46 +36,29 @@ const TableButton: FC<Props> = ({
 	style,
 	iconStyle,
 }) => {
-	const getButtonClass = (action: string, backgroundDark: boolean) => {
-		if (backgroundDark) {
+	const getButtonClass = (action: string, hasText: boolean) => {
+		if (hasText) {
 			switch (action) {
 				case 'add':
-					return 'btn-primary'
+					return 'btn-primary gz-table-text-btn'
 				case 'edit':
-					return 'btn-info'
+					return 'btn-light-info gz-table-text-btn'
 				case 'remove':
-					return 'btn-danger'
+					return 'btn-light-danger gz-table-text-btn'
 				case 'view':
-					return 'btn-success'
+					return 'btn-light-primary gz-table-text-btn'
 				case 'assign':
-					return 'btn-warning'
+					return 'btn-light-warning gz-table-text-btn'
 				case 'approve':
-					return 'btn-success'
+					return 'btn-light-success gz-table-text-btn'
 				case 'send':
-					return 'btn-success'
+					return 'btn-light-success gz-table-text-btn'
 				default:
-					return 'btn-primary'
-			}
-		} else {
-			switch (action) {
-				case 'add':
-					return 'btn-primary'
-				case 'edit':
-					return 'btn-light-info'
-				case 'remove':
-					return 'btn-light-danger'
-				case 'view':
-					return 'btn-light-success'
-				case 'assign':
-					return 'btn-light-warning'
-				case 'approve':
-					return 'btn-light-success'
-				case 'send':
-					return 'btn-light-success'
-				default:
-					return 'btn-light-primary'
+					return 'btn-light-primary gz-table-text-btn'
 			}
 		}
+
+		return `gz-table-action-btn is-${action}`
 	}
 
 	const getIcon = (action: string) => {
@@ -99,43 +82,69 @@ const TableButton: FC<Props> = ({
 		}
 	}
 
-	const buttonClass = `btn gap-2 ${getButtonClass(action, backgroundDark)} mx-2 btn-sm me-1 ${
-		className || ''
-	} ${disabled ? 'disabled' : ''}`
-	const icon = getIcon(action)
+	const getTitle = (action: string, text?: string) => {
+		if (text) return text
+		switch (action) {
+			case 'add':
+				return 'Add'
+			case 'edit':
+				return 'Edit'
+			case 'remove':
+				return 'Delete'
+			case 'view':
+				return 'View'
+			case 'assign':
+				return 'Assign'
+			case 'approve':
+				return 'Approve'
+			case 'send':
+				return 'Send'
+			default:
+				return 'Action'
+		}
+	}
 
-	const handleClick = onClick ? (e: React.MouseEvent<HTMLButtonElement>) => onClick(e) : undefined;
+	const hasText = Boolean(text)
+	const buttonClass = `${getButtonClass(action, hasText)} ${className || ''} ${
+		disabled ? 'disabled' : ''
+	}`
+	const icon = getIcon(action)
+	const titleText = getTitle(action, text)
+
+	const handleClick = onClick ? (e: React.MouseEvent<HTMLButtonElement>) => onClick(e) : undefined
 
 	return to ? (
 		<Link
 			to={to}
 			className={buttonClass}
-			style={style}>
+			style={style}
+			title={titleText}>
 			{showIcon && (
 				<FontAwesomeIcon
 					icon={icon as any}
-					className='fs-3'
-					style={iconStyle}
+					style={{ fontSize: hasText ? '12px' : '13px', ...iconStyle }}
 				/>
 			)}
-			{text && <span className={`${showIcon ? 'ms-3' : ''} fw-bolder fs-5`}>{text}</span>}
+			{text && <span className='fs-7 fw-semibold'>{text}</span>}
 		</Link>
 	) : (
 		<button
+			type='button'
 			className={buttonClass}
 			onClick={handleClick}
 			disabled={disabled}
-			style={style}>
+			style={style}
+			title={titleText}>
 			{showIcon && (
 				<FontAwesomeIcon
 					icon={icon as any}
-					className='fs-3'
-					style={iconStyle}
+					style={{ fontSize: hasText ? '12px' : '13px', ...iconStyle }}
 				/>
 			)}
-			{text && <span className={`${showIcon ? 'ms-3' : ''} fw-bolder fs-5`}>{text}</span>}
+			{text && <span className='fs-7 fw-semibold'>{text}</span>}
 		</button>
 	)
 }
 
 export default TableButton
+

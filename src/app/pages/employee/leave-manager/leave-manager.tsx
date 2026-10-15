@@ -3,12 +3,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
-import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
-import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import {
 	CreateEmployeeLeave,
@@ -51,14 +50,29 @@ const EmployeeLeaveManager: React.FC = () => {
 	}
 
 	const fetchLeaveData = async () => {
-		const employeeData: any = localStorage.getItem('fg_group_info')
-		const employee = JSON.parse(employeeData)
+		const raw =
+			localStorage.getItem('fg_group_user_info') ||
+			localStorage.getItem('fg_group_info') ||
+			localStorage.getItem('auth_fg_group')
+		let employeeId: any = null
+		if (raw) {
+			try {
+				const parsed = JSON.parse(raw)
+				employeeId = parsed._id || parsed.employee_id
+			} catch (e) {
+				console.error(e)
+			}
+		}
+
+		if (!employeeId) return
 
 		setLoading(true)
 		try {
 			const response = await GetEmployeeLeaves()
-			let filteredData: any = response.data
-			filteredData = filteredData.filter((el: any) => el?.admin_id?._id == employee._id).reverse()
+			let filteredData: any = response.data || []
+			filteredData = filteredData
+				.filter((el: any) => el?.admin_id?._id == employeeId || el?.admin_id == employeeId)
+				.reverse()
 			setLeaveData(filteredData)
 		} catch (error) {
 			console.error(error)
@@ -95,6 +109,7 @@ const EmployeeLeaveManager: React.FC = () => {
 
 			if (DayJS(toDate).isBefore(DayJS(fromDate))) {
 				toast.error('To Date cannot be earlier than From Date')
+				setSubmitLoading(false)
 				return
 			}
 		} else if (leaveType === 'half') {
@@ -106,6 +121,7 @@ const EmployeeLeaveManager: React.FC = () => {
 				)
 			) {
 				toast.error('For First Half leave, To Date must be 1:30 PM of the same day')
+				setSubmitLoading(false)
 				return
 			}
 			if (
@@ -116,6 +132,7 @@ const EmployeeLeaveManager: React.FC = () => {
 				)
 			) {
 				toast.error('For Second Half leave, To Date must be 18:00 PM of the next day')
+				setSubmitLoading(false)
 				return
 			}
 		}
@@ -132,6 +149,9 @@ const EmployeeLeaveManager: React.FC = () => {
 			toast.success('Leave Added Successfully')
 			fetchLeaveData()
 			setShowModal(false)
+			setReason('')
+			setFromDate('')
+			setToDate('')
 		} catch (error: any) {
 			toast.error(error.message)
 			console.error(error)
@@ -218,307 +238,300 @@ const EmployeeLeaveManager: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Leave</PageTitle>
-			<div
-				className='accordion'
-				id='kt_accordion_1'>
-				<KTCard className='accordion-item mt-5'>
-					<div
-						id='kt_accordion_1_body_1'
-						className='accordion-collapse collapse show'>
-						<div className='row mx-6 my-4 align-items-center justify-content-between'>
-							<div className='col-md-8 col-12'>
-								<div className='d-md-flex'>
-									<SearchFilter
-										searchTerm={searchTerm}
-										setSearchTerm={setSearchTerm}
-									/>
-									<div className='d-md-block d-none'>
-										{leaveData?.length > 0 && (
-											<select
-												className='form-select form-select-sm mx-3'
-												style={{ width: '80px' }}
-												value={pagination.itemsPerPage}
-												onChange={(e) =>
-													setPagination((prev) => ({
-														...prev,
-														itemsPerPage: Number(e.target.value),
-														page: 1,
-													}))
-												}>
-												<option value='10'>10</option>
-												<option value='50'>50</option>
-												<option value='100'>100</option>
-											</select>
-										)}
-									</div>
-								</div>
-							</div>
-							<div className='col-md-4 col-12 px-0 d-flex justify-content-end mb-md-0 mt-4'>
-								<div className='d-md-none d-block me-md-3'>
-									{leaveData?.length > 0 && (
-										<select
-											className='form-select form-select-sm'
-											style={{ width: '80px' }}
-											value={pagination.itemsPerPage}
-											onChange={(e) =>
-												setPagination((prev) => ({
-													...prev,
-													itemsPerPage: Number(e.target.value),
-													page: 1,
-												}))
-											}>
-											<option value='10'>10</option>
-											<option value='50'>50</option>
-											<option value='100'>100</option>
-										</select>
-									)}
-								</div>
-								<TableButton
-									action='add'
-									text='Add Leave'
-									onClick={() => setShowModal(true)}
-								/>
-							</div>
+
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				{/* Modern Header */}
+				<div className='card-header border-0 pt-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div>
+						<div className='d-flex align-items-center gap-2'>
+							<h2 className='fw-bolder text-gray-900 mb-0'>My Leave Requests</h2>
+							<span className='badge badge-light-primary fw-bold fs-8'>
+								{filteredData.length} records
+							</span>
 						</div>
-						{submitLoading && (
-							<div className='loader-background'>
-								<div
-									className='spinner-border spinner-border-1 text-white'
-									style={{ width: '50px', height: '50px' }}
-									role='status'>
-									<span className='visually-hidden'>Loading...</span>
-								</div>
-							</div>
-						)}
-						<div className='py-4 card-body'>
-							<div className='table-responsive'>
-								<Table
-									data={paginatedData}
-									columns={sortableFields}
-									sort={sort}
-									sortOrder={sortOrder}
-									onSortChange={handleSortChange}
-									pagination={pagination}
-									setPagination={setPagination}
-									loading={loading}
-									manualSearch={searchTerm}
-									removeAction={true}
-									visibleDetails={visibleDetails}
-									renderRow={(
-										leave: any,
-										index: number,
-										actualIndex: number,
-										isVisible: boolean
-									) => (
-										<React.Fragment key={leave._id}>
-											<tr
-												onClick={() => handleRowClick(leave._id)}
-												className='data-row'>
-												<td className='text-center'>
-													<div className='d-flex'>
-														<FontAwesomeIcon
-															icon={faPlusCircle}
-															className='mx-2 ms-5 mb-1 plus-icon'
-															style={{ color: '#607D8B', fontSize: '18px' }}
-														/>
-														<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-															{actualIndex}
-														</span>
-													</div>
-												</td>
-												<td>
-													<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-														{leave?.admin_id?.full_name}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-														{DayJS(leave.from_date).format('DD/MM/YYYY hh:mm A')}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-														{DayJS(leave.to_date).format('DD/MM/YYYY hh:mm A')}
-													</span>
-												</td>
-												<td>
-													<span
-														className='text-dark fw-bold text-hover-primary d-md-block d-none mb-1 fs-6'
-														onClick={() => toggleDescription(index)}
-														title={leave.reason}
-														style={{ cursor: 'pointer' }}>
-														{expandedDescription[index]
-															? leave.reason
-															: truncateString(leave.reason, 100)}
-													</span>
-													<span
-														className='text-dark fw-bold text-hover-primary d-md-none d-block mb-1 fs-6'
-														style={{ cursor: 'pointer' }}
-														title={leave.reason}
-														onClick={() => toggleDescription(index)}>
-														{expandedDescription[index]
-															? leave.reason
-															: truncateString(leave.reason, 20)}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-														{leave.status === 'PENDING' ? (
-															'Decision Pending'
-														) : (
-															<>
-																<span
-																	className='text-dark fw-bold text-hover-primary d-md-block d-none mb-1 fs-6'
-																	onClick={() => toggleDescription(index)}
-																	title={leave.remarks}
-																	style={{ cursor: 'pointer' }}>
-																	{expandedDescription[index]
-																		? leave.remarks
-																		: truncateString(leave.remarks, 100)}
-																</span>
-																<span
-																	className='text-dark fw-bold text-hover-primary d-md-none d-block mb-1 fs-6'
-																	style={{ cursor: 'pointer' }}
-																	title={leave.remarks}
-																	onClick={() => toggleDescription(index)}>
-																	{expandedDescription[index]
-																		? leave.remarks
-																		: truncateString(leave.remarks, 20)}
-																</span>
-															</>
-														)}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-														{leave.status === 'APPROVED' ? (
-															<span className='badge badge-light-success py-3 px-4 fs-7'>
-																Approved
-															</span>
-														) : leave.status === 'REJECTED' ? (
-															<span className='badge badge-light-danger py-3 px-4 fs-7'>
-																Rejected
-															</span>
-														) : (
-															<span className='badge badge-light-warning py-3 px-4 fs-7'>
-																Pending
-															</span>
-														)}
-													</span>
-												</td>
-											</tr>
-											{isVisible && (
-												<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-													<td colSpan={12}>
-														<div>
-															<strong>{sortableFields[0].title}:</strong>{' '}
-															{leave?.admin_id?.full_name}
-															<br />
-															<strong>{sortableFields[1].title}:</strong>{' '}
-															{DayJS(leave.from_date).format('DD/MM/YYYY hh:mm A')}
-															<br />
-															<strong>{sortableFields[2].title}:</strong>{' '}
-															{DayJS(leave.to_date).format('DD/MM/YYYY hh:mm A')}
-															<br />
-															<div className='d-flex'>
-																<strong>{sortableFields[3].title}:</strong>
-																<span
-																	className='text-dark fw-bold text-hover-primary d-md-none d-block mb-2 ms-1 fs-6'
-																	style={{ cursor: 'pointer' }}
-																	title={leave.reason}
-																	onClick={() => toggleDescription(index)}>
-																	{expandedDescription[index]
-																		? leave.reason
-																		: truncateString(leave.reason, 55)}
-																</span>
-															</div>
-															<div className='d-flex'>
-																<strong>{sortableFields[4].title}:</strong>{' '}
-																<span className='text-dark fw-bold text-hover-primary d-block mb-3 ms-1 fs-6'>
-																	{leave.status === 'PENDING' ? (
-																		'Decision Pending'
-																	) : (
-																		<>
-																			<span
-																				className='text-dark fw-bold text-hover-primary d-md-none d-block fs-6'
-																				style={{ cursor: 'pointer' }}
-																				title={leave.remarks}
-																				onClick={() => toggleDescription(index)}>
-																				{expandedDescription[index]
-																					? leave.remarks
-																					: truncateString(leave.remarks, 55)}
-																			</span>
-																		</>
-																	)}
-																</span>
-															</div>
-															<div className='d-flex'>
-																<strong className='mt-1'>{sortableFields[5].title}:</strong>{' '}
-																<span className='text-dark fw-bold text-hover-primary d-block mb-1 ms-1 fs-6'>
-																	{leave.status === 'APPROVED' ? (
-																		<span className='badge badge-light-success py-3 px-4 fs-7'>
-																			Approved
-																		</span>
-																	) : leave.status === 'REJECTED' ? (
-																		<span className='badge badge-light-danger py-3 px-4 fs-7'>
-																			Rejected
-																		</span>
-																	) : (
-																		<span className='badge badge-light-warning py-3 px-4 fs-7'>
-																			Pending
-																		</span>
-																	)}
-																</span>
-															</div>
-														</div>
-													</td>
-												</tr>
-											)}
-										</React.Fragment>
-									)}
-								/>
-							</div>
-							{leaveData.length === 0 && !loading && (
-								<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-									<b>No records found</b>
-								</div>
-							)}
-							{filteredData.length > 0 && (
-								<UsersListPagination
-									totalPages={Math.ceil(filteredData.length / pagination.itemsPerPage)}
-									currentPage={pagination.page}
-									onPageChange={handlePageChange}
-								/>
-							)}
+						<span className='text-muted fs-7 fw-semibold mt-1'>
+							Apply for leaves, track approval status, and review HR remarks
+						</span>
+					</div>
+
+					<div className='d-flex align-items-center flex-wrap gap-3'>
+						<LengthMenu
+							expenseData={filteredData}
+							handleItemsPerPageChange={(val) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))
+							}
+						/>
+
+						<div style={{ minWidth: '220px' }}>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								placeholder='Search leaves...'
+							/>
+						</div>
+
+						<button
+							type='button'
+							onClick={() => setShowModal(true)}
+							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '10px' }}>
+							<i className='bi bi-plus-lg fs-6'></i>
+							<span>Apply Leave</span>
+						</button>
+					</div>
+				</div>
+
+				{submitLoading && (
+					<div className='loader-background'>
+						<div
+							className='spinner-border spinner-border-1 text-white'
+							style={{ width: '50px', height: '50px' }}
+							role='status'>
+							<span className='visually-hidden'>Loading...</span>
 						</div>
 					</div>
-				</KTCard>
+				)}
+
+				<div className='py-4 card-body'>
+					<div className='table-responsive'>
+						<Table
+							data={paginatedData}
+							columns={sortableFields}
+							sort={sort}
+							sortOrder={sortOrder}
+							onSortChange={handleSortChange}
+							pagination={pagination}
+							setPagination={setPagination}
+							loading={loading}
+							manualSearch={searchTerm}
+							removeAction={true}
+							visibleDetails={visibleDetails}
+							renderRow={(
+								leave: any,
+								index: number,
+								actualIndex: number,
+								isVisible: boolean
+							) => (
+								<React.Fragment key={leave._id}>
+									<tr
+										onClick={() => handleRowClick(leave._id)}
+										className='data-row'>
+										<td className='text-center'>
+											<div className='d-flex'>
+												<FontAwesomeIcon
+													icon={faPlusCircle}
+													className='mx-2 ms-5 mb-1 plus-icon'
+													style={{ color: '#607D8B', fontSize: '18px' }}
+												/>
+												<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+													{actualIndex}
+												</span>
+											</div>
+										</td>
+										<td>
+											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+												{leave?.admin_id?.full_name || 'Me'}
+											</span>
+										</td>
+										<td>
+											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+												{DayJS(leave.from_date).format('DD/MM/YYYY hh:mm A')}
+											</span>
+										</td>
+										<td>
+											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+												{DayJS(leave.to_date).format('DD/MM/YYYY hh:mm A')}
+											</span>
+										</td>
+										<td>
+											<span
+												className='text-dark fw-bold text-hover-primary d-md-block d-none mb-1 fs-6'
+												onClick={() => toggleDescription(index)}
+												title={leave.reason}
+												style={{ cursor: 'pointer' }}>
+												{expandedDescription[index]
+													? leave.reason
+													: truncateString(leave.reason, 100)}
+											</span>
+											<span
+												className='text-dark fw-bold text-hover-primary d-md-none d-block mb-1 fs-6'
+												style={{ cursor: 'pointer' }}
+												title={leave.reason}
+												onClick={() => toggleDescription(index)}>
+												{expandedDescription[index]
+													? leave.reason
+													: truncateString(leave.reason, 20)}
+											</span>
+										</td>
+										<td>
+											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+												{leave.status === 'PENDING' ? (
+													<span className='text-muted fs-7'>Decision Pending</span>
+												) : (
+													<>
+														<span
+															className='text-dark fw-bold text-hover-primary d-md-block d-none mb-1 fs-6'
+															onClick={() => toggleDescription(index)}
+															title={leave.remarks}
+															style={{ cursor: 'pointer' }}>
+															{expandedDescription[index]
+																? leave.remarks
+																: truncateString(leave.remarks, 100)}
+														</span>
+														<span
+															className='text-dark fw-bold text-hover-primary d-md-none d-block mb-1 fs-6'
+															style={{ cursor: 'pointer' }}
+															title={leave.remarks}
+															onClick={() => toggleDescription(index)}>
+															{expandedDescription[index]
+																? leave.remarks
+																: truncateString(leave.remarks, 20)}
+														</span>
+													</>
+												)}
+											</span>
+										</td>
+										<td>
+											{leave.status === 'APPROVED' ? (
+												<span className='badge badge-light-success px-3 py-2 fs-7 fw-semibold'>
+													Approved
+												</span>
+											) : leave.status === 'REJECTED' ? (
+												<span className='badge badge-light-danger px-3 py-2 fs-7 fw-semibold'>
+													Rejected
+												</span>
+											) : (
+												<span className='badge badge-light-warning px-3 py-2 fs-7 fw-semibold'>
+													Pending
+												</span>
+											)}
+										</td>
+									</tr>
+									{isVisible && (
+										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
+											<td colSpan={12}>
+												<div className='p-3 bg-light rounded-3'>
+													<strong>{sortableFields[0].title}:</strong>{' '}
+													{leave?.admin_id?.full_name || 'Me'}
+													<br />
+													<strong>{sortableFields[1].title}:</strong>{' '}
+													{DayJS(leave.from_date).format('DD/MM/YYYY hh:mm A')}
+													<br />
+													<strong>{sortableFields[2].title}:</strong>{' '}
+													{DayJS(leave.to_date).format('DD/MM/YYYY hh:mm A')}
+													<br />
+													<div className='d-flex'>
+														<strong>{sortableFields[3].title}:</strong>
+														<span
+															className='text-dark fw-bold text-hover-primary d-md-none d-block mb-2 ms-1 fs-6'
+															style={{ cursor: 'pointer' }}
+															title={leave.reason}
+															onClick={() => toggleDescription(index)}>
+															{expandedDescription[index]
+																? leave.reason
+																: truncateString(leave.reason, 55)}
+														</span>
+													</div>
+													<div className='d-flex'>
+														<strong>{sortableFields[4].title}:</strong>{' '}
+														<span className='text-dark fw-bold text-hover-primary d-block mb-3 ms-1 fs-6'>
+															{leave.status === 'PENDING' ? (
+																'Decision Pending'
+															) : (
+																<>
+																	<span
+																		className='text-dark fw-bold text-hover-primary d-md-none d-block fs-6'
+																		style={{ cursor: 'pointer' }}
+																		title={leave.remarks}
+																		onClick={() => toggleDescription(index)}>
+																		{expandedDescription[index]
+																			? leave.remarks
+																			: truncateString(leave.remarks, 55)}
+																	</span>
+																</>
+															)}
+														</span>
+													</div>
+													<div className='d-flex'>
+														<strong className='mt-1'>{sortableFields[5].title}:</strong>{' '}
+														<span className='text-dark fw-bold text-hover-primary d-block mb-1 ms-1 fs-6'>
+															{leave.status === 'APPROVED' ? (
+																<span className='badge badge-light-success px-3 py-2 fs-7'>
+																	Approved
+																</span>
+															) : leave.status === 'REJECTED' ? (
+																<span className='badge badge-light-danger px-3 py-2 fs-7'>
+																	Rejected
+																</span>
+															) : (
+																<span className='badge badge-light-warning px-3 py-2 fs-7'>
+																	Pending
+																</span>
+															)}
+														</span>
+													</div>
+												</div>
+											</td>
+										</tr>
+									)}
+								</React.Fragment>
+							)}
+						/>
+					</div>
+
+					{leaveData.length === 0 && !loading && (
+						<div className='d-flex flex-column align-items-center justify-content-center text-center py-10 w-100'>
+							<div
+								className='rounded-circle d-flex align-items-center justify-content-center mb-3'
+								style={{ width: '56px', height: '56px', background: '#eff6ff' }}>
+								<i className='bi bi-calendar-check fs-2' style={{ color: '#2563EB' }}></i>
+							</div>
+							<span className='fw-bold text-gray-700 fs-6'>No leave records found</span>
+							<span className='text-muted fs-7'>You have not submitted any leave applications yet.</span>
+						</div>
+					)}
+
+					{filteredData.length > 0 && (
+						<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+							<div className='text-muted fs-7 fw-semibold'>
+								Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, filteredData.length)} to{' '}
+								{Math.min(pagination.page * pagination.itemsPerPage, filteredData.length)} of {filteredData.length} records
+							</div>
+							<UsersListPagination
+								totalPages={Math.ceil(filteredData.length / pagination.itemsPerPage)}
+								currentPage={pagination.page}
+								onPageChange={handlePageChange}
+							/>
+						</div>
+					)}
+				</div>
 			</div>
 
 			<Modal
 				show={showModal}
 				centered
+				size='lg'
 				onHide={() => setShowModal(false)}>
-				<Modal.Header closeButton>
-					<Modal.Title>Add Leave</Modal.Title>
+				<Modal.Header closeButton className='border-0 pb-0 pt-6 px-6'>
+					<div>
+						<Modal.Title className='fw-bolder text-gray-900 fs-4 mb-1'>Apply for Leave</Modal.Title>
+						<span className='text-muted fs-7'>Submit your leave request for manager / HR review</span>
+					</div>
 				</Modal.Header>
-				<Modal.Body>
+				<Modal.Body className='px-6 py-4'>
 					<Form>
-						<Form.Group
-							controlId='leave_type'
-							className='mb-5'>
-							<Form.Label>Leave Type</Form.Label>
-							<div className='d-flex'>
+						<Form.Group controlId='leave_type' className='mb-4'>
+							<Form.Label className='fw-bold text-gray-700 fs-7 d-block mb-2'>Leave Duration</Form.Label>
+							<div className='d-flex gap-4'>
 								<Form.Check
 									type='radio'
 									label='Full Day'
 									name='leaveType'
 									value='full'
-									style={{ marginRight: '10px' }}
 									checked={leaveType === 'full'}
 									onChange={(e) => {
 										setLeaveType(e.target.value)
-										setHalfDayPeriod('') // Reset half day period when switching to full day
+										setHalfDayPeriod('')
 										setFromDate('')
 										setToDate('')
 									}}
@@ -540,10 +553,8 @@ const EmployeeLeaveManager: React.FC = () => {
 
 						{leaveType === 'half' && (
 							<>
-								<Form.Group
-									controlId='half_day_period'
-									className='mb-5'>
-									<Form.Label>Half Day Period</Form.Label>
+								<Form.Group controlId='half_day_period' className='mb-4 p-3 bg-light rounded-3 border'>
+									<Form.Label className='fw-bold text-gray-700 fs-7 d-block mb-2'>Select Half Day Period</Form.Label>
 									<Form.Check
 										type='radio'
 										label='First Half (9:00 AM - 1:30 PM)'
@@ -596,79 +607,96 @@ const EmployeeLeaveManager: React.FC = () => {
 									/>
 								</Form.Group>
 
-								<Form.Group controlId='from_date'>
-									<Form.Label>From Date</Form.Label>
-									<Form.Control
-										type='datetime-local'
-										value={fromDate}
-										onChange={(e) => setFromDate(e.target.value)}
-									/>
-								</Form.Group>
-								<Form.Group
-									controlId='to_date'
-									className='mt-3'>
-									<Form.Label>To Date</Form.Label>
-									<Form.Control
-										type='datetime-local'
-										value={toDate}
-										onChange={(e) => setToDate(e.target.value)}
-									/>
-								</Form.Group>
+								<div className='row g-4 mb-4'>
+									<div className='col-12 col-md-6'>
+										<Form.Group controlId='from_date'>
+											<Form.Label className='fw-bold text-gray-700 fs-7'>From Date & Time</Form.Label>
+											<Form.Control
+												type='datetime-local'
+												value={fromDate}
+												style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
+												onChange={(e) => setFromDate(e.target.value)}
+											/>
+										</Form.Group>
+									</div>
+									<div className='col-12 col-md-6'>
+										<Form.Group controlId='to_date'>
+											<Form.Label className='fw-bold text-gray-700 fs-7'>To Date & Time</Form.Label>
+											<Form.Control
+												type='datetime-local'
+												value={toDate}
+												style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
+												onChange={(e) => setToDate(e.target.value)}
+											/>
+										</Form.Group>
+									</div>
+								</div>
 							</>
 						)}
 
 						{leaveType === 'full' && (
-							<>
-								<Form.Group controlId='from_date'>
-									<Form.Label>From Date</Form.Label>
-									<Form.Control
-										type='date'
-										value={DayJS(fromDate).format('YYYY-MM-DD')}
-										onChange={(e) => {
-											const selectedDate = DayJS(e.target.value).startOf('day').format('YYYY-MM-DD')
-											setFromDate(selectedDate)
-											setToDate(DayJS(e.target.value).endOf('day').format('YYYY-MM-DD')) // Set the ToDate to 11:59 PM of the same day
-										}}
-									/>
-								</Form.Group>
-								<Form.Group
-									controlId='to_date'
-									className='mt-3'>
-									<Form.Label>To Date</Form.Label>
-									<Form.Control
-										type='date'
-										value={DayJS(toDate).format('YYYY-MM-DD')}
-										onChange={(e) => {
-											const selectedDate = DayJS(e.target.value).endOf('day').format('YYYY-MM-DD')
-											setToDate(selectedDate)
-										}}
-									/>
-								</Form.Group>
-							</>
+							<div className='row g-4 mb-4'>
+								<div className='col-12 col-md-6'>
+									<Form.Group controlId='from_date'>
+										<Form.Label className='fw-bold text-gray-700 fs-7'>From Date</Form.Label>
+										<Form.Control
+											type='date'
+											value={DayJS(fromDate).format('YYYY-MM-DD')}
+											style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
+											onChange={(e) => {
+												const selectedDate = DayJS(e.target.value).startOf('day').format('YYYY-MM-DD')
+												setFromDate(selectedDate)
+												setToDate(DayJS(e.target.value).endOf('day').format('YYYY-MM-DD'))
+											}}
+										/>
+									</Form.Group>
+								</div>
+								<div className='col-12 col-md-6'>
+									<Form.Group controlId='to_date'>
+										<Form.Label className='fw-bold text-gray-700 fs-7'>To Date</Form.Label>
+										<Form.Control
+											type='date'
+											value={DayJS(toDate).format('YYYY-MM-DD')}
+											style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
+											onChange={(e) => {
+												const selectedDate = DayJS(e.target.value).endOf('day').format('YYYY-MM-DD')
+												setToDate(selectedDate)
+											}}
+										/>
+									</Form.Group>
+								</div>
+							</div>
 						)}
-						<Form.Group
-							controlId='reason'
-							className='mt-3'>
-							<Form.Label>Reason</Form.Label>
+
+						<Form.Group controlId='reason' className='mb-4'>
+							<Form.Label className='fw-bold text-gray-700 fs-7'>
+								Reason for Leave <span className='text-danger'>*</span>
+							</Form.Label>
 							<Form.Control
 								as='textarea'
-								rows={3}
+								rows={4}
+								placeholder='Please specify reason for your leave request...'
 								value={reason}
+								style={{ borderRadius: '8px', borderColor: '#ded8d2' }}
 								onChange={(e) => setReason(e.target.value)}
+								required
 							/>
 						</Form.Group>
 					</Form>
 				</Modal.Body>
-				<Modal.Footer>
+				<Modal.Footer className='border-0 pt-0 pb-6 px-6'>
 					<Button
-						variant='secondary'
+						variant='light'
+						style={{ borderRadius: '8px' }}
 						onClick={() => setShowModal(false)}>
-						Close
+						Cancel
 					</Button>
 					<Button
 						variant='primary'
-						onClick={handleAddLeave}>
-						Submit
+						style={{ borderRadius: '8px', minWidth: '130px' }}
+						onClick={handleAddLeave}
+						disabled={submitLoading || !reason.trim()}>
+						{submitLoading ? 'Submitting...' : 'Submit Request'}
 					</Button>
 				</Modal.Footer>
 			</Modal>
