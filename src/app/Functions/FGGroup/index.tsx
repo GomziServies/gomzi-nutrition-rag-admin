@@ -57,3 +57,12 @@ export * from './Trainer'
 export * from './Users'
 export * from './Wallet'
 export * from './WhatsApp'
+export * from './HeroBanner'
+
+export * from './Category'
+
+export * from './Blog'
+
+export * from './Deal'
+
+export * from './PromoBanner'

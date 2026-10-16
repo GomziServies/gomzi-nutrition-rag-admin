@@ -42,6 +42,24 @@ const ContactInquiry: React.FC = () => {
 	})
 	const [subject, setSubject] = useState('')
 
+	const RAG_CONTACT_SOURCE_FILTER =
+		'gomzilifesciences|ragnutrition|contact-us|5173|whey|rag'
+
+	const renderOriginBadge = (source?: string, subject?: string) => {
+		const src = (source || '').toLowerCase()
+		const sub = (subject || '').toLowerCase()
+		if (src.includes('contact-us') || sub.includes('rag website') || src.includes('5173')) {
+			return <span className='badge badge-light-success fw-bold fs-8 py-1 px-2 mt-1'>RAG Website</span>
+		}
+		if (src.includes('inquiry') || sub.includes('partner')) {
+			return <span className='badge badge-light-primary fw-bold fs-8 py-1 px-2 mt-1'>Partner Program</span>
+		}
+		if (src.includes('whey')) {
+			return <span className='badge badge-light-warning fw-bold fs-8 py-1 px-2 mt-1'>Whey Landing</span>
+		}
+		return null
+	}
+
 	const fetchData = async () => {
 		setLoading(true)
 		try {
@@ -49,7 +67,7 @@ const ContactInquiry: React.FC = () => {
 			const firstResponse: any = await GetContactInquiry({
 				page: 1,
 				limit: pageSize,
-				source: 'https://www.gomzilifesciences.in',
+				source: RAG_CONTACT_SOURCE_FILTER,
 			})
 
 			const paginationMeta: any = firstResponse?.metadata?.pagination || {}
@@ -61,7 +79,7 @@ const ContactInquiry: React.FC = () => {
 				const nextResponse: any = await GetContactInquiry({
 					page: currentPage,
 					limit: pageSize,
-					source: 'https://www.gomzilifesciences.in',
+					source: RAG_CONTACT_SOURCE_FILTER,
 				})
 				if (Array.isArray(nextResponse?.data)) {
 					allData = allData.concat(nextResponse.data)
@@ -171,6 +189,8 @@ const ContactInquiry: React.FC = () => {
 					(item.name || '').toString().toLowerCase().includes(q) ||
 					(item.email || '').toString().toLowerCase().includes(q) ||
 					(item.mobile || '').toString().toLowerCase().includes(q) ||
+					(item.subject || '').toString().toLowerCase().includes(q) ||
+					(item.source || '').toString().toLowerCase().includes(q) ||
 					(item.message || '').toString().toLowerCase().includes(q)
 				if (!matchesSearch) return false
 			}
@@ -236,6 +256,7 @@ const ContactInquiry: React.FC = () => {
 				Email: item.email || 'N/A',
 				'Mobile Number': item.mobile || 'N/A',
 				Subject: item.subject || 'N/A',
+				Source: item.source || 'N/A',
 				Message: item.message || 'N/A',
 				Date: DayJS(item.createdAt).format('DD/MM/YYYY hh:mm:ss A'),
 			}))
@@ -372,7 +393,8 @@ const ContactInquiry: React.FC = () => {
 											<span className='text-dark fw-bold  d-block mb-1 fs-6'>{item.mobile}</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>{item.subject}</span>
+											<span className='text-dark fw-bold d-block mb-1 fs-6'>{item.subject}</span>
+											{renderOriginBadge(item.source, item.subject)}
 										</td>
 										<td
 											style={{
@@ -427,6 +449,15 @@ const ContactInquiry: React.FC = () => {
 													<strong>{sortableFields[2].title}:</strong> {item.mobile}
 													<br />
 													<strong>{sortableFields[3].title}:</strong> {item.subject}
+													<br />
+													<strong>Source URL:</strong>{' '}
+													<a
+														href={item.source}
+														target='_blank'
+														rel='noreferrer'
+														className='text-primary fw-semibold'>
+														{item.source || 'N/A'}
+													</a>
 													<br />
 													<strong>{sortableFields[4].title}:</strong>{' '}
 													<span

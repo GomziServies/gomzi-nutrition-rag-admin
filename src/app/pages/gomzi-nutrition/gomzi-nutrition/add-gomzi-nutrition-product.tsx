@@ -12,7 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import { AddProduct, FileUploadToFGGroup } from '../../../Functions/FGGroup'
+import { AddProduct, FileUploadToFGGroup, GetCategoriesAdmin } from '../../../Functions/FGGroup'
 import '../products-theme.css'
 
 export const AddGomziNutritionProduct: React.FC = () => {
@@ -20,6 +20,54 @@ export const AddGomziNutritionProduct: React.FC = () => {
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const [activeSection, setActiveSection] = useState<string>('basic')
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+	const [categoryOptions, setCategoryOptions] = useState<{ label: string; value: string }[]>([
+		{ label: 'Whey Protein', value: 'Whey Protein' },
+		{ label: 'Mass Gainer', value: 'Mass Gainer' },
+		{ label: 'Plant Protein', value: 'Plant Protein' },
+		{ label: 'Pre Workout', value: 'Pre Workout' },
+		{ label: 'BCAA & Amino Acids', value: 'BCAA & Amino Acids' },
+		{ label: 'Creatine Monohydrate', value: 'Creatine Monohydrate' },
+		{ label: 'Wellness & Health', value: 'Wellness & Health' },
+	])
+
+	useEffect(() => {
+		const loadCategories = async () => {
+			try {
+				const res: any = await GetCategoriesAdmin()
+				if (res?.data?.categories && Array.isArray(res.data.categories) && res.data.categories.length > 0) {
+					const opts = res.data.categories.map((cat: any) => ({
+						label: cat.title,
+						value: cat.title,
+					}))
+					setCategoryOptions(opts)
+				}
+			} catch (error) {
+				console.error('Error fetching categories for dropdown:', error)
+			}
+		}
+		loadCategories()
+	}, [])
+
+	const handleCategorySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const val = e.target.value
+		if (!val) return
+		const current = formData.categories
+			? formData.categories.split(',').map((c: string) => c.trim()).filter(Boolean)
+			: []
+		if (!current.includes(val)) {
+			const updated = [...current, val].join(', ')
+			setFormData((prev: any) => ({ ...prev, categories: updated }))
+		}
+		e.target.value = ''
+	}
+
+	const handleRemoveCategory = (catToRemove: string) => {
+		const current = formData.categories
+			? formData.categories.split(',').map((c: string) => c.trim()).filter(Boolean)
+			: []
+		const updated = current.filter((c: string) => c !== catToRemove).join(', ')
+		setFormData((prev: any) => ({ ...prev, categories: updated }))
+	}
 
 	const [formData, setFormData] = useState({
 		name: '',
@@ -517,14 +565,45 @@ export const AddGomziNutritionProduct: React.FC = () => {
 							<div className='col-12 col-md-6'>
 								<div className='gz-prod-field-group'>
 									<label className='gz-prod-label'>Categories</label>
+									<select
+										className='gz-prod-select mb-2'
+										onChange={handleCategorySelect}
+										defaultValue=''>
+										<option value=''>-- Select Product Category --</option>
+										{categoryOptions.map((cat, idx) => (
+											<option key={idx} value={cat.value}>
+												{cat.label}
+											</option>
+										))}
+									</select>
+									<div className='d-flex flex-wrap gap-1 mb-2'>
+										{formData.categories
+											? formData.categories
+													.split(',')
+													.map((c) => c.trim())
+													.filter(Boolean)
+													.map((cat, idx) => (
+														<span
+															key={idx}
+															className='badge badge-light-primary d-inline-flex align-items-center gap-1 py-1 px-2 fs-8'
+															style={{ cursor: 'pointer' }}
+															onClick={() => handleRemoveCategory(cat)}
+															title='Click to remove'>
+															{cat} <span className='text-danger fw-bold ms-1'>&times;</span>
+														</span>
+													))
+											: null}
+									</div>
 									<input
 										type='text'
 										name='categories'
 										className='gz-prod-input'
-										placeholder='Proteins, Supplements, Gym (comma separated)'
+										placeholder='Or type categories (comma separated)'
 										value={formData.categories}
 										onChange={handleInputChange}
 									/>
+								</div>
+							</div>
 								</div>
 							</div>
 

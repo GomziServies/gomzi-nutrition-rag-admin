@@ -11,10 +11,12 @@ import {
 	faFileInvoice,
 	faHeadset,
 	faHome,
+	faImage,
 	faIndustry,
 	faJar,
 	faStar,
 	faTags,
+	faBookOpen,
 	faUserCog,
 	faUsers,
 	faUserTie,
@@ -36,6 +38,30 @@ export function GomziNutritionAsideMenuItems() {
 				title='Dashboard'
 			/>
 
+			<AsideMenuItem
+				to='/rag/hero-banner'
+				Icon={faImage}
+				title='Hero Banner'
+			/>
+
+			<AsideMenuItem
+				to='/rag/blogs'
+				Icon={faBookOpen}
+				title='Blogs & Journal'
+			/>
+
+			<AsideMenuItem
+				to='/rag/deals'
+				Icon={faTags}
+				title='Trending Deals'
+			/>
+
+			<AsideMenuItem
+				to='/rag/promo-banners'
+				Icon={faSliders}
+				title='Promo Sliders'
+			/>
+
 			{isMasterAdmin && (
 				<AsideMenuItem
 					to='/rag/admin'
@@ -52,6 +78,11 @@ export function GomziNutritionAsideMenuItems() {
 				<AsideMenuItem
 					to='/rag/product-list'
 					title='All Products'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/categories'
+					title='Product Categories'
 					hasBullet={true}
 				/>
 				<AsideMenuItem

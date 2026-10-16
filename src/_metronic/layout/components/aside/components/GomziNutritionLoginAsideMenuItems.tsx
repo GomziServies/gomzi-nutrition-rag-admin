@@ -7,6 +7,8 @@ import {
 	faEnvelope,
 	faFileInvoice,
 	faHome,
+	faBookOpen,
+	faImage,
 	faJar,
 	faWarehouse,
 } from '@fortawesome/free-solid-svg-icons'
@@ -20,6 +22,16 @@ export function GomziNutritionLoginAsideMenuItems() {
 				to='/rag/dashboard'
 				Icon={faHome}
 				title='Dashboard'
+			/>
+			<AsideMenuItem
+				to='/rag/hero-banner'
+				Icon={faImage}
+				title='Hero Banner'
+			/>
+			<AsideMenuItem
+				to='/rag/blogs'
+				Icon={faBookOpen}
+				title='Blogs & Journal'
 			/>
 			{/* <AsideMenuItemWithSub
 				to=''

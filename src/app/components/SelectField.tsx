@@ -74,7 +74,7 @@ const SelectField: React.FC<Props> = ({
 		allOptions.push(opt)
 	})
 
-	const selectedValues = typeof value === 'string' ? value.split(',') : []
+	const selectedValues = typeof value === 'string' ? value.split(',').map((v) => v.trim()) : []
 	const selectedOptions = formattedOptions.filter((option) => selectedValues.includes(option.value))
 
 	// Close on click outside

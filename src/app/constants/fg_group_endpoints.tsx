@@ -15,6 +15,26 @@ export const UpdateProfile = `${AdminV1Route}/update-profile`
 export const ChangePassword = `${AdminV1Route}/change-password`
 export const GetUniversalAccessToken = `${AdminV1Route}/get-universal-token`
 export const FileUpload = `${AdminV1Route}/file-upload`
+
+// Product Categories
+export const GetCategories = `${AdminV1Route}/categories`
+export const ManageCategory = `${AdminV1Route}/categories`
+
+// Science Journal / Blogs
+export const GetBlogs = `${AdminV1Route}/blogs`
+export const ManageBlog = `${AdminV1Route}/blogs`
+
+// Promotional Deals
+export const GetDeals = `${AdminV1Route}/deals`
+export const ManageDeal = `${AdminV1Route}/deals`
+
+// Middle Promo Banners
+export const GetPromoBanners = `${AdminV1Route}/promo-banners`
+export const ManagePromoBanner = `${AdminV1Route}/promo-banners`
+
+// Hero Banner
+export const GetHeroBanner = `${AdminV1Route}/hero-banner`
+export const UpdateHeroBanner = `${AdminV1Route}/hero-banner`
 export const TeleLogin = `${BASE_URL}/tele/v1/login`
 
 // Account/Authenticator [MFA]
