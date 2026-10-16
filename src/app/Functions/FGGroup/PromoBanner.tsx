@@ -5,11 +5,11 @@ import * as FGGroupEndpoints from '../../constants/fg_group_endpoints'
 export interface PromoBannerItem {
 	_id?: string
 	id?: string
-	brand: string
+	brand?: string
 	title: string
 	subtitle?: string
 	priceText?: string
-	priceValue: string
+	priceValue?: string
 	image?: string
 	bgGradient?: string
 	url?: string

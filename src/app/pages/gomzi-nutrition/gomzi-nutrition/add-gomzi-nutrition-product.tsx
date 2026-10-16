@@ -604,8 +604,6 @@ export const AddGomziNutritionProduct: React.FC = () => {
 									/>
 								</div>
 							</div>
-								</div>
-							</div>
 
 							<div className='col-12 col-md-6'>
 								<div className='gz-prod-field-group'>

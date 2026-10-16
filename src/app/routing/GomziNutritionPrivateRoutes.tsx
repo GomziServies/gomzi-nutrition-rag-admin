@@ -103,6 +103,8 @@ import CategoryManage from '../pages/gomzi-nutrition/categories/category-manage'
 import BlogManage from '../pages/gomzi-nutrition/blogs/blog-manage'
 import DealManage from '../pages/gomzi-nutrition/deals/deal-manage'
 import PromoBannerManage from '../pages/gomzi-nutrition/promo-banners/promo-banner-manage'
+import NutritionPromoBannerManage from '../pages/gomzi-nutrition/nutrition-promo-banners/nutrition-promo-banner-manage'
+import BankOfferManage from '../pages/gomzi-nutrition/bank-offers/bank-offer-manage'
 
 const GomziNutritionPrivateRoutes = () => {
 	return (
@@ -131,6 +133,14 @@ const GomziNutritionPrivateRoutes = () => {
 				<Route
 					path='/promo-banners'
 					element={<PromoBannerManage />}
+				/>
+				<Route
+					path='/nutrition-promo-banners'
+					element={<NutritionPromoBannerManage />}
+				/>
+				<Route
+					path='/bank-offers'
+					element={<BankOfferManage />}
 				/>
 				<Route
 					path='/users'
@@ -606,3 +616,4 @@ const GomziNutritionPrivateRoutes = () => {
 // }
 
 export { GomziNutritionPrivateRoutes }
+

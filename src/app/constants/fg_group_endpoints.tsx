@@ -32,6 +32,14 @@ export const ManageDeal = `${AdminV1Route}/deals`
 export const GetPromoBanners = `${AdminV1Route}/promo-banners`
 export const ManagePromoBanner = `${AdminV1Route}/promo-banners`
 
+// Nutrition Promo Banners
+export const GetNutritionPromoBanners = `${AdminV1Route}/nutrition-promo-banners`
+export const ManageNutritionPromoBanner = `${AdminV1Route}/nutrition-promo-banners`
+
+// Bank Offers Banner Slider (Purple Festive)
+export const GetBankOffers = `${AdminV1Route}/bank-offers`
+export const ManageBankOffer = `${AdminV1Route}/bank-offers`
+
 // Hero Banner
 export const GetHeroBanner = `${AdminV1Route}/hero-banner`
 export const UpdateHeroBanner = `${AdminV1Route}/hero-banner`

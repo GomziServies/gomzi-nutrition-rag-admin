@@ -6,6 +6,7 @@ import {
 	faClipboardCheck,
 	faClipboardList,
 	faCoins,
+	faCreditCard,
 	faDumbbell,
 	faEnvelope,
 	faFileInvoice,
@@ -17,6 +18,7 @@ import {
 	faStar,
 	faTags,
 	faBookOpen,
+	faSliders,
 	faUserCog,
 	faUsers,
 	faUserTie,
@@ -60,6 +62,18 @@ export function GomziNutritionAsideMenuItems() {
 				to='/rag/promo-banners'
 				Icon={faSliders}
 				title='Promo Sliders'
+			/>
+
+			<AsideMenuItem
+				to='/rag/nutrition-promo-banners'
+				Icon={faImage}
+				title='Discount Strip Banner'
+			/>
+
+			<AsideMenuItem
+				to='/rag/bank-offers'
+				Icon={faCreditCard}
+				title='Bank Offers Banner'
 			/>
 
 			{isMasterAdmin && (
@@ -373,4 +387,5 @@ export function GomziNutritionAsideMenuItems() {
 		</>
 	)
 }
+
 

@@ -66,3 +66,9 @@ export * from './Blog'
 export * from './Deal'
 
 export * from './PromoBanner'
+
+export * from './NutritionPromoBanner'
+
+
+export * from './BankOffer'
+
