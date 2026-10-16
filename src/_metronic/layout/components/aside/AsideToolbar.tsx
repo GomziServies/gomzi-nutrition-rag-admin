@@ -39,20 +39,37 @@ const AsideToolbar = () => {
 		}
 	}, [])
 
-	const [isMinimized, setIsMinimized] = useState(() =>
-		typeof document !== 'undefined' && document.body.classList.contains('aside-minimize')
-	)
+	const [isMinimized, setIsMinimized] = useState(() => {
+		if (typeof window !== 'undefined') {
+			const stored = localStorage.getItem('sidebar_minimized')
+			if (stored === 'true') {
+				document.body.classList.add('aside-minimize')
+				document.body.classList.add('gz-aside-collapsed')
+				return true
+			} else if (stored === 'false') {
+				document.body.classList.remove('aside-minimize')
+				document.body.classList.remove('gz-aside-collapsed')
+				return false
+			}
+		}
+		return typeof document !== 'undefined' && document.body.classList.contains('aside-minimize')
+	})
 
 	const toggleSidebar = () => {
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new Event('gz-close-floating-submenus'))
+		}
 		const nextState = !document.body.classList.contains('aside-minimize')
 		if (nextState) {
 			document.body.classList.add('aside-minimize')
 			document.body.classList.add('gz-aside-collapsed')
 			document.body.removeAttribute('data-kt-aside-minimize')
+			localStorage.setItem('sidebar_minimized', 'true')
 		} else {
 			document.body.classList.remove('aside-minimize')
 			document.body.classList.remove('gz-aside-collapsed')
 			document.body.removeAttribute('data-kt-aside-minimize')
+			localStorage.setItem('sidebar_minimized', 'false')
 		}
 		setIsMinimized(nextState)
 	}
@@ -79,9 +96,11 @@ const AsideToolbar = () => {
 			<button
 				type='button'
 				className='gz-aside-collapse-btn'
+				aria-label={isMinimized ? 'Expand sidebar' : 'Collapse sidebar'}
+				aria-expanded={!isMinimized}
 				title={isMinimized ? 'Expand sidebar' : 'Collapse sidebar'}
 				onClick={toggleSidebar}>
-				<i className={`bi ${isMinimized ? 'bi-chevron-double-right' : 'bi-chevron-double-left'}`}></i>
+				<i className={`bi ${isMinimized ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
 			</button>
 		</div>
 	)

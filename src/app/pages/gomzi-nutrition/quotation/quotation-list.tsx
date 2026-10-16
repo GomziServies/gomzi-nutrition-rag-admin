@@ -346,6 +346,9 @@ const QuotationList: React.FC = () => {
 							totalPages={metaData?.totalPages}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={metaData?.totalRecords || quotationData.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='quotations'
 						/>
 					)}
 				</div>

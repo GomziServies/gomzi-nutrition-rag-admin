@@ -1,135 +1,181 @@
 import React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons'
 
 type PaginationProps = {
 	totalPages: number
 	currentPage: number
 	onPageChange: (page: number) => void
+	totalRecords?: number
+	itemsPerPage?: number
+	entityName?: string
 }
 
 const UsersListPagination: React.FC<PaginationProps> = ({
 	totalPages,
 	currentPage,
 	onPageChange,
+	totalRecords,
+	itemsPerPage = 10,
+	entityName = 'records',
 }) => {
-	const getPageNumbers = () => {
-		const pages = []
+	if (totalPages <= 0) return null
 
-		if (totalPages <= 5) {
-			for (let i = 1; i <= totalPages; i++) {
-				pages.push(i)
-			}
-		} else {
-			pages.push(1)
-			if (currentPage > 3) {
-				pages.push('...')
-			}
-			if (currentPage > 2 && currentPage < totalPages - 1) {
-				pages.push(currentPage - 1)
-				pages.push(currentPage)
-				pages.push(currentPage + 1)
-			} else if (currentPage <= 2) {
-				pages.push(2)
-				pages.push(3)
-			} else {
-				pages.push(totalPages - 2)
-				pages.push(totalPages - 1)
-			}
-			if (currentPage < totalPages - 2) {
-				pages.push('...')
-			}
-			pages.push(totalPages)
+	const getPaginationItems = (page: number, total: number): (number | '...')[] => {
+		if (total <= 7) {
+			return Array.from({ length: total }, (_, i) => i + 1)
 		}
-
-		return pages
+		if (page <= 4) {
+			return [1, 2, 3, 4, 5, '...', total]
+		}
+		if (page >= total - 3) {
+			return [1, '...', total - 4, total - 3, total - 2, total - 1, total]
+		}
+		return [1, '...', page - 1, page, page + 1, '...', total]
 	}
 
+	const pageItems = getPaginationItems(currentPage, totalPages)
+
+	const currentStart = totalRecords !== undefined ? Math.min((currentPage - 1) * itemsPerPage + 1, totalRecords) : null
+	const currentEnd = totalRecords !== undefined ? Math.min(currentPage * itemsPerPage, totalRecords) : null
+
 	return (
-		<div className='d-flex align-items-center justify-content-end my-2'>
-			<div id='kt_table_users_paginate'>
-				<ul className='pagination pagination-circle gap-1 m-0 align-items-center'>
-					<li className={currentPage === 1 ? 'page-item disabled' : 'page-item'}>
+		<div
+			className='gz-inv-pagination'
+			style={{
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'space-between',
+				padding: '18px 24px',
+				borderTop: '1px solid #E4EAF2',
+				background: '#FFFFFF',
+				fontSize: '13px',
+				color: '#71809A',
+				flexWrap: 'wrap',
+				gap: '16px',
+				width: '100%',
+			}}>
+			{/* Left: Showing count */}
+			<div style={{ color: '#556987', fontSize: '13px' }}>
+				{totalRecords !== undefined ? (
+					<>
+						Showing <strong>{currentStart}</strong>–<strong>{currentEnd}</strong> of <strong>{totalRecords}</strong> {entityName}
+					</>
+				) : (
+					<>
+						Showing Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+					</>
+				)}
+			</div>
+
+			{/* Middle: Numbered pagination group */}
+			<div
+				className='gz-inv-pages-group'
+				style={{
+					display: 'flex',
+					alignItems: 'center',
+					gap: '6px',
+				}}>
+				<button
+					type='button'
+					className='gz-inv-page-num'
+					disabled={currentPage <= 1}
+					onClick={() => onPageChange(currentPage - 1)}
+					title='Previous page'
+					aria-label='Previous page'
+					style={{
+						width: '34px',
+						height: '34px',
+						borderRadius: '9px',
+						border: '1px solid #E4EAF2',
+						background: '#FFFFFF',
+						color: '#172B4D',
+						display: 'inline-flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+						opacity: currentPage <= 1 ? 0.4 : 1,
+						transition: 'all 0.15s ease',
+					}}>
+					<FontAwesomeIcon icon={faAngleLeft} />
+				</button>
+
+				{pageItems.map((item, idx) => {
+					if (item === '...') {
+						return (
+							<span
+								key={`dots-${idx}`}
+								style={{
+									display: 'inline-flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									minWidth: '24px',
+									height: '34px',
+									color: '#94A3B8',
+									fontWeight: 700,
+									fontSize: '14px',
+									userSelect: 'none',
+								}}>
+								…
+							</span>
+						)
+					}
+					const isActive = currentPage === item
+					return (
 						<button
-							className='page-link'
+							key={item}
+							type='button'
+							className={`gz-inv-page-num ${isActive ? 'active' : ''}`}
+							onClick={() => onPageChange(item)}
 							style={{
-								borderRadius: '8px',
+								width: '34px',
 								height: '34px',
-								minWidth: '34px',
-								display: 'flex',
+								borderRadius: '9px',
+								border: isActive ? '1px solid #172B4D' : '1px solid #E4EAF2',
+								background: isActive ? '#172B4D' : '#FFFFFF',
+								color: isActive ? '#FFFFFF' : '#142447',
+								fontWeight: 600,
+								fontSize: '13px',
+								display: 'inline-flex',
 								alignItems: 'center',
 								justifyContent: 'center',
-								fontSize: '13px',
-								fontWeight: 600,
-								border: '1px solid #e2e8f0',
-							}}
-							onClick={() => onPageChange(currentPage - 1)}
-							aria-label='Previous'>
-							<span aria-hidden='true'>&laquo;</span>
+								cursor: 'pointer',
+								boxShadow: isActive ? '0 2px 6px rgba(23, 43, 77, 0.2)' : 'none',
+								transition: 'all 0.15s ease',
+							}}>
+							{item}
 						</button>
-					</li>
-					{getPageNumbers().map((number, index) => (
-						<li
-							key={index}
-							className={currentPage === number ? 'page-item active' : 'page-item'}>
-							{typeof number === 'number' ? (
-								<button
-									className='page-link'
-									style={{
-										borderRadius: '8px',
-										height: '34px',
-										minWidth: '34px',
-										display: 'flex',
-										alignItems: 'center',
-										justifyContent: 'center',
-										fontSize: '13px',
-										fontWeight: 600,
-										border: '1px solid #e2e8f0',
-										...(currentPage === number
-											? { backgroundColor: '#2563eb', borderColor: '#2563eb', color: '#ffffff' }
-											: { backgroundColor: '#ffffff', color: '#334155' }),
-									}}
-									onClick={() => onPageChange(number)}>
-									{number}
-								</button>
-							) : (
-								<span
-									className='page-link'
-									style={{
-										borderRadius: '8px',
-										height: '34px',
-										minWidth: '34px',
-										display: 'flex',
-										alignItems: 'center',
-										justifyContent: 'center',
-										fontSize: '13px',
-										border: 'none',
-										background: 'transparent',
-										color: '#94a3b8',
-									}}>
-									{number}
-								</span>
-							)}
-						</li>
-					))}
-					<li className={currentPage === totalPages ? 'page-item disabled' : 'page-item'}>
-						<button
-							className='page-link'
-							style={{
-								borderRadius: '8px',
-								height: '34px',
-								minWidth: '34px',
-								display: 'flex',
-								alignItems: 'center',
-								justifyContent: 'center',
-								fontSize: '13px',
-								fontWeight: 600,
-								border: '1px solid #e2e8f0',
-							}}
-							onClick={() => onPageChange(currentPage + 1)}
-							aria-label='Next'>
-							<span aria-hidden='true'>&raquo;</span>
-						</button>
-					</li>
-				</ul>
+					)
+				})}
+
+				<button
+					type='button'
+					className='gz-inv-page-num'
+					disabled={currentPage >= totalPages}
+					onClick={() => onPageChange(currentPage + 1)}
+					title='Next page'
+					aria-label='Next page'
+					style={{
+						width: '34px',
+						height: '34px',
+						borderRadius: '9px',
+						border: '1px solid #E4EAF2',
+						background: '#FFFFFF',
+						color: '#172B4D',
+						display: 'inline-flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+						opacity: currentPage >= totalPages ? 0.4 : 1,
+						transition: 'all 0.15s ease',
+					}}>
+					<FontAwesomeIcon icon={faAngleRight} />
+				</button>
+			</div>
+
+			{/* Right: Page X of Y */}
+			<div style={{ color: '#71809A', fontSize: '13px', fontWeight: 500 }}>
+				Page {currentPage} of {totalPages}
 			</div>
 		</div>
 	)

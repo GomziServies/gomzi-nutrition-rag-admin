@@ -566,20 +566,48 @@ const EmployeeTask: React.FC = () => {
 			<PageTitle breadcrumbs={[]}>Task Assignment</PageTitle>
 			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
 				{/* Modern Header */}
-				<div className='card-header border-0 pt-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
-					<div>
-						<div className='d-flex align-items-center gap-2'>
-							<h2 className='fw-bolder text-gray-900 mb-0'>Tasks Assignment</h2>
-							<span className='badge badge-light-primary fw-bold fs-8'>
-								{metaData?.totalDocs || assignTaskData.length} tasks
+				<div className='card-header border-0 pt-6 d-flex flex-column gap-4'>
+					{/* Header Top: Title & Right Add Button */}
+					<div className='d-flex align-items-center justify-content-between flex-wrap gap-3 w-100'>
+						<div>
+							<div className='d-flex align-items-center gap-2'>
+								<h2 className='fw-bolder text-gray-900 mb-0'>Tasks Assignment</h2>
+								<span className='badge badge-light-primary fw-bold fs-8'>
+									{metaData?.totalDocs || assignTaskData.length} tasks
+								</span>
+							</div>
+							<span className='text-muted fs-7 fw-semibold mt-1'>
+								Review assigned tasks, submit completions, and track manager feedback
 							</span>
 						</div>
-						<span className='text-muted fs-7 fw-semibold mt-1'>
-							Review assigned tasks, submit completions, and track manager feedback
-						</span>
+
+						<button
+							type='button'
+							onClick={() => setShowModal(true)}
+							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '10px' }}>
+							<i className='bi bi-plus-lg fs-6'></i>
+							<span>Add Task</span>
+						</button>
 					</div>
 
-					<div className='d-flex align-items-center flex-wrap gap-3'>
+					{/* Header Bottom: Filter Bar */}
+					<div className='d-flex align-items-center flex-wrap gap-3 w-100 pb-2'>
+						<div style={{ minWidth: '220px' }}>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								placeholder='Search tasks...'
+							/>
+						</div>
+
+						<LengthMenu
+							expenseData={assignTaskData}
+							handleItemsPerPageChange={(val) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))
+							}
+						/>
+
 						{/* Task Rating Widget */}
 						<div
 							className='d-flex align-items-center rounded-3 px-3 py-1 border'
@@ -601,35 +629,11 @@ const EmployeeTask: React.FC = () => {
 							</span>
 						</div>
 
-						<LengthMenu
-							expenseData={assignTaskData}
-							handleItemsPerPageChange={(val) =>
-								setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))
-							}
-						/>
-
 						<DateFilter
 							onDateRangeChange={handleDateRangeChange}
-							leftValue='-270px'
+							rightValue='0'
 							storageKey='emp_task_selectedDateRange'
 						/>
-
-						<div style={{ minWidth: '220px' }}>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-								placeholder='Search tasks...'
-							/>
-						</div>
-
-						<button
-							type='button'
-							onClick={() => setShowModal(true)}
-							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
-							style={{ height: '38px', borderRadius: '10px' }}>
-							<i className='bi bi-plus-lg fs-6'></i>
-							<span>Add Task</span>
-						</button>
 					</div>
 				</div>
 

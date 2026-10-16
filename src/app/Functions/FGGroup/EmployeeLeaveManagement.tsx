@@ -6,6 +6,7 @@ export function CreateEmployeeLeave(body: {
 	from_date: string
 	to_date: string
 	reason: string
+	leave_type?: string
 }): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.CreateEmployeeLeave, getAPIHeaders('fg_group'), undefined, body)
 }

@@ -8,36 +8,51 @@
    ========================================================================== */
 
 :root {
-	--gz-brand: #0f172a;
-	--gz-brand-hover: #1e293b;
-	--gz-brand-accent: #2563eb;
-	--gz-brand-soft: #eff6ff;
-	--gz-brand-border: #cbd5e1;
-	--gz-workspace: #f8fafc;
-	--gz-sidebar: #f8fafc;
-	--gz-surface: #ffffff;
-	--gz-surface-2: #f1f5f9;
-	--gz-text: #0f172a;
-	--gz-text-2: #64748b;
-	--gz-border: #e2e8f0;
-	--gz-radius-sm: 6px;
-	--gz-radius-md: 8px;
+	/* Approved GOMZI Unified Navigation Shell Palette */
+	--gz-navy-primary: #172B4D;
+	--gz-navy-deep: #101F38;
+	--gz-navy-hover: #24446B;
+	--gz-text-primary: #142447;
+	--gz-text-secondary: #71809A;
+	--gz-white: #FFFFFF;
+	--gz-page-bg: #F4F6FA;
+	--gz-nav-soft: #F5F7FB;
+	--gz-module-active-bg: #EAF1FB;
+	--gz-powder-blue: #DCE8F8;
+	--gz-shell-border: #E4EAF2;
+	--gz-muted-icon: #64748B;
+
+	/* Core Tokens */
+	--gz-brand: #172B4D;
+	--gz-brand-hover: #24446B;
+	--gz-brand-accent: #172B4D;
+	--gz-brand-soft: #EAF1FB;
+	--gz-brand-border: #DCE8F8;
+	--gz-workspace: #F4F6FA;
+	--gz-sidebar: #FFFFFF;
+	--gz-surface: #FFFFFF;
+	--gz-surface-2: #F5F7FB;
+	--gz-text: #142447;
+	--gz-text-2: #71809A;
+	--gz-border: #E4EAF2;
+	--gz-radius-sm: 8px;
+	--gz-radius-md: 12px;
 	--gz-font: 'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI',
 		Roboto, 'Helvetica Neue', Arial, sans-serif;
 	--gz-font-num: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
 		Arial, sans-serif;
 
-	/* Global Bootstrap Primary Overrides (Modern Slate Navy) */
-	--bs-primary: #0f172a !important;
-	--bs-primary-rgb: 15, 23, 42 !important;
-	--bs-primary-hover: #1e293b !important;
-	--bs-primary-active: #020617 !important;
-	--bs-primary-light: #eff6ff !important;
-	--bs-primary-inverse: #ffffff !important;
-	--bs-link-color: #2563eb !important;
-	--bs-link-hover-color: #1d4ed8 !important;
-	--bs-component-active-bg: #0f172a !important;
-	--bs-component-hover-bg: #eff6ff !important;
+	/* Global Bootstrap Primary Overrides (Unified Navy) */
+	--bs-primary: #172B4D !important;
+	--bs-primary-rgb: 23, 43, 77 !important;
+	--bs-primary-hover: #24446B !important;
+	--bs-primary-active: #101F38 !important;
+	--bs-primary-light: #EAF1FB !important;
+	--bs-primary-inverse: #FFFFFF !important;
+	--bs-link-color: #172B4D !important;
+	--bs-link-hover-color: #24446B !important;
+	--bs-component-active-bg: #172B4D !important;
+	--bs-component-hover-bg: #EAF1FB !important;
 }
 
 /* ---------------------------------------------------------------- base */
@@ -106,12 +121,12 @@ textarea:focus-visible,
 		height: 100vh !important;
 		z-index: 105 !important;
 		width: 260px !important;
-		background-color: var(--gz-sidebar) !important;
-		border-right: 1px solid var(--gz-border) !important;
+		background-color: #FFFFFF !important;
+		border-right: 1px solid #E4EAF2 !important;
 		box-shadow: none !important;
 		display: flex !important;
 		flex-direction: column !important;
-		transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+		transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
 		overflow: hidden !important;
 	}
 
@@ -121,19 +136,20 @@ textarea:focus-visible,
 		top: 0 !important;
 		right: 0 !important;
 		left: 260px !important;
-		height: 60px !important;
-		min-height: 60px !important;
+		height: 68px !important;
+		min-height: 68px !important;
 		z-index: 100 !important;
-		background-color: var(--gz-surface) !important;
-		border-bottom: 1px solid var(--gz-border) !important;
-		transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+		background-color: #FFFFFF !important;
+		border-bottom: 1px solid #E4EAF2 !important;
+		box-shadow: none !important;
+		transition: left 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
 	}
 
 	.wrapper,
 	#kt_wrapper {
 		padding-left: 260px !important;
-		padding-top: 60px !important;
-		transition: padding-left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+		padding-top: 68px !important;
+		transition: padding-left 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
 	}
 
 	/* Minimized (Collapsed) Sidebar Mode */
@@ -175,14 +191,18 @@ textarea:focus-visible,
 		flex-direction: column !important;
 		align-items: center !important;
 		justify-content: center !important;
-		padding: 12px 6px !important;
+		padding: 14px 8px !important;
+		height: 80px !important;
+		min-height: 80px !important;
 		gap: 8px !important;
+		background: #FFFFFF !important;
 	}
 
 	body.aside-minimize .aside .gz-brand-logo,
 	body.gz-aside-collapsed .aside .gz-brand-logo,
 	body[data-kt-aside-minimize='on'] .aside .gz-brand-logo {
-		height: 28px !important;
+		height: 30px !important;
+		max-width: 32px !important;
 		margin: 0 auto !important;
 	}
 
@@ -205,7 +225,7 @@ textarea:focus-visible,
 		width: 72px !important;
 		min-width: 72px !important;
 		max-width: 72px !important;
-		padding: 0 !important;
+		padding: 4px 0 !important;
 		margin: 0 !important;
 	}
 
@@ -222,19 +242,19 @@ textarea:focus-visible,
 	body.aside-minimize .aside .menu-item .menu-link,
 	body.gz-aside-collapsed .aside .menu-item .menu-link,
 	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-link {
-		width: 38px !important;
-		height: 38px !important;
-		min-width: 38px !important;
-		max-width: 38px !important;
+		width: 42px !important;
+		height: 42px !important;
+		min-width: 42px !important;
+		max-width: 42px !important;
 		padding: 0 !important;
 		margin: 0 auto !important;
 		display: flex !important;
 		align-items: center !important;
 		justify-content: center !important;
-		border-radius: 8px !important;
+		border-radius: 10px !important;
 		position: relative !important;
 		background-color: transparent !important;
-		transition: all 0.15s ease-in-out !important;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 	}
 
 	body.aside-minimize .aside .menu-item .menu-icon,
@@ -242,8 +262,8 @@ textarea:focus-visible,
 	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-icon {
 		margin: 0 !important;
 		padding: 0 !important;
-		width: 20px !important;
-		height: 20px !important;
+		width: 22px !important;
+		height: 22px !important;
 		display: flex !important;
 		align-items: center !important;
 		justify-content: center !important;
@@ -257,28 +277,28 @@ textarea:focus-visible,
 	body.gz-aside-collapsed .aside .menu-item .menu-icon svg,
 	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-icon i,
 	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-icon svg {
-		font-size: 15px !important;
-		width: 15px !important;
-		height: 15px !important;
-		max-width: 15px !important;
-		max-height: 15px !important;
-		color: #555b68 !important;
-		fill: #555b68 !important;
+		font-size: 16px !important;
+		width: 16px !important;
+		height: 16px !important;
+		max-width: 16px !important;
+		max-height: 16px !important;
+		color: #64748B !important;
+		fill: #64748B !important;
 		opacity: 1 !important;
 		visibility: visible !important;
-		transition: color 0.15s ease, fill 0.15s ease !important;
+		transition: color 0.18s ease, fill 0.18s ease !important;
 	}
 
-	/* Collapsed icon hover: adjusted soft ice blue bg with cobalt blue icon (image 2 reference) */
+	/* Collapsed icon hover */
 	body.aside-minimize .aside .menu-item .menu-link:hover,
 	body.gz-aside-collapsed .aside .menu-item .menu-link:hover,
 	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-link:hover {
-		background-color: #eff6ff !important;
+		background-color: #F5F7FB !important;
 
 		.menu-icon i,
 		.menu-icon svg {
-			color: #2563eb !important;
-			fill: #2563eb !important;
+			color: #172B4D !important;
+			fill: #172B4D !important;
 		}
 	}
 
@@ -292,12 +312,12 @@ textarea:focus-visible,
 	body.aside-minimize .aside .menu-item.show > .menu-link,
 	body.gz-aside-collapsed .aside .menu-item.show > .menu-link,
 	body[data-kt-aside-minimize='on'] .aside .menu-item.show > .menu-link {
-		background-color: #eff6ff !important;
+		background-color: #EAF1FB !important;
 
 		.menu-icon i,
 		.menu-icon svg {
-			color: #2563eb !important;
-			fill: #2563eb !important;
+			color: #172B4D !important;
+			fill: #172B4D !important;
 		}
 	}
 
@@ -307,14 +327,7 @@ textarea:focus-visible,
 	body.aside-minimize .aside .menu-item.here > .menu-link::before,
 	body.gz-aside-collapsed .aside .menu-item.here > .menu-link::before,
 	body[data-kt-aside-minimize='on'] .aside .menu-item.here > .menu-link::before {
-		content: '' !important;
-		position: absolute !important;
-		left: -17px !important;
-		top: 6px !important;
-		bottom: 6px !important;
-		width: 3.5px !important;
-		border-radius: 0 4px 4px 0 !important;
-		background-color: #2563eb !important;
+		display: none !important;
 	}
 
 	body.aside-minimize .aside .menu-title,
@@ -378,16 +391,16 @@ textarea:focus-visible,
 
 		i {
 			font-size: 15px !important;
-			color: #555b68 !important;
+			color: #64748B !important;
 			transition: color 0.15s ease !important;
 		}
 
 		&:hover {
-			background-color: #eff6ff !important;
-			color: #2563eb !important;
+			background-color: #F5F7FB !important;
+			color: #172B4D !important;
 
 			i {
-				color: #2563eb !important;
+				color: #172B4D !important;
 			}
 		}
 	}
@@ -403,17 +416,23 @@ textarea:focus-visible,
 /* --- SIDEBAR TOOLBAR / BRAND HEADER --- */
 .aside-toolbar,
 #kt_aside_toolbar {
-	background-color: var(--gz-sidebar) !important;
-	border-bottom: 1px solid var(--gz-border) !important;
+	background-color: #FFFFFF !important;
+	border-bottom: 1px solid #E4EAF2 !important;
 	flex-shrink: 0 !important;
+	height: 80px !important;
+	min-height: 80px !important;
+	display: flex !important;
+	align-items: center !important;
 }
 
 .gz-aside-top {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 12px 14px 10px;
-	background: var(--gz-sidebar);
+	padding: 0 18px;
+	width: 100%;
+	height: 80px;
+	background: #FFFFFF;
 }
 
 .gz-brand-lockup {
@@ -426,10 +445,12 @@ textarea:focus-visible,
 }
 
 .gz-brand-logo {
-	height: 34px;
+	height: 38px;
 	width: auto;
+	max-width: 165px;
 	object-fit: contain;
 	flex-shrink: 0;
+	transition: all 0.2s ease;
 }
 
 .gz-brand-details {
@@ -471,33 +492,38 @@ textarea:focus-visible,
 }
 
 .gz-aside-collapse-btn {
-	border: 1px solid var(--gz-border);
-	background: #ffffff;
-	color: #555555;
-	border-radius: 6px;
-	width: 28px;
-	height: 28px;
-	min-width: 28px;
+	border: 1px solid #E4EAF2;
+	background: #F5F7FB;
+	color: #64748B;
+	border-radius: 8px;
+	width: 32px;
+	height: 32px;
+	min-width: 32px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 12px;
+	font-size: 13px;
 	cursor: pointer;
 	flex-shrink: 0;
-	transition: all 0.15s ease;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
 	&:hover {
-		background: var(--gz-brand-soft);
-		color: var(--gz-brand);
-		border-color: var(--gz-brand-border);
+		background: #EAF1FB;
+		color: #172B4D;
+		border-color: #DCE8F8;
+	}
+	&:focus-visible {
+		outline: 2px solid #172B4D;
+		outline-offset: 2px;
 	}
 }
 
-/* --- SIDEBAR MENU SCROLL CONTAINER (Smooth scrolling without visible scrollbar) --- */
+/* --- SIDEBAR MENU SCROLL CONTAINER --- */
 .aside-menu {
 	flex: 1 1 auto !important;
 	min-height: 0 !important;
 	overflow: hidden !important;
+	background-color: #FFFFFF !important;
 }
 
 #kt_aside_menu_wrapper,
@@ -506,70 +532,19 @@ textarea:focus-visible,
 	min-height: 0 !important;
 	overflow-y: auto !important;
 	overflow-x: hidden !important;
-	padding: 8px 6px !important;
-	scrollbar-width: none !important; /* Firefox */
-	-ms-overflow-style: none !important; /* IE and Edge */
+	padding: 10px 8px !important;
+	scrollbar-width: thin !important;
+	scrollbar-color: #E4EAF2 transparent !important;
 
 	&::-webkit-scrollbar {
-		display: none !important;
-		width: 0 !important;
-		height: 0 !important;
+		width: 4px !important;
 	}
 	&::-webkit-scrollbar-track {
-		display: none !important;
 		background: transparent !important;
 	}
 	&::-webkit-scrollbar-thumb {
-		display: none !important;
-		background: transparent !important;
-	}
-	&::-webkit-scrollbar-button {
-		display: none !important;
-		width: 0 !important;
-		height: 0 !important;
-	}
-}
-
-/* Suppress all native scrollbar buttons/arrows/tracks everywhere inside aside */
-.aside *::-webkit-scrollbar,
-#kt_aside *::-webkit-scrollbar {
-	display: none !important;
-	width: 0 !important;
-	height: 0 !important;
-}
-
-.aside *::-webkit-scrollbar-button,
-#kt_aside *::-webkit-scrollbar-button {
-	display: none !important;
-	width: 0 !important;
-	height: 0 !important;
-}
-
-/* Collapsed sidebar: Also keep completely clean without visible scrollbar */
-body.aside-minimize .aside #kt_aside_menu_wrapper,
-body.gz-aside-collapsed .aside #kt_aside_menu_wrapper,
-body[data-kt-aside-minimize='on'] .aside #kt_aside_menu_wrapper,
-body.aside-minimize .aside .aside-menu,
-body.gz-aside-collapsed .aside .aside-menu,
-body[data-kt-aside-minimize='on'] .aside .aside-menu,
-body.aside-minimize .aside .hover-scroll-overlay-y,
-body.gz-aside-collapsed .aside .hover-scroll-overlay-y,
-body[data-kt-aside-minimize='on'] .aside .hover-scroll-overlay-y {
-	scrollbar-width: none !important;
-	-ms-overflow-style: none !important;
-
-	&::-webkit-scrollbar {
-		display: none !important;
-		width: 0 !important;
-		height: 0 !important;
-	}
-	&::-webkit-scrollbar-track {
-		display: none !important;
-		background: transparent !important;
-	}
-	&::-webkit-scrollbar-thumb {
-		display: none !important;
-		background: transparent !important;
+		background: #E4EAF2 !important;
+		border-radius: 4px !important;
 	}
 }
 
@@ -579,35 +554,35 @@ body[data-kt-aside-minimize='on'] .aside .hover-scroll-overlay-y {
 	pointer-events: none !important;
 
 	.tooltip-inner {
-		background-color: #0f172a !important; /* Premium Slate Navy */
-		color: #ffffff !important;
-		font-size: 11px !important;
+		background-color: #172B4D !important;
+		color: #FFFFFF !important;
+		font-size: 11.5px !important;
 		font-weight: 600 !important;
-		padding: 5px 9px !important;
+		padding: 6px 10px !important;
 		border-radius: 6px !important;
-		box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25) !important;
+		box-shadow: 0 4px 14px rgba(23, 43, 77, 0.25) !important;
 		letter-spacing: 0.01em !important;
 		white-space: nowrap !important;
 	}
 
 	&.bs-tooltip-end .tooltip-arrow::before,
 	&[data-popper-placement^='right'] .tooltip-arrow::before {
-		border-right-color: #0f172a !important;
+		border-right-color: #172B4D !important;
 	}
 
 	&.bs-tooltip-start .tooltip-arrow::before,
 	&[data-popper-placement^='left'] .tooltip-arrow::before {
-		border-left-color: #0f172a !important;
+		border-left-color: #172B4D !important;
 	}
 
 	&.bs-tooltip-top .tooltip-arrow::before,
 	&[data-popper-placement^='top'] .tooltip-arrow::before {
-		border-top-color: #0f172a !important;
+		border-top-color: #172B4D !important;
 	}
 
 	&.bs-tooltip-bottom .tooltip-arrow::before,
 	&[data-popper-placement^='bottom'] .tooltip-arrow::before {
-		border-bottom-color: #0f172a !important;
+		border-bottom-color: #172B4D !important;
 	}
 }
 
@@ -624,44 +599,50 @@ body:not(.aside-minimize):not(.gz-aside-collapsed):not([data-kt-aside-minimize='
 .aside-menu .menu-item .menu-section,
 #kt_aside_menu .menu-item .menu-section,
 #kt_aside_menu .menu-content .menu-section {
-	color: #8a92a6 !important;
-	font-size: 10px !important;
+	color: #71809A !important;
+	font-size: 10.5px !important;
 	font-weight: 700 !important;
-	letter-spacing: 0.12em !important;
+	letter-spacing: 0.1em !important;
 	text-transform: uppercase !important;
-	padding: 12px 12px 4px !important;
+	padding: 14px 14px 6px !important;
 }
 
-/* --- ASIDE MENU LINKS: DEFAULT, HOVER, ACTIVE (HIGH SPECIFICITY OVERRIDES) --- */
+/* --- ASIDE MENU LINKS: DEFAULT, HOVER, ACTIVE (UNIFIED NAVIGATION SHELL) --- */
 .aside,
 .aside-menu,
 #kt_aside_menu_wrapper,
 #kt_aside_menu {
-	/* Default Link State */
-	.menu-item {
-		.menu-link {
-			border-radius: 6px !important;
-			margin: 2px 6px !important;
-			padding: 7px 10px !important;
+	/* Root Menu Items (Single destination or Parent Module) */
+	> .menu-item,
+	.menu > .menu-item {
+		margin: 2px 6px !important;
+		padding: 0 !important;
+
+		> .menu-link {
+			min-height: 44px !important;
+			height: 44px !important;
+			border-radius: 10px !important;
+			padding: 8px 12px !important;
 			display: flex !important;
 			align-items: center !important;
 			background-color: transparent !important;
-			transition: background-color 0.15s ease, color 0.15s ease !important;
+			transition: background-color 0.2s ease, color 0.2s ease !important;
 			position: relative !important;
+			border: 1px solid transparent !important;
 
 			.menu-title {
-				color: #2d3139 !important;
-				font-size: 13px !important;
+				color: #71809A !important;
+				font-size: 13.5px !important;
 				font-weight: 500 !important;
 				letter-spacing: -0.01em !important;
-				transition: color 0.15s ease !important;
+				transition: color 0.2s ease !important;
 				line-height: 1.3 !important;
 			}
 
 			.menu-icon {
-				margin-right: 10px !important;
-				width: 20px !important;
-				height: 20px !important;
+				margin-right: 11px !important;
+				width: 22px !important;
+				height: 22px !important;
 				display: flex !important;
 				align-items: center !important;
 				justify-content: center !important;
@@ -669,109 +650,260 @@ body:not(.aside-minimize):not(.gz-aside-collapsed):not([data-kt-aside-minimize='
 
 				i,
 				svg {
-					color: #555b68 !important;
-					fill: #555b68 !important;
+					color: #64748B !important;
+					fill: #64748B !important;
 					font-size: 15px !important;
-					transition: color 0.15s ease, fill 0.15s ease !important;
+					transition: color 0.2s ease, fill 0.2s ease !important;
+				}
+			}
+
+			.menu-arrow {
+				margin-left: auto !important;
+				display: flex !important;
+				align-items: center !important;
+				justify-content: center !important;
+				width: 16px !important;
+				height: 16px !important;
+				transition: transform 0.22s ease-out !important;
+
+				&:after {
+					color: #71809A !important;
+					transition: transform 0.22s ease-out, color 0.2s ease !important;
+				}
+			}
+
+			/* Inactive Root Item Hover */
+			&:not(.active):hover {
+				background-color: #F5F7FB !important;
+
+				.menu-title {
+					color: #142447 !important;
+					font-weight: 600 !important;
+				}
+
+				.menu-icon i,
+				.menu-icon svg {
+					color: #172B4D !important;
+					fill: #172B4D !important;
+				}
+
+				.menu-arrow:after {
+					color: #172B4D !important;
 				}
 			}
 		}
 
-		/* HOVER STATE: CLEAN COOL SLATE TINT (PREVENTS WARM BEIGE OR WHITE TEXT ON HOVER) */
-		.menu-link:not(.active):hover {
-			background-color: #f1f5f9 !important;
+		/* 7. EXPANDED MODULE STATE: Soft pale-blue background #EAF0FA */
+		&.menu-accordion.show > .menu-link {
+			background-color: #EAF0FA !important;
+			border-radius: 12px !important;
 
 			.menu-title {
-				color: #0f172a !important;
+				color: #172B4D !important;
 				font-weight: 600 !important;
 			}
 
 			.menu-icon i,
 			.menu-icon svg {
-				color: #2563eb !important;
-				fill: #2563eb !important;
+				color: #172B4D !important;
+				fill: #172B4D !important;
+			}
+
+			.menu-arrow {
+				transform: rotate(90deg) !important;
+				&:after {
+					color: #172B4D !important;
+				}
+			}
+
+			&::before {
+				display: none !important;
+				content: none !important;
 			}
 		}
 
-		/* ACTIVE STATE: SOFT ICE-BLUE WASH, LEFT COBALT INDICATOR, NAVY TEXT & ICON */
-		.menu-link.active,
-		&.here > .menu-link,
-		&.show > .menu-link {
-			background-color: #eff6ff !important;
-			color: #0f172a !important;
-			position: relative !important;
+		/* Closed parent with active route inside: subtle slate styling */
+		&.menu-accordion.here:not(.show) > .menu-link {
+			background-color: transparent !important;
+			border-radius: 12px !important;
 
 			.menu-title {
-				color: #0f172a !important;
-				font-weight: 700 !important;
+				color: #172B4D !important;
+				font-weight: 600 !important;
 			}
 
 			.menu-icon i,
 			.menu-icon svg {
-				color: #2563eb !important;
-				fill: #2563eb !important;
+				color: #172B4D !important;
+				fill: #172B4D !important;
+			}
+
+			.menu-arrow:after {
+				color: #71809A !important;
 			}
 
 			&::before {
-				content: '' !important;
-				position: absolute !important;
-				left: -6px !important;
-				top: 5px !important;
-				bottom: 5px !important;
-				width: 3.5px !important;
-				border-radius: 0 4px 4px 0 !important;
-				background-color: #2563eb !important;
+				display: none !important;
+				content: none !important;
 			}
 		}
 
-		/* Submenu Bullet Dot Fix (Prevent turning white on hover in light sidebar) */
-		.menu-link {
-			.menu-bullet {
-				margin-right: 6px !important;
+		/* Active direct root item (without sub, e.g. Dashboard) */
+		> .menu-link.without-sub.active {
+			background-color: #172B4D !important;
+			border-radius: 12px !important;
 
-				.bullet-dot,
-				.bullet {
-					background-color: #94a3b8 !important;
-					transition: background-color 0.15s ease, transform 0.15s ease !important;
+			.menu-title {
+				color: #FFFFFF !important;
+				font-weight: 600 !important;
+			}
+
+			.menu-icon i,
+			.menu-icon svg {
+				color: #FFFFFF !important;
+				fill: #FFFFFF !important;
+			}
+
+			&::before {
+				display: none !important;
+				content: none !important;
+			}
+		}
+	}
+
+	/* 9. SUBMENU CONTAINER & INACTIVE SUBMENU ITEMS */
+	.menu-sub,
+	.menu-sub-accordion {
+		padding: 4px 0 6px 14px !important;
+		position: relative !important;
+
+		/* Connector line completely removed per Part 1.2 */
+		&::before {
+			content: none !important;
+			display: none !important;
+		}
+
+		.menu-item {
+			margin: 2px 4px 2px 0 !important;
+			padding: 0 !important;
+
+			.menu-link {
+				min-height: 40px !important;
+				height: 40px !important;
+				border-radius: 10px !important;
+				padding: 0 12px 0 8px !important;
+				display: flex !important;
+				align-items: center !important;
+				background-color: transparent !important;
+				transition: background-color 0.18s ease, color 0.18s ease !important;
+				position: relative !important;
+				border: none !important;
+				cursor: pointer !important;
+
+				&::before {
+					display: none !important;
+					content: none !important;
+				}
+
+				.menu-bullet {
+					margin-right: 10px !important;
+					display: flex !important;
+					align-items: center !important;
+					justify-content: center !important;
+					width: 18px !important;
+					min-width: 18px !important;
+
+					.bullet-dot,
+					.bullet {
+						width: 5.5px !important;
+						height: 5.5px !important;
+						border-radius: 50% !important;
+						background-color: #94A3B8 !important;
+						display: inline-block !important;
+						transition: background-color 0.18s ease !important;
+						transform: none !important;
+					}
+				}
+
+				.menu-title {
+					color: #71809A !important;
+					font-size: 13px !important;
+					font-weight: 500 !important;
+					letter-spacing: -0.01em !important;
+					transition: color 0.18s ease !important;
+					line-height: 1.3 !important;
+				}
+
+				/* Inactive submenu item hover (1.7) */
+				&:hover:not(.active) {
+					background-color: #EAF0FA !important;
+
+					.menu-bullet .bullet-dot,
+					.menu-bullet .bullet {
+						background-color: #172B4D !important;
+						transform: none !important;
+					}
+
+					.menu-title {
+						color: #172B4D !important;
+						font-weight: 600 !important;
+					}
 				}
 			}
 
-			&:hover {
-				.menu-bullet .bullet-dot,
-				.menu-bullet .bullet {
-					background-color: #2563eb !important;
-				}
-			}
+			/* 8. ACTIVE SUBMENU STATE (1.6): Solid navy pill #172B4D, white text, white dot */
+			.menu-link.active {
+				background-color: #172B4D !important;
+				border-radius: 10px !important;
+				box-shadow: none !important;
+				border: none !important;
 
-			&.active,
-			&.show {
 				.menu-bullet .bullet-dot,
 				.menu-bullet .bullet {
-					background-color: #2563eb !important;
-					transform: scale(1.15) !important;
+					background-color: #FFFFFF !important;
+					display: inline-block !important;
+					transform: none !important;
+				}
+
+				.menu-title {
+					color: #FFFFFF !important;
+					font-weight: 600 !important;
+				}
+
+				&:hover {
+					background-color: #172B4D !important;
+				}
+
+				&::before {
+					display: none !important;
+					content: none !important;
 				}
 			}
 		}
 	}
 }
 
-/* Explicit Global Aside Submenu Bullet Dot Overrides */
+/* Explicit Aside Submenu Bullet Dot Overrides */
 .aside-menu .menu-item .menu-link:hover .menu-bullet .bullet-dot,
-.aside-menu .menu-item .menu-link.active .menu-bullet .bullet-dot,
 .aside-menu .menu-item.here > .menu-link .menu-bullet .bullet-dot,
 .aside-menu .menu-item.show > .menu-link .menu-bullet .bullet-dot,
 .menu-sub .menu-item .menu-link:hover .menu-bullet .bullet-dot {
-	background-color: #2563eb !important;
+	background-color: #172B4D !important;
 }
 
-/* Badges on menu items (e.g. Chat 12, Task 3) */
+.aside-menu .menu-item .menu-link.active .menu-bullet .bullet-dot,
+.menu-sub .menu-item .menu-link.active .menu-bullet .bullet-dot {
+	background-color: #FFFFFF !important;
+}
+
+/* Badges on menu items */
 .gz-menu-badge {
 	font-size: 10px !important;
 	font-weight: 700 !important;
 	padding: 1px 7px !important;
 	border-radius: 10px !important;
-	background: #eff6ff !important;
-	color: #2563eb !important;
+	background: #EAF1FB !important;
+	color: #172B4D !important;
 	margin-left: auto !important;
 	line-height: 1.4 !important;
 }
@@ -2150,40 +2282,52 @@ input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):focus 
    APPROVED REFERENCE DASHBOARD + SHELL SPECIFIC STYLES
    ========================================================================== */
 
-/* --- Topbar Header --- */
+/* --- Topbar Header (Unified Workspace Nav) --- */
 .gz-topbar-wrapper {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	width: 100%;
-	padding: 10px 24px;
-	background: var(--gz-surface);
-	border-bottom: 1px solid var(--gz-border);
-	min-height: 60px;
+	padding: 0 24px;
+	height: 68px;
+	min-height: 68px;
+	background: #FFFFFF !important;
+	border-bottom: none !important;
 }
+
+/* 14. GLOBAL SEARCH: Refined soft-gray pill */
 .gz-top-search-bar {
 	display: flex;
 	align-items: center;
-	background: #ffffff !important;
-	border: 1px solid #ded8d2 !important;
-	border-radius: 10px !important;
-	padding: 6px 12px !important;
-	width: 320px;
+	background: #F5F7FB !important;
+	border: 1px solid #E4EAF2 !important;
+	border-radius: 16px !important;
+	padding: 0 14px !important;
+	height: 42px !important;
+	width: 340px;
 	max-width: 100%;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: none !important;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
 	&:focus-within {
-		border-color: var(--gz-brand) !important;
-		box-shadow: 0 0 0 3px rgba(139, 82, 60, 0.12) !important;
+		background: #FFFFFF !important;
+		border-color: #172B4D !important;
+		box-shadow: 0 0 0 2px rgba(23, 43, 77, 0.12) !important;
 	}
 }
+
 .gz-top-search-icon {
-	color: #9ca3af !important;
-	margin-right: 8px !important;
-	font-size: 13.5px !important;
+	color: #64748B !important;
+	margin-right: 10px !important;
+	font-size: 14px !important;
 	flex-shrink: 0;
+	transition: color 0.2s ease;
 }
+
+.gz-top-search-bar:focus-within .gz-top-search-icon {
+	color: #172B4D !important;
+}
+
 .gz-top-search-bar .gz-top-search-input,
 .gz-search-filter-box .gz-search-filter-input,
 input.gz-top-search-input,
@@ -2196,115 +2340,180 @@ input.gz-search-filter-input {
 	min-height: unset !important;
 	padding: 0 !important;
 	font-size: 13px !important;
-	color: var(--gz-text) !important;
+	font-weight: 500 !important;
+	color: #142447 !important;
 	flex: 1 !important;
 	width: 100% !important;
 
 	&::placeholder {
-		color: #9ca3af !important;
+		color: #71809A !important;
 		font-size: 13px;
+		font-weight: 400;
 	}
 	&:focus {
 		border: none !important;
 		background: transparent !important;
-		background-color: transparent !important;
 		box-shadow: none !important;
 		outline: none !important;
 	}
 }
+
 .gz-top-search-kbd {
-	font-size: 10.5px !important;
-	font-weight: 500 !important;
-	color: #71717a !important;
-	background: #f4f4f5 !important;
-	border: 1px solid #e4e4e7 !important;
-	padding: 2px 6px !important;
+	font-size: 11px !important;
+	font-weight: 600 !important;
+	color: #71809A !important;
+	background: #FFFFFF !important;
+	border: 1px solid #E4EAF2 !important;
+	padding: 2px 7px !important;
 	border-radius: 6px !important;
 	margin-left: 8px !important;
 	white-space: nowrap !important;
 	flex-shrink: 0;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
-.gz-top-date-wrap .rs-picker-default .rs-picker-toggle {
-	border: 1px solid var(--gz-border) !important;
-	border-radius: 7px !important;
-	background: var(--gz-workspace) !important;
-	font-size: 12.5px !important;
-	padding: 6px 12px !important;
-	color: var(--gz-text) !important;
+
+/* 15. DATE-RANGE PICKER: Refined white/soft-gray pill */
+.gz-top-date-wrap {
+	.gz-filter-date-input,
+	input.gz-filter-date-input {
+		height: 42px !important;
+		background: #F5F7FB !important;
+		border: 1px solid #E4EAF2 !important;
+		border-radius: 12px !important;
+		font-size: 12.5px !important;
+		font-weight: 500 !important;
+		padding: 0 36px 0 14px !important;
+		color: #142447 !important;
+		cursor: pointer !important;
+		box-shadow: none !important;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+		&:hover {
+			background: #FFFFFF !important;
+			border-color: #CBD5E1 !important;
+		}
+
+		&:focus {
+			background: #FFFFFF !important;
+			border-color: #172B4D !important;
+			box-shadow: 0 0 0 2px rgba(23, 43, 77, 0.12) !important;
+		}
+	}
 }
+
+/* 16. NOTIFICATION CONTROL: Softly rounded icon button */
 .gz-top-btn-icon {
-	width: 36px;
-	height: 36px;
-	border-radius: 7px;
-	border: 1px solid var(--gz-border);
-	background: var(--gz-workspace);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	color: #555555;
-	transition: all 0.15s ease;
+	width: 42px !important;
+	height: 42px !important;
+	border-radius: 12px !important;
+	border: 1px solid #E4EAF2 !important;
+	background: #F5F7FB !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	color: #64748B !important;
+	position: relative !important;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+	&:hover {
+		background: #EAF1FB !important;
+		color: #172B4D !important;
+		border-color: #DCE8F8 !important;
+	}
+
+	&:focus-visible {
+		outline: 2px solid #172B4D !important;
+		outline-offset: 2px !important;
+	}
 }
-.gz-top-btn-icon:hover {
-	background: var(--gz-brand-soft);
-	color: var(--gz-brand);
-}
+
 .gz-bell-red-dot {
 	position: absolute;
-	top: 8px;
-	right: 8px;
-	width: 6.5px;
-	height: 6.5px;
+	top: 10px;
+	right: 10px;
+	width: 7px;
+	height: 7px;
 	border-radius: 50%;
-	background: #dc3545;
-	border: 1.5px solid #ffffff;
+	background: #EF4444;
+	border: 1.5px solid #FFFFFF;
 }
+
+/* 17. USER PROFILE CONTROL: Refined compact pill */
 .gz-top-user-wrap {
 	position: relative;
 }
+
 .gz-top-user-btn {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	background: var(--gz-workspace);
-	border: 1px solid var(--gz-border);
-	border-radius: 8px;
-	padding: 4px 10px;
+	gap: 9px;
+	height: 42px;
+	background: #F5F7FB !important;
+	border: 1px solid #E4EAF2 !important;
+	border-radius: 12px !important;
+	padding: 4px 12px 4px 6px !important;
 	cursor: pointer;
+	box-shadow: none !important;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+	&:hover {
+		background: #EAF1FB !important;
+		border-color: #DCE8F8 !important;
+	}
+
+	&:focus-visible {
+		outline: 2px solid #172B4D;
+		outline-offset: 2px;
+	}
 }
+
 .gz-top-user-avatar {
-	width: 28px;
-	height: 28px;
+	width: 32px;
+	height: 32px;
 	border-radius: 50%;
 	object-fit: cover;
+	border: 1px solid #E4EAF2;
 }
+
 .gz-top-user-info {
 	display: flex;
 	flex-direction: column;
-	line-height: 1.15;
+	line-height: 1.2;
 }
+
 .gz-top-user-name {
-	font-size: 12.5px;
-	font-weight: 700;
-	color: var(--gz-text);
+	font-size: 13px;
+	font-weight: 600;
+	color: #142447;
 }
+
 .gz-top-user-role {
-	font-size: 10.5px;
-	color: var(--gz-text-2);
+	font-size: 11px;
+	font-weight: 500;
+	color: #71809A;
 }
+
 .gz-top-user-arrow {
-	font-size: 10px;
-	color: #888888;
+	font-size: 11px;
+	color: #71809A;
+	transition: transform 0.2s ease, color 0.2s ease;
 }
+
+.gz-top-user-wrap:hover .gz-top-user-arrow {
+	color: #172B4D;
+}
+
+/* Profile Dropdown Menu Surface */
 .gz-topbar-user-dropdown-menu {
 	position: absolute;
 	top: calc(100% + 8px);
 	right: 0;
 	z-index: 1060;
-	background: #ffffff;
-	border: 1px solid #e2e8f0;
-	border-radius: 14px;
-	box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.05);
+	background: #FFFFFF !important;
+	border: 1px solid #E4EAF2 !important;
+	border-radius: 14px !important;
+	box-shadow: 0 16px 40px -8px rgba(20, 36, 71, 0.12), 0 0 0 1px rgba(20, 36, 71, 0.04) !important;
 	width: 340px;
 	max-width: 92vw;
 	animation: gzDropdownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2323,9 +2532,9 @@ input.gz-search-filter-input {
 }
 
 .gz-user-menu-header {
-	padding: 14px 16px 12px;
-	background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-	border-bottom: 1px solid #f1f5f9;
+	padding: 16px 18px 14px;
+	background: #F5F7FB !important;
+	border-bottom: 1px solid #E4EAF2 !important;
 }
 
 .gz-user-menu-avatar-wrap {
@@ -2340,7 +2549,7 @@ input.gz-search-filter-input {
 	height: 42px;
 	border-radius: 50%;
 	object-fit: cover;
-	border: 2px solid #ffffff;
+	border: 2px solid #FFFFFF;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
@@ -2351,81 +2560,17 @@ input.gz-search-filter-input {
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
-	background-color: #10b981;
-	border: 2px solid #ffffff;
-}
-
-.gz-active-panel-card {
-	margin: 10px 14px 8px;
-	padding: 10px 12px;
-	border-radius: 10px;
-	background: linear-gradient(135deg, rgba(139, 82, 60, 0.07) 0%, rgba(37, 99, 235, 0.05) 100%);
-	border: 1px solid rgba(139, 82, 60, 0.22);
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.gz-active-panel-tag {
-	font-size: 9.5px;
-	font-weight: 700;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: #8b523c;
-}
-
-.gz-active-panel-title {
-	font-size: 13px;
-	font-weight: 700;
-	color: #0f172a;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	margin-top: 1px;
-}
-
-.gz-active-panel-badge {
-	font-size: 10px;
-	font-weight: 700;
-	color: #059669;
-	background: #ecfdf5;
-	border: 1px solid rgba(5, 150, 105, 0.25);
-	padding: 3px 8px;
-	border-radius: 9999px;
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-	white-space: nowrap;
-}
-
-.gz-panel-pulse-dot {
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	background-color: #10b981;
-	box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-	animation: gzPulse 2s infinite;
-}
-
-@keyframes gzPulse {
-	0% {
-		box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-	}
-	70% {
-		box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-	}
-	100% {
-		box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-	}
+	background-color: #10B981;
+	border: 2px solid #FFFFFF;
 }
 
 .gz-panels-section-label {
-	font-size: 10px;
+	font-size: 10.5px;
 	font-weight: 700;
 	letter-spacing: 0.05em;
 	text-transform: uppercase;
-	color: #94a3b8;
-	padding: 8px 14px 4px;
+	color: #71809A !important;
+	padding: 10px 16px 4px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -2434,13 +2579,13 @@ input.gz-search-filter-input {
 .gz-panels-list {
 	max-height: 240px;
 	overflow-y: auto;
-	padding: 2px 8px;
+	padding: 4px 8px;
 
 	&::-webkit-scrollbar {
 		width: 4px;
 	}
 	&::-webkit-scrollbar-thumb {
-		background: #cbd5e1;
+		background: #E4EAF2;
 		border-radius: 4px;
 	}
 }
@@ -2460,27 +2605,27 @@ input.gz-search-filter-input {
 	margin-bottom: 2px;
 
 	&:hover {
-		background: #f8fafc;
-		border-color: #e2e8f0;
+		background: #F5F7FB;
+		border-color: #E4EAF2;
 		transform: translateX(2px);
 	}
 
 	&.is-active {
-		background-color: #eff6ff !important;
-		border-color: #dbeafe !important;
+		background-color: #EAF1FB !important;
+		border-color: #DCE8F8 !important;
 
 		.gz-panel-item-name {
-			color: #1e40af !important;
+			color: #172B4D !important;
 			font-weight: 700 !important;
 		}
 
 		.gz-panel-item-desc {
-			color: #2563eb !important;
+			color: #24446B !important;
 			font-weight: 500 !important;
 		}
 
 		.gz-panel-active-check {
-			color: #2563eb !important;
+			color: #172B4D !important;
 			font-size: 16px !important;
 			font-weight: 800 !important;
 		}
@@ -2502,37 +2647,37 @@ input.gz-search-filter-input {
 .gz-panel-item-name {
 	font-size: 12.5px;
 	font-weight: 600;
-	color: #0f172a;
+	color: #142447;
 	line-height: 1.2;
 }
 
 .gz-panel-item-desc {
 	font-size: 10.5px;
-	color: #64748b;
+	color: #71809A;
 	line-height: 1.2;
 }
 
 .gz-panel-item-arrow {
-	color: #94a3b8;
+	color: #71809A;
 	font-size: 15px;
 	transition: transform 0.15s ease;
 }
 
 .gz-panel-item-btn:hover .gz-panel-item-arrow {
-	color: var(--gz-brand, #8b523c);
+	color: #172B4D;
 	transform: translateX(3px);
 }
 
 .gz-panel-active-check {
-	color: #2563eb !important;
+	color: #172B4D !important;
 	font-size: 16px !important;
 	font-weight: 800 !important;
 }
 
 .gz-user-menu-footer {
 	padding: 10px 14px 12px;
-	background: #ffffff;
-	border-top: 1px solid #f1f5f9;
+	background: #FFFFFF;
+	border-top: 1px solid #E4EAF2;
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -2540,13 +2685,13 @@ input.gz-search-filter-input {
 
 .gz-user-menu-logout-btn {
 	width: 100%;
-	border: 1px solid #fee2e2;
-	background: #fef2f2;
-	color: #ef4444;
-	font-size: 12px;
+	border: 1px solid #FEE2E2;
+	background: #FEF2F2;
+	color: #EF4444;
+	font-size: 12.5px;
 	font-weight: 600;
 	border-radius: 8px;
-	padding: 7px 12px;
+	padding: 8px 12px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -2555,9 +2700,9 @@ input.gz-search-filter-input {
 	transition: all 0.15s ease;
 
 	&:hover {
-		background: #fee2e2;
-		border-color: #fca5a5;
-		color: #dc2626;
+		background: #FEE2E2;
+		border-color: #FCA5A5;
+		color: #DC2626;
 	}
 }
 
@@ -5053,13 +5198,13 @@ button.btn-outline-primary:hover {
 			transition: all 0.12s ease;
 
 			&:hover {
-				background: #e2e8f0;
-				color: #0f172a;
+				background: #F5F7FB;
+				color: #142447;
 			}
 
 			&.rdrStaticRangeSelected {
-				background: #eff6ff !important;
-				color: #2563eb !important;
+				background: #EAF1FB !important;
+				color: #172B4D !important;
 				font-weight: 700;
 			}
 		}
@@ -5090,17 +5235,17 @@ button.btn-outline-primary:hover {
    GOMZI TABLE ACTION BUTTONS
    ========================================================================= */
 .gz-table-action-btn {
-	width: 32px;
-	height: 32px;
-	min-width: 32px;
-	min-height: 32px;
+	width: 36px;
+	height: 36px;
+	min-width: 36px;
+	min-height: 36px;
 	padding: 0 !important;
-	border-radius: 8px !important;
+	border-radius: 10px !important;
 	display: inline-flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	font-size: 13px !important;
-	transition: all 0.15s ease !important;
+	font-size: 14px !important;
+	transition: all 0.18s ease !important;
 	border: 1px solid transparent !important;
 
 	&:hover:not(:disabled) {
@@ -6173,3 +6318,4620 @@ select.form-select.form-select-sm {
 		padding: 0.75rem 0.75rem;
 	}
 }
+
+/* =============================================================================
+   GOMZI STUDIO DASHBOARD LAYOUT (Inspired by Modern Health & Activity UI)
+   Strictly Gomzi Palette: Dark Slate #0F172A, Blue #2563EB, Amber #F59E0B, Emerald #10B981
+   ============================================================================= */
+.gz-studio-dash {
+	padding-bottom: 3rem;
+
+	/* Top Greeting Header */
+	.gz-studio-header {
+		margin-bottom: 1.75rem;
+
+		.gz-studio-title {
+			font-size: 2.15rem;
+			font-weight: 800;
+			color: #0f172a;
+			letter-spacing: -0.03em;
+			margin-bottom: 0.25rem;
+		}
+
+		.gz-studio-subtitle {
+			font-size: 0.95rem;
+			color: #64748b;
+			font-weight: 500;
+			margin-bottom: 0;
+		}
+	}
+
+	/* =========================================================================
+	   OPTION A: WORK ACTIVITY COMMAND CARD & 7-DAY WEEKLY TRACKER
+	   Clean, flat, high-contrast typography, zero glossy blur or radial orbs
+	   ========================================================================= */
+
+	/* Left Card: Work Activity Command Center */
+	.gz-command-card {
+		background: #ffffff;
+		border: 1px solid #f1f5f9;
+		border-radius: 24px;
+		padding: 1.75rem;
+		box-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.03);
+		min-height: 310px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		.gz-command-header {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 1rem;
+			margin-bottom: 1.25rem;
+
+			.gz-command-title {
+				font-size: 1.25rem;
+				font-weight: 800;
+				color: #0f172a;
+				margin-bottom: 0.25rem;
+				letter-spacing: -0.02em;
+			}
+
+			.gz-command-sub {
+				font-size: 0.8125rem;
+				color: #64748b;
+				margin-bottom: 0;
+			}
+		}
+
+		/* 4 Metric Chips Grid */
+		.gz-command-chips {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 0.75rem;
+			margin-bottom: 1.25rem;
+
+			@media (max-width: 768px) {
+				grid-template-columns: repeat(2, 1fr);
+			}
+
+			.gz-command-chip {
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				border-radius: 16px;
+				padding: 0.95rem 1rem;
+				transition: all 0.2s ease;
+
+				&:hover {
+					background: #ffffff;
+					border-color: #cbd5e1;
+					transform: translateY(-1px);
+					box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+				}
+
+				.gz-chip-top {
+					display: flex;
+					align-items: center;
+					gap: 0.5rem;
+					margin-bottom: 0.5rem;
+
+					.gz-chip-icon {
+						width: 28px;
+						height: 28px;
+						border-radius: 8px;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						font-size: 0.85rem;
+						flex-shrink: 0;
+					}
+
+					.gz-chip-label {
+						font-size: 0.72rem;
+						font-weight: 600;
+						color: #64748b;
+						text-transform: uppercase;
+						letter-spacing: 0.03em;
+					}
+				}
+
+				.gz-chip-val {
+					font-size: 1.35rem;
+					font-weight: 800;
+					color: #0f172a;
+					line-height: 1.1;
+				}
+
+				.gz-chip-sub {
+					font-size: 0.7rem;
+					color: #94a3b8;
+					font-weight: 500;
+					margin-top: 0.2rem;
+				}
+			}
+		}
+
+		/* Task Velocity Progress Footer */
+		.gz-command-footer {
+			background: #f8fafc;
+			border: 1px solid #f1f5f9;
+			border-radius: 16px;
+			padding: 0.95rem 1.15rem;
+
+			.gz-velocity-top {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				font-size: 0.78rem;
+				font-weight: 700;
+				color: #0f172a;
+				margin-bottom: 0.5rem;
+			}
+
+			.progress {
+				height: 6px;
+				background-color: #e2e8f0;
+				border-radius: 10px;
+				overflow: hidden;
+
+				.progress-bar {
+					background: #2563eb;
+					border-radius: 10px;
+					transition: width 0.4s ease;
+				}
+			}
+
+			.gz-velocity-note {
+				font-size: 0.72rem;
+				color: #64748b;
+				margin-top: 0.5rem;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+			}
+		}
+	}
+
+	/* Right Card: 7-Day Weekly Reporting & Output Tracker */
+	.gz-week-card {
+		background: #ffffff;
+		border: 1px solid #f1f5f9;
+		border-radius: 24px;
+		padding: 1.75rem;
+		box-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.03);
+		min-height: 310px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		.gz-week-header {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 1rem;
+			margin-bottom: 1.25rem;
+
+			.gz-week-title {
+				font-size: 1.2rem;
+				font-weight: 800;
+				color: #0f172a;
+				margin-bottom: 0.25rem;
+				letter-spacing: -0.02em;
+			}
+
+			.gz-week-sub {
+				font-size: 0.8125rem;
+				color: #64748b;
+				margin-bottom: 0;
+			}
+		}
+
+		/* 7 Days Columns Grid */
+		.gz-week-grid {
+			display: grid;
+			grid-template-columns: repeat(7, 1fr);
+			gap: 0.5rem;
+			margin-bottom: 1.25rem;
+
+			.gz-week-col {
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				border-radius: 14px;
+				padding: 0.75rem 0.25rem;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+				transition: all 0.2s ease;
+
+				.gz-col-dayname {
+					font-size: 0.7rem;
+					font-weight: 700;
+					color: #64748b;
+					text-transform: uppercase;
+					margin-bottom: 0.2rem;
+				}
+
+				.gz-col-datenum {
+					font-size: 0.95rem;
+					font-weight: 800;
+					color: #0f172a;
+					margin-bottom: 0.4rem;
+				}
+
+				.gz-col-status-pill {
+					width: 22px;
+					height: 22px;
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 0.7rem;
+				}
+
+				/* Done / Reported day */
+				&.is-done {
+					background: #ecfdf5;
+					border-color: #a7f3d0;
+
+					.gz-col-status-pill {
+						background: #10b981;
+						color: #ffffff;
+					}
+				}
+
+				/* Today */
+				&.is-today {
+					background: #eff6ff;
+					border: 2px solid #2563eb;
+					box-shadow: 0 4px 10px rgba(37, 99, 235, 0.12);
+
+					.gz-col-datenum {
+						color: #1d4ed8;
+					}
+				}
+
+				/* Missed / Pending past day */
+				&.is-pending {
+					background: #fffbeb;
+					border-color: #fde68a;
+
+					.gz-col-status-pill {
+						background: #f59e0b;
+						color: #ffffff;
+					}
+				}
+
+				/* Upcoming future day */
+				&.is-upcoming {
+					background: #ffffff;
+					border-color: #f1f5f9;
+
+					.gz-col-datenum {
+						color: #94a3b8;
+					}
+					.gz-col-status-pill {
+						background: #f1f5f9;
+						color: #cbd5e1;
+					}
+				}
+			}
+		}
+
+		/* Bottom Health Bar */
+		.gz-week-footer {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 0.75rem;
+			padding-top: 0.75rem;
+			border-top: 1px solid #f1f5f9;
+			font-size: 0.75rem;
+			color: #64748b;
+
+			.gz-week-badge {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.35rem;
+				font-weight: 600;
+				color: #0f172a;
+			}
+		}
+	}
+
+	/* Standard Studio White Surface Card */
+	.gz-studio-card {
+		background: #ffffff;
+		border: 1px solid #f1f5f9;
+		border-radius: 24px;
+		padding: 1.5rem;
+		box-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.03);
+
+		/* Workspace Tools Grid & Pills (Reference Image 3 fix) */
+		.gz-tools-grid {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 0.65rem;
+
+			@media (max-width: 576px) {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		.gz-shortcut-pill {
+			display: flex;
+			align-items: center;
+			gap: 0.65rem;
+			padding: 0.55rem 0.85rem;
+			background: #f8fafc;
+			border: 1px solid #e2e8f0;
+			border-radius: 12px;
+			text-decoration: none;
+			transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+			.gz-pill-icon-box {
+				width: 32px;
+				height: 32px;
+				border-radius: 8px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+				font-size: 0.95rem;
+				transition: transform 0.2s ease;
+			}
+
+			.gz-pill-text {
+				font-size: 0.8125rem;
+				font-weight: 700;
+				color: #1e293b;
+				transition: color 0.2s ease;
+			}
+
+			&:hover {
+				background: #ffffff;
+				border-color: #cbd5e1;
+				box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+				transform: translateY(-1px);
+
+				.gz-pill-icon-box {
+					transform: scale(1.1);
+				}
+
+				.gz-pill-text {
+					color: #2563eb;
+				}
+			}
+		}
+	}
+
+	/* Circular Goal Gauge Card */
+	.gz-studio-gauge-card {
+		background: #ffffff;
+		border: 1px solid #f1f5f9;
+		border-radius: 24px;
+		padding: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		box-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.03);
+
+		.gz-gauge-title {
+			font-size: 1.15rem;
+			font-weight: 800;
+			color: #0f172a;
+			margin-bottom: 0.25rem;
+		}
+
+		.gz-gauge-subtitle {
+			font-size: 0.8125rem;
+			color: #94a3b8;
+			margin-bottom: 0;
+		}
+
+		.gz-gauge-wrap {
+			position: relative;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin: 0.5rem 0;
+
+			.gz-gauge-center {
+				position: absolute;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+
+				.gz-gauge-lbl {
+					font-size: 0.75rem;
+					font-weight: 600;
+					color: #94a3b8;
+					text-transform: uppercase;
+					letter-spacing: 0.05em;
+				}
+
+				.gz-gauge-val {
+					font-size: 1.5rem;
+					font-weight: 800;
+					color: #0f172a;
+					line-height: 1.1;
+				}
+			}
+
+			.gz-gauge-floating-badge {
+				position: absolute;
+				top: 8px;
+				right: 18px;
+				background: #ffffff;
+				border: 1px solid #e2e8f0;
+				border-radius: 20px;
+				padding: 2px 8px;
+				font-size: 0.75rem;
+				font-weight: 700;
+				color: #0f172a;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+			}
+		}
+
+		.gz-gauge-btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			background: transparent;
+			border: none;
+			font-size: 0.85rem;
+			font-weight: 700;
+			color: #0f172a;
+			text-decoration: none;
+			padding: 0;
+
+			.gz-btn-icon-circle {
+				width: 26px;
+				height: 26px;
+				border-radius: 50%;
+				background: #0f172a;
+				color: #ffffff;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 11px;
+			}
+		}
+	}
+
+	/* Milestone Track Slider Card */
+	.gz-studio-slider-card {
+		background: #ffffff;
+		border: 1px solid #f1f5f9;
+		border-radius: 24px;
+		padding: 1.5rem;
+		box-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.03);
+
+		.gz-slider-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.25rem;
+
+			.gz-slider-title {
+				font-size: 1.15rem;
+				font-weight: 800;
+				color: #0f172a;
+				margin: 0;
+			}
+
+			.gz-slider-pct {
+				font-size: 1.2rem;
+				font-weight: 800;
+				color: #0f172a;
+			}
+			.gz-slider-sub {
+				font-size: 0.75rem;
+				color: #94a3b8;
+				font-weight: 500;
+			}
+		}
+
+		.gz-slider-track-wrap {
+			position: relative;
+			padding-top: 26px;
+			margin-bottom: 0.5rem;
+
+			.gz-slider-track {
+				height: 10px;
+				border-radius: 10px;
+				background: #f1f5f9;
+				position: relative;
+				overflow: hidden;
+
+				.gz-slider-fill {
+					height: 100%;
+					border-radius: 10px;
+					background: #0f172a;
+					transition: width 0.3s ease;
+				}
+			}
+
+			.gz-slider-floating-pill {
+				position: absolute;
+				top: 0;
+				transform: translateX(-50%);
+				background: #0f172a;
+				color: #ffffff;
+				font-size: 0.72rem;
+				font-weight: 700;
+				padding: 2px 8px;
+				border-radius: 12px;
+				white-space: nowrap;
+				box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+
+				&::after {
+					content: '';
+					position: absolute;
+					bottom: -3px;
+					left: 50%;
+					transform: translateX(-50%);
+					border-width: 3px 3px 0 3px;
+					border-style: solid;
+					border-color: #0f172a transparent transparent transparent;
+				}
+			}
+		}
+
+		.gz-slider-bounds {
+			display: flex;
+			justify-content: space-between;
+			font-size: 0.75rem;
+			color: #64748b;
+			font-weight: 600;
+		}
+	}
+
+	/* Deliverables / Habits Card */
+	.gz-studio-habits-card {
+		background: #ffffff;
+		border: 1px solid #f1f5f9;
+		border-radius: 24px;
+		padding: 1.75rem;
+		box-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.03);
+
+		.gz-habits-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.25rem;
+
+			.gz-habits-title {
+				font-size: 1.25rem;
+				font-weight: 800;
+				color: #0f172a;
+				margin: 0;
+			}
+
+			.gz-habits-add-btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				font-size: 0.8125rem;
+				font-weight: 700;
+				color: #0f172a;
+				text-decoration: none;
+
+				.gz-add-plus-circle {
+					width: 26px;
+					height: 26px;
+					border-radius: 50%;
+					background: #0f172a;
+					color: #ffffff;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 13px;
+				}
+			}
+		}
+
+		.gz-habit-row {
+			background: #f8fafc;
+			border: 1px solid #f1f5f9;
+			border-radius: 18px;
+			padding: 0.95rem 1.25rem;
+			margin-bottom: 0.75rem;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			transition: all 0.2s ease;
+
+			&:hover {
+				background: #ffffff;
+				border-color: #cbd5e1;
+				transform: translateY(-1px);
+				box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.06);
+			}
+
+			.gz-habit-left {
+				display: flex;
+				align-items: center;
+				gap: 0.9rem;
+				min-width: 0;
+			}
+
+			.gz-habit-avatar {
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				background: #e2e8f0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+				color: #475569;
+				font-size: 16px;
+			}
+
+			.gz-habit-info {
+				display: flex;
+				flex-direction: column;
+				min-width: 0;
+
+				.gz-habit-name {
+					font-size: 0.875rem;
+					font-weight: 700;
+					color: #0f172a;
+					text-decoration: none;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+
+					&:hover {
+						color: #2563eb;
+					}
+
+					&.is-completed {
+						text-decoration: line-through;
+						color: #94a3b8;
+					}
+				}
+
+				.gz-habit-sub {
+					font-size: 0.75rem;
+					color: #64748b;
+					margin-top: 1px;
+				}
+			}
+
+			.gz-habit-right {
+				display: flex;
+				align-items: center;
+				gap: 1.25rem;
+				flex-shrink: 0;
+			}
+
+			/* Capsule Progress Bar Indicator (Like Reference Image) */
+			.gz-capsule-meter {
+				display: flex;
+				align-items: center;
+				gap: 0.6rem;
+
+				.gz-capsule-label {
+					font-size: 0.75rem;
+					color: #64748b;
+					font-weight: 600;
+				}
+
+				.gz-capsule-bars {
+					display: flex;
+					align-items: center;
+					gap: 3px;
+
+					.gz-bar-pill {
+						width: 4px;
+						height: 14px;
+						border-radius: 4px;
+						background: #e2e8f0;
+
+						&.is-filled {
+							background: #ef4444; /* Orange/Coral like reference image */
+						}
+					}
+				}
+			}
+
+			.gz-habit-action-btn {
+				border: none;
+				background: transparent;
+				color: #94a3b8;
+				font-size: 1.1rem;
+				cursor: pointer;
+				padding: 0;
+
+				&:hover {
+					color: #0f172a;
+				}
+			}
+		}
+	}
+}
+
+/* =========================================================================
+   DRAG & DROP FILE UPLOAD ZONE (Matching User Image 2)
+   ========================================================================= */
+.gz-drag-dropzone {
+	border: 2px dashed #84cc16; /* Clean olive-green dashed border matching image 2 */
+	border-radius: 18px;
+	background: #fbfcf8;
+	padding: 2.25rem 1.5rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	cursor: pointer;
+	transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+	user-select: none;
+
+	&:hover,
+	&.is-dragging {
+		background: #f4faea;
+		border-color: #65a30d;
+		transform: scale(1.004);
+		box-shadow: 0 4px 16px -2px rgba(101, 163, 13, 0.12);
+	}
+
+	.gz-dropzone-icon-box {
+		width: 52px;
+		height: 52px;
+		border-radius: 16px;
+		background: #eef5e5;
+		color: #556b2f;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 0.875rem;
+		transition: transform 0.2s ease;
+	}
+
+	&:hover .gz-dropzone-icon-box {
+		transform: translateY(-2px);
+	}
+
+	.gz-dropzone-text {
+		font-size: 0.9375rem;
+		font-weight: 700;
+		color: #1e293b;
+		margin-bottom: 0.35rem;
+
+		.gz-browse-link {
+			color: #65a30d;
+			text-decoration: underline;
+			text-underline-offset: 3px;
+			font-weight: 700;
+			cursor: pointer;
+
+			&:hover {
+				color: #4d7c0f;
+			}
+		}
+	}
+
+	.gz-dropzone-hint {
+		font-size: 0.8125rem;
+		color: #94a3b8;
+		font-weight: 500;
+	}
+}
+
+/* =========================================================================
+   IMAGE 3 DASHBOARD REDESIGN: Planned Absences Timeline & 3-Column Bottom
+   Rich, smooth, premium lightweight aesthetic
+   ========================================================================= */
+
+/* Top Card: Planned Absences Timeline */
+.gz-absences-card {
+	background: #ffffff;
+	border: 1px solid rgba(226, 232, 240, 0.8);
+	border-radius: 26px;
+	padding: 1.75rem 1.85rem;
+	box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.04);
+	margin-bottom: 1.75rem;
+
+	.gz-absences-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+
+		.gz-absences-title {
+			font-size: 1.45rem;
+			font-weight: 800;
+			color: #0f172a;
+			margin-bottom: 0.15rem;
+			letter-spacing: -0.025em;
+		}
+
+		.gz-absences-sub {
+			font-size: 0.8125rem;
+			color: #64748b;
+			margin-bottom: 0;
+		}
+
+		.gz-absences-actions {
+			display: flex;
+			align-items: center;
+			gap: 0.65rem;
+
+			.gz-date-btn {
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				border-radius: 20px;
+				padding: 0.45rem 1rem;
+				font-size: 0.8125rem;
+				font-weight: 600;
+				color: #1e293b;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.45rem;
+				transition: all 0.2s ease;
+
+				&:hover {
+					background: #f1f5f9;
+					border-color: #cbd5e1;
+				}
+			}
+
+			.gz-filter-btn {
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				border-radius: 20px;
+				padding: 0.45rem 0.95rem;
+				font-size: 0.8125rem;
+				font-weight: 600;
+				color: #475569;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.4rem;
+
+				&:hover {
+					background: #f1f5f9;
+					color: #0f172a;
+				}
+			}
+
+			.gz-view-all-link {
+				font-size: 0.8125rem;
+				font-weight: 700;
+				color: #0f172a;
+				text-decoration: none;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.25rem;
+				padding: 0.45rem 0.75rem;
+
+				&:hover {
+					color: #2563eb;
+				}
+			}
+		}
+	}
+
+	/* Scrollable Timeline Grid Container */
+	.gz-timeline-scroll {
+		overflow-x: auto;
+		padding-bottom: 0.5rem;
+
+		&::-webkit-scrollbar {
+			height: 5px;
+		}
+		&::-webkit-scrollbar-track {
+			background: #f1f5f9;
+			border-radius: 4px;
+		}
+		&::-webkit-scrollbar-thumb {
+			background: #cbd5e1;
+			border-radius: 4px;
+		}
+	}
+
+	.gz-timeline-grid {
+		min-width: 900px;
+		display: grid;
+		grid-template-columns: 220px repeat(16, minmax(46px, 1fr));
+		gap: 6px;
+		align-items: center;
+		position: relative;
+
+		/* Header Row */
+		.gz-th-emp {
+			font-size: 0.78rem;
+			font-weight: 700;
+			color: #64748b;
+			padding-left: 0.5rem;
+		}
+
+		.gz-th-day {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 0.35rem 0.2rem;
+			border-radius: 12px;
+			text-align: center;
+			position: relative;
+
+			.gz-th-dayname {
+				font-size: 0.68rem;
+				font-weight: 600;
+				color: #94a3b8;
+				text-transform: capitalize;
+			}
+
+			.gz-th-datenum {
+				font-size: 0.8125rem;
+				font-weight: 700;
+				color: #334155;
+			}
+
+			/* Highlighted Active Day Pill (Tue 9 like in image) */
+			&.is-active-day {
+				background: #2563eb;
+				color: #ffffff;
+				box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+
+				.gz-th-dayname {
+					color: rgba(255, 255, 255, 0.85);
+				}
+
+				.gz-th-datenum {
+					color: #ffffff;
+				}
+			}
+		}
+
+		/* Employee Row */
+		.gz-td-emp {
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+			padding: 0.65rem 0.5rem;
+
+			.gz-emp-avatar {
+				width: 38px;
+				height: 38px;
+				border-radius: 50%;
+				background: #f1f5f9;
+				object-fit: cover;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-weight: 700;
+				color: #2563eb;
+				font-size: 0.85rem;
+				flex-shrink: 0;
+			}
+
+			.gz-emp-info {
+				display: flex;
+				flex-direction: column;
+				min-width: 0;
+
+				.gz-emp-name {
+					font-size: 0.875rem;
+					font-weight: 700;
+					color: #0f172a;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
+
+				.gz-emp-role {
+					font-size: 0.75rem;
+					color: #64748b;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
+			}
+		}
+
+		/* Cell */
+		.gz-td-cell {
+			height: 52px;
+			background: #ffffff;
+			border: 1px solid #f1f5f9;
+			border-radius: 12px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: relative;
+			transition: background 0.15s ease;
+
+			/* Diagonal hatch pattern for weekend cells (matching image 3) */
+			&.is-weekend {
+				background: repeating-linear-gradient(
+					45deg,
+					#f8fafc,
+					#f8fafc 4px,
+					#f1f5f9 4px,
+					#f1f5f9 8px
+				);
+				border-color: #e2e8f0;
+			}
+
+			/* Today vertical dashed guide */
+			&.is-today-col {
+				border-left: 2px dashed #93c5fd;
+				border-right: 2px dashed #93c5fd;
+			}
+		}
+
+		/* Status Pills (matching Image 3) */
+		.gz-pill-vacation {
+			background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+			color: #ffffff;
+			border-radius: 14px;
+			padding: 0.45rem 0.85rem;
+			font-size: 0.75rem;
+			font-weight: 700;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.45rem;
+			box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28);
+			white-space: nowrap;
+			z-index: 2;
+		}
+
+		.gz-pill-paid-leave {
+			background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+			color: #ffffff;
+			border-radius: 14px;
+			padding: 0.45rem 0.85rem;
+			font-size: 0.75rem;
+			font-weight: 700;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.45rem;
+			box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
+			white-space: nowrap;
+			z-index: 2;
+		}
+
+		.gz-pill-sick-leave {
+			background: rgba(186, 230, 253, 0.78);
+			backdrop-filter: blur(8px);
+			border: 1px solid rgba(56, 189, 248, 0.55);
+			color: #0369a1;
+			border-radius: 14px;
+			padding: 0.45rem 0.85rem;
+			font-size: 0.75rem;
+			font-weight: 700;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.45rem;
+			white-space: nowrap;
+			z-index: 2;
+		}
+
+		.gz-pill-daily-report {
+			background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+			color: #ffffff;
+			border-radius: 14px;
+			padding: 0.45rem 0.85rem;
+			font-size: 0.75rem;
+			font-weight: 700;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.45rem;
+			box-shadow: 0 4px 14px rgba(14, 165, 233, 0.25);
+			white-space: nowrap;
+			z-index: 2;
+		}
+
+		.gz-pill-tag {
+			background: rgba(255, 255, 255, 0.3);
+			border-radius: 20px;
+			padding: 2px 7px;
+			font-size: 0.65rem;
+			font-weight: 800;
+			letter-spacing: 0.02em;
+		}
+	}
+}
+
+/* =========================================================================
+   BOTTOM 3 CARDS: Future Events, Onboarding 2x2, and Welcome Assistant
+   ========================================================================= */
+
+/* Card 1: Future Events Card */
+.gz-future-card {
+	background: #ffffff;
+	border: 1px solid rgba(226, 232, 240, 0.8);
+	border-radius: 26px;
+	padding: 1.75rem;
+	box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
+	.gz-card-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1.25rem;
+
+		.gz-card-title {
+			font-size: 1.25rem;
+			font-weight: 800;
+			color: #0f172a;
+			margin-bottom: 0;
+			letter-spacing: -0.02em;
+		}
+
+		.gz-card-viewall {
+			font-size: 0.8125rem;
+			font-weight: 700;
+			color: #0f172a;
+			text-decoration: none;
+
+			&:hover {
+				color: #2563eb;
+			}
+		}
+	}
+
+	/* Top Highlight Card (Warm gold/yellow matching Image 3) */
+	.gz-event-highlight-card {
+		background: #fde047; /* Yellow matching Image 3 */
+		border-radius: 20px;
+		padding: 1.25rem;
+		color: #0f172a;
+		margin-bottom: 1rem;
+		transition: transform 0.2s ease;
+
+		&:hover {
+			transform: translateY(-2px);
+		}
+
+		.gz-event-top {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 0.5rem;
+			margin-bottom: 0.35rem;
+
+			.gz-event-name {
+				font-size: 0.95rem;
+				font-weight: 800;
+				color: #0f172a;
+				line-height: 1.25;
+			}
+
+			.gz-event-badge {
+				background: rgba(0, 0, 0, 0.12);
+				color: #0f172a;
+				border-radius: 20px;
+				padding: 3px 8px;
+				font-size: 0.68rem;
+				font-weight: 700;
+				white-space: nowrap;
+			}
+		}
+
+		.gz-event-sub {
+			font-size: 0.78rem;
+			color: #334155;
+			margin-bottom: 1rem;
+		}
+
+		.gz-event-chips {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+
+			.gz-chip-item {
+				background: rgba(255, 255, 255, 0.65);
+				border-radius: 12px;
+				padding: 4px 10px;
+				font-size: 0.72rem;
+				font-weight: 700;
+				color: #0f172a;
+				display: inline-flex;
+				align-items: center;
+				gap: 4px;
+			}
+
+			.gz-avatar-stack {
+				display: flex;
+				align-items: center;
+
+				.gz-stack-img {
+					width: 24px;
+					height: 24px;
+					border-radius: 50%;
+					border: 2px solid #fde047;
+					margin-left: -6px;
+
+					&:first-child {
+						margin-left: 0;
+					}
+				}
+
+				.gz-stack-count {
+					width: 24px;
+					height: 24px;
+					border-radius: 50%;
+					background: rgba(0, 0, 0, 0.15);
+					font-size: 0.65rem;
+					font-weight: 700;
+					color: #0f172a;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					margin-left: -6px;
+				}
+			}
+		}
+	}
+
+	/* Clean event list item below */
+	.gz-event-item {
+		padding: 0.85rem 0.25rem;
+		border-top: 1px solid #f1f5f9;
+
+		&:first-of-type {
+			border-top: none;
+		}
+
+		.gz-item-name {
+			font-size: 0.875rem;
+			font-weight: 700;
+			color: #0f172a;
+			margin-bottom: 0.2rem;
+		}
+
+		.gz-item-sub {
+			font-size: 0.75rem;
+			color: #64748b;
+			margin-bottom: 0.65rem;
+		}
+
+		.gz-item-chips {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+
+			.gz-chip-light {
+				background: #f1f5f9;
+				border-radius: 10px;
+				padding: 3px 8px;
+				font-size: 0.7rem;
+				font-weight: 600;
+				color: #475569;
+				display: inline-flex;
+				align-items: center;
+				gap: 4px;
+			}
+		}
+	}
+}
+
+/* Card 2: Onboarding & Focus Deliverables (2x2 Grid) */
+.gz-onboarding-card {
+	background: #ffffff;
+	border: 1px solid rgba(226, 232, 240, 0.8);
+	border-radius: 26px;
+	padding: 1.75rem;
+	box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
+	.gz-card-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1.25rem;
+
+		.gz-card-title {
+			font-size: 1.25rem;
+			font-weight: 800;
+			color: #0f172a;
+			margin-bottom: 0;
+			letter-spacing: -0.02em;
+		}
+
+		.gz-card-viewall {
+			font-size: 0.8125rem;
+			font-weight: 700;
+			color: #0f172a;
+			text-decoration: none;
+
+			&:hover {
+				color: #2563eb;
+			}
+		}
+	}
+
+	.gz-onboard-2x2-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.85rem;
+		flex: 1;
+
+		.gz-grid-member-card {
+			background: #f8fafc;
+			border: 1px solid #e2e8f0;
+			border-radius: 20px;
+			padding: 1.25rem 0.85rem;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+			justify-content: space-between;
+			transition: all 0.2s ease;
+			cursor: pointer;
+
+			&:hover {
+				background: #ffffff;
+				border-color: #cbd5e1;
+				transform: translateY(-2px);
+				box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
+			}
+
+			.gz-member-avatar {
+				width: 52px;
+				height: 52px;
+				border-radius: 50%;
+				background: #e2e8f0;
+				object-fit: cover;
+				margin-bottom: 0.65rem;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 1.25rem;
+				color: #2563eb;
+			}
+
+			.gz-member-name {
+				font-size: 0.875rem;
+				font-weight: 700;
+				color: #0f172a;
+				margin-bottom: 0.15rem;
+				line-height: 1.2;
+			}
+
+			.gz-member-role {
+				font-size: 0.72rem;
+				color: #64748b;
+				margin-bottom: 0.85rem;
+				line-height: 1.2;
+			}
+
+			.gz-member-progress-pill {
+				background: #e2e8f0;
+				border-radius: 12px;
+				padding: 0.35rem 0.75rem;
+				font-size: 0.7rem;
+				font-weight: 700;
+				color: #334155;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.4rem;
+				width: 100%;
+				justify-content: center;
+
+				&.is-complete {
+					background: #ecfdf5;
+					color: #059669;
+				}
+			}
+		}
+	}
+}
+
+/* Card 3: Welcome Assistant Card */
+.gz-assistant-card {
+	background: #ffffff;
+	border: 1px solid rgba(226, 232, 240, 0.8);
+	border-radius: 26px;
+	padding: 1.75rem 1.5rem;
+	box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	justify-content: space-between;
+
+	/* 3D Glass Sphere Graphic (Matching Image 3) */
+	.gz-sphere-container {
+		width: 84px;
+		height: 84px;
+		margin: 0.25rem auto 1rem;
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		.gz-3d-sphere {
+			width: 76px;
+			height: 76px;
+			border-radius: 50%;
+			background: radial-gradient(circle at 35% 30%, #ffffff 0%, #93c5fd 40%, #3b82f6 75%, #1d4ed8 100%);
+			box-shadow: inset -4px -6px 14px rgba(29, 78, 216, 0.6),
+						inset 4px 6px 14px rgba(255, 255, 255, 0.8),
+						0 12px 24px -4px rgba(37, 99, 235, 0.3);
+			position: relative;
+
+			&::after {
+				content: '';
+				position: absolute;
+				top: 10px;
+				left: 14px;
+				width: 20px;
+				height: 12px;
+				border-radius: 50%;
+				background: rgba(255, 255, 255, 0.7);
+				transform: rotate(-30deg);
+				filter: blur(1px);
+			}
+		}
+	}
+
+	.gz-assist-title {
+		font-size: 1.25rem;
+		font-weight: 800;
+		color: #0f172a;
+		margin-bottom: 0.25rem;
+		letter-spacing: -0.02em;
+	}
+
+	.gz-assist-sub {
+		font-size: 0.875rem;
+		color: #475569;
+		margin-bottom: 1.25rem;
+		font-weight: 500;
+	}
+
+	/* Quick Action Pills Row */
+	.gz-assist-pills {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: 0.45rem;
+		margin-bottom: 1.25rem;
+
+		.gz-pill-action {
+			background: #f8fafc;
+			border: 1px solid #e2e8f0;
+			border-radius: 20px;
+			padding: 0.4rem 0.85rem;
+			font-size: 0.75rem;
+			font-weight: 700;
+			color: #1e293b;
+			text-decoration: none;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.4rem;
+			transition: all 0.2s ease;
+
+			&:hover {
+				background: #ffffff;
+				border-color: #cbd5e1;
+				color: #2563eb;
+				transform: translateY(-1px);
+			}
+		}
+	}
+
+	/* Input Bar at bottom */
+	.gz-assist-box {
+		width: 100%;
+		background: #f8fafc;
+		border: 1px solid #e2e8f0;
+		border-radius: 18px;
+		padding: 0.75rem 0.95rem;
+		text-align: left;
+
+		.gz-assist-input {
+			border: none;
+			background: transparent;
+			width: 100%;
+			font-size: 0.8125rem;
+			color: #0f172a;
+			outline: none;
+			margin-bottom: 0.5rem;
+
+			&::placeholder {
+				color: #94a3b8;
+			}
+		}
+
+		.gz-assist-footer {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+
+			.gz-assist-tools {
+				display: flex;
+				align-items: center;
+				gap: 0.4rem;
+
+				.gz-tool-btn {
+					background: transparent;
+					border: 1px solid #e2e8f0;
+					border-radius: 10px;
+					padding: 2px 7px;
+					font-size: 0.7rem;
+					font-weight: 600;
+					color: #475569;
+					display: inline-flex;
+					align-items: center;
+					gap: 4px;
+					cursor: pointer;
+
+					&:hover {
+						background: #ffffff;
+						color: #0f172a;
+					}
+				}
+			}
+
+			.gz-char-count {
+				font-size: 0.68rem;
+				color: #94a3b8;
+				font-weight: 600;
+			}
+		}
+	}
+}
+
+/* =========================================================================
+   GOMZI EMPLOYEE DASHBOARD — MASTER BENTO REDESIGN (Screen-accurate)
+   Design System:
+   - Palette: Lime (#E5FF79), Lavender (#B9A7F0), Charcoal (#18191F), Neutral (#FFFFFF, #F5F6F8)
+   - Corner Cut-outs: Organic concave masks
+   - Editorial Typography & Micro-interactions
+   ========================================================================= */
+
+.gz-bento-workspace {
+	font-family: inherit;
+	color: #17181D;
+
+	/* Bento Grid Layouts */
+	.gz-bento-row {
+		display: grid;
+		gap: 1.25rem;
+		margin-bottom: 1.25rem;
+
+		@media (max-width: 1199px) {
+			grid-template-columns: 1fr !important;
+		}
+	}
+
+	.gz-row-1 {
+		grid-template-columns: 1.35fr 1.05fr 1fr;
+	}
+
+	.gz-row-2 {
+		grid-template-columns: 1.35fr 1.15fr 0.9fr;
+	}
+
+	.gz-row-3 {
+		grid-template-columns: 1.35fr 1.15fr 0.9fr;
+	}
+
+	/* Card Base Standards with Sculpted SVG Backgrounds */
+	.gz-bento-card {
+		position: relative;
+		background: transparent;
+		overflow: visible;
+		transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+
+		.gz-sculpted-content-layer {
+			padding: 1.5rem;
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			position: relative;
+			z-index: 2;
+		}
+
+		&.gz-white-surface {
+			background: #FFFFFF;
+			border: 1px solid #E8E9ED;
+			border-radius: 28px;
+			box-shadow: 0 4px 20px -2px rgba(24, 25, 31, 0.04);
+			padding: 1.5rem;
+			color: #17181D;
+		}
+
+		&.gz-dark-surface {
+			color: #FFFFFF;
+		}
+
+		&:hover {
+			transform: translateY(-2px);
+		}
+	}
+
+	.gz-sculpted-card-container {
+		position: relative;
+		overflow: visible;
+		transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+
+		&:hover {
+			transform: translateY(-2px);
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   1. GREETING PANEL (LIME #E5FF79)
+	   ------------------------------------------------------------------------- */
+	.gz-bento-lime {
+		color: #18191F;
+		min-height: 250px;
+		position: relative;
+
+		.gz-sculpted-content-layer {
+			padding: 1.75rem;
+		}
+
+		.gz-lime-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.25rem;
+
+			.gz-workspace-tag {
+				font-size: 0.72rem;
+				font-weight: 800;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: rgba(24, 25, 31, 0.75);
+			}
+
+			.gz-lime-controls {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+
+				.gz-circle-ctrl-btn {
+					width: 38px;
+					height: 38px;
+					border-radius: 50%;
+					background: #FFFFFF;
+					border: none;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					color: #18191F;
+					font-size: 0.9rem;
+					cursor: pointer;
+					transition: all 0.18s ease;
+
+					&:hover {
+						background: #F1F3F5;
+						transform: scale(1.05);
+					}
+				}
+			}
+		}
+
+		.gz-greeting-body {
+			.gz-greeting-headline {
+				font-size: 2.15rem;
+				font-weight: 800;
+				color: #18191F;
+				line-height: 1.15;
+				margin-bottom: 0.5rem;
+				letter-spacing: -0.03em;
+			}
+
+			.gz-greeting-sub {
+				font-size: 0.875rem;
+				font-weight: 500;
+				color: rgba(24, 25, 31, 0.75);
+				margin-bottom: 0;
+			}
+		}
+
+		/* Dark Circular Floating Arrow in Cutout */
+		.gz-greeting-arrow-btn {
+			position: absolute;
+			bottom: 1rem;
+			right: 1rem;
+			width: 44px;
+			height: 44px;
+			border-radius: 50%;
+			background: #18191F;
+			color: #FFFFFF;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			text-decoration: none;
+			font-size: 1rem;
+			box-shadow: 0 4px 12px rgba(24, 25, 31, 0.25);
+			transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+			z-index: 5;
+
+			&:hover {
+				background: #000000;
+				color: #FFFFFF;
+				transform: translate(2px, -2px);
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   2. UPCOMING SCHEDULE MODULE
+	   ------------------------------------------------------------------------- */
+	.gz-bento-schedule {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		.gz-schedule-top {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			margin-bottom: 0.75rem;
+
+			.gz-schedule-title {
+				font-size: 1.35rem;
+				font-weight: 800;
+				color: #18191F;
+				line-height: 1.15;
+				letter-spacing: -0.02em;
+				margin-bottom: 0;
+			}
+
+			.gz-schedule-month-btn {
+				background: #F8F9FA;
+				border: 1px solid #E8E9ED;
+				border-radius: 20px;
+				padding: 0.4rem 0.85rem;
+				font-size: 0.78rem;
+				font-weight: 700;
+				color: #18191F;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.35rem;
+				cursor: pointer;
+				transition: background 0.18s ease;
+				position: relative;
+
+				&:hover {
+					background: #EEF0F2;
+				}
+
+				.gz-month-menu-dropdown {
+					position: absolute;
+					top: calc(100% + 6px);
+					right: 0;
+					background: #FFFFFF;
+					border: 1px solid #E8E9ED;
+					border-radius: 14px;
+					box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+					padding: 0.35rem;
+					min-width: 155px;
+					z-index: 100;
+
+					.gz-month-option {
+						padding: 0.45rem 0.75rem;
+						border-radius: 8px;
+						font-size: 0.78rem;
+						font-weight: 600;
+						color: #18191F;
+						cursor: pointer;
+						transition: all 0.15s ease;
+
+						&:hover {
+							background: #F1F5F9;
+						}
+
+						&.is-selected {
+							background: #E5FF79;
+							font-weight: 800;
+						}
+					}
+				}
+			}
+		}
+
+		.gz-schedule-meta {
+			font-size: 0.8125rem;
+			font-weight: 600;
+			color: #737987;
+			margin-bottom: 1.15rem;
+			display: flex;
+			align-items: center;
+			gap: 0.35rem;
+		}
+
+		/* Horizontal Date Pills */
+		.gz-schedule-pills {
+			display: grid;
+			grid-template-columns: repeat(7, 1fr);
+			gap: 0.4rem;
+			margin-bottom: 1rem;
+
+			.gz-date-pill {
+				background: #F8F9FA;
+				border: 1px solid #E8E9ED;
+				border-radius: 18px;
+				padding: 0.65rem 0.2rem;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+				transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+
+				.gz-pill-datenum {
+					font-size: 0.95rem;
+					font-weight: 800;
+					color: #18191F;
+					line-height: 1.1;
+				}
+
+				.gz-pill-dayname {
+					font-size: 0.68rem;
+					font-weight: 600;
+					color: #737987;
+					text-transform: capitalize;
+					margin-top: 0.2rem;
+				}
+
+				&:hover {
+					background: #EEF0F2;
+					border-color: #D2D5DC;
+				}
+
+				&.is-selected {
+					background: #E5FF79;
+					border-color: #D4F250;
+					box-shadow: 0 4px 12px rgba(229, 255, 121, 0.35);
+
+					.gz-pill-datenum,
+					.gz-pill-dayname {
+						color: #18191F;
+					}
+				}
+			}
+		}
+
+		/* Dotted Timeline Indicator */
+		.gz-timeline-dots {
+			display: flex;
+			align-items: center;
+			justify-content: space-around;
+			position: relative;
+			padding: 0.25rem 0.5rem;
+
+			&::before {
+				content: '';
+				position: absolute;
+				top: 50%;
+				left: 1rem;
+				right: 1rem;
+				height: 1px;
+				background: #E8E9ED;
+				z-index: 1;
+			}
+
+			.gz-dot {
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: #D2D5DC;
+				position: relative;
+				z-index: 2;
+				transition: all 0.2s ease;
+
+				&.is-active {
+					width: 9px;
+					height: 9px;
+					background: #18191F;
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   3. MONTHLY SALARY PANEL (DARK #18191F)
+	   ------------------------------------------------------------------------- */
+	.gz-bento-salary {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		.gz-salary-top {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 0.85rem;
+
+			.gz-salary-label {
+				font-size: 0.8125rem;
+				font-weight: 600;
+				color: #A0A5B5;
+			}
+
+			.gz-view-payslip-link {
+				font-size: 0.8125rem;
+				font-weight: 700;
+				color: #FFFFFF;
+				text-decoration: none;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.35rem;
+				transition: gap 0.2s ease;
+
+				&:hover {
+					color: #B9A7F0;
+					gap: 0.55rem;
+				}
+			}
+		}
+
+		.gz-salary-main {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.15rem;
+
+			.gz-salary-left-col {
+				display: flex;
+				flex-direction: column;
+
+				.gz-salary-val {
+					font-size: 2.25rem;
+					font-weight: 800;
+					color: #FFFFFF;
+					letter-spacing: -0.03em;
+					line-height: 1.1;
+				}
+
+				.gz-net-tag {
+					font-size: 0.8125rem;
+					font-weight: 600;
+					color: #A0A5B5;
+					margin-top: 0.25rem;
+				}
+			}
+
+			.gz-growth-card {
+				background: rgba(255, 255, 255, 0.07);
+				border-radius: 16px;
+				padding: 0.55rem 0.95rem;
+				text-align: center;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				min-width: 96px;
+
+				.gz-growth-pct {
+					color: #4ade80;
+					font-size: 0.85rem;
+					font-weight: 700;
+					display: inline-flex;
+					align-items: center;
+					gap: 2px;
+				}
+
+				.gz-growth-lbl {
+					color: #A0A5B5;
+					font-size: 0.68rem;
+					font-weight: 500;
+					margin-top: 2px;
+				}
+			}
+		}
+
+		/* Historical Monthly Bars matching Image 1 */
+		.gz-salary-bars {
+			display: grid;
+			grid-template-columns: repeat(6, 1fr);
+			gap: 0.55rem;
+			align-items: flex-end;
+			height: 68px;
+			padding-top: 0.25rem;
+
+			.gz-bar-col {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.35rem;
+				height: 100%;
+				justify-content: flex-end;
+				cursor: pointer;
+
+				.gz-bar-fill {
+					width: 100%;
+					border-radius: 8px;
+					background: #252836;
+					transition: all 0.2s ease;
+				}
+
+				.gz-bar-month {
+					font-size: 0.68rem;
+					font-weight: 600;
+					color: #737987;
+				}
+
+				&:hover .gz-bar-fill {
+					background: #3E4050;
+				}
+
+				&.is-current {
+					.gz-bar-fill {
+						background: #B9A7F0; /* Soft lavender */
+						box-shadow: 0 0 12px rgba(185, 167, 240, 0.35);
+					}
+					.gz-bar-month {
+						color: #FFFFFF;
+						font-weight: 700;
+					}
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   4. ATTENDANCE OVERVIEW (WHITE CARD)
+	   ------------------------------------------------------------------------- */
+	.gz-bento-attendance {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		.gz-card-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.25rem;
+
+			.gz-head-title {
+				font-size: 1.25rem;
+				font-weight: 800;
+				color: #18191F;
+				letter-spacing: -0.02em;
+			}
+
+			.gz-head-actions {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+
+				.gz-period-pill {
+					background: #F8F9FA;
+					border: 1px solid #E8E9ED;
+					border-radius: 20px;
+					padding: 0.35rem 0.75rem;
+					font-size: 0.78rem;
+					font-weight: 600;
+					color: #18191F;
+					display: inline-flex;
+					align-items: center;
+					gap: 0.35rem;
+					cursor: pointer;
+				}
+
+				.gz-circle-arrow-link {
+					width: 32px;
+					height: 32px;
+					border-radius: 50%;
+					background: #F8F9FA;
+					border: 1px solid #E8E9ED;
+					color: #18191F;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					text-decoration: none;
+					font-size: 0.85rem;
+					transition: all 0.18s ease;
+
+					&:hover {
+						background: #EEF0F2;
+						transform: translate(1px, -1px);
+					}
+				}
+			}
+		}
+
+		.gz-attendance-body {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 1.25rem;
+			flex-wrap: wrap;
+
+			.gz-donut-wrapper {
+				position: relative;
+				width: 130px;
+				height: 130px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+
+				svg {
+					transform: rotate(-90deg);
+				}
+
+				.gz-donut-center {
+					position: absolute;
+					text-align: center;
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					justify-content: center;
+
+					.gz-donut-val {
+						font-size: 1.5rem;
+						font-weight: 800;
+						color: #18191F;
+						line-height: 1;
+					}
+
+					.gz-donut-lbl {
+						font-size: 0.72rem;
+						font-weight: 700;
+						color: #18191F;
+						margin-top: 2px;
+					}
+
+					.gz-donut-pct {
+						font-size: 0.7rem;
+						color: #737987;
+						font-weight: 600;
+					}
+				}
+			}
+
+			.gz-attendance-legend {
+				display: flex;
+				flex-direction: column;
+				gap: 0.65rem;
+				flex: 1;
+				min-width: 140px;
+
+				.gz-legend-item {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					font-size: 0.8125rem;
+
+					.gz-legend-left {
+						display: flex;
+						align-items: center;
+						gap: 0.5rem;
+
+						.gz-dot-indicator {
+							width: 8px;
+							height: 8px;
+							border-radius: 50%;
+						}
+
+						.gz-legend-name {
+							font-weight: 600;
+							color: #475569;
+						}
+					}
+
+					.gz-legend-count {
+						font-weight: 800;
+						color: #18191F;
+					}
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   5. LEAVE BALANCE MODULE (LAVENDER #B9A7F0)
+	   ------------------------------------------------------------------------- */
+	.gz-bento-leave {
+		color: #18191F;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		.gz-leave-top {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.25rem;
+
+			.gz-leave-title {
+				font-size: 1.35rem;
+				font-weight: 800;
+				color: #18191F;
+				letter-spacing: -0.02em;
+			}
+
+			.gz-circle-arrow-link {
+				width: 42px;
+				height: 42px;
+				border-radius: 50%;
+				background: #FFFFFF;
+				color: #18191F;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				text-decoration: none;
+				font-size: 0.95rem;
+				box-shadow: 0 2px 8px rgba(24, 25, 31, 0.08);
+				transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+				cursor: pointer;
+
+				i {
+					color: #18191F;
+					transition: transform 200ms ease, color 200ms ease;
+					display: inline-block;
+				}
+
+				&:hover {
+					background: #18191F;
+					color: #FFFFFF;
+					box-shadow: 0 6px 16px rgba(24, 25, 31, 0.22);
+
+					i {
+						color: #FFFFFF;
+						transform: translate(2px, -2px);
+					}
+				}
+
+				&:focus-visible {
+					outline: 2px solid #18191F;
+					outline-offset: 2px;
+				}
+			}
+		}
+
+		/* 3 White Balance Tiles */
+		.gz-leave-tiles {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 0.5rem;
+			margin-bottom: 1.25rem;
+
+			.gz-leave-tile {
+				background: #FFFFFF;
+				border-radius: 18px;
+				padding: 0.85rem 0.65rem;
+				text-align: left;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+				.gz-tile-val {
+					font-size: 1.35rem;
+					font-weight: 800;
+					color: #18191F;
+					line-height: 1.1;
+					margin-bottom: 0.25rem;
+				}
+
+				.gz-tile-lbl {
+					font-size: 0.68rem;
+					font-weight: 700;
+					color: #737987;
+					line-height: 1.2;
+				}
+			}
+		}
+
+		/* Apply for Leave Button */
+		.gz-apply-leave-btn {
+			background: #FFFFFF;
+			color: #18191F;
+			border-radius: 999px;
+			padding: 0.65rem 1.45rem;
+			font-weight: 700;
+			font-size: 0.875rem;
+			border: none;
+			cursor: pointer;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			width: fit-content;
+			text-decoration: none;
+			box-shadow: 0 4px 12px rgba(24, 25, 31, 0.08);
+			transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+
+			i {
+				color: #18191F;
+				display: inline-block;
+				transition: transform 200ms ease, color 200ms ease;
+			}
+
+			&:hover {
+				background: #18191F;
+				color: #FFFFFF;
+				box-shadow: 0 6px 18px rgba(24, 25, 31, 0.22);
+
+				i {
+					color: #FFFFFF;
+					transform: translateX(3px);
+				}
+			}
+
+			&:focus-visible {
+				outline: 2px solid #18191F;
+				outline-offset: 2px;
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   6. QUICK ACTIONS MODULE
+	   ------------------------------------------------------------------------- */
+	.gz-bento-actions {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		.gz-actions-title {
+			font-size: 1.25rem;
+			font-weight: 800;
+			color: #18191F;
+			letter-spacing: -0.02em;
+			margin-bottom: 1.25rem;
+		}
+
+		.gz-actions-2x2-grid {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 0.85rem;
+
+			.gz-action-tile {
+				background: #FFFFFF;
+				border-radius: 16px;
+				padding: 0.75rem 0.5rem;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				text-align: center;
+				text-decoration: none;
+				transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+				cursor: pointer;
+
+				.gz-action-icon-circle {
+					width: 44px;
+					height: 44px;
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 1.15rem;
+					margin-bottom: 0.45rem;
+					transition: transform 0.18s ease;
+				}
+
+				.gz-action-name {
+					font-size: 0.75rem;
+					font-weight: 700;
+					color: #18191F;
+					line-height: 1.2;
+				}
+
+				&:hover {
+					transform: translateY(-2px);
+					.gz-action-icon-circle {
+						transform: scale(1.08);
+					}
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   7. MY TASKS MODULE
+	   ------------------------------------------------------------------------- */
+	.gz-bento-tasks {
+		display: flex;
+		flex-direction: column;
+
+		.gz-tasks-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1rem;
+
+			.gz-tasks-title {
+				font-size: 1.25rem;
+				font-weight: 800;
+				color: #18191F;
+				letter-spacing: -0.02em;
+				margin-bottom: 0;
+			}
+
+			.gz-tasks-viewall {
+				font-size: 0.8125rem;
+				font-weight: 700;
+				color: #18191F;
+				text-decoration: none;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.35rem;
+
+				&:hover {
+					color: #2563EB;
+				}
+			}
+		}
+
+		/* Filter Pills */
+		.gz-task-filters {
+			display: flex;
+			align-items: center;
+			gap: 0.45rem;
+			margin-bottom: 1.15rem;
+
+			.gz-filter-pill {
+				border: none;
+				background: #F1F3F5;
+				color: #737987;
+				border-radius: 20px;
+				padding: 0.35rem 0.85rem;
+				font-size: 0.75rem;
+				font-weight: 700;
+				cursor: pointer;
+				transition: all 0.18s ease;
+
+				&.is-active {
+					background: #18191F;
+					color: #FFFFFF;
+				}
+			}
+		}
+
+		/* Task List Rows */
+		.gz-task-rows {
+			display: flex;
+			flex-direction: column;
+			gap: 0.65rem;
+
+			.gz-task-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 0.75rem;
+				padding: 0.5rem 0.35rem;
+				border-radius: 14px;
+				transition: background 0.18s ease;
+
+				&:hover {
+					background: #F8F9FA;
+				}
+
+				.gz-task-left {
+					display: flex;
+					align-items: center;
+					gap: 0.75rem;
+					min-width: 0;
+					flex: 1;
+
+					.gz-task-checkbox {
+						width: 18px;
+						height: 18px;
+						border-radius: 6px;
+						accent-color: #18191F;
+						cursor: pointer;
+					}
+
+					.gz-task-icon-box {
+						width: 32px;
+						height: 32px;
+						border-radius: 10px;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						font-size: 0.85rem;
+						flex-shrink: 0;
+					}
+
+					.gz-task-details {
+						min-width: 0;
+						display: flex;
+						flex-direction: column;
+
+						.gz-task-name {
+							font-size: 0.8125rem;
+							font-weight: 700;
+							color: #18191F;
+							white-space: nowrap;
+							overflow: hidden;
+							text-overflow: ellipsis;
+							text-decoration: none;
+
+							&:hover {
+								color: #2563EB;
+							}
+
+							&.is-completed {
+								text-decoration: line-through;
+								color: #A0A5B5;
+							}
+						}
+
+						.gz-task-due {
+							font-size: 0.7rem;
+							color: #737987;
+							margin-top: 1px;
+						}
+					}
+				}
+
+				.gz-task-right {
+					display: flex;
+					align-items: center;
+					gap: 0.65rem;
+					flex-shrink: 0;
+
+					.gz-task-status-pill {
+						border-radius: 12px;
+						padding: 3px 8px;
+						font-size: 0.68rem;
+						font-weight: 700;
+					}
+
+					.gz-task-arrow {
+						color: #A0A5B5;
+						font-size: 0.8rem;
+						text-decoration: none;
+						display: flex;
+						align-items: center;
+
+						&:hover {
+							color: #18191F;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   8. PROJECT / WORK PROGRESS (DARK #18191F)
+	   ------------------------------------------------------------------------- */
+	.gz-bento-progress {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		.gz-progress-top {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 0.5rem;
+
+			.gz-progress-title {
+				font-size: 1.25rem;
+				font-weight: 800;
+				color: #FFFFFF;
+				letter-spacing: -0.02em;
+			}
+
+			.gz-progress-period {
+				background: rgba(255, 255, 255, 0.08);
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 20px;
+				padding: 0.35rem 0.75rem;
+				font-size: 0.75rem;
+				font-weight: 600;
+				color: #FFFFFF;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.35rem;
+				cursor: pointer;
+			}
+		}
+
+		/* Chart area with Y-axis scale matching Image 2 */
+		.gz-chart-with-y-axis {
+			display: flex;
+			align-items: center;
+			gap: 0.65rem;
+			margin: 0.35rem 0 0.15rem 0;
+
+			.gz-chart-y-axis {
+				display: flex;
+				flex-direction: column;
+				justify-content: space-between;
+				height: 82px;
+				font-size: 0.65rem;
+				font-weight: 600;
+				color: #737987;
+				line-height: 1;
+				user-select: none;
+				padding-bottom: 2px;
+			}
+
+			.gz-chart-wrap {
+				flex: 1;
+				position: relative;
+				height: 90px;
+
+				svg {
+					width: 100%;
+					height: 100%;
+					overflow: visible;
+				}
+
+				.gz-point-tooltip {
+					position: absolute;
+					top: 0px;
+					background: #FFFFFF;
+					color: #18191F;
+					font-size: 0.72rem;
+					font-weight: 800;
+					border-radius: 12px;
+					padding: 2px 7px;
+					box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+					pointer-events: none;
+					transform: translateX(-50%);
+				}
+			}
+		}
+
+		/* Days Label Row */
+		.gz-progress-days {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			font-size: 0.68rem;
+			color: #737987;
+			font-weight: 600;
+			margin-bottom: 0.75rem;
+			padding-left: 28px;
+			padding-right: 0.5rem;
+
+			.is-active-day {
+				color: #FFFFFF;
+				font-weight: 700;
+			}
+		}
+
+		/* Current Focus Card matching Image 2 */
+		.gz-focus-card {
+			background: #23252E;
+			border-radius: 18px;
+			padding: 0.75rem 0.95rem;
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+
+			.gz-focus-icon-circle {
+				width: 38px;
+				height: 38px;
+				border-radius: 50%;
+				background: #EDE9FE;
+				color: #7C3AED;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 1.05rem;
+				flex-shrink: 0;
+			}
+
+			.gz-focus-body {
+				flex: 1;
+				min-width: 0;
+				display: flex;
+				flex-direction: column;
+				gap: 0.2rem;
+
+				.gz-focus-top-line {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+
+					.gz-focus-lbl {
+						font-size: 0.68rem;
+						color: #A0A5B5;
+						font-weight: 600;
+					}
+
+					.gz-focus-pct {
+						font-size: 0.75rem;
+						font-weight: 700;
+						color: #FFFFFF;
+					}
+				}
+
+				.gz-focus-task-title {
+					font-size: 0.8125rem;
+					font-weight: 700;
+					color: #FFFFFF;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
+
+				.gz-focus-progress-track {
+					width: 100%;
+					height: 5px;
+					background: #353745;
+					border-radius: 999px;
+					overflow: hidden;
+					margin-top: 3px;
+
+					.gz-focus-progress-bar {
+						height: 100%;
+						background: #B9A7F0;
+						border-radius: 999px;
+						transition: width 0.3s ease;
+					}
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   9. RECENT ANNOUNCEMENTS MODULE
+	   ------------------------------------------------------------------------- */
+	.gz-bento-announcements {
+		display: flex;
+		flex-direction: column;
+
+		.gz-ann-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1rem;
+
+			.gz-ann-title {
+				font-size: 1.25rem;
+				font-weight: 800;
+				color: #18191F;
+				letter-spacing: -0.02em;
+				margin-bottom: 0;
+			}
+
+			.gz-ann-viewall {
+				font-size: 0.8125rem;
+				font-weight: 700;
+				color: #18191F;
+				text-decoration: none;
+				display: inline-flex;
+				align-items: center;
+				gap: 0.35rem;
+
+				&:hover {
+					color: #2563EB;
+				}
+			}
+		}
+
+		.gz-ann-list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.65rem;
+
+			.gz-ann-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 0.75rem;
+				padding: 0.5rem 0.35rem;
+				border-radius: 14px;
+				text-decoration: none;
+				transition: background 0.18s ease;
+
+				&:hover {
+					background: #F8F9FA;
+					.gz-ann-arrow {
+						color: #18191F;
+						transform: translateX(2px);
+					}
+				}
+
+				.gz-ann-left {
+					display: flex;
+					align-items: center;
+					gap: 0.75rem;
+					min-width: 0;
+
+					.gz-ann-icon-box {
+						width: 36px;
+						height: 36px;
+						border-radius: 12px;
+						background: #EDE9FE;
+						color: #7C3AED;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						font-size: 0.95rem;
+						flex-shrink: 0;
+					}
+
+					.gz-ann-info {
+						min-width: 0;
+						display: flex;
+						flex-direction: column;
+
+						.gz-ann-name {
+							font-size: 0.8125rem;
+							font-weight: 700;
+							color: #18191F;
+							white-space: nowrap;
+							overflow: hidden;
+							text-overflow: ellipsis;
+						}
+
+						.gz-ann-sub {
+							font-size: 0.7rem;
+							color: #737987;
+							white-space: nowrap;
+							overflow: hidden;
+							text-overflow: ellipsis;
+							margin-top: 1px;
+						}
+					}
+				}
+
+				.gz-ann-arrow {
+					color: #A0A5B5;
+					font-size: 0.85rem;
+					transition: all 0.18s ease;
+				}
+			}
+		}
+	}
+
+	.gz-task-empty,
+	.gz-ann-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 1.5rem 0.5rem;
+		color: #737987;
+		text-align: center;
+	}
+}
+
+/* =============================================================================
+   GOMZI NUTRITION — RAG COMMERCE DASHBOARD STYLES (/rag/dashboard)
+   Spacious, uncompressed bento layout matching Employee Dashboard rhythm
+   ============================================================================= */
+.gz-rag-workspace {
+	width: 100%;
+	max-width: 1440px;
+	margin: 0 auto;
+	padding: 1.25rem 1.5rem 4rem 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	position: relative;
+
+	/* -------------------------------------------------------------------------
+	   GLOBAL TOP BAR
+	   ------------------------------------------------------------------------- */
+	.gz-rag-topbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 0.15rem;
+
+		.gz-topbar-brand {
+			font-size: 0.8125rem;
+			font-weight: 800;
+			letter-spacing: 0.08em;
+			color: #71809A;
+			text-transform: uppercase;
+		}
+
+		.gz-period-dropdown-wrap {
+			position: relative;
+			z-index: 60;
+
+			.gz-global-period-btn {
+				background: #FFFFFF;
+				border: 1px solid #E6EBF3;
+				border-radius: 999px;
+				padding: 0.5rem 1.15rem;
+				font-size: 0.8125rem;
+				font-weight: 700;
+				color: #142447;
+				display: inline-flex;
+				align-items: center;
+				box-shadow: 0 2px 8px rgba(16, 31, 56, 0.04);
+				cursor: pointer;
+				transition: all 0.2s ease;
+
+				.gz-arrow-icon {
+					transition: transform 0.2s ease;
+					&.is-open {
+						transform: rotate(180deg);
+					}
+				}
+
+				&:hover {
+					border-color: #2563EB;
+					box-shadow: 0 4px 14px rgba(37, 99, 235, 0.10);
+				}
+			}
+		}
+	}
+
+	/* Common Interactive Dropdown Menu */
+	.gz-period-menu {
+		position: absolute;
+		right: 0;
+		top: calc(100% + 8px);
+		background: #FFFFFF;
+		border: 1px solid #E6EBF3;
+		border-radius: 14px;
+		padding: 0.45rem;
+		min-width: 155px;
+		box-shadow: 0 10px 30px rgba(16, 31, 56, 0.12);
+		z-index: 100;
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+
+		.gz-period-opt {
+			display: block;
+			width: 100%;
+			text-align: left;
+			border: none;
+			background: transparent;
+			padding: 0.55rem 0.85rem;
+			font-size: 0.8125rem;
+			font-weight: 600;
+			color: #71809A;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: all 0.15s ease;
+
+			&:hover {
+				background: #F4F6FA;
+				color: #142447;
+			}
+
+			&.is-active {
+				background: #EAF1F8;
+				color: #2563EB;
+				font-weight: 800;
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   COMMON BENTO GRID ROWS
+	   ------------------------------------------------------------------------- */
+	.gz-rag-grid-row {
+		display: grid;
+		gap: 1.5rem;
+		align-items: stretch;
+	}
+
+	/* Row 1: Hero (55%) + Revenue (45%) */
+	.gz-rag-row-1 {
+		grid-template-columns: 1.25fr 1fr;
+		min-height: 270px;
+
+		@media (max-width: 992px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	/* Row 2: Invoices (50%) + Expenses (50%) */
+	.gz-rag-row-2 {
+		grid-template-columns: 1fr 1fr;
+		min-height: 210px;
+
+		@media (max-width: 992px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	/* Full Width Rows (Trend Chart, Catalog Overview) */
+	.gz-rag-row-full {
+		grid-template-columns: 1fr;
+	}
+
+	/* Split 50/50 Rows (Top Products + Orders, Actions + Alerts) */
+	.gz-rag-row-split {
+		grid-template-columns: 1fr 1fr;
+
+		@media (max-width: 992px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	/* Common Bento Card Base */
+	.gz-rag-card {
+		background: #FFFFFF;
+		border-radius: 26px;
+		padding: 1.75rem 1.85rem;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		position: relative;
+		box-shadow: 0 4px 20px rgba(16, 31, 56, 0.04);
+		transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease;
+
+		&:hover {
+			box-shadow: 0 8px 28px rgba(16, 31, 56, 0.06);
+		}
+	}
+
+	.gz-card-title-wrap {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+
+		.gz-card-head-title {
+			font-size: 1.25rem;
+			font-weight: 800;
+			color: #142447;
+			letter-spacing: -0.02em;
+			margin: 0;
+			line-height: 1.2;
+		}
+
+		.gz-card-sub-title {
+			font-size: 0.78rem;
+			font-weight: 500;
+			color: #71809A;
+			margin-top: 2px;
+		}
+	}
+
+	.gz-icon-badge {
+		width: 38px;
+		height: 38px;
+		border-radius: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.05rem;
+		flex-shrink: 0;
+
+		&.gz-badge-blue {
+			background: #EAF1F8;
+			color: #2563EB;
+		}
+		&.gz-badge-purple {
+			background: #F0EDFA;
+			color: #7C3AED;
+		}
+		&.gz-badge-pink {
+			background: #FCE8EC;
+			color: #E11D48;
+		}
+		&.gz-badge-amber {
+			background: #FEF3C7;
+			color: #D97706;
+		}
+		&.gz-badge-red {
+			background: #FEE2E2;
+			color: #DC2626;
+		}
+	}
+
+	/* Circular Feature Arrow Buttons */
+	.gz-circle-arrow-link {
+		width: 38px;
+		height: 38px;
+		border-radius: 50%;
+		background: #FFFFFF;
+		color: #142447;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-decoration: none;
+		font-size: 0.95rem;
+		box-shadow: 0 2px 8px rgba(16, 31, 56, 0.06);
+		transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+		cursor: pointer;
+
+		i {
+			transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+		}
+
+		&:hover {
+			background: #142447;
+			color: #FFFFFF;
+			transform: translate(2px, -2px);
+
+			i {
+				transform: translate(1px, -1px);
+			}
+		}
+	}
+
+	/* Action Text Links ("View All") with Smooth Arrow Translation */
+	.gz-view-all-link {
+		font-size: 0.8125rem;
+		font-weight: 700;
+		color: #2563EB;
+		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		cursor: pointer;
+		transition: color 0.2s ease;
+
+		i {
+			transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+		}
+
+		&:hover {
+			color: #1D4ED8;
+
+			i {
+				transform: translateX(3px);
+			}
+		}
+	}
+
+	.gz-period-pill-select {
+		background: #F4F6FA;
+		border: 1px solid #E6EBF3;
+		border-radius: 999px;
+		padding: 0.4rem 0.9rem;
+		font-size: 0.78rem;
+		font-weight: 700;
+		color: #142447;
+		display: inline-flex;
+		align-items: center;
+		cursor: pointer;
+		transition: all 0.18s ease;
+
+		.gz-arrow-icon {
+			transition: transform 0.2s ease;
+			&.is-open {
+				transform: rotate(180deg);
+			}
+		}
+
+		&:hover {
+			background: #EAF1F8;
+			border-color: #2563EB;
+			color: #2563EB;
+		}
+	}
+
+	/* Growth Indicators */
+	.gz-growth-pill-green {
+		background: rgba(34, 197, 94, 0.15);
+		color: #16A34A;
+		border-radius: 999px;
+		padding: 3px 10px;
+		font-size: 0.75rem;
+		font-weight: 700;
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+	}
+
+	.gz-growth-pill-red {
+		background: rgba(239, 68, 68, 0.15);
+		color: #DC2626;
+		border-radius: 999px;
+		padding: 3px 10px;
+		font-size: 0.75rem;
+		font-weight: 700;
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+	}
+
+	/* -------------------------------------------------------------------------
+	   1. BUSINESS HERO (POWDER BLUE #DCE8F8)
+	   ------------------------------------------------------------------------- */
+	.gz-card-hero {
+		min-height: 270px;
+
+		.gz-hero-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.5rem;
+
+			.gz-hero-tag {
+				font-size: 0.78rem;
+				font-weight: 800;
+				letter-spacing: 0.08em;
+				color: #24446B;
+				text-transform: uppercase;
+			}
+
+			.gz-hero-controls {
+				display: flex;
+				align-items: center;
+				gap: 0.65rem;
+
+				.gz-hero-ctrl-btn {
+					width: 36px;
+					height: 36px;
+					border-radius: 50%;
+					background: #FFFFFF;
+					border: none;
+					color: #142447;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 0.95rem;
+					cursor: pointer;
+					box-shadow: 0 2px 8px rgba(16, 31, 56, 0.06);
+					transition: all 0.2s ease;
+
+					&:hover {
+						background: #F4F6FA;
+						transform: scale(1.08);
+					}
+				}
+			}
+		}
+
+		.gz-hero-body {
+			.gz-hero-heading-row {
+				display: flex;
+				align-items: flex-start;
+				gap: 1rem;
+
+				.gz-hero-headline {
+					font-size: 2.75rem;
+					font-weight: 900;
+					color: #142447;
+					line-height: 1.05;
+					letter-spacing: -0.04em;
+					margin-bottom: 0.85rem;
+				}
+
+				.gz-hero-trend-badge {
+					margin-top: 6px;
+				}
+			}
+
+			.gz-hero-sub {
+				font-size: 0.925rem;
+				font-weight: 500;
+				color: #4A5B78;
+				line-height: 1.45;
+				max-width: 440px;
+				margin: 0;
+			}
+		}
+
+		.gz-hero-floating-arrow {
+			position: absolute;
+			bottom: 18px;
+			right: 18px;
+			width: 54px;
+			height: 54px;
+			border-radius: 50%;
+			background: #172B4D;
+			color: #FFFFFF;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.25rem;
+			text-decoration: none;
+			box-shadow: 0 8px 24px rgba(23, 43, 77, 0.32);
+			transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+
+			&:hover {
+				background: #24446B;
+				transform: translate(3px, -3px) scale(1.05);
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   2. TOTAL SALES & REVENUE (DEEP NAVY #101F38)
+	   ------------------------------------------------------------------------- */
+	.gz-card-revenue {
+		color: #FFFFFF;
+		min-height: 270px;
+
+		.gz-revenue-content-wrap {
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			height: 100%;
+			gap: 1.15rem;
+		}
+
+		.gz-revenue-top {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+
+			.gz-revenue-title-wrap {
+				display: flex;
+				align-items: center;
+				gap: 0.75rem;
+
+				.gz-revenue-icon {
+					width: 36px;
+					height: 36px;
+					border-radius: 10px;
+					background: rgba(37, 99, 235, 0.25);
+					color: #60A5FA;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 1.05rem;
+				}
+
+				.gz-revenue-label {
+					font-size: 0.875rem;
+					font-weight: 700;
+					color: #A0A5B5;
+				}
+
+				.gz-order-count-badge {
+					font-size: 0.75rem;
+					font-weight: 600;
+					color: #60A5FA;
+					margin-top: 1px;
+				}
+			}
+
+			.gz-circle-arrow-link {
+				background: rgba(255, 255, 255, 0.12);
+				color: #FFFFFF;
+				box-shadow: none;
+
+				&:hover {
+					background: #FFFFFF;
+					color: #101F38;
+				}
+			}
+		}
+
+		.gz-revenue-main {
+			.gz-revenue-val {
+				font-size: 2.65rem;
+				font-weight: 800;
+				color: #FFFFFF;
+				letter-spacing: -0.035em;
+				line-height: 1.1;
+				font-variant-numeric: tabular-nums;
+			}
+
+			.gz-revenue-growth-row {
+				display: flex;
+				align-items: center;
+				gap: 0.55rem;
+				margin-top: 0.45rem;
+
+				.gz-growth-sub {
+					font-size: 0.78rem;
+					font-weight: 600;
+					color: #A0A5B5;
+				}
+			}
+		}
+
+		.gz-revenue-apex-bars {
+			width: 100%;
+			height: 145px;
+			margin-top: 0.5rem;
+
+			.apexcharts-canvas {
+				margin: 0 auto;
+			}
+			.apexcharts-xcrosshairs,
+			.apexcharts-ycrosshairs {
+				display: none !important;
+				opacity: 0 !important;
+				visibility: hidden !important;
+				pointer-events: none !important;
+			}
+			.apexcharts-tooltip.apexcharts-theme-dark {
+				background: #142447 !important;
+				border: none !important;
+				border-radius: 10px !important;
+				box-shadow: 0 6px 18px rgba(20, 36, 71, 0.32) !important;
+				padding: 4px 8px !important;
+
+				.apexcharts-tooltip-title {
+					display: none !important;
+				}
+				.apexcharts-tooltip-series-group {
+					padding: 0 !important;
+					.apexcharts-tooltip-text {
+						font-size: 11px !important;
+						font-weight: 700 !important;
+						color: #FFFFFF !important;
+					}
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   3. INVOICE COLLECTIONS (SOFT LAVENDER #E8E6F8)
+	   ------------------------------------------------------------------------- */
+	.gz-card-invoice {
+		background: #E8E6F8;
+		border-radius: 26px;
+		padding: 1.75rem 1.85rem;
+		min-height: 220px;
+
+		.gz-invoice-top {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.25rem;
+		}
+
+		.gz-invoice-amounts-block {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 1.5rem;
+			margin-bottom: 1.25rem;
+
+			.gz-inv-metric-box {
+				.gz-inv-val {
+					font-size: 1.85rem;
+					font-weight: 800;
+					color: #142447;
+					line-height: 1.1;
+					font-variant-numeric: tabular-nums;
+				}
+
+				.gz-inv-metric-footer {
+					display: flex;
+					align-items: center;
+					gap: 0.65rem;
+					margin-top: 0.35rem;
+
+					.gz-inv-lbl {
+						font-size: 0.8125rem;
+						font-weight: 700;
+						color: #71809A;
+					}
+				}
+			}
+		}
+
+		.gz-inv-progress-wrap {
+			.gz-inv-track {
+				width: 100%;
+				height: 10px;
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.7);
+				display: flex;
+				overflow: hidden;
+
+				.gz-inv-bar-collected {
+					background: #7C3AED;
+					border-radius: 999px 0 0 999px;
+					transition: width 0.4s ease;
+				}
+
+				.gz-inv-bar-pending {
+					background: #C4B5FD;
+					border-radius: 0 999px 999px 0;
+					transition: width 0.4s ease;
+				}
+			}
+
+			.gz-inv-progress-labels {
+				display: flex;
+				justify-content: space-between;
+				font-size: 0.78rem;
+				font-weight: 600;
+				color: #71809A;
+				margin-top: 0.45rem;
+
+				strong {
+					color: #142447;
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   4. OPERATING EXPENSES (SOFT PINK #FBECEF)
+	   ------------------------------------------------------------------------- */
+	.gz-card-expense {
+		background: #FBECEF;
+		border-radius: 26px;
+		padding: 1.75rem 1.85rem;
+		min-height: 220px;
+
+		.gz-expense-top {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.15rem;
+		}
+
+		.gz-expense-body-wrap {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 1.5rem;
+			flex-wrap: wrap;
+
+			.gz-expense-main {
+				.gz-expense-val {
+					font-size: 2.35rem;
+					font-weight: 800;
+					color: #142447;
+					line-height: 1.1;
+					font-variant-numeric: tabular-nums;
+				}
+
+				.gz-expense-growth-row {
+					display: flex;
+					align-items: center;
+					gap: 0.55rem;
+					margin-top: 0.35rem;
+
+					.gz-growth-sub {
+						font-size: 0.78rem;
+						font-weight: 600;
+						color: #71809A;
+					}
+				}
+			}
+
+			.gz-margin-pill-card {
+				background: #FFFFFF;
+				border-radius: 18px;
+				padding: 0.85rem 1.25rem;
+				box-shadow: 0 2px 10px rgba(16, 31, 56, 0.04);
+
+				.gz-margin-row {
+					display: flex;
+					align-items: center;
+					gap: 0.75rem;
+
+					.gz-margin-icon {
+						color: #7C3AED;
+						font-size: 1.15rem;
+					}
+
+					.gz-margin-vals {
+						display: flex;
+						align-items: center;
+						gap: 0.5rem;
+
+						.gz-margin-amount {
+							font-size: 1.15rem;
+							font-weight: 800;
+							color: #142447;
+							font-variant-numeric: tabular-nums;
+						}
+
+						.gz-margin-badge {
+							background: #ECFDF5;
+							color: #16A34A;
+							font-size: 0.75rem;
+							font-weight: 800;
+							border-radius: 999px;
+							padding: 2px 8px;
+						}
+					}
+				}
+
+				.gz-margin-lbl {
+					font-size: 0.75rem;
+					font-weight: 600;
+					color: #71809A;
+					margin-top: 2px;
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   5. SALES & ORDERS TREND (LARGE FULL-WIDTH CHART SECTION)
+	   ApexCharts area spline, dual Y-axis & interactive month dropdown
+	   ------------------------------------------------------------------------- */
+	.gz-card-trend {
+		background: #FFFFFF;
+		min-height: 410px;
+		padding: 2rem 2.25rem;
+
+		.gz-trend-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.25rem;
+			position: relative;
+			z-index: 50;
+			flex-wrap: wrap;
+			gap: 1rem;
+
+			.gz-trend-controls {
+				display: flex;
+				align-items: center;
+				gap: 1.5rem;
+
+				.gz-chart-dropdown-wrap {
+					position: relative;
+				}
+
+				.gz-trend-legend {
+					display: flex;
+					align-items: center;
+					gap: 1.25rem;
+					white-space: nowrap;
+
+					.gz-legend-item {
+						font-size: 0.8125rem;
+						font-weight: 700;
+						color: #71809A;
+						display: flex;
+						align-items: center;
+						gap: 0.45rem;
+
+						.gz-legend-dot {
+							width: 9px;
+							height: 9px;
+							border-radius: 50%;
+							display: inline-block;
+
+							&.gz-dot-sales { background: #2563EB; }
+							&.gz-dot-orders { background: #9381DA; }
+						}
+					}
+				}
+			}
+		}
+
+		.gz-apex-chart-container {
+			width: 100%;
+			min-height: 290px;
+			position: relative;
+
+			.apexcharts-canvas {
+				margin: 0 auto;
+			}
+			.apexcharts-tooltip.apexcharts-theme-dark {
+				background: #142447 !important;
+				border: none !important;
+				border-radius: 12px !important;
+				box-shadow: 0 8px 24px rgba(20, 36, 71, 0.32) !important;
+				padding: 6px 10px !important;
+
+				.apexcharts-tooltip-title {
+					background: transparent !important;
+					border: none !important;
+					font-size: 11px !important;
+					color: #A0A5B5 !important;
+					font-weight: 600 !important;
+					padding: 0 0 4px 0 !important;
+					margin: 0 !important;
+				}
+				.apexcharts-tooltip-series-group {
+					padding: 2px 0 !important;
+					.apexcharts-tooltip-text {
+						font-size: 12px !important;
+						font-weight: 700 !important;
+					}
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   6. CATALOG OVERVIEW (SPACIOUS HORIZONTAL MODULE)
+	   ------------------------------------------------------------------------- */
+	.gz-card-catalog-full {
+		background: #FFFFFF;
+		padding: 2rem 2.25rem;
+
+		.gz-catalog-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.5rem;
+		}
+
+		.gz-catalog-tiles-row {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 1.25rem;
+			margin-bottom: 1.5rem;
+
+			@media (max-width: 768px) {
+				grid-template-columns: 1fr;
+			}
+
+			.gz-cat-tile {
+				border-radius: 20px;
+				padding: 1.25rem 1.35rem;
+				display: flex;
+				flex-direction: column;
+				gap: 0.4rem;
+
+				&.gz-cat-tile-blue { background: #EAF1F8; }
+				&.gz-cat-tile-purple { background: #F3E8FF; }
+				&.gz-cat-tile-green { background: #ECFDF5; }
+
+				.gz-cat-tile-top {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+
+					.gz-cat-icon {
+						font-size: 1.35rem;
+						&.gz-cat-icon-blue { color: #2563EB; }
+						&.gz-cat-icon-purple { color: #7C3AED; }
+						&.gz-cat-icon-green { color: #16A34A; }
+					}
+
+					.gz-cat-val {
+						font-size: 2rem;
+						font-weight: 900;
+						color: #142447;
+						line-height: 1;
+						font-variant-numeric: tabular-nums;
+					}
+				}
+
+				.gz-cat-lbl {
+					font-size: 0.8125rem;
+					font-weight: 700;
+					color: #71809A;
+				}
+
+				.gz-cat-badge {
+					font-size: 0.72rem;
+					font-weight: 700;
+					display: inline-flex;
+					align-items: center;
+					gap: 3px;
+					margin-top: 2px;
+
+					&.gz-badge-green { color: #16A34A; }
+					&.gz-badge-red { color: #DC2626; }
+				}
+			}
+		}
+
+		.gz-catalog-action-row {
+			background: #F4F0FD;
+			border-radius: 18px;
+			padding: 1rem 1.35rem;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			text-decoration: none;
+			transition: all 0.2s ease;
+			cursor: pointer;
+
+			.gz-cat-act-left {
+				display: flex;
+				align-items: center;
+				gap: 0.95rem;
+
+				.gz-cat-act-icon {
+					width: 40px;
+					height: 40px;
+					border-radius: 12px;
+					background: #FFFFFF;
+					color: #7C3AED;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 1.1rem;
+				}
+
+				.gz-cat-act-title {
+					font-size: 0.925rem;
+					font-weight: 800;
+					color: #142447;
+				}
+
+				.gz-cat-act-sub {
+					font-size: 0.78rem;
+					color: #71809A;
+					margin-top: 2px;
+				}
+			}
+
+			.gz-cat-act-arrow {
+				color: #7C3AED;
+				font-size: 1.15rem;
+				transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+			}
+
+			&:hover {
+				background: #EEE9FB;
+
+				.gz-cat-act-arrow {
+					transform: translateX(4px);
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   7. TOP SELLING PRODUCTS (50% COLUMN)
+	   Spacious list rows: 64-74px height with ample breathing room
+	   ------------------------------------------------------------------------- */
+	.gz-card-top-products {
+		padding: 2rem 2.25rem;
+
+		.gz-section-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.5rem;
+			position: relative;
+			z-index: 40;
+
+			.gz-head-actions {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+
+				.gz-top-prod-dropdown-wrap {
+					position: relative;
+				}
+			}
+		}
+
+		.gz-top-products-list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.65rem;
+
+			.gz-top-product-row {
+				display: flex;
+				align-items: center;
+				gap: 1.15rem;
+				padding: 0.95rem 1.15rem;
+				border-radius: 16px;
+				min-height: 68px;
+				background: #FFFFFF;
+				border: 1px solid #F1F4F9;
+				transition: all 0.2s ease;
+				cursor: pointer;
+
+				&:hover {
+					background: #F8FAFC;
+					border-color: #E2E8F0;
+					transform: translateX(2px);
+				}
+
+				.gz-tp-rank {
+					width: 32px;
+					height: 32px;
+					border-radius: 50%;
+					background: #F4F6FA;
+					color: #142447;
+					font-size: 0.8125rem;
+					font-weight: 800;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-shrink: 0;
+				}
+
+				.gz-tp-info {
+					flex: 1.25;
+					min-width: 0;
+
+					.gz-tp-name {
+						font-size: 0.875rem;
+						font-weight: 800;
+						color: #142447;
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+
+					.gz-tp-orders {
+						font-size: 0.75rem;
+						font-weight: 600;
+						color: #71809A;
+						margin-top: 2px;
+					}
+				}
+
+				.gz-tp-bar-track {
+					flex: 1;
+					height: 8px;
+					border-radius: 999px;
+					background: #EEF2F7;
+					overflow: hidden;
+
+					.gz-tp-bar-fill {
+						height: 100%;
+						border-radius: 999px;
+						background: #2563EB;
+						transition: width 0.3s ease;
+					}
+				}
+
+				.gz-tp-rev {
+					font-size: 0.875rem;
+					font-weight: 800;
+					color: #142447;
+					min-width: 85px;
+					text-align: right;
+					flex-shrink: 0;
+					font-variant-numeric: tabular-nums;
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   8. RECENT ORDERS (50% COLUMN)
+	   Spacious list rows: 64-74px height with ample breathing room
+	   ------------------------------------------------------------------------- */
+	.gz-card-recent-orders {
+		padding: 2rem 2.25rem;
+
+		.gz-section-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1.5rem;
+		}
+
+		.gz-recent-orders-list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.65rem;
+
+			.gz-recent-order-row {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+				padding: 0.95rem 1.15rem;
+				border-radius: 16px;
+				min-height: 68px;
+				background: #FFFFFF;
+				border: 1px solid #F1F4F9;
+				transition: all 0.2s ease;
+				cursor: pointer;
+
+				&:hover {
+					background: #F8FAFC;
+					border-color: #E2E8F0;
+
+					.gz-order-chevron {
+						transform: translateX(3px);
+						color: #2563EB;
+					}
+				}
+
+				.gz-order-avatar {
+					width: 40px;
+					height: 40px;
+					border-radius: 12px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 0.8125rem;
+					font-weight: 800;
+					flex-shrink: 0;
+
+					&.gz-av-blue { background: #DBEAFE; color: #1E40AF; }
+					&.gz-av-purple { background: #EDE9FE; color: #5B21B6; }
+					&.gz-av-teal { background: #CCFBF1; color: #115E59; }
+					&.gz-av-pink { background: #FCE7F3; color: #9D174D; }
+					&.gz-av-indigo { background: #E0E7FF; color: #3730A3; }
+				}
+
+				.gz-order-details {
+					flex: 1.25;
+					min-width: 0;
+
+					.gz-order-cust-name {
+						font-size: 0.875rem;
+						font-weight: 800;
+						color: #142447;
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+
+					.gz-order-id-tag {
+						font-size: 0.72rem;
+						font-weight: 600;
+						color: #71809A;
+						margin-top: 2px;
+					}
+				}
+
+				.gz-order-date {
+					font-size: 0.78rem;
+					font-weight: 600;
+					color: #71809A;
+					min-width: 75px;
+					flex-shrink: 0;
+				}
+
+				.gz-order-amount {
+					font-size: 0.875rem;
+					font-weight: 800;
+					color: #142447;
+					min-width: 70px;
+					text-align: right;
+					flex-shrink: 0;
+					font-variant-numeric: tabular-nums;
+				}
+
+				.gz-order-status-pill {
+					font-size: 0.72rem;
+					font-weight: 700;
+					border-radius: 999px;
+					padding: 3px 10px;
+					flex-shrink: 0;
+
+					&.gz-status-success { background: #DCFCE7; color: #166534; }
+					&.gz-status-pending { background: #FEF3C7; color: #92400E; }
+					&.gz-status-processing { background: #DBEAFE; color: #1E40AF; }
+				}
+
+				.gz-order-chevron {
+					color: #A0A5B5;
+					font-size: 0.95rem;
+					transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+					text-decoration: none;
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   9. QUICK ACTIONS (50% COLUMN)
+	   Comfortable 2x2 grid with generous click targets (~105px each)
+	   ------------------------------------------------------------------------- */
+	.gz-card-quick-actions {
+		padding: 2rem 2.25rem;
+
+		.gz-qa-2x2-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 1.15rem;
+
+			.gz-qa-tile {
+				border-radius: 20px;
+				padding: 1.35rem 1.25rem;
+				display: flex;
+				flex-direction: column;
+				justify-content: space-between;
+				min-height: 105px;
+				text-decoration: none;
+				transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+				cursor: pointer;
+
+				&.gz-qa-blue { background: #EAF1F8; color: #2563EB; }
+				&.gz-qa-pink { background: #FCE8EC; color: #E11D48; }
+				&.gz-qa-purple { background: #F3E8FF; color: #7C3AED; }
+				&.gz-qa-green { background: #ECFDF5; color: #16A34A; }
+
+				.gz-qa-icon {
+					font-size: 1.45rem;
+					transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+				}
+
+				.gz-qa-lbl {
+					font-size: 0.8125rem;
+					font-weight: 800;
+					color: #142447;
+					line-height: 1.3;
+					margin-top: 0.75rem;
+				}
+
+				&:hover {
+					transform: translateY(-2px);
+					box-shadow: 0 4px 14px rgba(16, 31, 56, 0.08);
+
+					.gz-qa-icon {
+						transform: translate(2px, -2px);
+					}
+				}
+			}
+		}
+	}
+
+	/* -------------------------------------------------------------------------
+	   10. LOW STOCK ALERTS (50% COLUMN)
+	   Spacious alert rows with warning badges & clear reorder callouts
+	   ------------------------------------------------------------------------- */
+	.gz-card-stock-alerts {
+		padding: 2rem 2.25rem;
+
+		.gz-stock-alerts-list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.85rem;
+
+			.gz-stock-alert-row {
+				display: flex;
+				align-items: center;
+				gap: 1.15rem;
+				padding: 1.15rem 1.25rem;
+				border-radius: 18px;
+				background: #FFF8F8;
+				border: 1px solid #FFE4E6;
+				text-decoration: none;
+				transition: all 0.2s ease;
+				cursor: pointer;
+
+				&:hover {
+					background: #FFF1F2;
+					border-color: #FECDD3;
+
+					.gz-sa-chevron {
+						transform: translateX(3px);
+						color: #DC2626;
+					}
+				}
+
+				.gz-sa-icon-circle {
+					width: 38px;
+					height: 38px;
+					border-radius: 12px;
+					background: #FEE2E2;
+					color: #DC2626;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 1.05rem;
+					flex-shrink: 0;
+				}
+
+				.gz-sa-info {
+					flex: 1;
+					min-width: 0;
+
+					.gz-sa-name {
+						font-size: 0.875rem;
+						font-weight: 800;
+						color: #142447;
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+
+					.gz-sa-units {
+						font-size: 0.75rem;
+						font-weight: 600;
+						color: #DC2626;
+						display: flex;
+						align-items: center;
+						gap: 5px;
+						margin-top: 3px;
+
+						.gz-sa-dot {
+							width: 6px;
+							height: 6px;
+							border-radius: 50%;
+							background: #DC2626;
+							display: inline-block;
+						}
+					}
+				}
+
+				.gz-sa-action {
+					display: flex;
+					align-items: center;
+					gap: 0.75rem;
+
+					.gz-sa-reorder-tag {
+						font-size: 0.72rem;
+						font-weight: 700;
+						color: #DC2626;
+						background: #FFFFFF;
+						border: 1px solid #FECDD3;
+						border-radius: 999px;
+						padding: 2px 10px;
+					}
+
+					.gz-sa-chevron {
+						color: #A0A5B5;
+						font-size: 0.95rem;
+						transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+					}
+				}
+			}
+		}
+	}
+}
+
+/* =============================================================================
+   RAG COMMERCE SKELETON VARIANTS
+   ============================================================================= */
+.gz-skeleton-dark {
+	background: linear-gradient(
+		90deg,
+		rgba(255, 255, 255, 0.08) 25%,
+		rgba(255, 255, 255, 0.20) 50%,
+		rgba(255, 255, 255, 0.08) 75%
+	) !important;
+	background-size: 200% 100% !important;
+	animation: gz-shimmer 1.6s infinite ease-in-out !important;
+}
+
+.gz-skeleton-subtle {
+	background: linear-gradient(
+		90deg,
+		rgba(0, 0, 0, 0.05) 25%,
+		rgba(255, 255, 255, 0.45) 50%,
+		rgba(0, 0, 0, 0.05) 75%
+	) !important;
+	background-size: 200% 100% !important;
+	animation: gz-shimmer 1.6s infinite ease-in-out !important;
+}
+
+.gz-skeleton-row-item {
+	pointer-events: none !important;
+}
+
+/* =============================================================================
+   GOMZI PANELS — PREMIUM MICRO-INTERACTIONS & MOTION SYSTEM
+   Quiet by default. Expressive only when meaningful.
+   ============================================================================= */
+
+:root {
+	--gz-motion-icon: 200ms;
+	--gz-motion-hover: 220ms;
+	--gz-motion-focus: 240ms;
+	--gz-motion-confirm: 320ms;
+	--gz-motion-number: 650ms;
+	--gz-motion-chart: 1000ms;
+	--gz-motion-celebration: 1500ms;
+	--gz-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--gz-motion-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+	--gz-motion-ease-out: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* -----------------------------------------------------------------------------
+   1. TABLES — Contextual Action Reveal & Row Transitions
+   ----------------------------------------------------------------------------- */
+table tbody tr {
+	transition: background-color var(--gz-motion-hover) var(--gz-motion-ease);
+}
+
+table tbody tr:hover {
+	background-color: #F8FAFD !important;
+}
+
+/* Action button controls in table rows */
+.gz-table-action-btn,
+.sb-action-btn,
+.btn-icon.btn-active-color-primary,
+.table-action-btn {
+	opacity: 0.88;
+	transition: opacity var(--gz-motion-hover) var(--gz-motion-ease),
+				background-color 0.18s var(--gz-motion-ease),
+				border-color 0.18s var(--gz-motion-ease),
+				color 0.18s var(--gz-motion-ease),
+				transform 0.18s var(--gz-motion-ease) !important;
+}
+
+/* Emphasize on row hover */
+table tbody tr:hover .gz-table-action-btn,
+table tbody tr:hover .sb-action-btn,
+table tbody tr:hover .btn-icon.btn-active-color-primary,
+table tbody tr:hover .table-action-btn {
+	opacity: 1;
+}
+
+/* Hover and active states for individual action buttons */
+.gz-table-action-btn:hover,
+.sb-action-btn:hover {
+	opacity: 1 !important;
+	transform: translateY(-1px);
+}
+
+.gz-table-action-btn:active,
+.sb-action-btn:active {
+	transform: scale(0.96) !important;
+}
+
+/* Accessible keyboard focus for table action buttons */
+.gz-table-action-btn:focus-visible,
+.sb-action-btn:focus-visible,
+.btn-icon:focus-visible {
+	opacity: 1 !important;
+	outline: 2px solid #172B4D !important;
+	outline-offset: 2px !important;
+}
+
+/* On touch devices, action buttons must always be 100% visible */
+@media (hover: none) {
+	.gz-table-action-btn,
+	.sb-action-btn,
+	.btn-icon.btn-active-color-primary,
+	.table-action-btn {
+		opacity: 1 !important;
+	}
+}
+
+/* -----------------------------------------------------------------------------
+   2. FORM FOCUS — Subtle Border Tracing & Transitions
+   ----------------------------------------------------------------------------- */
+.form-control,
+.sb-input-custom,
+.gz-filter-date-input,
+.gz-prod-input,
+.gz-prod-select,
+.gz-prod-textarea,
+.gz-prod-search-input,
+input.form-control-solid {
+	transition: border-color var(--gz-motion-focus) var(--gz-motion-ease),
+				box-shadow var(--gz-motion-focus) var(--gz-motion-ease),
+				background-color var(--gz-motion-focus) var(--gz-motion-ease) !important;
+}
+
+.form-control:focus,
+.sb-input-custom:focus,
+.gz-filter-date-input:focus,
+.gz-prod-input:focus,
+.gz-prod-select:focus,
+.gz-prod-textarea:focus,
+.gz-prod-search-input:focus,
+input.form-control-solid:focus {
+	border-color: #172B4D !important;
+	box-shadow: 0 0 0 3px rgba(23, 43, 77, 0.08) !important;
+	outline: none !important;
+}
+
+/* Error validation styling takes strict priority over decorative focus */
+.form-control.is-invalid,
+.form-control.is-invalid:focus,
+.is-invalid .form-control {
+	border-color: #EF4444 !important;
+	box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+/* -----------------------------------------------------------------------------
+   3. DROPDOWNS & FILTER POPUPS — Smooth Reveal
+   ----------------------------------------------------------------------------- */
+@keyframes gzDropdownReveal {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.gz-custom-select-dropdown,
+.gz-datepicker-modal,
+.gz-filter-dropdown-menu,
+.dropdown-menu.show {
+	animation: gzDropdownReveal 180ms var(--gz-motion-ease) forwards;
+}
+
+/* Chevron indicator rotation */
+.gz-select-chevron,
+.bi-chevron-down {
+	transition: transform var(--gz-motion-hover) var(--gz-motion-ease);
+}
+
+.gz-custom-select-trigger.is-open .gz-select-chevron,
+[aria-expanded="true"] .gz-select-chevron,
+.show > .bi-chevron-down {
+	transform: rotate(180deg);
+}
+
+/* -----------------------------------------------------------------------------
+   4. BUTTON PRESS & SAVE FEEDBACK MORPH
+   ----------------------------------------------------------------------------- */
+.btn,
+.sb-btn-primary,
+.gz-table-text-btn {
+	transition: background-color var(--gz-motion-hover) var(--gz-motion-ease),
+				border-color var(--gz-motion-hover) var(--gz-motion-ease),
+				color var(--gz-motion-hover) var(--gz-motion-ease),
+				box-shadow var(--gz-motion-hover) var(--gz-motion-ease),
+				transform 0.18s var(--gz-motion-ease);
+}
+
+.btn:active:not(:disabled),
+.sb-btn-primary:active:not(:disabled),
+.gz-table-text-btn:active:not(:disabled) {
+	transform: scale(0.98);
+}
+
+/* Checkmark morph icon feedback */
+@keyframes gzSuccessCheckScale {
+	0% {
+		transform: scale(0.65);
+		opacity: 0;
+	}
+	60% {
+		transform: scale(1.15);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+.gz-success-check-icon {
+	animation: gzSuccessCheckScale 280ms var(--gz-motion-ease) forwards;
+	color: #10B981 !important;
+}
+
+/* -----------------------------------------------------------------------------
+   5. COPY-LINK INTERACTION FEEDBACK
+   ----------------------------------------------------------------------------- */
+.gz-copy-btn-feedback {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	transition: all var(--gz-motion-hover) var(--gz-motion-ease);
+}
+
+.gz-copy-btn-feedback.is-copied {
+	background-color: #ECFDF5 !important;
+	border-color: #A7F3D0 !important;
+	color: #059669 !important;
+}
+
+/* -----------------------------------------------------------------------------
+   6. PRODUCT IMAGE THUMBNAIL INTERACTIONS
+   ----------------------------------------------------------------------------- */
+.gz-product-thumbnail-img {
+	transition: transform var(--gz-motion-hover) var(--gz-motion-ease),
+				box-shadow var(--gz-motion-hover) var(--gz-motion-ease);
+	will-change: transform;
+}
+
+.gz-product-thumbnail-img:hover {
+	transform: scale(1.05);
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.12);
+}
+
+/* Add/Edit Product image preview reveal */
+@keyframes gzImagePreviewFade {
+	from {
+		opacity: 0;
+		transform: scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.gz-image-preview-animated {
+	animation: gzImagePreviewFade 240ms var(--gz-motion-ease) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   7. INVENTORY STOCK PROGRESS INDICATORS
+   ----------------------------------------------------------------------------- */
+.gz-stock-progress-bar {
+	transition: width 0.65s var(--gz-motion-ease);
+	will-change: width;
+}
+
+/* -----------------------------------------------------------------------------
+   8. SKELETON-TO-CONTENT REVEAL
+   ----------------------------------------------------------------------------- */
+@keyframes gzContentFadeReveal {
+	from {
+		opacity: 0.7;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.gz-content-revealed {
+	animation: gzContentFadeReveal 240ms var(--gz-motion-ease) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   9. HR CELEBRATIONS — GENTLE CANDLE FLICKER & TROPHY GLINT (STOPS NATURALLY)
+   ----------------------------------------------------------------------------- */
+@keyframes gzCandleFlicker {
+	0% {
+		transform: scale(1) translateY(0);
+		opacity: 0.95;
+	}
+	20% {
+		transform: scale(1.12, 0.92) translateY(-0.5px);
+		opacity: 1;
+	}
+	40% {
+		transform: scale(0.94, 1.06) translateY(0.5px);
+		opacity: 0.88;
+	}
+	60% {
+		transform: scale(1.08, 0.95) translateY(-0.3px);
+		opacity: 1;
+	}
+	80% {
+		transform: scale(0.97, 1.03) translateY(0.2px);
+		opacity: 0.92;
+	}
+	100% {
+		transform: scale(1) translateY(0);
+		opacity: 1;
+	}
+}
+
+.gz-candle-flame-flicker {
+	transform-origin: center bottom;
+	animation: gzCandleFlicker 1.4s var(--gz-motion-ease) 1 forwards;
+}
+
+@keyframes gzTrophyGlint {
+	0% {
+		opacity: 0;
+		transform: translateX(-40px) skewX(-20deg);
+	}
+	20% {
+		opacity: 0.75;
+	}
+	60% {
+		opacity: 0.75;
+	}
+	100% {
+		opacity: 0;
+		transform: translateX(80px) skewX(-20deg);
+	}
+}
+
+.gz-trophy-glint-bar {
+	animation: gzTrophyGlint 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1 forwards;
+	pointer-events: none;
+}
+
+/* -----------------------------------------------------------------------------
+   10. SCULPTED CURVED-CORNER CARD MICRO-INTERACTION
+   ----------------------------------------------------------------------------- */
+.gz-sculpted-svg-bg path {
+	transition: stroke 0.22s var(--gz-motion-ease),
+				filter 0.22s var(--gz-motion-ease);
+}
+
+.gz-sculpted-card-container:hover .gz-sculpted-svg-bg path {
+	filter: drop-shadow(0 4px 16px rgba(23, 43, 77, 0.05));
+}
+
+/* -----------------------------------------------------------------------------
+   11. ACCESSIBILITY — PREFERS-REDUCED-MOTION
+   ----------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+
+	.gz-odometer-digit-strip {
+		transition: none !important;
+	}
+
+	.gz-candle-flame-flicker,
+	.gz-trophy-glint-bar,
+	.gz-hr-cake-anim,
+	.gz-hr-trophy-anim,
+	.gz-hr-confetti-float {
+		animation: none !important;
+	}
+}
+

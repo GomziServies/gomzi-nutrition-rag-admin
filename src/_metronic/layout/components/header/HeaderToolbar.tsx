@@ -113,12 +113,42 @@ const HeaderToolbar = () => {
 	const userName = userProfile?.full_name || 'chiragFWG'
 	const userRole = userProfile?.type || 'Employee'
 
+	const userMenuRef = useRef<HTMLDivElement>(null)
+	const searchInputRef = useRef<HTMLInputElement>(null)
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+				e.preventDefault()
+				searchInputRef.current?.focus()
+			} else if (e.key === 'Escape') {
+				setShowUserMenu(false)
+				searchInputRef.current?.blur()
+			}
+		}
+
+		const handleClickOutside = (e: MouseEvent) => {
+			if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+				setShowUserMenu(false)
+			}
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		document.addEventListener('mousedown', handleClickOutside)
+
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown)
+			document.removeEventListener('mousedown', handleClickOutside)
+		}
+	}, [])
+
 	return (
-		<div className='gz-topbar-wrapper d-flex align-items-center justify-content-between w-100 px-4 py-2'>
+		<div className='gz-topbar-wrapper d-flex align-items-center justify-content-between w-100 px-4'>
 			{/* Left: Search anything... with ⌘ K */}
 			<div className='gz-top-search-bar'>
 				<i className='bi bi-search gz-top-search-icon'></i>
 				<input
+					ref={searchInputRef}
 					type='text'
 					className='gz-top-search-input'
 					placeholder='Search anything...'
@@ -149,6 +179,7 @@ const HeaderToolbar = () => {
 
 				{/* User Profile Pill */}
 				<div
+					ref={userMenuRef}
 					className='gz-top-user-wrap position-relative'
 					onMouseEnter={() => {
 						if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)

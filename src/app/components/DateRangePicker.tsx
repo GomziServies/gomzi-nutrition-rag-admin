@@ -17,6 +17,7 @@ type DateFilterProps = {
 	setMonth?: boolean
 	lastMonth?: boolean
 	storageKey?: string
+	customIcon?: React.ReactNode
 }
 
 const DateFilter: React.FC<DateFilterProps> = ({
@@ -24,6 +25,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
 	setMonth,
 	lastMonth,
 	storageKey,
+	customIcon,
 }) => {
 	const location = useLocation()
 	const key = storageKey || `selectedDateRange_${location.pathname}`
@@ -232,18 +234,34 @@ const DateFilter: React.FC<DateFilterProps> = ({
 					placeholder='Select Date'
 					value={formatDateRange(selectedRange)}
 				/>
-				<FontAwesomeIcon
-					icon={faCalendarDays as any}
-					style={{
-						position: 'absolute',
-						right: '0.85rem',
-						top: '50%',
-						transform: 'translateY(-50%)',
-						pointerEvents: 'none',
-						color: '#94a3b8',
-						fontSize: '13.5px',
-					}}
-				/>
+				{customIcon ? (
+					<div
+						style={{
+							position: 'absolute',
+							right: '0.85rem',
+							top: '50%',
+							transform: 'translateY(-50%)',
+							pointerEvents: 'none',
+							display: 'inline-flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+						}}>
+						{customIcon}
+					</div>
+				) : (
+					<FontAwesomeIcon
+						icon={faCalendarDays as any}
+						style={{
+							position: 'absolute',
+							right: '0.85rem',
+							top: '50%',
+							transform: 'translateY(-50%)',
+							pointerEvents: 'none',
+							color: '#94a3b8',
+							fontSize: '13.5px',
+						}}
+					/>
+				)}
 			</div>
 
 			{/* Centered Modal Backdrop via createPortal */}
@@ -262,7 +280,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
 										className='symbol symbol-30px'
 										style={{
 											background: '#eff6ff',
-											color: '#2563eb',
+											color: '#172B4D',
 											borderRadius: '8px',
 											display: 'inline-flex',
 											alignItems: 'center',
@@ -270,7 +288,7 @@ const DateFilter: React.FC<DateFilterProps> = ({
 											width: '32px',
 											height: '32px',
 										}}>
-										<FontAwesomeIcon icon={faCalendarDays as any} />
+										{customIcon || <FontAwesomeIcon icon={faCalendarDays as any} />}
 									</span>
 									<div>
 										<h5 className='m-0 fw-bold fs-6 text-dark'>Select Date Range</h5>

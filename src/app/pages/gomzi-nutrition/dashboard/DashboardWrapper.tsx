@@ -1,12 +1,12 @@
 import React from 'react'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import { GomziApprovedDashboard } from '../../../components/GomziApprovedDashboard'
+import { GomziNutritionRagDashboard } from './GomziNutritionRagDashboard'
 
 const GomziNutritionDashboard: React.FC = () => {
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>Dashboard</PageTitle>
-			<GomziApprovedDashboard />
+			<PageTitle breadcrumbs={[]}>Commerce Dashboard</PageTitle>
+			<GomziNutritionRagDashboard />
 		</>
 	)
 }

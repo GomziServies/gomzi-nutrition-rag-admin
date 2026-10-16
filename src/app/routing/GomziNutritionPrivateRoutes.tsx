@@ -78,6 +78,7 @@ import GomziNutritionProductVariationList from '../pages/gomzi-nutrition/gomzi-n
 import NutritionCreateInvoice from '../pages/gomzi-nutrition/invoice/create-invoice'
 import NutritionTotalSalesList from '../pages/gomzi-nutrition/invoice/total-sales'
 import NutritionUpdateInvoice from '../pages/gomzi-nutrition/invoice/update-invoice'
+import NutritionViewInvoice from '../pages/gomzi-nutrition/invoice/view-invoice'
 import InventoryLogList from '../pages/gomzi-nutrition/product-inventory/InventoryLogList'
 import ManageInventory from '../pages/gomzi-nutrition/product-inventory/ManageInventory'
 import { NutritionOrderView } from '../pages/gomzi-nutrition/product/all-order/order-view'
@@ -185,6 +186,14 @@ const GomziNutritionPrivateRoutes = () => {
 				<Route
 					path='/invoice-list'
 					element={<NutritionTotalSalesList />}
+				/>
+				<Route
+					path='/view-invoice'
+					element={<NutritionViewInvoice />}
+				/>
+				<Route
+					path='/invoice-view'
+					element={<NutritionViewInvoice />}
 				/>
 				<Route
 					path='/create-quotation'

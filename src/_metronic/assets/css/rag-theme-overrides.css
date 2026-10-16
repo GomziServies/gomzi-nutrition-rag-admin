@@ -188,7 +188,7 @@ body {
 	border-radius: 6px !important;
 	padding: 7px 10px !important;
 	border: 1px solid transparent !important;
-	transition: background-color 0.15s ease, color 0.15s ease !important;
+	transition: background-color 220ms cubic-bezier(0.22, 1, 0.36, 1), border-color 220ms cubic-bezier(0.22, 1, 0.36, 1), color 220ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 	background-color: transparent !important;
 	display: flex !important;
 	align-items: center !important;
@@ -237,109 +237,551 @@ body {
 }
 
 /* ==========================================================================
-   ACTIVE STATE - EXACT MATCH TO SCREENSHOT 1:
-   Only currently active route or currently active section (.here) is highlighted
+   GOMZI ASIDE NAVIGATION SYSTEM: EXPANDED & COLLAPSED FLOATING MODES
    ========================================================================== */
-.aside-menu .menu-item .menu-link.active,
-.aside-menu .menu-item.here > .menu-link,
-#kt_aside_menu .menu-item .menu-link.active,
-#kt_aside_menu .menu-item.here > .menu-link {
-	background-color: #eff6ff !important;
-	background-image: none !important;
-	border: 1px solid rgba(37, 99, 235, 0.12) !important;
+
+/* 1. DIRECT ROOT MENU ITEM (WITHOUT SUB, E.G. DASHBOARD) */
+.aside-menu .menu-item > .menu-link.without-sub.active,
+#kt_aside_menu .menu-item > .menu-link.without-sub.active {
+	background-color: #172B4D !important;
+	border-radius: 12px !important;
+	border: none !important;
 	box-shadow: none !important;
-	color: #0f172a !important;
+	color: #FFFFFF !important;
 	position: relative !important;
 }
 
-.aside-menu .menu-item .menu-link.active .menu-title,
-.aside-menu .menu-item.here > .menu-link .menu-title,
-#kt_aside_menu .menu-item .menu-link.active .menu-title,
-#kt_aside_menu .menu-item.here > .menu-link .menu-title {
-	color: #0f172a !important;
-	font-weight: 700 !important;
+.aside-menu .menu-item > .menu-link.without-sub.active .menu-title,
+#kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-title {
+	color: #FFFFFF !important;
+	font-weight: 600 !important;
 }
 
-.aside-menu .menu-item .menu-link.active .menu-icon,
-.aside-menu .menu-item .menu-link.active .menu-icon i,
-.aside-menu .menu-item .menu-link.active .menu-icon svg,
-.aside-menu .menu-item.here > .menu-link .menu-icon,
-.aside-menu .menu-item.here > .menu-link .menu-icon i,
-.aside-menu .menu-item.here > .menu-link .menu-icon svg,
-#kt_aside_menu .menu-item .menu-link.active .menu-icon,
-#kt_aside_menu .menu-item .menu-link.active .menu-icon i,
-#kt_aside_menu .menu-item .menu-link.active .menu-icon svg,
-#kt_aside_menu .menu-item.here > .menu-link .menu-icon,
-#kt_aside_menu .menu-item.here > .menu-link .menu-icon i,
-#kt_aside_menu .menu-item.here > .menu-link .menu-icon svg {
-	color: #2563eb !important;
-	fill: #2563eb !important;
+.aside-menu .menu-item > .menu-link.without-sub.active .menu-icon,
+.aside-menu .menu-item > .menu-link.without-sub.active .menu-icon i,
+.aside-menu .menu-item > .menu-link.without-sub.active .menu-icon svg,
+#kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-icon,
+#kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-icon i,
+#kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-icon svg {
+	color: #FFFFFF !important;
+	fill: #FFFFFF !important;
 }
 
-.aside-menu .menu-item .menu-link.active .menu-arrow,
-.aside-menu .menu-item.here > .menu-link .menu-arrow {
-	color: #64748b !important;
+.aside-menu .menu-item > .menu-link.without-sub.active::before,
+#kt_aside_menu .menu-item > .menu-link.without-sub.active::before {
+	display: none !important;
+	content: none !important;
 }
 
-/* LEFT COBALT INDICATOR PILL (Visible ONLY on active/here item) */
-.aside-menu .menu-item .menu-link.active::before,
-.aside-menu .menu-item.here > .menu-link::before,
-#kt_aside_menu .menu-item .menu-link.active::before,
-#kt_aside_menu .menu-item.here > .menu-link::before {
-	content: '' !important;
-	display: block !important;
-	position: absolute !important;
-	left: -6px !important;
-	top: 5px !important;
-	bottom: 5px !important;
-	width: 3.5px !important;
-	border-radius: 4px !important;
-	background-color: #2563eb !important;
-	box-shadow: 0 0 6px rgba(37, 99, 235, 0.35) !important;
-}
-
-/* Merely open/expanded accordions when current page is elsewhere (NEVER styled as active) */
-.aside-menu .menu-item.show:not(.here) > .menu-link,
-#kt_aside_menu .menu-item.show:not(.here) > .menu-link {
-	background-color: transparent !important;
-	border-color: transparent !important;
+/* 2. PARENT ACCORDION EXPANDED STATE (E.G. PRODUCTS & ORDERS) */
+.aside-menu .menu-item.menu-accordion.show > .menu-link,
+#kt_aside_menu .menu-item.menu-accordion.show > .menu-link {
+	background-color: #EAF0FA !important;
+	border-radius: 12px !important;
+	border: none !important;
 	box-shadow: none !important;
 }
 
-.aside-menu .menu-item.show:not(.here) > .menu-link .menu-title,
-#kt_aside_menu .menu-item.show:not(.here) > .menu-link .menu-title {
-	color: #2d3139 !important;
+.aside-menu .menu-item.menu-accordion.show > .menu-link .menu-title,
+#kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-title {
+	color: #172B4D !important;
+	font-weight: 600 !important;
+}
+
+.aside-menu .menu-item.menu-accordion.show > .menu-link .menu-icon,
+.aside-menu .menu-item.menu-accordion.show > .menu-link .menu-icon i,
+.aside-menu .menu-item.menu-accordion.show > .menu-link .menu-icon svg,
+#kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-icon,
+#kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-icon i,
+#kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-icon svg {
+	color: #172B4D !important;
+	fill: #172B4D !important;
+}
+
+.aside-menu .menu-item.menu-accordion.show > .menu-link .menu-arrow,
+#kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-arrow {
+	transform: rotate(90deg) !important;
+	color: #172B4D !important;
+}
+
+.aside-menu .menu-item.menu-accordion.show > .menu-link::before,
+#kt_aside_menu .menu-item.menu-accordion.show > .menu-link::before {
+	display: none !important;
+	content: none !important;
+}
+
+/* 3. PARENT ACCORDION CLOSED BUT CURRENT ROUTE IS INSIDE */
+.aside-menu .menu-item.menu-accordion.here:not(.show) > .menu-link,
+#kt_aside_menu .menu-item.menu-accordion.here:not(.show) > .menu-link {
+	background-color: transparent !important;
+	border-radius: 12px !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.aside-menu .menu-item.menu-accordion.here:not(.show) > .menu-link .menu-title,
+#kt_aside_menu .menu-item.menu-accordion.here:not(.show) > .menu-link .menu-title {
+	color: #172B4D !important;
+	font-weight: 600 !important;
+}
+
+.aside-menu .menu-item.menu-accordion.here:not(.show) > .menu-link .menu-icon,
+.aside-menu .menu-item.here > .menu-link .menu-icon i,
+.aside-menu .menu-item.here > .menu-link .menu-icon svg,
+#kt_aside_menu .menu-item.here > .menu-link .menu-icon,
+#kt_aside_menu .menu-item.here > .menu-link .menu-icon i,
+#kt_aside_menu .menu-item.here > .menu-link .menu-icon svg {
+	color: #172B4D !important;
+	fill: #172B4D !important;
+}
+
+.aside-menu .menu-item.menu-accordion.here:not(.show) > .menu-link .menu-arrow,
+#kt_aside_menu .menu-item.here > .menu-link .menu-arrow {
+	transform: none !important;
+	color: #71809A !important;
+}
+
+.aside-menu .menu-item.menu-accordion.here:not(.show) > .menu-link::before,
+#kt_aside_menu .menu-item.here > .menu-link::before {
+	display: none !important;
+	content: none !important;
+}
+
+/* 4. REMOVE VERTICAL CONNECTOR LINE COMPLETELY (PART 1.2) */
+.aside-menu .menu-sub::before,
+.aside-menu .menu-sub-accordion::before,
+#kt_aside_menu .menu-sub::before,
+#kt_aside_menu .menu-sub-accordion::before {
+	display: none !important;
+	content: none !important;
+}
+
+.aside-menu .menu-sub,
+.aside-menu .menu-sub-accordion,
+#kt_aside_menu .menu-sub,
+#kt_aside_menu .menu-sub-accordion {
+	padding: 4px 0 6px 14px !important;
+	border-left: none !important;
+	border: none !important;
+}
+
+.aside-menu .menu-item.menu-accordion.show > .menu-sub-accordion {
+	animation: gzSubmenuFade 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
+@keyframes gzSubmenuFade {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.aside-menu .menu-item.menu-accordion.show > .menu-sub-accordion {
+		animation: none !important;
+	}
+}
+
+/* 5. SUBMENU ITEMS (NESTED CHILD ROWS) */
+.aside-menu .menu-sub .menu-item,
+#kt_aside_menu .menu-sub .menu-item {
+	margin: 2px 4px 2px 0 !important;
+	padding: 0 !important;
+}
+
+.aside-menu .menu-sub .menu-item .menu-link,
+#kt_aside_menu .menu-sub .menu-item .menu-link {
+	min-height: 40px !important;
+	height: 40px !important;
+	border-radius: 10px !important;
+	padding: 0 12px 0 8px !important;
+	display: flex !important;
+	align-items: center !important;
+	background-color: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	cursor: pointer !important;
+	text-decoration: none !important;
+	position: relative !important;
+	transition: background-color 180ms ease, color 180ms ease !important;
+}
+
+.aside-menu .menu-sub .menu-item .menu-link::before,
+#kt_aside_menu .menu-sub .menu-item .menu-link::before {
+	display: none !important;
+	content: none !important;
+}
+
+/* Fixed-width dot column for perfect horizontal alignment (PART 1.3) */
+.aside-menu .menu-sub .menu-link .menu-bullet,
+#kt_aside_menu .menu-sub .menu-link .menu-bullet {
+	width: 18px !important;
+	min-width: 18px !important;
+	max-width: 18px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	margin-right: 10px !important;
+}
+
+.aside-menu .menu-sub .menu-link .menu-bullet .bullet-dot,
+.aside-menu .menu-sub .menu-link .menu-bullet .bullet,
+#kt_aside_menu .menu-sub .menu-link .menu-bullet .bullet-dot,
+#kt_aside_menu .menu-sub .menu-link .menu-bullet .bullet {
+	display: inline-block !important;
+	width: 5.5px !important;
+	height: 5.5px !important;
+	border-radius: 50% !important;
+	background-color: #94A3B8 !important;
+	transition: background-color 180ms ease !important;
+	transform: none !important;
+}
+
+.aside-menu .menu-sub .menu-link .menu-title,
+#kt_aside_menu .menu-sub .menu-link .menu-title {
+	color: #71809A !important;
+	font-size: 13px !important;
 	font-weight: 500 !important;
+	letter-spacing: -0.01em !important;
+	transition: color 180ms ease !important;
+	line-height: 1.3 !important;
 }
 
-.aside-menu .menu-item.show:not(.here) > .menu-link .menu-icon,
-.aside-menu .menu-item.show:not(.here) > .menu-link .menu-icon i,
-.aside-menu .menu-item.show:not(.here) > .menu-link .menu-icon svg,
-#kt_aside_menu .menu-item.show:not(.here) > .menu-link .menu-icon,
-#kt_aside_menu .menu-item.show:not(.here) > .menu-link .menu-icon i,
-#kt_aside_menu .menu-item.show:not(.here) > .menu-link .menu-icon svg {
-	color: #555b68 !important;
-	fill: #555b68 !important;
+/* Submenu Inactive Hover State (PART 1.7) */
+.aside-menu .menu-sub .menu-item .menu-link:hover:not(.active),
+#kt_aside_menu .menu-sub .menu-item .menu-link:hover:not(.active) {
+	background-color: #EAF0FA !important;
+	border: none !important;
 }
 
-.aside-menu .menu-item.show:not(.here) > .menu-link::before,
-#kt_aside_menu .menu-item.show:not(.here) > .menu-link::before {
+.aside-menu .menu-sub .menu-item .menu-link:hover:not(.active) .menu-bullet .bullet-dot,
+.aside-menu .menu-sub .menu-item .menu-link:hover:not(.active) .menu-bullet .bullet,
+#kt_aside_menu .menu-sub .menu-item .menu-link:hover:not(.active) .menu-bullet .bullet-dot,
+#kt_aside_menu .menu-sub .menu-item .menu-link:hover:not(.active) .menu-bullet .bullet {
+	background-color: #172B4D !important;
+	transform: none !important;
+}
+
+.aside-menu .menu-sub .menu-item .menu-link:hover:not(.active) .menu-title,
+#kt_aside_menu .menu-sub .menu-item .menu-link:hover:not(.active) .menu-title {
+	color: #172B4D !important;
+	font-weight: 600 !important;
+}
+
+/* 6. ACTIVE SUBMENU ITEM (SOLID NAVY PILL #172B4D, WHITE TEXT, WHITE DOT - PART 1.6) */
+.aside-menu .menu-sub .menu-item .menu-link.active,
+#kt_aside_menu .menu-sub .menu-item .menu-link.active {
+	background-color: #172B4D !important;
+	border-radius: 10px !important;
+	box-shadow: none !important;
+	border: none !important;
+}
+
+.aside-menu .menu-sub .menu-item .menu-link.active .menu-bullet .bullet-dot,
+.aside-menu .menu-sub .menu-item .menu-link.active .menu-bullet .bullet,
+#kt_aside_menu .menu-sub .menu-item .menu-link.active .menu-bullet .bullet-dot,
+#kt_aside_menu .menu-sub .menu-item .menu-link.active .menu-bullet .bullet {
+	display: inline-block !important;
+	background-color: #FFFFFF !important;
+	transform: none !important;
+}
+
+.aside-menu .menu-sub .menu-item .menu-link.active .menu-title,
+#kt_aside_menu .menu-sub .menu-item .menu-link.active .menu-title {
+	color: #FFFFFF !important;
+	font-weight: 600 !important;
+}
+
+.aside-menu .menu-sub .menu-item .menu-link.active:hover,
+#kt_aside_menu .menu-sub .menu-item .menu-link.active:hover {
+	background-color: #172B4D !important;
+}
+
+.aside-menu .menu-sub .menu-item .menu-link.active::before,
+#kt_aside_menu .menu-sub .menu-item .menu-link.active::before {
 	display: none !important;
 	content: none !important;
 }
 
-/* Remove default dots / bullets */
-.aside-menu .menu-item .menu-link.active::after,
-.aside-menu .menu-item.here > .menu-link::after {
+/* 7. COLLAPSED SIDEBAR FLOATING SUBMENU PANEL (PART 2) */
+.gz-floating-sub-panel {
+	position: fixed;
+	z-index: 1070;
+	width: 240px;
+	background-color: #FFFFFF;
+	border: 1px solid #E2E8F0;
+	border-radius: 14px;
+	box-shadow: 0 10px 25px -5px rgba(23, 43, 77, 0.14), 0 8px 10px -6px rgba(23, 43, 77, 0.08);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	animation: gzFloatingSubEntrance 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes gzFloatingSubEntrance {
+	0% {
+		opacity: 0;
+		transform: translateX(-5px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.gz-floating-sub-panel {
+		animation: none !important;
+		transform: none !important;
+	}
+}
+
+.gz-floating-sub-header {
+	display: flex;
+	align-items: center;
+	padding: 12px 14px 10px 14px;
+	background-color: #FFFFFF;
+}
+
+.gz-floating-sub-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	margin-right: 10px;
+	color: #172B4D;
+	font-size: 14px;
+}
+
+.gz-floating-sub-title {
+	font-size: 13.5px;
+	font-weight: 700;
+	color: #172B4D;
+	letter-spacing: -0.01em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.gz-floating-sub-divider {
+	height: 1px;
+	background-color: #F1F5F9;
+	margin: 0;
+	border: none;
+}
+
+.gz-floating-sub-body {
+	padding: 6px 8px 8px 8px;
+	max-height: calc(100vh - 120px);
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: #CBD5E1 transparent;
+}
+
+.gz-floating-sub-body::-webkit-scrollbar {
+	width: 4px;
+}
+
+.gz-floating-sub-body::-webkit-scrollbar-thumb {
+	background-color: #CBD5E1;
+	border-radius: 4px;
+}
+
+.gz-floating-sub-body .menu-item {
+	margin: 2px 0 !important;
+	padding: 0 !important;
+	width: 100% !important;
+}
+
+.gz-floating-sub-body .menu-item .menu-link {
+	min-height: 38px !important;
+	height: 38px !important;
+	border-radius: 10px !important;
+	padding: 0 12px 0 8px !important;
+	display: flex !important;
+	align-items: center !important;
+	cursor: pointer !important;
+	background-color: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	transition: background-color 180ms ease, color 180ms ease !important;
+	text-decoration: none !important;
+	position: relative !important;
+}
+
+.gz-floating-sub-body .menu-item .menu-link::before {
 	display: none !important;
 	content: none !important;
 }
 
-.aside-menu .menu-item .menu-link.active .bullet,
-.aside-menu .menu-item.here > .menu-link .bullet,
-.aside-menu .menu-item .menu-link.active .bullet-dot,
-.aside-menu .menu-item.here > .menu-link .bullet-dot {
+.gz-floating-sub-body .menu-bullet {
+	width: 18px !important;
+	min-width: 18px !important;
+	max-width: 18px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	margin-right: 10px !important;
+}
+
+.gz-floating-sub-body .bullet-dot,
+.gz-floating-sub-body .bullet {
+	display: inline-block !important;
+	width: 5.5px !important;
+	height: 5.5px !important;
+	border-radius: 50% !important;
+	background-color: #94A3B8 !important;
+	transition: background-color 180ms ease !important;
+	transform: none !important;
+}
+
+.gz-floating-sub-body .menu-title {
+	color: #71809A !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	letter-spacing: -0.01em !important;
+	line-height: 1.3 !important;
+	white-space: nowrap !important;
+	overflow: hidden;
+	text-overflow: ellipsis !important;
+	transition: color 180ms ease !important;
+}
+
+.gz-floating-sub-body .menu-link:hover:not(.active) {
+	background-color: #EAF0FA !important;
+}
+
+.gz-floating-sub-body .menu-link:hover:not(.active) .bullet-dot,
+.gz-floating-sub-body .menu-link:hover:not(.active) .bullet {
+	background-color: #172B4D !important;
+	transform: none !important;
+}
+
+.gz-floating-sub-body .menu-link:hover:not(.active) .menu-title {
+	color: #172B4D !important;
+	font-weight: 600 !important;
+}
+
+.gz-floating-sub-body .menu-link.active {
+	background-color: #172B4D !important;
+	border-radius: 10px !important;
+	box-shadow: none !important;
+	border: none !important;
+}
+
+.gz-floating-sub-body .menu-link.active .bullet-dot,
+.gz-floating-sub-body .menu-link.active .bullet {
+	display: inline-block !important;
+	background-color: #FFFFFF !important;
+	transform: none !important;
+}
+
+.gz-floating-sub-body .menu-link.active .menu-title {
+	color: #FFFFFF !important;
+	font-weight: 600 !important;
+}
+
+.gz-floating-sub-body .menu-link.active:hover {
+	background-color: #172B4D !important;
+}
+
+/* Highlight parent trigger in collapsed rail when floating submenu is open */
+body.aside-minimize .aside .menu-item .menu-link.gz-floating-trigger-active,
+body.gz-aside-collapsed .aside .menu-item .menu-link.gz-floating-trigger-active,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link.gz-floating-trigger-active {
+	background-color: #EAF0FA !important;
+}
+
+body.aside-minimize .aside .menu-item .menu-link.gz-floating-trigger-active .menu-icon svg,
+body.aside-minimize .aside .menu-item .menu-link.gz-floating-trigger-active .menu-icon i,
+body.gz-aside-collapsed .aside .menu-item .menu-link.gz-floating-trigger-active .menu-icon svg,
+body.gz-aside-collapsed .aside .menu-item .menu-link.gz-floating-trigger-active .menu-icon i {
+	color: #172B4D !important;
+	fill: #172B4D !important;
+}
+
+/* Coordinate tooltip suppression while floating submenu is open */
+body.gz-floating-sub-active .tooltip.gz-aside-tooltip {
 	display: none !important;
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
+}
+
+/* --- 8. COLLAPSED ASIDE RAIL: PERFECT DEAD-CENTER ALIGNMENT --- */
+body.aside-minimize .aside .menu-item,
+body.gz-aside-collapsed .aside .menu-item,
+body[data-kt-aside-minimize="on"] .aside .menu-item,
+body.aside-minimize #kt_aside .menu-item,
+body.gz-aside-collapsed #kt_aside .menu-item,
+body[data-kt-aside-minimize="on"] #kt_aside .menu-item {
+	width: 100% !important;
+	display: flex !important;
+	justify-content: center !important;
+	align-items: center !important;
+	padding: 0 !important;
+	margin: 3px 0 !important;
+}
+
+body.aside-minimize .aside .menu-item .menu-link,
+body.gz-aside-collapsed .aside .menu-item .menu-link,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link,
+body.aside-minimize .aside-menu .menu-link,
+body.gz-aside-collapsed .aside-menu .menu-link,
+body[data-kt-aside-minimize="on"] .aside-menu .menu-link {
+	width: 42px !important;
+	height: 42px !important;
+	min-width: 42px !important;
+	max-width: 42px !important;
+	padding: 0 !important;
+	margin: 0 auto !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	border-radius: 12px !important;
+	position: relative !important;
+	box-sizing: border-box !important;
+}
+
+body.aside-minimize .aside .menu-item .menu-icon,
+body.gz-aside-collapsed .aside .menu-item .menu-icon,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon,
+body.aside-minimize .aside-menu .menu-link .menu-icon,
+body.gz-aside-collapsed .aside-menu .menu-link .menu-icon,
+body[data-kt-aside-minimize="on"] .aside-menu .menu-link .menu-icon {
+	margin: 0 !important;
+	margin-right: 0 !important;
+	margin-left: 0 !important;
+	padding: 0 !important;
+	width: 42px !important;
+	height: 42px !important;
+	min-width: 42px !important;
+	max-width: 42px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	text-align: center !important;
+}
+
+body.aside-minimize .aside .menu-item .menu-icon svg,
+body.aside-minimize .aside .menu-item .menu-icon i,
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg,
+body.gz-aside-collapsed .aside .menu-item .menu-icon i,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon i,
+body.aside-minimize .aside-menu .menu-link .menu-icon svg,
+body.aside-minimize .aside-menu .menu-link .menu-icon i,
+body.gz-aside-collapsed .aside-menu .menu-link .menu-icon svg,
+body.gz-aside-collapsed .aside-menu .menu-link .menu-icon i,
+body[data-kt-aside-minimize="on"] .aside-menu .menu-link .menu-icon svg,
+body[data-kt-aside-minimize="on"] .aside-menu .menu-link .menu-icon i {
+	margin: 0 auto !important;
+	margin-right: 0 !important;
+	margin-left: 0 !important;
+	display: block !important;
 }
 
 /* ==========================================================================
@@ -938,24 +1380,43 @@ label.fw-bold {
 	opacity: 0.7 !important;
 }
 
-/* Ensure table action cells stay side-by-side (excluding printable documents) */
-table:not(#invoiceContent table):not(#quotationContent table) td:last-child {
+/* Ensure table action cells stay side-by-side (excluding printable documents and empty state cells with colspan) */
+table:not(#invoiceContent table):not(#quotationContent table) td:last-child:not([colspan]):not(.gz-table-empty-cell) {
 	white-space: nowrap !important;
 }
 
-table:not(#invoiceContent table):not(#quotationContent table) td:last-child .d-flex {
+table:not(#invoiceContent table):not(#quotationContent table) td:last-child:not([colspan]):not(.gz-table-empty-cell) .d-flex {
 	display: inline-flex !important;
 	flex-direction: row !important;
 	flex-wrap: nowrap !important;
 	align-items: center !important;
 }
 
-table:not(#invoiceContent table):not(#quotationContent table) td:last-child .btn,
-table:not(#invoiceContent table):not(#quotationContent table) td:last-child a.btn {
+table:not(#invoiceContent table):not(#quotationContent table) td:last-child:not([colspan]):not(.gz-table-empty-cell) .btn,
+table:not(#invoiceContent table):not(#quotationContent table) td:last-child:not([colspan]):not(.gz-table-empty-cell) a.btn {
 	display: inline-flex !important;
 	vertical-align: middle !important;
 	margin-top: 0 !important;
 	margin-bottom: 0 !important;
+}
+
+/* Empty state cells */
+table td[colspan],
+table td.gz-table-empty-cell {
+	white-space: normal !important;
+	text-align: center !important;
+}
+
+table td[colspan] .d-flex.flex-column,
+table td.gz-table-empty-cell .d-flex.flex-column,
+table td .gz-empty-state-wrap,
+table td .gz-prod-empty-state {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	text-align: center !important;
+	white-space: normal !important;
 }
 
 /* ==========================================================================

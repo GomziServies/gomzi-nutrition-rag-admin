@@ -1,39 +1,50 @@
-import { useEffect, useState } from 'react'
+/* eslint-disable */
+import React, { useState, useRef, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faPenToSquare,
+	faTrash,
+	faCloudArrowUp,
+	faCheck,
+	faArrowLeft,
+	faCircleNotch,
+	faPlus,
+} from '@fortawesome/free-solid-svg-icons'
 import toast from 'react-hot-toast'
-import { useLocation, useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import InputField from '../../../components/InputField'
-import SelectField from '../../../components/SelectField'
-import TableButton from '../../../components/TableButton'
-import TextareaField from '../../../components/TextareaField'
 import { FileUploadToFGGroup, GetProduct, UpdateProduct } from '../../../Functions/FGGroup'
+import '../products-theme.css'
 
-const EditGomziNutritionProduct = () => {
+export const EditGomziNutritionProduct: React.FC = () => {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
-	const product_id: string | any = searchParams.get('product_id')
-	const [isSubmitting, setIsSubmitting] = useState(false)
+	const product_id = searchParams.get('product_id') || searchParams.get('id')
+
+	const fileInputRef = useRef<HTMLInputElement>(null)
+	const [activeSection, setActiveSection] = useState<string>('basic')
+	const [loading, setLoading] = useState<boolean>(true)
+	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
 	const [formData, setFormData] = useState({
 		_id: '',
 		name: '',
 		shortDescription: '',
 		description: '',
-		flavour: '',
-		weight: {
-			amount: '',
-			unit: 'g',
-		},
 		price: '',
 		discountPrice: '',
 		stock: '',
 		private_note: '',
+		flavour: '',
 		storageInstructions: '',
 		additionalInstructions: '',
-
+		weight: {
+			amount: '',
+			unit: 'g',
+		},
 		categories: '',
 		tags: '',
-
 		nutrition: {
 			servingSize: '',
 			energy: '',
@@ -46,10 +57,8 @@ const EditGomziNutritionProduct = () => {
 			resveratrol: '',
 			unit: 'g',
 		},
-
 		displayImages: [] as string[],
 		selectedFiles: [] as File[],
-
 		highlights: [] as any[],
 		benefits: [] as any[],
 		ingredients: [] as string[],
@@ -57,200 +66,136 @@ const EditGomziNutritionProduct = () => {
 		variations: [] as any[],
 	})
 
+	useEffect(() => {
+		const fetchProductData = async () => {
+			if (!product_id) {
+				setLoading(false)
+				toast.error('No product ID provided')
+				return
+			}
+
+			try {
+				setLoading(true)
+				const response: any = await GetProduct({ id: product_id })
+				const product = response?.data?.[0]
+				if (!product) {
+					toast.error('Product not found')
+					setLoading(false)
+					return
+				}
+
+				setFormData({
+					...product,
+					_id: product._id,
+					selectedFiles: [],
+					categories: Array.isArray(product.categories) ? product.categories.join(', ') : product.categories || '',
+					tags: Array.isArray(product.tags) ? product.tags.join(', ') : product.tags || '',
+					flavour: product.flavour || '',
+					price: String(product.price ?? ''),
+					discountPrice: String(product.discountPrice ?? ''),
+					stock: String(product.stock ?? ''),
+					shortDescription: product.shortDescription || '',
+					description: product.description || '',
+					private_note: product.private_note || '',
+					storageInstructions: product.storageInstructions || '',
+					additionalInstructions: product.additionalInstructions || '',
+					weight: {
+						amount: product.weight?.amount ? String(product.weight.amount) : '',
+						unit: product.weight?.unit || 'g',
+					},
+					displayImages: Array.isArray(product.displayImages) ? product.displayImages : [],
+					highlights: Array.isArray(product.highlights) && product.highlights.length > 0 ? product.highlights : [{ title: '', value: '' }],
+					benefits: Array.isArray(product.benefits) && product.benefits.length > 0 ? product.benefits : [{ title: '' }],
+					ingredients: Array.isArray(product.ingredients) && product.ingredients.length > 0 ? product.ingredients : [''],
+					usageInstructions: Array.isArray(product.usageInstructions) && product.usageInstructions.length > 0
+						? product.usageInstructions
+						: [{ stepNumber: '1', description: '' }],
+					nutrition: {
+						servingSize: product.nutrition?.servingSize || '',
+						energy: String(product.nutrition?.energy ?? ''),
+						protein: String(product.nutrition?.protein ?? ''),
+						carbohydrates: String(product.nutrition?.carbohydrates ?? ''),
+						fat: String(product.nutrition?.fat ?? ''),
+						fiber: String(product.nutrition?.fiber ?? ''),
+						vitaminC: String(product.nutrition?.vitaminC ?? ''),
+						iron: String(product.nutrition?.iron ?? ''),
+						resveratrol: String(product.nutrition?.resveratrol ?? ''),
+						unit: product.nutrition?.unit || 'g',
+					},
+					variations: product.variations || [],
+				})
+			} catch (error: any) {
+				console.error('Error fetching product data:', error)
+				toast.error('Failed to load product details')
+			} finally {
+				setLoading(false)
+			}
+		}
+
+		fetchProductData()
+	}, [product_id])
+
+	// Section intersection observer to update active nav item on scroll
+	useEffect(() => {
+		const sections = ['basic', 'images', 'highlights', 'usage', 'benefits', 'ingredients', 'nutrition']
+		const handleScroll = () => {
+			const scrollPos = window.scrollY + 160
+			for (const sec of sections) {
+				const el = document.getElementById(`section-${sec}`)
+				if (el) {
+					const top = el.offsetTop
+					const height = el.offsetHeight
+					if (scrollPos >= top && scrollPos < top + height) {
+						setActiveSection(sec)
+						break
+					}
+				}
+			}
+		}
+
+		window.addEventListener('scroll', handleScroll, { passive: true })
+		return () => window.removeEventListener('scroll', handleScroll)
+	}, [])
+
+	const scrollToSection = (id: string) => {
+		setActiveSection(id)
+		const el = document.getElementById(`section-${id}`)
+		if (el) {
+			const yOffset = -100
+			const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset
+			window.scrollTo({ top: y, behavior: 'smooth' })
+		}
+	}
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+		const { name, value } = e.target
+		setFormData((prev) => ({
+			...prev,
+			[name]: value,
+		}))
+	}
+
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (!e.target.files) return
-
 		const files = Array.from(e.target.files)
 
 		setFormData((prev) => ({
 			...prev,
 			selectedFiles: [...prev.selectedFiles, ...files],
-			displayImages: [...prev.displayImages, ...files.map((file) => URL.createObjectURL(file))],
 		}))
 	}
 
-	const removeImage = (index: number) => {
+	const removeExistingImage = (index: number) => {
 		setFormData((prev) => ({
 			...prev,
-			selectedFiles: prev.selectedFiles.filter((_, i) => i !== index),
 			displayImages: prev.displayImages.filter((_, i) => i !== index),
 		}))
 	}
 
-	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-		const { id, name, value } = event.target
-
-		if (id === 'fileInput' && event.target instanceof HTMLInputElement && event.target.files) {
-			const file = event.target.files[0]
-			setFormData((prevData) => ({
-				...prevData,
-				selectedFiles: [...prevData.selectedFiles, file],
-				displayImages: [...prevData.displayImages, URL.createObjectURL(file)],
-			}))
-		} else {
-			setFormData((prevData) => ({
-				...prevData,
-				[name]: value,
-			}))
-		}
-	}
-
-	useEffect(() => {
-		const fetchProductData = async () => {
-			try {
-				const response: any = await GetProduct({ id: product_id })
-				const product = response.data[0]
-				setFormData({
-					...product,
-					selectedFiles: [],
-					categories: product.categories?.join(', ') || '',
-					tags: product.tags?.join(', ') || '',
-					flavour: product.flavour,
-					weight: {
-						amount: product.weight?.amount || '',
-						unit: product.weight?.unit || 'g',
-					},
-					displayImages:
-						product.displayImages?.map((img: string) => `https://files.fggroup.in/${img}`) || [],
-
-					highlights: product.highlights || [],
-					benefits: product.benefits || [],
-					ingredients: product.ingredients || [],
-
-					usageInstructions: product.usageInstructions || [],
-
-					nutrition: {
-						servingSize: product.nutrition?.servingSize || '',
-						energy: product.nutrition?.energy || '',
-						protein: product.nutrition?.protein || '',
-						carbohydrates: product.nutrition?.carbohydrates || '',
-						fat: product.nutrition?.fat || '',
-						fiber: product.nutrition?.fiber || '',
-						vitaminC: product.nutrition?.vitaminC || '',
-						iron: product.nutrition?.iron || '',
-						resveratrol: product.nutrition?.resveratrol || '',
-						unit: product.nutrition?.unit || 'g',
-					},
-				})
-			} catch (error: any) {
-				toast.error(error.message)
-				console.error(error)
-			}
-		}
-
-		fetchProductData()
-	}, [])
-
-	const handleUpdateButtonClick = async () => {
-		try {
-			setIsSubmitting(true)
-			const existingImages = (formData.displayImages || [])
-				.filter((img) => !img.startsWith('blob:'))
-				.map((img) => img.replace('https://files.fggroup.in/', ''))
-
-			let imageUrls = [...existingImages]
-			if (formData.selectedFiles?.length > 0) {
-				const uploadedImages = await Promise.all(
-					formData.selectedFiles.map(async (file) => {
-						const response: any = await FileUploadToFGGroup([file], {
-							directory: 'products',
-						})
-
-						return response.data?.fileURLs?.[0]
-					})
-				)
-
-				imageUrls = [...existingImages, ...uploadedImages.filter(Boolean)]
-			}
-
-			const payload = {
-				id: product_id,
-				flavour: formData.flavour,
-				name: formData.name.trim(),
-				price: Number(formData.price),
-				discountPrice: formData.discountPrice ? Number(formData.discountPrice) : undefined,
-				weight:
-					formData.weight.amount !== ''
-						? {
-								amount: Number(formData.weight.amount),
-								unit: formData.weight.unit,
-						  }
-						: undefined,
-				stock: Number(formData.stock || 0),
-
-				shortDescription: formData.shortDescription,
-
-				description: formData.description,
-
-				private_note: formData.private_note,
-
-				displayImages: imageUrls,
-
-				categories: formData.categories
-					.split(',')
-					.map((x) => x.trim())
-					.filter(Boolean),
-
-				tags: formData.tags
-					.split(',')
-					.map((x) => x.trim())
-					.filter(Boolean),
-
-				highlights: formData.highlights.filter((item) => item.title?.trim()),
-
-				benefits: formData.benefits.filter((item) => item.title?.trim()),
-
-				ingredients: formData.ingredients.filter((item) => item.trim()),
-
-				nutrition: {
-					servingSize: formData.nutrition.servingSize,
-
-					energy: Number(formData.nutrition.energy || 0),
-
-					protein: Number(formData.nutrition.protein || 0),
-
-					carbohydrates: Number(formData.nutrition.carbohydrates || 0),
-
-					fat: Number(formData.nutrition.fat || 0),
-
-					fiber: Number(formData.nutrition.fiber || 0),
-
-					vitaminC: Number(formData.nutrition.vitaminC || 0),
-
-					iron: Number(formData.nutrition.iron || 0),
-
-					resveratrol: Number(formData.nutrition.resveratrol || 0),
-
-					unit: formData.nutrition.unit,
-				},
-
-				usageInstructions: formData.usageInstructions.filter((item) => item.stepNumber),
-
-				storageInstructions: formData.storageInstructions,
-
-				additionalInstructions: formData.additionalInstructions,
-
-				variations: formData.variations || [],
-			}
-			await UpdateProduct(payload)
-
-			toast.success('Product Updated Successfully')
-			setIsSubmitting(false)
-			navigate('/rag/product-list')
-		} catch (error: any) {
-			toast.error(error.message)
-			setIsSubmitting(false)
-			console.error(error)
-		}
-	}
-
-	const updateNutrition = (field: string, value: string) => {
+	const removeNewImage = (index: number) => {
 		setFormData((prev) => ({
 			...prev,
-			nutrition: {
-				...prev.nutrition,
-				[field]: value,
-			},
+			selectedFiles: prev.selectedFiles.filter((_, i) => i !== index),
 		}))
 	}
 
@@ -264,759 +209,834 @@ const EditGomziNutritionProduct = () => {
 		}))
 	}
 
-	const addHighlight = () => {
-		setFormData((prev: any) => ({
-			...prev,
-			highlights: [
-				...prev.highlights,
-				{
-					title: '',
-					value: '',
-				},
-			],
-		}))
-	}
-
-	const removeHighlight = (index: number) => {
+	const updateNutrition = (field: string, value: string) => {
 		setFormData((prev) => ({
 			...prev,
-			highlights: prev.highlights.filter((_, i) => i !== index),
+			nutrition: {
+				...prev.nutrition,
+				[field]: value,
+			},
 		}))
 	}
 
-	const updateHighlight = (index: number, field: 'title' | 'value', value: string) => {
+	// Highlights
+	const addHighlight = () => {
+		setFormData((prev) => ({
+			...prev,
+			highlights: [...prev.highlights, { title: '', value: '' }],
+		}))
+	}
+
+	const removeHighlight = (idx: number) => {
+		setFormData((prev) => ({
+			...prev,
+			highlights: prev.highlights.filter((_, i) => i !== idx),
+		}))
+	}
+
+	const updateHighlight = (idx: number, field: 'title' | 'value', val: string) => {
 		setFormData((prev) => {
-			const updated = [...prev.highlights]
-
-			updated[index] = {
-				...updated[index],
-				[field]: value,
-			}
-
-			return {
-				...prev,
-				highlights: updated,
-			}
+			const arr = [...prev.highlights]
+			arr[idx] = { ...arr[idx], [field]: val }
+			return { ...prev, highlights: arr }
 		})
 	}
 
-	const addUsageInstructions = () => {
-		setFormData((prev: any) => ({
+	// Usage Instructions
+	const addStep = () => {
+		setFormData((prev) => ({
 			...prev,
 			usageInstructions: [
 				...prev.usageInstructions,
-				{
-					stepNumber: '',
-					description: '',
-				},
+				{ stepNumber: String(prev.usageInstructions.length + 1), description: '' },
 			],
 		}))
 	}
 
-	const removeUsageInstructions = (index: number) => {
+	const removeStep = (idx: number) => {
 		setFormData((prev) => ({
 			...prev,
-			usageInstructions: prev.usageInstructions.filter((_, i) => i !== index),
+			usageInstructions: prev.usageInstructions
+				.filter((_, i) => i !== idx)
+				.map((step, i) => ({ ...step, stepNumber: String(i + 1) })),
 		}))
 	}
 
-	const updateUsageInstructions = (
-		index: number,
-		field: 'stepNumber' | 'description',
-		value: string
-	) => {
+	const updateStep = (idx: number, description: string) => {
 		setFormData((prev) => {
-			const updated = [...prev.usageInstructions]
-
-			updated[index] = {
-				...updated[index],
-				[field]: value,
-			}
-
-			return {
-				...prev,
-				usageInstructions: updated,
-			}
+			const arr = [...prev.usageInstructions]
+			arr[idx] = { ...arr[idx], description }
+			return { ...prev, usageInstructions: arr }
 		})
 	}
 
+	// Benefits
 	const addBenefit = () => {
-		setFormData((prev: any) => ({
-			...prev,
-			benefits: [
-				...prev.benefits,
-				{
-					title: '',
-				},
-			],
-		}))
-	}
-
-	const removeBenefit = (index: number) => {
 		setFormData((prev) => ({
 			...prev,
-			benefits: prev.benefits.filter((_, i) => i !== index),
+			benefits: [...prev.benefits, { title: '' }],
 		}))
 	}
 
-	const updateBenefit = (index: number, field: 'title', value: string) => {
+	const removeBenefit = (idx: number) => {
+		setFormData((prev) => ({
+			...prev,
+			benefits: prev.benefits.filter((_, i) => i !== idx),
+		}))
+	}
+
+	const updateBenefit = (idx: number, title: string) => {
 		setFormData((prev) => {
-			const updated = [...prev.benefits]
-
-			updated[index] = {
-				...updated[index],
-				[field]: value,
-			}
-
-			return {
-				...prev,
-				benefits: updated,
-			}
+			const arr = [...prev.benefits]
+			arr[idx] = { ...arr[idx], title }
+			return { ...prev, benefits: arr }
 		})
 	}
 
+	// Ingredients
 	const addIngredient = () => {
-		setFormData((prev: any) => ({
+		setFormData((prev) => ({
 			...prev,
 			ingredients: [...prev.ingredients, ''],
 		}))
 	}
 
-	const removeIngredient = (index: number) => {
+	const removeIngredient = (idx: number) => {
 		setFormData((prev) => ({
 			...prev,
-			ingredients: prev.ingredients.filter((_, i) => i !== index),
+			ingredients: prev.ingredients.filter((_, i) => i !== idx),
 		}))
 	}
 
-	const updateIngredient = (index: number, value: string) => {
+	const updateIngredient = (idx: number, val: string) => {
 		setFormData((prev) => {
-			const updated = [...prev.ingredients]
-
-			updated[index] = value
-
-			return {
-				...prev,
-				ingredients: updated,
-			}
+			const arr = [...prev.ingredients]
+			arr[idx] = val
+			return { ...prev, ingredients: arr }
 		})
 	}
 
+	const handleUpdateProduct = async () => {
+		try {
+			setIsSubmitting(true)
+
+			if (!formData.name.trim()) {
+				toast.error('Product name is required')
+				setIsSubmitting(false)
+				return
+			}
+
+			if (!formData.price || Number(formData.price) <= 0) {
+				toast.error('Valid price is required')
+				setIsSubmitting(false)
+				return
+			}
+
+			let newImageUrls: string[] = []
+			if (formData.selectedFiles.length > 0) {
+				const uploadedImages = await Promise.all(
+					formData.selectedFiles.map(async (file) => {
+						const response: any = await FileUploadToFGGroup([file], {
+							directory: 'products',
+						})
+						return response.data?.fileURLs?.[0]
+					})
+				)
+				newImageUrls = uploadedImages.filter(Boolean)
+			}
+
+			// Clean existing URLs so only relative paths are sent if needed
+			const cleanedExistingImages = formData.displayImages.map((img) =>
+				img.replace('https://files.fggroup.in/', '')
+			)
+
+			const allImages = [...cleanedExistingImages, ...newImageUrls]
+
+			const payload: any = {
+				id: String(formData._id || product_id || ''),
+				name: formData.name.trim(),
+				price: Number(formData.price),
+				discountPrice: formData.discountPrice ? Number(formData.discountPrice) : undefined,
+				stock: formData.stock ? Number(formData.stock) : 0,
+				shortDescription: formData.shortDescription,
+				description: formData.description,
+				private_note: formData.private_note,
+				flavour: formData.flavour,
+				displayImages: allImages,
+				weight:
+					formData.weight.amount !== ''
+						? {
+								amount: Number(formData.weight.amount),
+								unit: formData.weight.unit,
+						  }
+						: undefined,
+				categories: formData.categories
+					.split(',')
+					.map((x) => x.trim())
+					.filter(Boolean),
+				tags: formData.tags
+					.split(',')
+					.map((x) => x.trim())
+					.filter(Boolean),
+				highlights: formData.highlights.filter((item) => item.title && item.title.trim()),
+				benefits: formData.benefits.filter((item) => item.title && item.title.trim()),
+				ingredients: formData.ingredients.filter((item) => item && item.trim()),
+				nutrition: {
+					servingSize: formData.nutrition.servingSize,
+					energy: Number(formData.nutrition.energy || 0),
+					protein: Number(formData.nutrition.protein || 0),
+					carbohydrates: Number(formData.nutrition.carbohydrates || 0),
+					fat: Number(formData.nutrition.fat || 0),
+					fiber: Number(formData.nutrition.fiber || 0),
+					vitaminC: Number(formData.nutrition.vitaminC || 0),
+					iron: Number(formData.nutrition.iron || 0),
+					resveratrol: Number(formData.nutrition.resveratrol || 0),
+					unit: formData.nutrition.unit,
+				},
+				usageInstructions: formData.usageInstructions.filter(
+					(item) => String(item.stepNumber).trim() !== '' && item.description && item.description.trim() !== ''
+				),
+				storageInstructions: formData.storageInstructions,
+				additionalInstructions: formData.additionalInstructions,
+				variations: formData.variations || [],
+			}
+
+			await UpdateProduct(payload)
+			toast.success('Product Updated Successfully')
+			navigate('/rag/product-list')
+		} catch (error: any) {
+			console.error('Error updating product:', error)
+			toast.error(error?.message || 'Failed to update product')
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
+
+	if (loading) {
+		return (
+			<div className='gz-prod-container'>
+				<PageTitle breadcrumbs={[]}>Edit Product</PageTitle>
+				<div className='gz-prod-breadcrumb'>
+					<Link to='/rag/product-list'>Products & Orders</Link>
+					<span className='sep'>&gt;</span>
+					<span>Edit Product</span>
+				</div>
+				<div className='gz-prod-header'>
+					<div>
+						<div className='gz-prod-skeleton mb-2' style={{ width: '220px', height: '32px', borderRadius: '8px' }}></div>
+						<div className='gz-prod-skeleton' style={{ width: '260px', height: '16px', borderRadius: '4px' }}></div>
+					</div>
+				</div>
+
+				<div className='gz-prod-split-layout'>
+					<div className='gz-prod-sticky-nav'>
+						{Array.from({ length: 6 }).map((_, idx) => (
+							<div key={idx} className='gz-prod-nav-item'>
+								<span className='gz-prod-skeleton' style={{ width: '24px', height: '24px', borderRadius: '50%' }}></span>
+								<span className='gz-prod-skeleton' style={{ width: '120px', height: '14px', borderRadius: '4px' }}></span>
+							</div>
+						))}
+					</div>
+					<div className='gz-prod-form-content'>
+						<div className='gz-prod-form-section'>
+							<div className='gz-prod-skeleton mb-4' style={{ width: '180px', height: '24px', borderRadius: '6px' }}></div>
+							<div className='row g-4'>
+								{Array.from({ length: 6 }).map((_, idx) => (
+									<div key={idx} className='col-12 col-md-6'>
+										<div className='gz-prod-skeleton mb-2' style={{ width: '80px', height: '12px', borderRadius: '4px' }}></div>
+										<div className='gz-prod-skeleton' style={{ width: '100%', height: '42px', borderRadius: '8px' }}></div>
+									</div>
+								))}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		)
+	}
+
 	return (
-		<>
-			<PageTitle breadcrumbs={[]}>Product Details</PageTitle>
-			<div className='row'>
-				<div className='col-12 mt-3'>
-					<div className='card py-10'>
-						<div className='card-body'>
-							<div className='row'>
-								<div className='col-md-5'>
-									<div className='card-header'>
-										<h3 className='card-title fw-bold'>Product Images</h3>
-									</div>
+		<div className='gz-prod-container'>
+			<PageTitle breadcrumbs={[]}>Edit Product</PageTitle>
 
-									<div className='card-body'>
-										<div className='mb-5'>
-											<input
-												type='file'
-												multiple
-												accept='image/*'
-												className='form-control'
-												onChange={handleImageChange}
-											/>
-										</div>
+			{/* =========================================================================
+			    BREADCRUMBS
+			    ========================================================================= */}
+			<div className='gz-prod-breadcrumb'>
+				<Link to='/rag/product-list'>Products & Orders</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Edit Product</span>
+			</div>
 
-										{formData.displayImages.length === 0 && (
-											<div className='text-center py-10 border rounded'>
-												<img
-													src='/media/logos/rag-favicon-logo.png'
-													alt='preview'
-													style={{
-														maxHeight: '150px',
-													}}
-												/>
+			{/* =========================================================================
+			    HEADER
+			    ========================================================================= */}
+			<div className='gz-prod-header'>
+				<div>
+					<h1 className='gz-prod-title'>{`Edit: ${formData.name || 'Product'}`}</h1>
+					<p className='gz-prod-subtitle'>Update product specifications, media assets and pricing</p>
+				</div>
+				<div className='d-flex align-items-center gap-3'>
+					<button
+						type='button'
+						className='gz-prod-btn-cancel'
+						onClick={() => navigate('/rag/product-list')}>
+						Cancel
+					</button>
+					<button
+						type='button'
+						className='gz-prod-btn-primary'
+						onClick={handleUpdateProduct}
+						disabled={isSubmitting}>
+						{isSubmitting ? (
+							<>
+								<FontAwesomeIcon icon={faCircleNotch} spin />
+								<span>Saving Changes...</span>
+							</>
+						) : (
+							<>
+								<FontAwesomeIcon icon={faPenToSquare} />
+								<span>Save Changes</span>
+							</>
+						)}
+					</button>
+				</div>
+			</div>
 
-												<div className='text-muted mt-3'>No images selected</div>
-											</div>
-										)}
+			{/* =========================================================================
+			    TWO COLUMN SPLIT LAYOUT (STICKY NAV + FORM SECTIONS)
+			    ========================================================================= */}
+			<div className='gz-prod-split-layout'>
+				{/* Left: Sticky Navigation */}
+				<div className='gz-prod-sticky-nav'>
+					{[
+						{ id: 'basic', num: 1, label: 'Basic Information' },
+						{ id: 'images', num: 2, label: 'Images' },
+						{ id: 'highlights', num: 3, label: 'Highlights' },
+						{ id: 'usage', num: 4, label: 'How to make it' },
+						{ id: 'benefits', num: 5, label: 'Benefits' },
+						{ id: 'ingredients', num: 6, label: 'Ingredients' },
+						{ id: 'nutrition', num: 7, label: 'Nutrition Facts' },
+					].map((item) => (
+						<button
+							key={item.id}
+							type='button'
+							className={`gz-prod-nav-item ${activeSection === item.id ? 'active' : ''}`}
+							onClick={() => scrollToSection(item.id)}>
+							<span className='gz-prod-nav-num'>{item.num}</span>
+							<span>{item.label}</span>
+						</button>
+					))}
+				</div>
 
-										{formData.displayImages.length > 0 && (
-											<div className='row'>
-												{formData.displayImages.map((image, index) => (
-													<div
-														className='col-md-3 mb-5'
-														key={index}>
-														<div
-															className='position-relative border rounded overflow-hidden'
-															style={{
-																height: '180px',
-															}}>
-															<img
-																src={image}
-																alt='product'
-																className='w-100 h-100'
-																style={{
-																	objectFit: 'cover',
-																}}
-															/>
+				{/* Right: Form Sections */}
+				<div className='gz-prod-form-content'>
+					{/* Section 1: Basic Information */}
+					<div className='gz-prod-form-section' id='section-basic'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>Basic Information</h3>
+								<div className='gz-prod-form-section-sub'>General product attributes, SKU, pricing and catalog classification</div>
+							</div>
+						</div>
 
-															<button
-																type='button'
-																className='btn btn-danger btn-sm position-absolute top-0 end-0 m-2'
-																onClick={() => removeImage(index)}>
-																×
-															</button>
-														</div>
-													</div>
-												))}
-											</div>
-										)}
+						<div className='row g-4'>
+							<div className='col-12 col-md-8'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>
+										Product Name <span className='req'>*</span>
+									</label>
+									<input
+										type='text'
+										name='name'
+										className='gz-prod-input'
+										placeholder='Enter product name'
+										value={formData.name}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Flavour</label>
+									<input
+										type='text'
+										name='flavour'
+										className='gz-prod-input'
+										placeholder='e.g., Chocolate, Unflavoured'
+										value={formData.flavour}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>
+										Price (₹) <span className='req'>*</span>
+									</label>
+									<input
+										type='number'
+										name='price'
+										className='gz-prod-input'
+										placeholder='0.00'
+										value={formData.price}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Discount Price (₹)</label>
+									<input
+										type='number'
+										name='discountPrice'
+										className='gz-prod-input'
+										placeholder='0.00'
+										value={formData.discountPrice}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Stock</label>
+									<input
+										type='number'
+										name='stock'
+										className='gz-prod-input'
+										placeholder='0'
+										value={formData.stock}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-12 col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Weight</label>
+									<div className='d-flex gap-2'>
+										<input
+											type='number'
+											className='gz-prod-input flex-grow-1'
+											placeholder='e.g., 500, 1'
+											value={formData.weight.amount}
+											onChange={(e) => updateWeight('amount', e.target.value)}
+										/>
+										<select
+											className='gz-prod-select'
+											style={{ width: '90px' }}
+											value={formData.weight.unit}
+											onChange={(e) => updateWeight('unit', e.target.value)}>
+											<option value='g'>g</option>
+											<option value='kg'>kg</option>
+											<option value='ml'>ml</option>
+											<option value='l'>L</option>
+										</select>
 									</div>
 								</div>
-								<div className='col-md-7'>
-									<div className='row justify-content-end'>
-										<div className='col-12'>
-											<div className='card mb-7'>
-												<div className='card-header'>
-													<h3 className='card-title fw-bold'>Basic Information</h3>
-												</div>
+							</div>
 
-												<div className='card-body'>
-													<div className='row'>
-														{/* Product Name */}
-														<div className='col-md-12'>
-															<InputField
-																placeholder='Enter Product Name'
-																type='text'
-																name='name'
-																label='Product Name'
-																htmlFor='name'
-																value={formData.name}
-																onChange={handleInputChange}
-																required
-															/>
-														</div>
-
-														{/* Price */}
-														<div className='col-md-4'>
-															<InputField
-																placeholder='0'
-																type='number'
-																name='price'
-																label='Price'
-																htmlFor='price'
-																value={formData.price}
-																onChange={handleInputChange}
-																required
-															/>
-														</div>
-
-														{/* Discount Price */}
-														<div className='col-md-4'>
-															<InputField
-																placeholder='0'
-																type='number'
-																name='discountPrice'
-																label='Discount Price'
-																htmlFor='discountPrice'
-																value={formData.discountPrice}
-																onChange={handleInputChange}
-															/>
-														</div>
-
-														<div className='col-md-4'>
-															<InputField
-																placeholder='0'
-																type='number'
-																name='stock'
-																label='Stock'
-																htmlFor='stock'
-																value={formData.stock}
-																onChange={handleInputChange}
-															/>
-														</div>
-
-														<div className='col-md-6'>
-															<InputField
-																placeholder='enter flavour'
-																type='text'
-																name='flavour'
-																label='Flavour'
-																htmlFor='flavour'
-																value={formData.flavour}
-																onChange={handleInputChange}
-															/>
-														</div>
-
-														<div className='col-md-4'>
-															<InputField
-																placeholder='500'
-																type='number'
-																name='weightAmount'
-																label='Weight'
-																htmlFor='weightAmount'
-																value={String(formData.weight.amount)}
-																onChange={(e) => updateWeight('amount', e.target.value)}
-															/>
-														</div>
-
-														<div className='col-md-2'>
-															<SelectField
-																label='Weight Unit'
-																name='weightUnit'
-																htmlFor='weightUnit'
-																marginRemove
-																value={formData.weight.unit}
-																onChange={(e) => updateWeight('unit', e.target.value)}
-																options={['g', 'kg', 'mg', 'lb', 'oz']}
-																searchable={false}
-																hideDefaultOption
-															/>
-														</div>
-
-														{/* Categories */}
-														<div className='col-md-6'>
-															<InputField
-																type='text'
-																placeholder='Protein, Weight Loss, Wellness'
-																name='categories'
-																label='Categories'
-																htmlFor='Categories'
-																marginRemove
-																value={formData.categories}
-																onChange={handleInputChange}
-															/>
-
-															<div className='text-muted fs-8 mt-2'>
-																Separate categories with commas
-															</div>
-														</div>
-
-														{/* Tags */}
-														<div className='col-md-6'>
-															<InputField
-																type='text'
-																placeholder='Gym, Fitness, Muscle'
-																name='tags'
-																value={formData.tags}
-																onChange={handleInputChange}
-																label='Tags'
-																marginRemove
-																htmlFor='tags'
-															/>
-
-															<div className='text-muted fs-8 mt-2'>Separate tags with commas</div>
-														</div>
-
-														{/* Short Description */}
-														<div className='col-md-12 mt-5'>
-															<TextareaField
-																className=''
-																label='Short Description'
-																htmlFor='Short Description'
-																name='shortDescription'
-																value={formData.shortDescription}
-																onChange={handleInputChange as any}
-																placeholder='Short product summary'
-															/>
-														</div>
-
-														{/* Description */}
-														<div className='col-md-12'>
-															<TextareaField
-																className=''
-																label='Product Description'
-																htmlFor='Product Description'
-																name='description'
-																value={formData.description}
-																onChange={handleInputChange as any}
-																placeholder='Detailed product description'
-															/>
-														</div>
-
-														{/* storageInstructions */}
-														<div className='col-md-12'>
-															<TextareaField
-																className=''
-																label='Storage Instructions'
-																htmlFor='Storage Instructions'
-																name='storageInstructions'
-																value={formData.storageInstructions}
-																onChange={handleInputChange as any}
-																placeholder='Storage Instructions'
-															/>
-														</div>
-
-														{/* Private Note */}
-														<div className='col-md-12'>
-															<TextareaField
-																className=''
-																label='Private Note'
-																htmlFor='Private Note'
-																name='private_note'
-																value={formData.private_note}
-																onChange={handleInputChange as any}
-																placeholder='Only visible to admins'
-															/>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
+							<div className='col-12 col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Categories</label>
+									<input
+										type='text'
+										name='categories'
+										className='gz-prod-input'
+										placeholder='Proteins, Supplements (comma separated)'
+										value={formData.categories}
+										onChange={handleInputChange}
+									/>
 								</div>
-								<div className='col-md-12'>
-									<div className='col-12'>
-										<div className='card mb-7'>
-											<div className='card-header'>
-												<div className='card-title'>
-													<h3>Product Highlights</h3>
-												</div>
+							</div>
 
-												<div className='card-toolbar'>
-													<button
-														type='button'
-														className='btn btn-primary btn-sm'
-														onClick={addHighlight}>
-														Add Highlight
-													</button>
-												</div>
-											</div>
+							<div className='col-12 col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Tags</label>
+									<input
+										type='text'
+										name='tags'
+										className='gz-prod-input'
+										placeholder='whey, isolate, fitness (comma separated)'
+										value={formData.tags}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
 
-											<div className='card-body'>
-												{formData.highlights.map((item, index) => (
-													<div
-														className='row mb-4 align-items-center'
-														key={index}>
-														<div className='col-md-7'>
-															<InputField
-																type='text'
-																htmlFor='Title'
-																label='Title'
-																name='title'
-																labelMarginRemove
-																value={item.title}
-																placeholder='Protein'
-																onChange={(e) => updateHighlight(index, 'title', e.target.value)}
-															/>
-														</div>
+							<div className='col-12 col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Private Admin Note</label>
+									<input
+										type='text'
+										name='private_note'
+										className='gz-prod-input'
+										placeholder='Internal operational remarks'
+										value={formData.private_note}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
 
-														<div className='col-md-4'>
-															<InputField
-																type='text'
-																htmlFor='value'
-																label='Value'
-																name='value'
-																labelMarginRemove
-																value={item.value}
-																placeholder='25g'
-																onChange={(e) => updateHighlight(index, 'value', e.target.value)}
-															/>
-														</div>
-														<div className='col-md-1'>
-															<button
-																type='button'
-																className='btn btn-danger'
-																onClick={() => removeHighlight(index)}>
-																×
-															</button>
-														</div>
-													</div>
-												))}
-											</div>
+							<div className='col-12'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Short Description</label>
+									<textarea
+										name='shortDescription'
+										className='gz-prod-textarea'
+										rows={2}
+										placeholder='Brief product overview displayed on catalog cards'
+										value={formData.shortDescription}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-12'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Full Product Description</label>
+									<textarea
+										name='description'
+										className='gz-prod-textarea'
+										rows={4}
+										placeholder='Comprehensive details and product overview'
+										value={formData.description}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Section 2: Product Images */}
+					<div className='gz-prod-form-section' id='section-images'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>Product Images</h3>
+								<div className='gz-prod-form-section-sub'>Manage live product images and upload additional variant views</div>
+							</div>
+						</div>
+
+						<input
+							type='file'
+							ref={fileInputRef}
+							className='d-none'
+							multiple
+							accept='image/*'
+							onChange={handleImageChange}
+						/>
+
+						<div
+							className='gz-prod-upload-zone'
+							onClick={() => fileInputRef.current?.click()}>
+							<div className='gz-prod-upload-icon'>
+								<FontAwesomeIcon icon={faCloudArrowUp} />
+							</div>
+							<div className='gz-prod-upload-text'>
+								Drag & drop images here or <span style={{ color: '#2563EB' }}>click to upload new</span>
+							</div>
+							<div className='gz-prod-upload-hint'>
+								Supports JPG, PNG, WebP (Max 5MB each)
+							</div>
+						</div>
+
+						{/* Existing & New Images */}
+						{(formData.displayImages.length > 0 || formData.selectedFiles.length > 0) && (
+							<div className='gz-prod-image-previews'>
+								{/* Existing saved images */}
+								{formData.displayImages.map((imgUrl, idx) => {
+									const fullSrc = imgUrl.startsWith('http') ? imgUrl : `https://files.fggroup.in/${imgUrl}`
+									return (
+										<div key={`exist-${idx}`} className='gz-prod-image-card'>
+											<img src={fullSrc} alt={`Existing product ${idx + 1}`} />
+											<button
+												type='button'
+												className='gz-prod-image-remove'
+												onClick={() => removeExistingImage(idx)}
+												title='Remove image'>
+												✕
+											</button>
 										</div>
-										<div className='card mb-7'>
-											<div className='card-header'>
-												<div className='card-title'>
-													<h3>How to make it</h3>
-												</div>
+									)
+								})}
 
-												<div className='card-toolbar'>
-													<button
-														type='button'
-														className='btn btn-primary btn-sm'
-														onClick={addUsageInstructions}>
-														Add Step
-													</button>
-												</div>
-											</div>
-
-											<div className='card-body'>
-												{formData.usageInstructions.map((item, index) => (
-													<div
-														className='row mb-4 align-items-center'
-														key={index}>
-														<div className='col-md-4'>
-															<InputField
-																type='number'
-																htmlFor='stepNumber'
-																label='Step Number'
-																name='stepNumber'
-																labelMarginRemove
-																value={item.stepNumber}
-																placeholder='1'
-																onChange={(e) =>
-																	updateUsageInstructions(index, 'stepNumber', e.target.value)
-																}
-															/>
-														</div>
-
-														<div className='col-md-7'>
-															<InputField
-																type='text'
-																htmlFor='description'
-																label='Description'
-																name='description'
-																labelMarginRemove
-																value={item.description}
-																placeholder='Example: Add 400ml of water to NARA shaker'
-																onChange={(e) =>
-																	updateUsageInstructions(index, 'description', e.target.value)
-																}
-															/>
-														</div>
-														<div className='col-md-1'>
-															<button
-																type='button'
-																className='btn btn-danger'
-																onClick={() => removeUsageInstructions(index)}>
-																×
-															</button>
-														</div>
-													</div>
-												))}
-											</div>
+								{/* Newly selected files previews */}
+								{formData.selectedFiles.map((file, idx) => {
+									const previewUrl = URL.createObjectURL(file)
+									return (
+										<div key={`new-${idx}`} className='gz-prod-image-card' style={{ border: '2px solid #2563EB' }}>
+											<img src={previewUrl} alt={`New upload preview ${idx + 1}`} />
+											<button
+												type='button'
+												className='gz-prod-image-remove'
+												onClick={() => removeNewImage(idx)}
+												title='Remove new image'>
+												✕
+											</button>
 										</div>
-										<div className='row'>
-											<div className='col-md-6'>
-												<div className='card mb-7'>
-													<div className='card-header'>
-														<div className='card-title'>
-															<h3>Product Benefits</h3>
-														</div>
+									)
+								})}
 
-														<div className='card-toolbar'>
-															<button
-																type='button'
-																className='btn btn-primary btn-sm'
-																onClick={addBenefit}>
-																Add Benefit
-															</button>
-														</div>
-													</div>
-													<div className='card-body'>
-														{formData.benefits.map((item, index) => (
-															<div
-																className='row mb-5 align-items-end'
-																key={index}>
-																<div className='col-md-10'>
-																	<input
-																		type='text'
-																		className='form-control'
-																		value={item.title}
-																		placeholder='Builds Muscle'
-																		onChange={(e) => updateBenefit(index, 'title', e.target.value)}
-																	/>
-																</div>
-																<div className='col-md-2'>
-																	<button
-																		type='button'
-																		className='btn btn-danger'
-																		onClick={() => removeBenefit(index)}>
-																		×
-																	</button>
-																</div>
-															</div>
-														))}
-													</div>
-												</div>
-											</div>
-											<div className='col-md-6'>
-												<div className='card mb-7'>
-													{' '}
-													<div className='card-header'>
-														<div className='card-title'>
-															<h3>Ingredients</h3>
-														</div>
+								<button
+									type='button'
+									className='gz-prod-image-card d-flex flex-column align-items-center justify-content-center text-muted border-dashed'
+									style={{ background: '#F8FAFC', cursor: 'pointer', border: '2px dashed #CBD5E1' }}
+									onClick={() => fileInputRef.current?.click()}>
+									<FontAwesomeIcon icon={faCloudArrowUp} className='mb-1 text-primary' />
+									<span style={{ fontSize: '11px', fontWeight: 600 }}>Add more</span>
+								</button>
+							</div>
+						)}
+					</div>
 
-														<div className='card-toolbar'>
-															<button
-																type='button'
-																className='btn btn-primary btn-sm'
-																onClick={addIngredient}>
-																Add Ingredient
-															</button>
-														</div>
-													</div>
-													<div className='card-body'>
-														{formData.ingredients.map((item, index) => (
-															<div
-																className='row mb-4 align-items-end'
-																key={index}>
-																<div className='col-md-10'>
-																	<input
-																		type='text'
-																		className='form-control'
-																		value={item}
-																		placeholder='Ingredient name'
-																		onChange={(e) => updateIngredient(index, e.target.value)}
-																	/>
-																</div>
+					{/* Section 3: Highlights */}
+					<div className='gz-prod-form-section' id='section-highlights'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>Product Highlights</h3>
+								<div className='gz-prod-form-section-sub'>Key bullet points and specifications</div>
+							</div>
+							<button type='button' className='gz-prod-add-row-btn' onClick={addHighlight}>
+								<FontAwesomeIcon icon={faPlus} />
+								<span>Add Highlight</span>
+							</button>
+						</div>
 
-																<div className='col-md-2'>
-																	<button
-																		type='button'
-																		className='btn btn-danger'
-																		onClick={() => removeIngredient(index)}>
-																		×
-																	</button>
-																</div>
-															</div>
-														))}
-													</div>
-												</div>
-											</div>
-										</div>
-										<div className='card mb-7'>
-											<div className='card-header'>
-												<div className='card-title'>
-													<h3>Nutrition Information</h3>
-												</div>
-											</div>
+						{formData.highlights.map((hl, idx) => (
+							<div key={idx} className='gz-prod-repeatable-row'>
+								<input
+									type='text'
+									className='gz-prod-input'
+									placeholder='Title (e.g., Protein Content)'
+									value={hl.title}
+									onChange={(e) => updateHighlight(idx, 'title', e.target.value)}
+									style={{ maxWidth: '35%' }}
+								/>
+								<input
+									type='text'
+									className='gz-prod-input flex-grow-1'
+									placeholder='Value (e.g., 24g Pure Whey Isolate)'
+									value={hl.value}
+									onChange={(e) => updateHighlight(idx, 'value', e.target.value)}
+								/>
+								{formData.highlights.length > 1 && (
+									<button
+										type='button'
+										className='gz-prod-row-delete-btn'
+										onClick={() => removeHighlight(idx)}
+										title='Remove highlight'>
+										<FontAwesomeIcon icon={faTrash} />
+									</button>
+								)}
+							</div>
+						))}
+					</div>
 
-											<div className='card-body'>
-												<div className='row'>
-													<div className='col-md-3'>
-														<InputField
-															type='text'
-															name='servingSize'
-															label='Serving Size'
-															htmlFor='servingSize'
-															value={formData.nutrition.servingSize}
-															onChange={(e) => updateNutrition('servingSize', e.target.value)}
-														/>
-													</div>
+					{/* Section 4: How to Make It */}
+					<div className='gz-prod-form-section' id='section-usage'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>How to make it</h3>
+								<div className='gz-prod-form-section-sub'>Numbered steps for preparation and consumption</div>
+							</div>
+							<button type='button' className='gz-prod-add-row-btn' onClick={addStep}>
+								<FontAwesomeIcon icon={faPlus} />
+								<span>Add Step</span>
+							</button>
+						</div>
 
-													<div className='col-md-3'>
-														<InputField
-															type='text'
-															name='unit'
-															label='Unit'
-															htmlFor='unit'
-															value={formData.nutrition.unit}
-															onChange={(e) => updateNutrition('unit', e.target.value)}
-														/>
-													</div>
+						{formData.usageInstructions.map((step, idx) => (
+							<div key={idx} className='gz-prod-repeatable-row'>
+								<span className='gz-prod-repeatable-num'>{step.stepNumber || idx + 1}</span>
+								<input
+									type='text'
+									className='gz-prod-input flex-grow-1'
+									placeholder={`Step ${idx + 1} instructions`}
+									value={step.description}
+									onChange={(e) => updateStep(idx, e.target.value)}
+								/>
+								{formData.usageInstructions.length > 1 && (
+									<button
+										type='button'
+										className='gz-prod-row-delete-btn'
+										onClick={() => removeStep(idx)}
+										title='Remove step'>
+										<FontAwesomeIcon icon={faTrash} />
+									</button>
+								)}
+							</div>
+						))}
+					</div>
 
-													<div className='col-md-3'>
-														<InputField
-															type='number'
-															name='energy'
-															label='Energy'
-															htmlFor='energy'
-															value={String(formData.nutrition.energy)}
-															onChange={(e) => updateNutrition('energy', e.target.value)}
-														/>
-													</div>
+					{/* Section 5: Benefits */}
+					<div className='gz-prod-form-section' id='section-benefits'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>Product Benefits</h3>
+								<div className='gz-prod-form-section-sub'>Core nutritional and health advantages</div>
+							</div>
+							<button type='button' className='gz-prod-add-row-btn' onClick={addBenefit}>
+								<FontAwesomeIcon icon={faPlus} />
+								<span>Add Benefit</span>
+							</button>
+						</div>
 
-													<div className='col-md-3'>
-														<InputField
-															type='number'
-															name='protein'
-															label='Protein'
-															htmlFor='protein'
-															value={String(formData.nutrition.protein)}
-															onChange={(e) => updateNutrition('protein', e.target.value)}
-														/>
-													</div>
+						{formData.benefits.map((benefit, idx) => (
+							<div key={idx} className='gz-prod-repeatable-row'>
+								<span className='gz-prod-repeatable-num'>{idx + 1}</span>
+								<input
+									type='text'
+									className='gz-prod-input flex-grow-1'
+									placeholder='Benefit statement'
+									value={benefit.title}
+									onChange={(e) => updateBenefit(idx, e.target.value)}
+								/>
+								{formData.benefits.length > 1 && (
+									<button
+										type='button'
+										className='gz-prod-row-delete-btn'
+										onClick={() => removeBenefit(idx)}
+										title='Remove benefit'>
+										<FontAwesomeIcon icon={faTrash} />
+									</button>
+								)}
+							</div>
+						))}
+					</div>
 
-													<div className='col-md-3'>
-														<InputField
-															type='number'
-															name='carbohydrates'
-															label='Carbohydrates'
-															htmlFor='carbohydrates'
-															value={String(formData.nutrition.carbohydrates)}
-															onChange={(e) => updateNutrition('carbohydrates', e.target.value)}
-														/>
-													</div>
+					{/* Section 6: Ingredients */}
+					<div className='gz-prod-form-section' id='section-ingredients'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>Ingredients</h3>
+								<div className='gz-prod-form-section-sub'>List of active formulation ingredients</div>
+							</div>
+							<button type='button' className='gz-prod-add-row-btn' onClick={addIngredient}>
+								<FontAwesomeIcon icon={faPlus} />
+								<span>Add Ingredient</span>
+							</button>
+						</div>
 
-													<div className='col-md-3'>
-														<InputField
-															type='number'
-															name='fat'
-															label='Fat'
-															htmlFor='fat'
-															value={String(formData.nutrition.fat)}
-															onChange={(e) => updateNutrition('fat', e.target.value)}
-														/>
-													</div>
+						{formData.ingredients.map((ing, idx) => (
+							<div key={idx} className='gz-prod-repeatable-row'>
+								<span className='gz-prod-repeatable-num'>{idx + 1}</span>
+								<input
+									type='text'
+									className='gz-prod-input flex-grow-1'
+									placeholder='Ingredient name'
+									value={ing}
+									onChange={(e) => updateIngredient(idx, e.target.value)}
+								/>
+								{formData.ingredients.length > 1 && (
+									<button
+										type='button'
+										className='gz-prod-row-delete-btn'
+										onClick={() => removeIngredient(idx)}
+										title='Remove ingredient'>
+										<FontAwesomeIcon icon={faTrash} />
+									</button>
+								)}
+							</div>
+						))}
+					</div>
 
-													<div className='col-md-3'>
-														<InputField
-															type='number'
-															name='fiber'
-															label='Fiber'
-															htmlFor='fiber'
-															value={String(formData.nutrition.fiber)}
-															onChange={(e) => updateNutrition('fiber', e.target.value)}
-														/>
-													</div>
+					{/* Section 7: Nutrition Facts */}
+					<div className='gz-prod-form-section' id='section-nutrition'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>Nutrition Facts</h3>
+								<div className='gz-prod-form-section-sub'>Nutritional values per serving breakdown</div>
+							</div>
+						</div>
 
-													<div className='col-md-3'>
-														<InputField
-															type='number'
-															name='vitaminC'
-															label='Vitamin C'
-															htmlFor='vitaminC'
-															value={String(formData.nutrition.vitaminC)}
-															onChange={(e) => updateNutrition('vitaminC', e.target.value)}
-														/>
-													</div>
+						<div className='row g-3'>
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Serving Size</label>
+									<input
+										type='text'
+										className='gz-prod-input'
+										placeholder='e.g., 1 Scoop (30g)'
+										value={formData.nutrition.servingSize}
+										onChange={(e) => updateNutrition('servingSize', e.target.value)}
+									/>
+								</div>
+							</div>
 
-													<div className='col-md-3'>
-														<InputField
-															type='number'
-															name='iron'
-															label='Iron'
-															htmlFor='iron'
-															value={String(formData.nutrition.iron)}
-															onChange={(e) => updateNutrition('iron', e.target.value)}
-														/>
-													</div>
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Energy (kcal)</label>
+									<input
+										type='number'
+										className='gz-prod-input'
+										placeholder='0'
+										value={formData.nutrition.energy}
+										onChange={(e) => updateNutrition('energy', e.target.value)}
+									/>
+								</div>
+							</div>
 
-													<div className='col-md-3'>
-														<InputField
-															type='number'
-															name='resveratrol'
-															label='Resveratrol'
-															htmlFor='resveratrol'
-															value={String(formData.nutrition.resveratrol)}
-															onChange={(e) => updateNutrition('resveratrol', e.target.value)}
-														/>
-													</div>
-												</div>
-											</div>
-										</div>
-										<div className='col-md-2 fv-row mb-7'>
-											<TableButton
-												action='add'
-												onClick={handleUpdateButtonClick}
-												text={isSubmitting ? 'Please wait, updating Product...' : 'Update Product'}
-												showIcon={false}
-												disabled={isSubmitting}
-												className={`btn-block mb-4 w-100 ${isSubmitting ? 'disabled' : ''}`}
-											/>
-										</div>
-									</div>
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Protein (g)</label>
+									<input
+										type='number'
+										className='gz-prod-input'
+										placeholder='0'
+										value={formData.nutrition.protein}
+										onChange={(e) => updateNutrition('protein', e.target.value)}
+									/>
+								</div>
+							</div>
+
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Carbohydrates (g)</label>
+									<input
+										type='number'
+										className='gz-prod-input'
+										placeholder='0'
+										value={formData.nutrition.carbohydrates}
+										onChange={(e) => updateNutrition('carbohydrates', e.target.value)}
+									/>
+								</div>
+							</div>
+
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Fat (g)</label>
+									<input
+										type='number'
+										className='gz-prod-input'
+										placeholder='0'
+										value={formData.nutrition.fat}
+										onChange={(e) => updateNutrition('fat', e.target.value)}
+									/>
+								</div>
+							</div>
+
+							<div className='col-12 col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>Fiber (g)</label>
+									<input
+										type='number'
+										className='gz-prod-input'
+										placeholder='0'
+										value={formData.nutrition.fiber}
+										onChange={(e) => updateNutrition('fiber', e.target.value)}
+									/>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 
-export { EditGomziNutritionProduct }
+export default EditGomziNutritionProduct

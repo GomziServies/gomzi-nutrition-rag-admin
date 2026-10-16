@@ -1,18 +1,19 @@
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { endOfMonth, startOfMonth } from 'date-fns'
+import { CalendarDays, Copy, Star } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import * as XLSX from 'xlsx'
-import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
-import UsersListPagination from '../../../components/TablePagination'
+import GomziTablePagination from '../../../components/GomziTablePagination'
+import CopyButton from '../../../components/motion/CopyButton'
 import { GetGnSampleBooking, RemoveGnSampleBooking } from '../../../Functions/FGGroup'
 import './sample-booking.css'
 
@@ -262,8 +263,33 @@ const SampleBookingList: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Sample Booking List</PageTitle>
-			<KTCard>
-				<div className='card-header border-0 pt-6 px-6'>
+
+			{/* Page Heading */}
+			<div className='sb-page-header'>
+				<div>
+					<div className='sb-breadcrumb'>
+						<span>Sample Bookings</span>
+						<span className='sb-breadcrumb-separator'>/</span>
+						<span>Booking List</span>
+					</div>
+					<h1 className='sb-page-title'>Sample Bookings</h1>
+					<p className='sb-page-subtitle'>
+						Manage and track client product sample requests, dispatch status, and customer reviews.
+					</p>
+				</div>
+				<div className='d-flex align-items-center gap-3'>
+					<TableButton
+						action='add'
+						to='/rag/sample-booking-add'
+						text='Add Sample'
+					/>
+				</div>
+			</div>
+
+			{/* Main List Surface */}
+			<div className='sb-main-card'>
+				{/* Filter Toolbar */}
+				<div className='sb-toolbar-wrap'>
 					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
 						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
 							<div>
@@ -292,30 +318,30 @@ const SampleBookingList: React.FC = () => {
 										height: '38px',
 										minWidth: '38px',
 										padding: 0,
-										borderRadius: '8px',
+										borderRadius: '10px',
 										fontSize: '14px',
-										backgroundColor: '#ffffff',
-										border: '1px solid #DFE7F0',
-										color: '#1E3A5F',
-										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+										backgroundColor: '#FFFFFF',
+										border: '1px solid #E4EAF2',
+										color: '#172B4D',
+										boxShadow: '0 1px 2px rgba(23, 43, 77, 0.04)',
 										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
 										cursor: exporting ? 'not-allowed' : 'pointer',
 									}}
 									onMouseEnter={(e) => {
 										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#1E3A5F'
-											e.currentTarget.style.borderColor = '#1E3A5F'
-											e.currentTarget.style.color = '#ffffff'
-											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
+											e.currentTarget.style.backgroundColor = '#172B4D'
+											e.currentTarget.style.borderColor = '#172B4D'
+											e.currentTarget.style.color = '#FFFFFF'
+											e.currentTarget.style.boxShadow = '0 4px 10px rgba(23, 43, 77, 0.2)'
 											e.currentTarget.style.transform = 'translateY(-1px)'
 										}
 									}}
 									onMouseLeave={(e) => {
 										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#ffffff'
-											e.currentTarget.style.borderColor = '#DFE7F0'
-											e.currentTarget.style.color = '#1E3A5F'
-											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
+											e.currentTarget.style.backgroundColor = '#FFFFFF'
+											e.currentTarget.style.borderColor = '#E4EAF2'
+											e.currentTarget.style.color = '#172B4D'
+											e.currentTarget.style.boxShadow = '0 1px 2px rgba(23, 43, 77, 0.04)'
 											e.currentTarget.style.transform = 'translateY(0)'
 										}
 									}}
@@ -334,19 +360,15 @@ const SampleBookingList: React.FC = () => {
 								<DateFilter
 									onDateRangeChange={handleDateRangeChange}
 									rightValue='0'
+									customIcon={<CalendarDays size={18} color='#172B4D' />}
 								/>
 							</div>
 						</div>
-						<div className='flex-shrink-0 ms-auto'>
-							<TableButton
-								action='add'
-								to='/rag/sample-booking-add'
-								text='Add Sample'
-							/>
-						</div>
 					</div>
 				</div>
-				<div className='py-4 card-body'>
+
+				{/* Data Table */}
+				<div className='p-0'>
 					<div className='table-responsive'>
 						<Table
 							data={bookingData}
@@ -365,94 +387,98 @@ const SampleBookingList: React.FC = () => {
 								return (
 									<tr key={booking._id}>
 										<td>
-											<span className='text-dark fw-bold ms-6 mb-1 fs-6'>{actualIndex}</span>
+											<span className='fw-bold ms-6 mb-1 fs-6' style={{ color: '#172B4D' }}>
+												{actualIndex}
+											</span>
 										</td>
 										<td>
 											<div className='d-flex flex-column'>
-												<span className='text-dark fw-bold mb-1 fs-6'>
+												<span className='fw-bold mb-1 fs-6' style={{ color: '#172B4D' }}>
 													{booking.customer_name || '---'}
 												</span>
-												<span className='text-muted fw-semibold fs-7'>
+												<span className='fw-semibold fs-7' style={{ color: '#71809A' }}>
 													{booking.mobile || '---'}
 												</span>
 											</div>
 										</td>
 										<td>
-											<div className='d-flex align-items-center gap-1'>
+											<div className='d-flex align-items-center gap-1.5'>
 												{booking.order_id && (
-													<button
-														type='button'
-														className='btn btn-icon btn-bg-light btn-active-color-primary btn-sm'
-														onClick={() => {
-															navigator.clipboard.writeText(booking.order_id)
-															toast.success('Order ID copied!')
-														}}
+													<CopyButton
+														text={booking.order_id}
 														title='Copy Order ID'
+														customMessage='Order ID copied!'
 														style={{
-															backgroundColor: 'transparent',
-															width: '25px',
-															height: '25px',
-														}}>
-														<i
-															className='bi bi-files fs-5'
-															style={{ color: '#50cd89' }}></i>
-													</button>
+															backgroundColor: '#F8FAFD',
+															border: '1px solid #E4EAF2',
+															borderRadius: '6px',
+															width: '26px',
+															height: '26px',
+															color: '#172B4D',
+															display: 'inline-flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+														}}
+													/>
 												)}
-												<span className='text-dark fw-bold mb-1 fs-6'>
+												<span className='fw-semibold mb-1 fs-6' style={{ color: '#172B4D' }}>
 													{booking.order_id || '---'}
 												</span>
 											</div>
 										</td>
 										<td>
-											<div className='d-flex align-items-center gap-1'>
+											<div className='d-flex align-items-center gap-1.5'>
 												{booking.tracking_id && (
-													<button
-														type='button'
-														className='btn btn-icon btn-bg-light btn-active-color-primary btn-sm'
-														onClick={() => {
-															navigator.clipboard.writeText(booking.tracking_id)
-															toast.success('Tracking ID copied!')
-														}}
+													<CopyButton
+														text={booking.tracking_id}
 														title='Copy Tracking ID'
+														customMessage='Tracking ID copied!'
 														style={{
-															backgroundColor: 'transparent',
-															width: '25px',
-															height: '25px',
-														}}>
-														<i
-															className='bi bi-files fs-5'
-															style={{ color: '#50cd89' }}></i>
-													</button>
+															backgroundColor: '#F8FAFD',
+															border: '1px solid #E4EAF2',
+															borderRadius: '6px',
+															width: '26px',
+															height: '26px',
+															color: '#172B4D',
+															display: 'inline-flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+														}}
+													/>
 												)}
-												<span className='text-dark fw-bold mb-1 fs-6'>
+												<span className='fw-semibold mb-1 fs-6' style={{ color: '#172B4D' }}>
 													{booking.tracking_id || '---'}
 												</span>
 											</div>
 										</td>
 										<td>
-											<div className='d-flex align-items-center gap-1'>
-												<button
-													type='button'
-													className='btn btn-icon btn-bg-light btn-active-color-primary btn-sm'
-													onClick={() => {
-														navigator.clipboard.writeText(sampleUpdateLink)
-														toast.success('Link copied!')
-													}}
+											<div className='d-flex align-items-center gap-1.5'>
+												<CopyButton
+													text={sampleUpdateLink}
 													title='Copy Link'
-													style={{ backgroundColor: 'transparent', width: '25px', height: '25px' }}>
-													<i
-														className='bi bi-files fs-5'
-														style={{ color: '#50cd89' }}></i>
-												</button>
+													customMessage='Link copied!'
+													style={{
+														backgroundColor: '#F8FAFD',
+														border: '1px solid #E4EAF2',
+														borderRadius: '6px',
+														width: '26px',
+														height: '26px',
+														color: '#172B4D',
+														display: 'inline-flex',
+														alignItems: 'center',
+														justifyContent: 'center',
+													}}
+												/>
 												<div
-													className='text-dark fw-bold mb-1 fs-6'
+													className='fw-medium mb-1 fs-6'
 													title={sampleUpdateLink}
 													style={{
-														maxWidth: '120px',
+														maxWidth: '140px',
 														whiteSpace: 'nowrap',
 														overflow: 'hidden',
 														textOverflow: 'ellipsis',
 														cursor: 'pointer',
+														color: '#172B4D',
 													}}>
 													{sampleUpdateLink}
 												</div>
@@ -460,11 +486,11 @@ const SampleBookingList: React.FC = () => {
 										</td>
 
 										<td>
-											<span className='text-dark fw-bold d-block mb-1 fs-6'>
+											<span className='fw-bold d-block mb-1 fs-6'>
 												{(() => {
 													const ratedProducts =
 														booking.products?.filter((p: any) => p.rating > 0) || []
-													if (ratedProducts.length === 0) return '-'
+													if (ratedProducts.length === 0) return <span style={{ color: '#71809A' }}>-</span>
 													const avgRating = (
 														ratedProducts.reduce(
 															(sum: number, p: any) => sum + (p.rating || 0),
@@ -472,23 +498,31 @@ const SampleBookingList: React.FC = () => {
 														) / ratedProducts.length
 													).toFixed(1)
 													return (
-														<div className='d-flex align-items-center'>
-															<i className='bi bi-star-fill fs-4 me-2 text-warning'></i>
-															<span>{avgRating}</span>
+														<div
+															className='d-inline-flex align-items-center gap-1.5 px-2 py-1'
+															style={{
+																background: '#FFFBEB',
+																border: '1px solid #FDE68A',
+																borderRadius: '6px',
+															}}>
+															<Star size={13} fill='#D97706' color='#D97706' />
+															<span style={{ color: '#92400E', fontSize: '12.5px', fontWeight: 600 }}>
+																{avgRating}
+															</span>
 														</div>
 													)
 												})()}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold d-block mb-1 fs-6'>
+											<span className='fw-semibold d-block mb-1 fs-6' style={{ color: '#172B4D' }}>
 												{booking.createdAt
 													? new Date(booking.createdAt).toLocaleDateString('en-GB')
 													: '---'}
 											</span>
 										</td>
 										<td>
-											<div className='d-flex'>
+											<div className='d-flex align-items-center gap-1'>
 												<TableButton
 													action='view'
 													to={'/rag/sample-booking-view?id=' + booking._id}
@@ -512,14 +546,17 @@ const SampleBookingList: React.FC = () => {
 						/>
 					</div>
 					{bookingData.length > 0 && (
-						<UsersListPagination
+						<GomziTablePagination
+							totalRecords={totalDocs}
+							page={pagination.page}
+							itemsPerPage={pagination.itemsPerPage}
 							totalPages={totalPages}
-							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							entityName='sample bookings'
 						/>
 					)}
 				</div>
-			</KTCard>
+			</div>
 		</>
 	)
 }

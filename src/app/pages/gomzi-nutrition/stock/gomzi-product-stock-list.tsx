@@ -359,6 +359,9 @@ const GomziNutritionProductStock: React.FC = () => {
 							totalPages={metaData?.totalPages}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={metaData?.totalRecords || productData.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='products'
 						/>
 					)}
 				</div>

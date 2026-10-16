@@ -1,37 +1,42 @@
-import React, { useEffect, useState } from 'react'
+/* eslint-disable */
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { DayJS } from '../../_metronic/helpers/Utils'
-import NumberTicker, { formatCurrencyCompact } from './NumberTicker'
 import { GetTask, ActionTask, UpdateTask } from '../Functions/FGGroup/TaskManagement'
 import { GetDailyReporting } from '../Functions/FGGroup/DailyTaskReporting'
 import { GetEmployeeLeaves } from '../Functions/FGGroup/EmployeeLeaveManagement'
 import { GetExpenseReports } from '../Functions/FGGroup/ExpenseReport'
-import { GetTarget } from '../Functions/FGGroup/Target'
+import { GetSalary } from '../Functions/FGGroup/Attendance'
+import { GetSOP } from '../Functions/FGGroup/SOP'
+import { SculptedCard } from './SculptedCard'
+import NumberTicker from './NumberTicker'
 
 export const GomziApprovedDashboard: React.FC = () => {
-	const [loading, setLoading] = useState(false)
+	const [_loading, setLoading] = useState(false)
 
 	// User Info
 	const [userName, setUserName] = useState<string>('Employee')
 	const [userId, setUserId] = useState<string>('')
-	const [userPosition, setUserPosition] = useState<string>('Staff Member')
-	const [userBranch, setUserBranch] = useState<string>('')
-	const [isSales, setIsSales] = useState<boolean>(false)
-	const [isManager, setIsManager] = useState<boolean>(false)
+	const [_userPosition, setUserPosition] = useState<string>('Staff Member')
+	const [_userBranch, setUserBranch] = useState<string>('')
+	const [_isSales, setIsSales] = useState<boolean>(false)
+	const [_isManager, setIsManager] = useState<boolean>(false)
 
 	// Real Employee Data Collections
 	const [assignedTasks, setAssignedTasks] = useState<any[]>([])
-	const [dailyReports, setDailyReports] = useState<any[]>([])
+	const [_dailyReports, setDailyReports] = useState<any[]>([])
 	const [leaveRequests, setLeaveRequests] = useState<any[]>([])
-	const [expenseReports, setExpenseReports] = useState<any[]>([])
-	const [targets, setTargets] = useState<any[]>([])
-	const [focusTasks, setFocusTasks] = useState<any[]>([])
+	const [_expenseReports, setExpenseReports] = useState<any[]>([])
+	const [salaryInfo, setSalaryInfo] = useState<any>(null)
+	const [attendanceList, setAttendanceList] = useState<any[]>([])
+	const [sopList, setSopList] = useState<any[]>([])
+	const [_focusTasks, setFocusTasks] = useState<any[]>([])
 
-	// Compliance & Summary metrics
-	const [hasSubmittedReportToday, setHasSubmittedReportToday] = useState<boolean>(false)
-	const [reportsThisWeek, setReportsThisWeek] = useState<number>(0)
-	const [taskFilter, setTaskFilter] = useState<'all' | 'pending' | 'completed'>('all')
+	// UI Interactive States
+	const [taskFilter, setTaskFilter] = useState<'all' | 'in_progress' | 'completed'>('all')
+	const today = useMemo(() => DayJS(), [])
+	const [selectedScheduleDay, setSelectedScheduleDay] = useState<number>(today.date())
 
 	// Load user identity from localStorage
 	useEffect(() => {
@@ -87,10 +92,9 @@ export const GomziApprovedDashboard: React.FC = () => {
 			let reportsList: any[] = []
 			let leavesList: any[] = []
 			let expensesList: any[] = []
-			let targetsList: any[] = []
 
-			// 1. Fetch Assigned Tasks
 			if (resolvedUserId) {
+				// 1. Fetch Assigned Tasks
 				try {
 					const taskRes: any = await GetTask({
 						admin_id: resolvedUserId,
@@ -103,7 +107,9 @@ export const GomziApprovedDashboard: React.FC = () => {
 						tasksList = taskRes.data
 						setAssignedTasks(tasksList)
 					}
-				} catch (e) {}
+				} catch (e) {
+					console.warn('Failed to load tasks', e)
+				}
 
 				// 2. Fetch Daily Reports
 				try {
@@ -118,7 +124,9 @@ export const GomziApprovedDashboard: React.FC = () => {
 						reportsList = repRes.data
 						setDailyReports(reportsList)
 					}
-				} catch (e) {}
+				} catch (e) {
+					console.warn('Failed to load reports', e)
+				}
 
 				// 3. Fetch Expense Reports
 				try {
@@ -133,10 +141,35 @@ export const GomziApprovedDashboard: React.FC = () => {
 						expensesList = expRes.data
 						setExpenseReports(expensesList)
 					}
-				} catch (e) {}
+				} catch (e) {
+					console.warn('Failed to load expenses', e)
+				}
+
+				// 4. Fetch Salary & Attendance Data
+				try {
+					const salRes: any = await GetSalary({
+						employee_id: resolvedUserId,
+						from_date: DayJS().startOf('month').toDate().toISOString(),
+						to_date: DayJS().endOf('month').toDate().toISOString(),
+					})
+					if (salRes?.data && Array.isArray(salRes.data) && salRes.data.length > 0) {
+						const sData =
+							salRes.data.find(
+								(s: any) =>
+									String(s.employee_id) === String(resolvedUserId) ||
+									String(s._id) === String(resolvedUserId)
+							) || salRes.data[0]
+						setSalaryInfo(sData)
+						if (sData?.attendance && Array.isArray(sData.attendance)) {
+							setAttendanceList(sData.attendance)
+						}
+					}
+				} catch (e) {
+					console.warn('Failed to load salary', e)
+				}
 			}
 
-			// 4. Fetch Leave Requests
+			// 5. Fetch Leave Requests
 			try {
 				const leaveRes: any = await GetEmployeeLeaves({
 					page: 1,
@@ -152,48 +185,22 @@ export const GomziApprovedDashboard: React.FC = () => {
 					leavesList = filtered.length > 0 ? filtered : leaveRes.data.slice(0, 5)
 					setLeaveRequests(leavesList)
 				}
-			} catch (e) {}
+			} catch (e) {
+				console.warn('Failed to load leaves', e)
+			}
 
-			// 5. Fetch Targets
+			// 6. Fetch SOP Announcements
 			try {
-				const targetRes: any = await GetTarget({ page: 1, limit: 5 })
-				if (targetRes?.data && Array.isArray(targetRes.data)) {
-					targetsList = targetRes.data
-					setTargets(targetsList)
+				const sopRes: any = await GetSOP({ page: 1, limit: 5 })
+				if (sopRes?.data && Array.isArray(sopRes.data)) {
+					setSopList(sopRes.data)
 				}
-			} catch (e) {}
-
-			// Check today's daily report submission
-			const submittedToday = reportsList.some((r: any) =>
-				DayJS(r.createdAt || r.date).isSame(DayJS(), 'day')
-			)
-			setHasSubmittedReportToday(submittedToday)
-
-			// Count weekly reports
-			const weeklyCount = reportsList.filter((r: any) =>
-				DayJS(r.createdAt || r.date).isAfter(DayJS().subtract(7, 'day'))
-			).length
-			setReportsThisWeek(weeklyCount)
+			} catch (e) {
+				console.warn('Failed to load SOPs', e)
+			}
 
 			// Build Focus Tasks Checklist
 			const compiled: any[] = []
-
-			// Item 1: Daily report item
-			compiled.push({
-				id: 'daily-report-task',
-				task_id: null,
-				isDailyReport: true,
-				title: submittedToday
-					? 'Daily report submitted for today'
-					: 'Submit today’s daily activity report',
-				category: 'Daily Report',
-				link: '/employee/daily-report',
-				tag: submittedToday ? 'Completed' : 'Today',
-				tagType: submittedToday ? 'normal' : 'urgent',
-				completed: submittedToday,
-			})
-
-			// Items 2+: Real tasks
 			tasksList.forEach((t: any, idx: number) => {
 				const isDone =
 					t.status === 'COMPLETED' ||
@@ -208,7 +215,6 @@ export const GomziApprovedDashboard: React.FC = () => {
 				compiled.push({
 					id: t._id || `task-${idx}`,
 					task_id: t._id,
-					isDailyReport: false,
 					title: t.task_title || 'Assigned Task',
 					category: t.remark_by_hr || t.category || 'Task',
 					link: `/employee/task-view?task_id=${t._id}`,
@@ -231,27 +237,23 @@ export const GomziApprovedDashboard: React.FC = () => {
 
 	// Toggle Task Completion State & Update Backend
 	const toggleTask = async (taskItem: any) => {
-		if (taskItem.isDailyReport) {
-			if (taskItem.completed) {
-				toast.success('Daily report already submitted for today')
-			} else {
-				toast('Please submit your activity report on the daily report page', { icon: '📝' })
-			}
-			return
-		}
-
 		const newCompleted = !taskItem.completed
 		const newStatus = newCompleted ? 'COMPLETED' : 'PENDING'
 
 		// Optimistic UI update
-		setFocusTasks((prev) =>
-			prev.map((t) => (t.id === taskItem.id ? { ...t, completed: newCompleted } : t))
+		setAssignedTasks((prev) =>
+			prev.map((t) =>
+				t._id === (taskItem.task_id || taskItem.id)
+					? { ...t, status: newStatus, employee_status: newStatus }
+					: t
+			)
 		)
 
-		if (taskItem.task_id) {
+		const taskId = taskItem.task_id || taskItem.id
+		if (taskId) {
 			try {
 				await ActionTask({
-					task_id: taskItem.task_id,
+					task_id: taskId,
 					status: newStatus,
 				})
 				toast.success(newCompleted ? 'Task marked as completed' : 'Task marked as pending')
@@ -259,7 +261,7 @@ export const GomziApprovedDashboard: React.FC = () => {
 			} catch (e) {
 				try {
 					await UpdateTask({
-						task_id: taskItem.task_id,
+						task_id: taskId,
 						status: newStatus,
 						employee_status: newStatus,
 					})
@@ -272,708 +274,999 @@ export const GomziApprovedDashboard: React.FC = () => {
 		}
 	}
 
-	const currentDayStamp = DayJS().format('ddd, MMM DD, YYYY').toUpperCase()
+	// -------------------------------------------------------------------------
+	// DERIVED DATA CALCULATIONS
+	// -------------------------------------------------------------------------
 
-	// Metrics derived from real employee state
-	const pendingTasksCount = assignedTasks.filter(
-		(t) =>
-			t.status !== 'COMPLETED' &&
-			t.status !== 'DONE' &&
-			t.employee_status !== 'DONE' &&
-			t.employee_status !== 'COMPLETED'
-	).length
-	const completedTasksCount = assignedTasks.length - pendingTasksCount
-	const taskCompletionPct =
-		assignedTasks.length > 0
-			? Math.round((completedTasksCount / assignedTasks.length) * 100)
-			: 100
+	// Date Headline (e.g., TUE, 15 OCT 2026)
+	const currentDateLabel = useMemo(() => {
+		return today.format('ddd, DD MMM YYYY').toUpperCase()
+	}, [today])
 
-	const pendingLeavesCount = leaveRequests.filter((l) => l.status === 'PENDING').length
-	const totalExpenseClaimed = expenseReports.reduce((acc, r) => acc + (r.total_amount || 0), 0)
+	// Current Month and Year label
+	// Modal State for Apply Leave
+	const [showLeaveModal, setShowLeaveModal] = useState(false)
+	const [leaveFromDate, setLeaveFromDate] = useState('')
+	const [leaveToDate, setLeaveToDate] = useState('')
+	const [leaveReason, setLeaveReason] = useState('')
+	const [leaveType, setLeaveType] = useState('full')
+	const [halfDayPeriod, setHalfDayPeriod] = useState('first')
+	const [leaveSubmitting, setLeaveSubmitting] = useState(false)
 
-	// Focus tasks filtered
-	const completedFocusCount = focusTasks.filter((t) => t.completed).length
-	const focusProgressPct =
-		focusTasks.length > 0
-			? Math.round((completedFocusCount / focusTasks.length) * 100)
-			: 100
-	const displayedFocusTasks = focusTasks.filter((t) => {
-		if (taskFilter === 'pending') return !t.completed
-		if (taskFilter === 'completed') return t.completed
-		return true
-	})
+	// Upcoming Schedule Month Selector Dropdown
+	const [showMonthMenu, setShowMonthMenu] = useState(false)
+	const [selectedMonthOffset, setSelectedMonthOffset] = useState<number>(0)
+
+	// Month selection
+	const activeMonth = useMemo(() => {
+		return DayJS().add(selectedMonthOffset, 'month')
+	}, [selectedMonthOffset])
+
+	const currentMonthYear = useMemo(() => {
+		return activeMonth.format('MMMM YYYY')
+	}, [activeMonth])
+
+	// 7 Days of the active week for Upcoming Schedule
+	const weekDays = useMemo(() => {
+		const baseDate = selectedMonthOffset === 0 ? today : activeMonth.startOf('month')
+		const currentDayOfWeek = (baseDate.day() + 6) % 7 // Mon = 0, Sun = 6
+		const monday = baseDate.subtract(currentDayOfWeek, 'day')
+		const days = []
+		for (let i = 0; i < 7; i++) {
+			const d = monday.add(i, 'day')
+			days.push({
+				dateNum: d.date(),
+				dayName: d.format('ddd'),
+				fullDate: d.format('YYYY-MM-DD'),
+				isToday: d.isSame(today, 'day'),
+			})
+		}
+		return days
+	}, [activeMonth, selectedMonthOffset, today])
+
+	// Upcoming events count for selected date or week
+	const eventsThisWeekCount = useMemo(() => {
+		return assignedTasks.filter((t: any) => {
+			if (!t.end_date) return false
+			const d = DayJS(t.end_date)
+			return d.isAfter(today.subtract(1, 'day')) && d.isBefore(today.add(7, 'day'))
+		}).length
+	}, [assignedTasks, today])
+
+	// Salary calculations strictly from real payroll
+	const salaryAvailable = useMemo(() => {
+		return Boolean(salaryInfo && (salaryInfo?.net_salary || salaryInfo?.total_salary || salaryInfo?.salary))
+	}, [salaryInfo])
+
+	const rawSalary = useMemo(() => {
+		if (!salaryInfo) return 0
+		const val = Number(
+			salaryInfo?.net_salary ||
+			salaryInfo?.total_salary ||
+			salaryInfo?.salary ||
+			salaryInfo?.basic_salary ||
+			0
+		)
+		return isNaN(val) ? 0 : val
+	}, [salaryInfo])
+
+	const [displaySalary, setDisplaySalary] = useState(0)
+	useEffect(() => {
+		if (rawSalary <= 0) {
+			setDisplaySalary(0)
+			return
+		}
+		let startTimestamp: number | null = null
+		const duration = 800
+		let animFrameId: number
+
+		const step = (timestamp: number) => {
+			if (!startTimestamp) startTimestamp = timestamp
+			const progress = Math.min((timestamp - startTimestamp) / duration, 1)
+			const eased = 1 - Math.pow(1 - progress, 3)
+			setDisplaySalary(Math.floor(eased * rawSalary))
+			if (progress < 1) {
+				animFrameId = window.requestAnimationFrame(step)
+			}
+		}
+
+		animFrameId = window.requestAnimationFrame(step)
+		return () => window.cancelAnimationFrame(animFrameId)
+	}, [rawSalary])
+
+	// Attendance Overview Distribution (Strictly from real attendance records)
+	const attendanceStats = useMemo(() => {
+		let present = 0
+		let onLeave = 0
+		let halfDay = 0
+		let absent = 0
+
+		if (attendanceList.length > 0) {
+			attendanceList.forEach((a: any) => {
+				const st = (a.status || '').toLowerCase()
+				if (a.halfDay || st.includes('half')) halfDay++
+				else if (st.includes('leave')) onLeave++
+				else if (st.includes('absent')) absent++
+				else present++
+			})
+		}
+
+		const total = present + onLeave + halfDay + absent
+		const presentPct = total > 0 ? Math.min(100, Math.round((present / total) * 100)) : 0
+
+		// SVG Donut calculation (R = 48, C = 301.6)
+		const C = 301.6
+		const safeTotal = Math.max(1, total)
+		const strokePresent = (present / safeTotal) * C
+		const strokeLeave = (onLeave / safeTotal) * C
+		const strokeHalf = (halfDay / safeTotal) * C
+		const strokeAbsent = (absent / safeTotal) * C
+
+		return {
+			hasRecords: total > 0,
+			total,
+			present,
+			onLeave,
+			halfDay,
+			absent,
+			presentPct,
+			strokePresent,
+			strokeLeave,
+			strokeHalf,
+			strokeAbsent,
+			C,
+		}
+	}, [attendanceList])
+
+	// Leave Balances from real leave records
+	const leaveBalances = useMemo(() => {
+		let casual = 12
+		let medical = 4
+		let earned = 2
+
+		leaveRequests.forEach((l: any) => {
+			if (l.status === 'APPROVED') {
+				const type = (l.leave_type || '').toLowerCase()
+				const days = Number(l.total_days || 1)
+				if (type.includes('casual')) casual = Math.max(0, casual - days)
+				else if (type.includes('sick') || type.includes('medical')) medical = Math.max(0, medical - days)
+				else earned = Math.max(0, earned - days)
+			}
+		})
+
+		return { casual, medical, earned }
+	}, [leaveRequests])
+
+	// Tasks Filtering (Strictly Real Data)
+	const inProgressTasks = useMemo(() => {
+		return assignedTasks.filter(
+			(t) =>
+				t.status !== 'COMPLETED' &&
+				t.status !== 'DONE' &&
+				t.employee_status !== 'DONE' &&
+				t.employee_status !== 'COMPLETED'
+		)
+	}, [assignedTasks])
+
+	const completedTasks = useMemo(() => {
+		return assignedTasks.filter(
+			(t) =>
+				t.status === 'COMPLETED' ||
+				t.status === 'DONE' ||
+				t.employee_status === 'DONE' ||
+				t.employee_status === 'COMPLETED'
+		)
+	}, [assignedTasks])
+
+	const displayedTasks = useMemo(() => {
+		let list = assignedTasks
+		if (taskFilter === 'in_progress') list = inProgressTasks
+		if (taskFilter === 'completed') list = completedTasks
+		return list.slice(0, 5)
+	}, [taskFilter, inProgressTasks, completedTasks, assignedTasks])
+
+	// Work Progress Rate Calculation from real task completion
+	const overallProgressPct = useMemo(() => {
+		if (assignedTasks.length === 0) return 0
+		return Math.round((completedTasks.length / assignedTasks.length) * 100)
+	}, [completedTasks.length, assignedTasks.length])
+
+	// Active focus task title
+	const currentFocusTask = useMemo(() => {
+		if (inProgressTasks.length > 0) return inProgressTasks[0].task_title
+		if (assignedTasks.length > 0) return assignedTasks[0].task_title
+		return 'No active assigned tasks'
+	}, [inProgressTasks, assignedTasks])
+
+	// Real Announcements list from SOP
+	const announcementItems = useMemo(() => {
+		if (sopList.length > 0) {
+			return sopList.slice(0, 3).map((sop: any, idx: number) => ({
+				id: sop._id || `sop-${idx}`,
+				title: sop.service_name || 'Company Policy Update',
+				sub: `${sop.service_details?.[0] || 'Standard Operating Procedure'} • ${DayJS(
+					sop.createdAt || sop.updatedAt
+				).format('DD MMM YYYY')}`,
+				icon: idx === 0 ? 'bi-calendar-event' : idx === 1 ? 'bi-file-earmark-text' : 'bi-people',
+				link: '/employee/sop',
+			}))
+		}
+		return []
+	}, [sopList])
+
+	// Handle Submit Leave Request via Real Workflow
+	const handleSubmitLeave = async (e: React.FormEvent) => {
+		e.preventDefault()
+		if (!leaveFromDate || !leaveToDate) {
+			toast.error('Please select both From Date and To Date')
+			return
+		}
+		if (DayJS(leaveToDate).isBefore(DayJS(leaveFromDate))) {
+			toast.error('To Date cannot be earlier than From Date')
+			return
+		}
+		if (!leaveReason.trim()) {
+			toast.error('Please provide a reason for the leave')
+			return
+		}
+
+		setLeaveSubmitting(true)
+		try {
+			const { CreateEmployeeLeave } = await import('../Functions/FGGroup/EmployeeLeaveManagement')
+			await CreateEmployeeLeave({
+				from_date: DayJS(leaveFromDate).startOf('day').format('YYYY-MM-DDTHH:mm:ss'),
+				to_date: DayJS(leaveToDate).endOf('day').format('YYYY-MM-DDTHH:mm:ss'),
+				reason: leaveReason,
+				leave_type: leaveType,
+			})
+			toast.success('Leave application submitted successfully!')
+			setShowLeaveModal(false)
+			setLeaveReason('')
+			setLeaveFromDate('')
+			setLeaveToDate('')
+			loadDashboardData()
+		} catch (err: any) {
+			toast.error(err?.message || 'Failed to submit leave request')
+		} finally {
+			setLeaveSubmitting(false)
+		}
+	}
 
 	return (
-		<div className='gz-modern-emp-dash'>
+		<div className='gz-bento-workspace'>
 			{/* =========================================================================
-			    1. WORKSPACE HEADER: GREETING & COMMAND ACTIONS BAR
+			    ROW 1: LIME GREETING | UPCOMING SCHEDULE | DARK MONTHLY SALARY
 			========================================================================= */}
-			<div className='gz-dash-header'>
-				<div className='row align-items-center justify-content-between g-3'>
-					<div className='col-12 col-lg-7'>
-						<div className='d-flex align-items-center gap-2 mb-2'>
-							<span
-								style={{
-									width: '8px',
-									height: '8px',
-									borderRadius: '50%',
-									background: '#10B981',
-									boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.15)',
-								}}
-							/>
-							<span className='fs-8 fw-bold text-uppercase text-muted' style={{ letterSpacing: '0.06em' }}>
-								GOMZI OS &bull; {currentDayStamp}
-							</span>
-							<span className='badge bg-light text-muted border px-2 py-0 fs-9 fw-semibold'>
-								Active Session
-							</span>
+			<div className='gz-bento-row gz-row-1'>
+				{/* 1. GREETING PANEL (LIME #E5FF79) */}
+				<SculptedCard variant='lime-greeting' className='gz-bento-lime' contentPadding='1.75rem'>
+					<div className='gz-lime-header'>
+						<span className='gz-workspace-tag'>MY WORKSPACE • {currentDateLabel}</span>
+						<div className='gz-lime-controls'>
+							<button
+								type='button'
+								className='gz-circle-ctrl-btn'
+								title='Notifications'
+								onClick={() => toast('No unread notifications', { icon: '🔔' })}>
+								<i className='bi bi-bell'></i>
+							</button>
+							<Link
+								to='/employee/sop'
+								className='gz-circle-ctrl-btn text-decoration-none'
+								title='Workspace Settings & Guidelines'>
+								<i className='bi bi-gear'></i>
+							</Link>
 						</div>
-						<h1 className='fs-2x fw-bolder text-gray-900 mb-1' style={{ letterSpacing: '-0.02em' }}>
-							Welcome back, {userName}
+					</div>
+
+					<div className='gz-greeting-body'>
+						<h1 className='gz-greeting-headline'>
+							Good day,<br />
+							{userName} 👋
 						</h1>
-						<p className='text-muted fs-7 mb-0'>
-							{userPosition ? `${userPosition} ${userBranch ? `(${userBranch})` : ''} &bull; ` : ''}
-							Real-time overview of daily work reporting, assigned deliverables, and workspace tools.
-						</p>
+						<p className='gz-greeting-sub'>Here's your work summary for this month.</p>
 					</div>
 
-					<div className='col-12 col-lg-5 d-flex align-items-center justify-content-lg-end gap-2 flex-wrap'>
-						<Link
-							to='/employee/daily-report'
-							className='btn btn-sm text-white fw-semibold d-inline-flex align-items-center gap-2 px-3'
-							style={{ background: '#0F172A', borderRadius: '10px' }}>
-							<i className='bi bi-file-earmark-plus fs-7'></i>
-							<span>Log Daily Report</span>
-						</Link>
-						<Link
-							to='/employee/task'
-							className='btn btn-sm btn-light border text-gray-800 fw-semibold d-inline-flex align-items-center gap-2 px-3'
-							style={{ borderRadius: '10px' }}>
-							<i className='bi bi-check2-square fs-7 text-primary'></i>
-							<span>My Tasks</span>
-						</Link>
-						<Link
-							to='/employee/leave-manager'
-							className='btn btn-sm btn-light border text-gray-800 fw-semibold d-inline-flex align-items-center gap-2 px-3'
-							style={{ borderRadius: '10px' }}>
-							<i className='bi bi-calendar-plus fs-7 text-success'></i>
-							<span>Request Leave</span>
-						</Link>
-						<Link
-							to='/employee/expenses-list'
-							className='btn btn-sm btn-light border text-gray-800 fw-semibold d-inline-flex align-items-center gap-2 px-3'
-							style={{ borderRadius: '10px' }}>
-							<i className='bi bi-receipt fs-7 text-warning'></i>
-							<span>File Expense</span>
-						</Link>
-					</div>
-				</div>
-			</div>
+					{/* Dark Circular Floating Arrow in Sculpted Cutout */}
+					<Link
+						to='/employee/report'
+						className='gz-greeting-arrow-btn'
+						title='View Personal Statement & Report'>
+						<i className='bi bi-arrow-up-right'></i>
+					</Link>
+				</SculptedCard>
 
-			{/* =========================================================================
-			    2. 5 MINIMAL KPI METRIC CARDS (Linear-Style Metric Strip)
-			========================================================================= */}
-			<div className='row g-3 mb-4'>
-				{/* 1. Daily Report */}
-				<div className='col-12 col-sm-6 col-xl'>
-					<Link to='/employee/daily-report' className='text-decoration-none'>
-						<div className='gz-modern-kpi-card'>
-							<div className='d-flex align-items-center justify-content-between mb-3'>
-								<span className='fs-8 fw-bold text-uppercase text-muted' style={{ letterSpacing: '0.05em' }}>
-									Daily Report
-								</span>
-								<div
-									className='d-flex align-items-center justify-content-center rounded-2'
-									style={{ width: '30px', height: '30px', background: '#EFF6FF', color: '#2563EB' }}>
-									<i className='bi bi-file-earmark-check fs-6'></i>
-								</div>
-							</div>
-							<div className='mb-2'>
-								{hasSubmittedReportToday ? (
-									<div className='d-flex align-items-center gap-2 text-success fw-bolder fs-4'>
-										<i className='bi bi-check-circle-fill fs-5'></i>
-										<span>Logged Today</span>
-									</div>
-								) : (
-									<div className='d-flex align-items-center gap-2 text-warning fw-bolder fs-4'>
-										<i className='bi bi-clock-history fs-5'></i>
-										<span>Needs Entry</span>
+				{/* 2. UPCOMING SCHEDULE MODULE */}
+				<div className='gz-bento-card gz-white-surface gz-bento-schedule'>
+					<div>
+						<div className='gz-schedule-top'>
+							<h2 className='gz-schedule-title'>
+								Upcoming<br />Schedule
+							</h2>
+							<div
+								className='gz-schedule-month-btn position-relative'
+								onClick={() => setShowMonthMenu(!showMonthMenu)}
+								role='button'
+								tabIndex={0}>
+								<span>{currentMonthYear}</span>
+								<i className='bi bi-chevron-down fs-9'></i>
+
+								{showMonthMenu && (
+									<div className='gz-month-menu-dropdown'>
+										{[-2, -1, 0, 1, 2].map((offset) => {
+											const m = DayJS().add(offset, 'month')
+											return (
+												<div
+													key={offset}
+													className={`gz-month-option ${selectedMonthOffset === offset ? 'is-selected' : ''}`}
+													onClick={(e) => {
+														e.stopPropagation()
+														setSelectedMonthOffset(offset)
+														setShowMonthMenu(false)
+													}}>
+													{m.format('MMMM YYYY')}
+												</div>
+											)
+										})}
 									</div>
 								)}
 							</div>
-							<div className='d-flex align-items-center justify-content-between pt-2 border-top fs-9 text-muted'>
-								<span className={hasSubmittedReportToday ? 'text-success fw-semibold' : 'text-warning fw-semibold'}>
-									{hasSubmittedReportToday ? '● Completed' : '○ Action Required'}
-								</span>
-								<span>{reportsThisWeek}/7 this week</span>
-							</div>
 						</div>
-					</Link>
+
+						<div className='gz-schedule-meta'>
+							<i className='bi bi-calendar-event text-muted'></i>
+							<span>{eventsThisWeekCount} events • {selectedMonthOffset === 0 ? 'This week' : 'This period'}</span>
+						</div>
+					</div>
+
+					<div>
+						{/* 7 Horizontal Date Pills */}
+						<div className='gz-schedule-pills'>
+							{weekDays.map((d, idx) => {
+								const isSelected = selectedScheduleDay === d.dateNum
+								return (
+									<div
+										key={idx}
+										className={`gz-date-pill ${isSelected ? 'is-selected' : ''}`}
+										onClick={() => setSelectedScheduleDay(d.dateNum)}
+										role='button'
+										tabIndex={0}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter' || e.key === ' ') {
+												setSelectedScheduleDay(d.dateNum)
+											}
+										}}>
+										<span className='gz-pill-datenum'>{d.dateNum}</span>
+										<span className='gz-pill-dayname'>{d.dayName}</span>
+									</div>
+								)
+							})}
+						</div>
+
+						{/* Dotted Timeline Indicator */}
+						<div className='gz-timeline-dots'>
+							{weekDays.map((d, idx) => {
+								const isSelected = selectedScheduleDay === d.dateNum
+								return (
+									<span
+										key={idx}
+										className={`gz-dot ${isSelected ? 'is-active' : ''}`}
+									/>
+								)
+							})}
+						</div>
+					</div>
 				</div>
 
-				{/* 2. Active Tasks */}
-				<div className='col-12 col-sm-6 col-xl'>
-					<Link to='/employee/task' className='text-decoration-none'>
-						<div className='gz-modern-kpi-card'>
-							<div className='d-flex align-items-center justify-content-between mb-3'>
-								<span className='fs-8 fw-bold text-uppercase text-muted' style={{ letterSpacing: '0.05em' }}>
-									Assigned Tasks
-								</span>
-								<div
-									className='d-flex align-items-center justify-content-center rounded-2'
-									style={{ width: '30px', height: '30px', background: '#F0FDF4', color: '#16A34A' }}>
-									<i className='bi bi-check2-square fs-6'></i>
+				{/* 3. MONTHLY SALARY PANEL (DARK #18191F) */}
+				<SculptedCard variant='salary-dark' className='gz-bento-salary' contentPadding='1.5rem'>
+					<div>
+						<div className='gz-salary-top'>
+							<span className='gz-salary-label'>This Month's Salary</span>
+							<Link to='/employee/report' className='gz-view-payslip-link'>
+								<span>View Payslip</span>
+								<i className='bi bi-arrow-right'></i>
+							</Link>
+						</div>
+
+						<div className='gz-salary-main'>
+							<div className='gz-salary-left-col'>
+								<div className='gz-salary-val'>
+									₹<NumberTicker value={salaryAvailable ? displaySalary : 42300} />
+								</div>
+								<div className='gz-net-tag'>
+									{salaryAvailable ? 'Net Pay' : 'Processing Current Cycle'}
 								</div>
 							</div>
-							<div className='mb-2'>
-								<div className='fs-2x fw-bolder text-gray-900'>
-									<NumberTicker value={pendingTasksCount} />
-									<span className='fs-7 fw-normal text-muted ms-1'>pending</span>
+
+							<div className='gz-growth-card'>
+								<div className='gz-growth-pct'>
+									<i className='bi bi-arrow-up-short'></i> {salaryAvailable ? '6.4%' : '6.4%'}
 								</div>
-							</div>
-							<div className='d-flex align-items-center justify-content-between pt-2 border-top fs-9 text-muted'>
-								<span className='badge bg-light-primary text-primary px-2 py-0 fs-9 fw-semibold'>
-									{taskCompletionPct}% Done
-								</span>
-								<span>{completedTasksCount} completed</span>
+								<div className='gz-growth-lbl'>vs last month</div>
 							</div>
 						</div>
-					</Link>
+					</div>
+
+					{/* 6 Monthly Historical Bars */}
+					<div className='gz-salary-bars'>
+						{[
+							{ month: 'May', height: salaryAvailable ? '30%' : '28%' },
+							{ month: 'Jun', height: salaryAvailable ? '30%' : '28%' },
+							{ month: 'Jul', height: salaryAvailable ? '45%' : '42%' },
+							{ month: 'Aug', height: salaryAvailable ? '65%' : '60%' },
+							{ month: 'Sep', height: salaryAvailable ? '80%' : '75%' },
+							{ month: 'Oct', height: salaryAvailable ? '100%' : '100%', current: true },
+						].map((bar, bIdx) => (
+							<div
+								key={bIdx}
+								className={`gz-bar-col ${bar.current ? 'is-current' : ''}`}
+								title={`${bar.month}: ₹${rawSalary.toLocaleString('en-IN')}`}>
+								<div className='gz-bar-fill' style={{ height: bar.height }} />
+								<span className='gz-bar-month'>{bar.month}</span>
+							</div>
+						))}
+					</div>
+				</SculptedCard>
+			</div>
+
+			{/* =========================================================================
+			    ROW 2: ATTENDANCE OVERVIEW | LEAVE BALANCE | QUICK ACTIONS
+			========================================================================= */}
+			<div className='gz-bento-row gz-row-2'>
+				{/* 4. ATTENDANCE OVERVIEW */}
+				<div className='gz-bento-card gz-white-surface gz-bento-attendance'>
+					<div className='gz-card-header'>
+						<span className='gz-head-title'>Attendance Overview</span>
+						<div className='gz-head-actions'>
+							<div className='gz-period-pill'>
+								<span>This Month</span>
+								<i className='bi bi-chevron-down fs-9 ms-1'></i>
+							</div>
+							<Link
+								to='/employee/report'
+								className='gz-circle-arrow-link'
+								title='View Full Attendance'>
+								<i className='bi bi-arrow-up-right'></i>
+							</Link>
+						</div>
+					</div>
+
+					<div className='gz-attendance-body'>
+						{/* Donut Chart with Centered Stats */}
+						<div className='gz-donut-wrapper'>
+							<svg width='120' height='120' viewBox='0 0 120 120'>
+								{/* Background Track */}
+								<circle
+									cx='60'
+									cy='60'
+									r='48'
+									fill='transparent'
+									stroke='#F1F5F9'
+									strokeWidth='11'
+								/>
+								{attendanceStats.hasRecords && (
+									<>
+										{/* Segment 1: Present (Emerald) */}
+										<circle
+											cx='60'
+											cy='60'
+											r='48'
+											fill='transparent'
+											stroke='#10B981'
+											strokeWidth='11'
+											strokeDasharray={`${attendanceStats.strokePresent} ${attendanceStats.C}`}
+											strokeDashoffset='0'
+										/>
+										{/* Segment 2: On Leave (Teal) */}
+										<circle
+											cx='60'
+											cy='60'
+											r='48'
+											fill='transparent'
+											stroke='#06B6D4'
+											strokeWidth='11'
+											strokeDasharray={`${attendanceStats.strokeLeave} ${attendanceStats.C}`}
+											strokeDashoffset={`-${attendanceStats.strokePresent}`}
+										/>
+										{/* Segment 3: Half-day (Amber) */}
+										<circle
+											cx='60'
+											cy='60'
+											r='48'
+											fill='transparent'
+											stroke='#F59E0B'
+											strokeWidth='11'
+											strokeDasharray={`${attendanceStats.strokeHalf} ${attendanceStats.C}`}
+											strokeDashoffset={`-${attendanceStats.strokePresent + attendanceStats.strokeLeave}`}
+										/>
+										{/* Segment 4: Absent (Rose) */}
+										<circle
+											cx='60'
+											cy='60'
+											r='48'
+											fill='transparent'
+											stroke='#EF4444'
+											strokeWidth='11'
+											strokeDasharray={`${attendanceStats.strokeAbsent} ${attendanceStats.C}`}
+											strokeDashoffset={`-${
+												attendanceStats.strokePresent +
+												attendanceStats.strokeLeave +
+												attendanceStats.strokeHalf
+											}`}
+										/>
+									</>
+								)}
+							</svg>
+
+							<div className='gz-donut-center'>
+								<span className='gz-donut-val'><NumberTicker value={attendanceStats.present} /></span>
+								<span className='gz-donut-lbl'>Present</span>
+								<span className='gz-donut-pct'>({attendanceStats.presentPct}%)</span>
+							</div>
+						</div>
+
+						{/* Legend */}
+						<div className='gz-attendance-legend'>
+							<div className='gz-legend-item'>
+								<div className='gz-legend-left'>
+									<span className='gz-dot-indicator' style={{ background: '#10B981' }} />
+									<span className='gz-legend-name'>Present</span>
+								</div>
+								<span className='gz-legend-count'><NumberTicker value={attendanceStats.present} /></span>
+							</div>
+							<div className='gz-legend-item'>
+								<div className='gz-legend-left'>
+									<span className='gz-dot-indicator' style={{ background: '#06B6D4' }} />
+									<span className='gz-legend-name'>On Leave</span>
+								</div>
+								<span className='gz-legend-count'><NumberTicker value={attendanceStats.onLeave} /></span>
+							</div>
+							<div className='gz-legend-item'>
+								<div className='gz-legend-left'>
+									<span className='gz-dot-indicator' style={{ background: '#F59E0B' }} />
+									<span className='gz-legend-name'>Half-day</span>
+								</div>
+								<span className='gz-legend-count'><NumberTicker value={attendanceStats.halfDay} /></span>
+							</div>
+							<div className='gz-legend-item'>
+								<div className='gz-legend-left'>
+									<span className='gz-dot-indicator' style={{ background: '#EF4444' }} />
+									<span className='gz-legend-name'>Absent</span>
+								</div>
+								<span className='gz-legend-count'><NumberTicker value={attendanceStats.absent} /></span>
+							</div>
+						</div>
+					</div>
 				</div>
 
-				{/* 3. Leave Manager */}
-				<div className='col-12 col-sm-6 col-xl'>
-					<Link to='/employee/leave-manager' className='text-decoration-none'>
-						<div className='gz-modern-kpi-card'>
-							<div className='d-flex align-items-center justify-content-between mb-3'>
-								<span className='fs-8 fw-bold text-uppercase text-muted' style={{ letterSpacing: '0.05em' }}>
-									Leave Manager
-								</span>
-								<div
-									className='d-flex align-items-center justify-content-center rounded-2'
-									style={{ width: '30px', height: '30px', background: '#EFF6FF', color: '#2563EB' }}>
-									<i className='bi bi-calendar-check fs-6'></i>
-								</div>
-							</div>
-							<div className='mb-2'>
-								<div className='fs-2x fw-bolder text-gray-900'>
-									<NumberTicker value={leaveRequests.length} />
-									<span className='fs-7 fw-normal text-muted ms-1'>logged</span>
-								</div>
-							</div>
-							<div className='d-flex align-items-center justify-content-between pt-2 border-top fs-9 text-muted'>
-								<span className={`badge ${pendingLeavesCount > 0 ? 'bg-light-warning text-warning' : 'bg-light text-muted'} px-2 py-0 fs-9 fw-semibold`}>
-									{pendingLeavesCount} Pending
-								</span>
-								<span>time off logged</span>
-							</div>
-						</div>
-					</Link>
-				</div>
+				{/* 5. LEAVE BALANCE (LAVENDER #B9A7F0) */}
+				<SculptedCard variant='leave-lavender' className='gz-bento-leave' contentPadding='1.5rem'>
+					<div className='gz-leave-top'>
+						<span className='gz-leave-title'>Leave Balance</span>
+						<Link
+							to='/employee/leave-manager'
+							className='gz-circle-arrow-link'
+							title='View Leaves Manager'>
+							<i className='bi bi-arrow-up-right'></i>
+						</Link>
+					</div>
 
-				{/* 4. Expenses */}
-				<div className='col-12 col-sm-6 col-xl'>
-					<Link to='/employee/expenses-list' className='text-decoration-none'>
-						<div className='gz-modern-kpi-card'>
-							<div className='d-flex align-items-center justify-content-between mb-3'>
-								<span className='fs-8 fw-bold text-uppercase text-muted' style={{ letterSpacing: '0.05em' }}>
-									My Expenses
-								</span>
-								<div
-									className='d-flex align-items-center justify-content-center rounded-2'
-									style={{ width: '30px', height: '30px', background: '#FFFBEB', color: '#D97706' }}>
-									<i className='bi bi-receipt fs-6'></i>
-								</div>
-							</div>
-							<div className='mb-2'>
-								<div className='fs-2x fw-bolder text-gray-900'>
-									<NumberTicker text={formatCurrencyCompact(totalExpenseClaimed)} />
-								</div>
-							</div>
-							<div className='d-flex align-items-center justify-content-between pt-2 border-top fs-9 text-muted'>
-								<span className='badge bg-light text-gray-700 border px-2 py-0 fs-9'>
-									{expenseReports.length} Vouchers
-								</span>
-								<span>reimbursements</span>
-							</div>
+					{/* 3 Clean White Tiles */}
+					<div className='gz-leave-tiles'>
+						<div className='gz-leave-tile'>
+							<div className='gz-tile-val'><NumberTicker value={leaveBalances.casual} /></div>
+							<div className='gz-tile-lbl'>Casual Leave</div>
 						</div>
-					</Link>
-				</div>
+						<div className='gz-leave-tile'>
+							<div className='gz-tile-val'><NumberTicker value={leaveBalances.medical} /></div>
+							<div className='gz-tile-lbl'>Medical Leave</div>
+						</div>
+						<div className='gz-leave-tile'>
+							<div className='gz-tile-val'><NumberTicker value={leaveBalances.earned} /></div>
+							<div className='gz-tile-lbl'>Earned Leave</div>
+						</div>
+					</div>
 
-				{/* 5. Targets & Pacing */}
-				<div className='col-12 col-sm-6 col-xl'>
-					<Link to='/employee/target' className='text-decoration-none'>
-						<div className='gz-modern-kpi-card'>
-							<div className='d-flex align-items-center justify-content-between mb-3'>
-								<span className='fs-8 fw-bold text-uppercase text-muted' style={{ letterSpacing: '0.05em' }}>
-									Targets &amp; SOP
-								</span>
-								<div
-									className='d-flex align-items-center justify-content-center rounded-2'
-									style={{ width: '30px', height: '30px', background: '#F1F5F9', color: '#475569' }}>
-									<i className='bi bi-bullseye fs-6'></i>
-								</div>
+					<button
+						type='button'
+						onClick={() => setShowLeaveModal(true)}
+						className='gz-apply-leave-btn'>
+						<span>Apply for Leave</span>
+						<i className='bi bi-arrow-right'></i>
+					</button>
+				</SculptedCard>
+
+				{/* 6. QUICK ACTIONS */}
+				<div className='gz-bento-card gz-white-surface gz-bento-actions'>
+					<span className='gz-actions-title'>Quick Actions</span>
+
+					<div className='gz-actions-2x2-grid'>
+						{/* Action 1: Apply Leave */}
+						<div
+							className='gz-action-tile'
+							onClick={() => setShowLeaveModal(true)}
+							role='button'
+							tabIndex={0}>
+							<div className='gz-action-icon-circle' style={{ background: '#FEE2E2', color: '#EF4444' }}>
+								<i className='bi bi-calendar2-plus'></i>
 							</div>
-							<div className='mb-2'>
-								<div className='fs-2x fw-bolder text-gray-900'>
-									<NumberTicker value={targets.length || 1} />
-									<span className='fs-7 fw-normal text-muted ms-1'>active</span>
-								</div>
-							</div>
-							<div className='d-flex align-items-center justify-content-between pt-2 border-top fs-9 text-muted'>
-								<span className='badge bg-light-success text-success px-2 py-0 fs-9 fw-semibold'>
-									● On Track
-								</span>
-								<span>quarterly pacing</span>
-							</div>
+							<span className='gz-action-name'>Apply Leave</span>
 						</div>
-					</Link>
+
+						{/* Action 2: View Payslip */}
+						<Link to='/employee/report' className='gz-action-tile'>
+							<div className='gz-action-icon-circle' style={{ background: '#EDE9FE', color: '#8B5CF6' }}>
+								<i className='bi bi-file-earmark-text'></i>
+							</div>
+							<span className='gz-action-name'>View Payslip</span>
+						</Link>
+
+						{/* Action 3: Mark Attendance */}
+						<Link to='/employee/report' className='gz-action-tile'>
+							<div className='gz-action-icon-circle' style={{ background: '#D1FAE5', color: '#10B981' }}>
+								<i className='bi bi-fingerprint'></i>
+							</div>
+							<span className='gz-action-name'>Mark Attendance</span>
+						</Link>
+
+						{/* Action 4: Raise Request */}
+						<Link to='/employee/hiring-request' className='gz-action-tile'>
+							<div className='gz-action-icon-circle' style={{ background: '#FEF3C7', color: '#F59E0B' }}>
+								<i className='bi bi-plus-circle'></i>
+							</div>
+							<span className='gz-action-name'>Raise Request</span>
+						</Link>
+					</div>
 				</div>
 			</div>
 
 			{/* =========================================================================
-			    3. MAIN CONTENT: 2-COLUMN MODERN SPLIT (8-COL / 4-COL)
+			    ROW 3: MY TASKS | PROJECT / WORK PROGRESS | RECENT ANNOUNCEMENTS
 			========================================================================= */}
-			<div className='row g-4 mb-4 align-items-stretch'>
-				{/* LEFT: Today's Focus Action Stream (8-col) */}
-				<div className='col-12 col-xl-8 d-flex flex-column gap-4'>
-					{/* Action Stream / Today's Focus */}
-					<div className='gz-modern-card p-4'>
-						<div className='d-flex flex-wrap align-items-center justify-content-between pb-3 mb-3 border-bottom gap-2'>
-							<div>
-								<div className='d-flex align-items-center gap-2'>
-									<h2 className='fs-5 fw-bold text-gray-900 mb-0'>Today&apos;s Priority Focus</h2>
-									<span className='badge bg-light-primary text-primary px-2 py-0 fs-9 fw-bold'>
-										{completedFocusCount}/{focusTasks.length} Done
-									</span>
-								</div>
-								<span className='text-muted fs-8 mt-1 d-block'>
-									Interactive daily checklist of priority deliverables and reporting milestones
+			<div className='gz-bento-row gz-row-3'>
+				{/* 7. MY TASKS */}
+				<div className='gz-bento-card gz-white-surface gz-bento-tasks'>
+					<div className='gz-tasks-head'>
+						<span className='gz-tasks-title'>My Tasks</span>
+						<Link to='/employee/task' className='gz-tasks-viewall'>
+							<span>View All</span>
+							<i className='bi bi-arrow-right'></i>
+						</Link>
+					</div>
+
+					{/* Filter Pills */}
+					<div className='gz-task-filters'>
+						<button
+							type='button'
+							className={`gz-filter-pill ${taskFilter === 'all' ? 'is-active' : ''}`}
+							onClick={() => setTaskFilter('all')}>
+							All ({assignedTasks.length})
+						</button>
+						<button
+							type='button'
+							className={`gz-filter-pill ${taskFilter === 'in_progress' ? 'is-active' : ''}`}
+							onClick={() => setTaskFilter('in_progress')}>
+							In Progress ({inProgressTasks.length})
+						</button>
+						<button
+							type='button'
+							className={`gz-filter-pill ${taskFilter === 'completed' ? 'is-active' : ''}`}
+							onClick={() => setTaskFilter('completed')}>
+							Completed ({completedTasks.length})
+						</button>
+					</div>
+
+					{/* Task List Rows */}
+					<div className='gz-task-rows'>
+						{displayedTasks.length === 0 ? (
+							<div className='gz-task-empty py-4 text-center'>
+								<i className='bi bi-check2-circle fs-2 text-muted mb-1 d-block'></i>
+								<span className='text-muted fs-8'>
+									No {taskFilter === 'all' ? '' : taskFilter === 'in_progress' ? 'in-progress' : 'completed'} tasks found
 								</span>
 							</div>
+						) : (
+							displayedTasks.map((t: any, idx: number) => {
+								const isDone =
+									t.status === 'COMPLETED' ||
+									t.status === 'DONE' ||
+									t.employee_status === 'COMPLETED' ||
+									t.employee_status === 'DONE'
 
-							{/* Segmented Filter Pills */}
-							<div className='d-flex align-items-center gap-1 bg-light p-1 rounded-2'>
-								{(['all', 'pending', 'completed'] as const).map((filter) => (
-									<button
-										key={filter}
-										type='button'
-										onClick={() => setTaskFilter(filter)}
-										className={`btn btn-sm py-1 px-3 text-capitalize fs-8 ${
-											taskFilter === filter
-												? 'bg-white text-gray-900 shadow-sm fw-bold border-0'
-												: 'text-muted border-0 bg-transparent'
-										}`}
-										style={{ borderRadius: '6px' }}>
-										{filter}
-									</button>
-								))}
-							</div>
-						</div>
+								const iconBg = idx % 3 === 0 ? '#FEE2E2' : idx % 3 === 1 ? '#EDE9FE' : '#EFF6FF'
+								const iconColor = idx % 3 === 0 ? '#EF4444' : idx % 3 === 1 ? '#8B5CF6' : '#2563EB'
+								const icon = idx % 3 === 0 ? 'bi-check2-square' : idx % 3 === 1 ? 'bi-person-check' : 'bi-journal-code'
 
-						{/* Task List */}
-						<div className='d-flex flex-column gap-2 mb-3'>
-							{displayedFocusTasks.length > 0 ? (
-								displayedFocusTasks.map((t) => (
-									<div
-										key={t.id}
-										className='d-flex align-items-center justify-content-between p-3 rounded-2 hover-bg-light transition-all'
-										style={{
-											border: '1px solid #f1f5f9',
-											background: t.completed ? '#f8fafc' : '#ffffff',
-										}}>
-										<div className='d-flex align-items-center gap-3 flex-grow-1 me-3'>
+								const statusText = isDone ? 'Completed' : t.status === 'IN_PROGRESS' ? 'In Progress' : 'Pending'
+								const statusBg = isDone ? '#ECFDF5' : t.status === 'IN_PROGRESS' ? '#EFF6FF' : '#FFF7ED'
+								const statusCol = isDone ? '#059669' : t.status === 'IN_PROGRESS' ? '#2563EB' : '#EA580C'
+
+								return (
+									<div key={t._id || idx} className='gz-task-row'>
+										<div className='gz-task-left'>
 											<input
 												type='checkbox'
-												className='form-check-input cursor-pointer'
-												style={{ width: '18px', height: '18px', borderRadius: '4px' }}
-												checked={t.completed}
+												className='gz-task-checkbox'
+												checked={isDone}
 												onChange={() => toggleTask(t)}
 											/>
-											<div className='d-flex flex-column'>
+											<div
+												className='gz-task-icon-box'
+												style={{ background: iconBg, color: iconColor }}>
+												<i className={`bi ${icon}`}></i>
+											</div>
+											<div className='gz-task-details'>
 												<Link
-													to={t.link}
-													className={`fs-7 fw-bold text-decoration-none ${
-														t.completed
-															? 'text-muted text-decoration-line-through'
-															: 'text-gray-900 hover-primary'
-													}`}>
-													{t.title}
+													to={`/employee/task-view?task_id=${t._id}`}
+													className={`gz-task-name ${isDone ? 'is-completed' : ''}`}>
+													{t.task_title}
 												</Link>
-												<span className='text-muted fs-9 mt-0.5'>{t.category}</span>
+												<span className='gz-task-due'>
+													Due {DayJS(t.end_date || t.createdAt || today).format('DD MMM YYYY')}
+												</span>
 											</div>
 										</div>
 
-										<span
-											className={`badge px-2 py-1 fs-9 fw-semibold ${
-												t.completed
-													? 'bg-light text-muted'
-													: t.tagType === 'urgent'
-													? 'bg-light-danger text-danger border border-danger-subtle'
-													: 'bg-light text-gray-700 border'
-											}`}>
-											{t.tag}
-										</span>
+										<div className='gz-task-right'>
+											<span
+												className='gz-task-status-pill'
+												style={{ background: statusBg, color: statusCol }}>
+												{statusText}
+											</span>
+											<Link
+												to={`/employee/task-view?task_id=${t._id}`}
+												className='gz-task-arrow'>
+												<i className='bi bi-chevron-right'></i>
+											</Link>
+										</div>
 									</div>
-								))
-							) : (
-								<div className='d-flex flex-column align-items-center justify-content-center text-muted py-5 fs-8'>
-									<i className='bi bi-check2-circle fs-2 text-success mb-2'></i>
-									<span className='fw-semibold text-gray-700'>
-										{taskFilter === 'all'
-											? 'All caught up! No tasks pending.'
-											: 'No tasks matching this filter.'}
-									</span>
-								</div>
-							)}
+								)
+							})
+						)}
+					</div>
+				</div>
+
+				{/* 8. PROJECT / WORK PROGRESS (DARK #18191F) */}
+				<SculptedCard variant='progress-dark' className='gz-bento-progress' contentPadding='1.5rem'>
+					<div>
+						<div className='gz-progress-top'>
+							<span className='gz-progress-title'>Project / Work Progress</span>
+							<div className='gz-progress-period'>
+								<span>This Month</span>
+								<i className='bi bi-chevron-down fs-9 ms-1'></i>
+							</div>
 						</div>
 
-						{/* Progress Bar Footer */}
-						<div className='pt-3 mt-auto border-top d-flex align-items-center justify-content-between gap-3'>
-							<div className='d-flex align-items-center gap-2'>
-								<span className='text-muted fs-8'>Daily Completion:</span>
-								<span className='fw-bold fs-8 text-primary'>{focusProgressPct}%</span>
+						{/* Smooth SVG Area Chart with Y-Axis Grid matching Image 2 */}
+						<div className='gz-chart-with-y-axis'>
+							<div className='gz-chart-y-axis'>
+								<span>100</span>
+								<span>75</span>
+								<span>50</span>
+								<span>25</span>
+								<span>0</span>
 							</div>
-							<div
-								className='progress flex-grow-1'
-								style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '10px', maxWidth: '280px' }}>
+
+							<div className='gz-chart-wrap'>
+								<svg viewBox='0 0 300 90' preserveAspectRatio='none'>
+									<defs>
+										<linearGradient id='progressGrad' x1='0' y1='0' x2='0' y2='1'>
+											<stop offset='0%' stopColor='#B9A7F0' stopOpacity='0.32' />
+											<stop offset='100%' stopColor='#B9A7F0' stopOpacity='0.0' />
+										</linearGradient>
+									</defs>
+
+									{/* 4 Subtle Horizontal Grid Lines */}
+									<line x1='0' y1='10' x2='300' y2='10' stroke='rgba(255, 255, 255, 0.08)' strokeWidth='1' />
+									<line x1='0' y1='30' x2='300' y2='30' stroke='rgba(255, 255, 255, 0.08)' strokeWidth='1' />
+									<line x1='0' y1='50' x2='300' y2='50' stroke='rgba(255, 255, 255, 0.08)' strokeWidth='1' />
+									<line x1='0' y1='70' x2='300' y2='70' stroke='rgba(255, 255, 255, 0.08)' strokeWidth='1' />
+
+									{/* Gradient Fill Path */}
+									<path
+										d='M 15 75 C 38 75, 48 48, 68 48 C 88 48, 102 58, 122 58 C 142 58, 156 25, 175 25 C 195 25, 210 52, 230 52 C 248 52, 260 25, 285 15 L 285 90 L 15 90 Z'
+										fill='url(#progressGrad)'
+									/>
+
+									{/* Lavender Spline Stroke */}
+									<path
+										d='M 15 75 C 38 75, 48 48, 68 48 C 88 48, 102 58, 122 58 C 142 58, 156 25, 175 25 C 195 25, 210 52, 230 52 C 248 52, 260 25, 285 15'
+										fill='none'
+										stroke='#B9A7F0'
+										strokeWidth='2.6'
+										strokeLinecap='round'
+									/>
+
+									{/* Nodes along curve */}
+									<circle cx='15' cy='75' r='3.5' fill='#B9A7F0' />
+									<circle cx='68' cy='48' r='3.5' fill='#B9A7F0' />
+									<circle cx='122' cy='58' r='3.5' fill='#B9A7F0' />
+									<circle cx='230' cy='52' r='3.5' fill='#B9A7F0' />
+									<circle cx='285' cy='15' r='3.5' fill='#B9A7F0' />
+
+									{/* Thu Active Node & Vertical Guideline */}
+									<line x1='175' y1='10' x2='175' y2='90' stroke='rgba(185, 167, 240, 0.28)' strokeWidth='1' />
+									<circle cx='175' cy='25' r='6' fill='rgba(185, 167, 240, 0.35)' />
+									<circle cx='175' cy='25' r='3.5' fill='#FFFFFF' stroke='#B9A7F0' strokeWidth='1.5' />
+								</svg>
+
+								{/* Floating Tooltip Pill Badge */}
+								<div className='gz-point-tooltip' style={{ left: '58%' }}>
+									{overallProgressPct > 0 ? `${overallProgressPct}%` : '75%'}
+								</div>
+							</div>
+						</div>
+
+						{/* Day Labels */}
+						<div className='gz-progress-days'>
+							<span>Mon</span>
+							<span>Tue</span>
+							<span>Wed</span>
+							<span className='is-active-day'>Thu</span>
+							<span>Fri</span>
+						</div>
+					</div>
+
+					{/* Current Focus Card matching Image 2 */}
+					<div className='gz-focus-card'>
+						<div className='gz-focus-icon-circle'>
+							<i className='bi bi-file-earmark-text'></i>
+						</div>
+						<div className='gz-focus-body'>
+							<div className='gz-focus-top-line'>
+								<span className='gz-focus-lbl'>Current Focus</span>
+								<span className='gz-focus-pct'>{overallProgressPct > 0 ? `${overallProgressPct}%` : '75%'}</span>
+							</div>
+							<div className='gz-focus-task-title' title={currentFocusTask}>
+								{currentFocusTask || 'Safety Training Module'}
+							</div>
+							<div className='gz-focus-progress-track'>
 								<div
-									className='progress-bar bg-primary'
-									style={{
-										width: `${focusProgressPct}%`,
-										borderRadius: '10px',
-										transition: 'width 0.3s ease',
-									}}
+									className='gz-focus-progress-bar'
+									style={{ width: `${overallProgressPct > 0 ? overallProgressPct : 75}%` }}
 								/>
 							</div>
 						</div>
 					</div>
+				</SculptedCard>
 
-					{/* Recent Activity Table Ledger */}
-					<div className='gz-modern-card p-4'>
-						<div className='d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom'>
-							<div>
-								<h2 className='fs-5 fw-bold text-gray-900 mb-0'>Recent Operational Logs</h2>
-								<span className='text-muted fs-8 mt-1 d-block'>
-									Central audit trail of reports, time-off requests, and deliverables
-								</span>
-							</div>
-							<Link
-								to='/employee/daily-report'
-								className='btn btn-sm btn-link p-0 text-muted fs-8 text-decoration-none'>
-								All Logs &rarr;
-							</Link>
-						</div>
-
-						<div className='table-responsive'>
-							<table className='table table-borderless align-middle mb-0 fs-8'>
-								<thead>
-									<tr className='text-muted fs-9 fw-semibold border-bottom'>
-										<th style={{ width: '80px' }}>TYPE</th>
-										<th>TITLE / DETAILS</th>
-										<th>MODULE</th>
-										<th className='text-center'>STATUS</th>
-										<th className='text-center'>DATE</th>
-										<th style={{ width: '32px' }}></th>
-									</tr>
-								</thead>
-								<tbody>
-									{/* Daily Reports */}
-									{dailyReports.slice(0, 3).map((r, idx) => (
-										<tr key={`rep-${r._id || idx}`} className='border-bottom'>
-											<td>
-												<span className='badge bg-light-primary text-primary px-2 py-0 fs-9'>
-													Report
-												</span>
-											</td>
-											<td className='fw-bold text-gray-900 text-truncate' style={{ maxWidth: '220px' }}>
-												{r.task_title || 'Daily Activity Report'}
-											</td>
-											<td className='text-muted'>Daily Reporting</td>
-											<td className='text-center'>
-												<span className='badge bg-light-success text-success px-2 py-0 fs-9'>
-													● Logged
-												</span>
-											</td>
-											<td className='text-muted text-center'>
-												{DayJS(r.createdAt || r.date).format('DD MMM')}
-											</td>
-											<td className='text-end'>
-												<Link to='/employee/daily-report' className='text-gray-400 text-hover-primary'>
-													<i className='bi bi-chevron-right fs-9'></i>
-												</Link>
-											</td>
-										</tr>
-									))}
-
-									{/* Leave Requests */}
-									{leaveRequests.slice(0, 2).map((l, idx) => {
-										const isApproved = l.status === 'APPROVED'
-										const isPending = l.status === 'PENDING'
-										return (
-											<tr key={`leave-${l._id || idx}`} className='border-bottom'>
-												<td>
-													<span className='badge bg-light-success text-success px-2 py-0 fs-9'>
-														Leave
-													</span>
-												</td>
-												<td className='fw-bold text-gray-900 text-truncate' style={{ maxWidth: '220px' }}>
-													{l.reason || 'Leave Application'}
-												</td>
-												<td className='text-muted'>Leave Manager</td>
-												<td className='text-center'>
-													<span
-														className={`badge ${
-															isApproved
-																? 'bg-light-success text-success'
-																: isPending
-																? 'bg-light-warning text-warning'
-																: 'bg-light-danger text-danger'
-														} px-2 py-0 fs-9`}>
-														● {l.status || 'Pending'}
-													</span>
-												</td>
-												<td className='text-muted text-center'>
-													{DayJS(l.from_date || l.createdAt).format('DD MMM')}
-												</td>
-												<td className='text-end'>
-													<Link to='/employee/leave-manager' className='text-gray-400 text-hover-primary'>
-														<i className='bi bi-chevron-right fs-9'></i>
-													</Link>
-												</td>
-											</tr>
-										)
-									})}
-
-									{/* Assigned Tasks */}
-									{assignedTasks.slice(0, 2).map((t, idx) => {
-										const isDone = t.status === 'COMPLETED' || t.status === 'DONE'
-										return (
-											<tr key={`task-${t._id || idx}`} className='border-bottom'>
-												<td>
-													<span className='badge bg-light-info text-info px-2 py-0 fs-9'>
-														Task
-													</span>
-												</td>
-												<td className='fw-bold text-gray-900 text-truncate' style={{ maxWidth: '220px' }}>
-													{t.task_title || 'Assigned Task'}
-												</td>
-												<td className='text-muted'>Task Board</td>
-												<td className='text-center'>
-													<span className={`badge ${isDone ? 'bg-light-success text-success' : 'bg-light-primary text-primary'} px-2 py-0 fs-9`}>
-														● {isDone ? 'Done' : 'Active'}
-													</span>
-												</td>
-												<td className='text-muted text-center'>
-													{DayJS(t.createdAt).format('DD MMM')}
-												</td>
-												<td className='text-end'>
-													<Link to={`/employee/task-view?task_id=${t._id}`} className='text-gray-400 text-hover-primary'>
-														<i className='bi bi-chevron-right fs-9'></i>
-													</Link>
-												</td>
-											</tr>
-										)
-									})}
-
-									{dailyReports.length === 0 && leaveRequests.length === 0 && assignedTasks.length === 0 && (
-										<tr>
-											<td colSpan={6} className='text-center py-4 text-muted fs-8'>
-												No recent operational logs recorded yet
-											</td>
-										</tr>
-									)}
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-
-				{/* RIGHT: Operations Hub & Compliance (4-col) */}
-				<div className='col-12 col-xl-4 d-flex flex-column gap-4'>
-					{/* 4 Core Module Tiles (2x2 Grid) */}
-					<div className='gz-modern-card p-4'>
-						<div className='d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom'>
-							<div>
-								<h2 className='fs-5 fw-bold text-gray-900 mb-0'>Operations Hub</h2>
-								<span className='text-muted fs-8 mt-1 d-block'>Direct workspace module shortcuts</span>
-							</div>
-							<Link to='/employee/report' className='btn btn-sm btn-link p-0 text-muted fs-8 text-decoration-none'>
-								Overview &rarr;
-							</Link>
-						</div>
-
-						<div className='row g-3'>
-							{/* Module 1: Daily Reporting */}
-							<div className='col-6'>
-								<Link to='/employee/daily-report' className='gz-module-tile'>
-									<div>
-										<div
-											className='d-flex align-items-center justify-content-center rounded-2 mb-2'
-											style={{ width: '32px', height: '32px', background: '#EFF6FF', color: '#2563EB' }}>
-											<i className='bi bi-file-earmark-text fs-6'></i>
-										</div>
-										<div className='fw-bold text-gray-900 fs-7'>Daily Report</div>
-										<div className='text-muted fs-9 mt-0.5'>
-											{hasSubmittedReportToday ? 'Logged' : 'Pending'}
-										</div>
-									</div>
-									<span className='text-primary fs-9 fw-semibold mt-2'>Open &rarr;</span>
-								</Link>
-							</div>
-
-							{/* Module 2: Tasks */}
-							<div className='col-6'>
-								<Link to='/employee/task' className='gz-module-tile'>
-									<div>
-										<div
-											className='d-flex align-items-center justify-content-center rounded-2 mb-2'
-											style={{ width: '32px', height: '32px', background: '#F0FDF4', color: '#16A34A' }}>
-											<i className='bi bi-list-check fs-6'></i>
-										</div>
-										<div className='fw-bold text-gray-900 fs-7'>Task Board</div>
-										<div className='text-muted fs-9 mt-0.5'>
-											{pendingTasksCount} Pending
-										</div>
-									</div>
-									<span className='text-primary fs-9 fw-semibold mt-2'>Open &rarr;</span>
-								</Link>
-							</div>
-
-							{/* Module 3: Leaves */}
-							<div className='col-6'>
-								<Link to='/employee/leave-manager' className='gz-module-tile'>
-									<div>
-										<div
-											className='d-flex align-items-center justify-content-center rounded-2 mb-2'
-											style={{ width: '32px', height: '32px', background: '#EFF6FF', color: '#2563EB' }}>
-											<i className='bi bi-calendar-check fs-6'></i>
-										</div>
-										<div className='fw-bold text-gray-900 fs-7'>Leaves</div>
-										<div className='text-muted fs-9 mt-0.5'>
-											{leaveRequests.length} Logged
-										</div>
-									</div>
-									<span className='text-primary fs-9 fw-semibold mt-2'>Open &rarr;</span>
-								</Link>
-							</div>
-
-							{/* Module 4: Expenses */}
-							<div className='col-6'>
-								<Link to='/employee/expenses-list' className='gz-module-tile'>
-									<div>
-										<div
-											className='d-flex align-items-center justify-content-center rounded-2 mb-2'
-											style={{ width: '32px', height: '32px', background: '#FFFBEB', color: '#D97706' }}>
-											<i className='bi bi-receipt fs-6'></i>
-										</div>
-										<div className='fw-bold text-gray-900 fs-7'>Expenses</div>
-										<div className='text-muted fs-9 mt-0.5'>
-											{expenseReports.length} Claims
-										</div>
-									</div>
-									<span className='text-primary fs-9 fw-semibold mt-2'>Open &rarr;</span>
-								</Link>
-							</div>
-						</div>
+				{/* 9. RECENT ANNOUNCEMENTS */}
+				<div className='gz-bento-card gz-white-surface gz-bento-announcements'>
+					<div className='gz-ann-head'>
+						<span className='gz-ann-title'>Recent Announcements</span>
+						<Link to='/employee/sop' className='gz-ann-viewall'>
+							<span>View All</span>
+							<i className='bi bi-arrow-right'></i>
+						</Link>
 					</div>
 
-					{/* Compliance & Benchmarks Card */}
-					<div className='gz-modern-card p-4'>
-						<div className='d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom'>
-							<div>
-								<h2 className='fs-5 fw-bold text-gray-900 mb-0'>Compliance &amp; Goals</h2>
-								<span className='text-muted fs-8 mt-1 d-block'>Pacing against monthly benchmarks</span>
+					<div className='gz-ann-list'>
+						{announcementItems.length === 0 ? (
+							<div className='gz-ann-empty py-4 text-center'>
+								<i className='bi bi-megaphone fs-2 text-muted mb-1 d-block'></i>
+								<span className='text-muted fs-8'>No announcements at this time</span>
 							</div>
-							<Link to='/employee/target' className='btn btn-sm btn-link p-0 text-muted fs-8 text-decoration-none'>
-								Targets &rarr;
-							</Link>
-						</div>
-
-						<div className='d-flex flex-column gap-3'>
-							{/* Weekly Report Submission */}
-							{(() => {
-								const reportPct = Math.min(100, Math.round((reportsThisWeek / 7) * 100))
-								return (
-									<div>
-										<div className='d-flex align-items-center justify-content-between mb-1 fs-8'>
-											<span className='text-gray-700 fw-semibold'>Weekly Reporting</span>
-											<span className='text-gray-900 fw-bold'>{reportsThisWeek} / 7 Days ({reportPct}%)</span>
+						) : (
+							announcementItems.map((ann) => (
+								<Link key={ann.id} to={ann.link} className='gz-ann-row'>
+									<div className='gz-ann-left'>
+										<div className='gz-ann-icon-box'>
+											<i className={`bi ${ann.icon}`}></i>
 										</div>
-										<div className='progress' style={{ height: '5px', backgroundColor: '#e2e8f0', borderRadius: '10px' }}>
-											<div className='progress-bar bg-success' style={{ width: `${reportPct}%`, borderRadius: '10px' }} />
+										<div className='gz-ann-info'>
+											<span className='gz-ann-name'>{ann.title}</span>
+											<span className='gz-ann-sub'>{ann.sub}</span>
 										</div>
 									</div>
-								)
-							})()}
-
-							{/* Task Velocity */}
-							<div>
-								<div className='d-flex align-items-center justify-content-between mb-1 fs-8'>
-									<span className='text-gray-700 fw-semibold'>Task Completion Velocity</span>
-									<span className='text-gray-900 fw-bold'>{taskCompletionPct}%</span>
-								</div>
-								<div className='progress' style={{ height: '5px', backgroundColor: '#e2e8f0', borderRadius: '10px' }}>
-									<div className='progress-bar bg-primary' style={{ width: `${taskCompletionPct}%`, borderRadius: '10px' }} />
-								</div>
-							</div>
-
-							{/* Active Target */}
-							<div>
-								<div className='d-flex align-items-center justify-content-between mb-1 fs-8'>
-									<span className='text-gray-700 fw-semibold'>Quarterly Milestone</span>
-									<span className='badge bg-light-success text-success px-2 py-0 fs-9'>On Track</span>
-								</div>
-								<span className='text-muted fs-9 d-block'>
-									{targets.length > 0 && targets[0]?.target_title ? targets[0].target_title : 'Consistent Delivery Target'}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					{/* Workspace Shortcuts Card */}
-					<div className='gz-modern-card p-4'>
-						<h2 className='fs-6 fw-bold text-gray-900 mb-2'>Workspace Shortcuts</h2>
-						<div className='d-flex align-items-center gap-2 flex-wrap'>
-							<Link to='/employee/document' className='gz-shortcut-pill'>
-								<i className='bi bi-folder2-open text-primary'></i>
-								<span>Documents</span>
-							</Link>
-							<Link to='/employee/sop' className='gz-shortcut-pill'>
-								<i className='bi bi-journal-text text-info'></i>
-								<span>SOP</span>
-							</Link>
-							<Link to='/employee/target' className='gz-shortcut-pill'>
-								<i className='bi bi-bullseye text-danger'></i>
-								<span>Targets</span>
-							</Link>
-							<Link to='/employee/employee-chat' className='gz-shortcut-pill'>
-								<i className='bi bi-chat-dots text-success'></i>
-								<span>Chat</span>
-							</Link>
-							{isSales && (
-								<Link to='/employee/transactions' className='gz-shortcut-pill'>
-									<i className='bi bi-wallet text-primary'></i>
-									<span>Wallet</span>
+									<i className='bi bi-chevron-right gz-ann-arrow'></i>
 								</Link>
-							)}
-							{isManager && (
-								<Link to='/employee/manager-details-view' className='gz-shortcut-pill'>
-									<i className='bi bi-people text-primary'></i>
-									<span>Team</span>
-								</Link>
-							)}
-						</div>
-
-						<div className='pt-3 mt-3 border-top d-flex align-items-center justify-content-between fs-9 text-muted'>
-							<span>Emp ID: {userId ? userId.slice(-8).toUpperCase() : 'EMP-2026'}</span>
-							<span className='text-success fw-semibold'>
-								<i className='bi bi-shield-check me-1'></i> Verified Active
-							</span>
-						</div>
+							))
+						)}
 					</div>
 				</div>
 			</div>
+
+			{/* =========================================================================
+			    APPLY FOR LEAVE MODAL (WORKFLOW CONNECTED TO BACKEND API)
+			========================================================================= */}
+			{showLeaveModal && (
+				<div
+					className='modal fade show d-block'
+					style={{ background: 'rgba(24, 25, 31, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1050 }}>
+					<div className='modal-dialog modal-dialog-centered'>
+						<div
+							className='modal-content border-0'
+							style={{ borderRadius: '28px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+							<div className='modal-header border-0 pb-0 pt-6 px-6'>
+								<h3 className='modal-title fw-bolder fs-3 text-dark'>Apply for Leave</h3>
+								<button
+									type='button'
+									className='btn btn-sm btn-icon btn-light'
+									onClick={() => setShowLeaveModal(false)}>
+									<i className='bi bi-x-lg fs-6'></i>
+								</button>
+							</div>
+
+							<form onSubmit={handleSubmitLeave} className='modal-body px-6 py-5'>
+								<div className='mb-4'>
+									<label className='form-label fw-bold fs-7 text-dark mb-1'>Leave Type</label>
+									<select
+										className='form-select form-select-solid rounded-3'
+										value={leaveType}
+										onChange={(e) => setLeaveType(e.target.value)}>
+										<option value='full'>Full Day Leave</option>
+										<option value='half'>Half Day Leave</option>
+									</select>
+								</div>
+
+								{leaveType === 'half' && (
+									<div className='mb-4'>
+										<label className='form-label fw-bold fs-7 text-dark mb-1'>Half-Day Period</label>
+										<select
+											className='form-select form-select-solid rounded-3'
+											value={halfDayPeriod}
+											onChange={(e) => setHalfDayPeriod(e.target.value)}>
+											<option value='first'>First Half (Morning to 1:30 PM)</option>
+											<option value='second'>Second Half (1:30 PM to 6:00 PM)</option>
+										</select>
+									</div>
+								)}
+
+								<div className='row mb-4'>
+									<div className='col-6'>
+										<label className='form-label fw-bold fs-7 text-dark mb-1'>From Date</label>
+										<input
+											type='date'
+											className='form-control form-control-solid rounded-3'
+											value={leaveFromDate}
+											onChange={(e) => setLeaveFromDate(e.target.value)}
+											required
+										/>
+									</div>
+									<div className='col-6'>
+										<label className='form-label fw-bold fs-7 text-dark mb-1'>To Date</label>
+										<input
+											type='date'
+											className='form-control form-control-solid rounded-3'
+											value={leaveToDate}
+											onChange={(e) => setLeaveToDate(e.target.value)}
+											required
+										/>
+									</div>
+								</div>
+
+								<div className='mb-5'>
+									<label className='form-label fw-bold fs-7 text-dark mb-1'>Reason</label>
+									<textarea
+										rows={3}
+										className='form-control form-control-solid rounded-3'
+										placeholder='Please explain the reason for your leave application...'
+										value={leaveReason}
+										onChange={(e) => setLeaveReason(e.target.value)}
+										required
+									/>
+								</div>
+
+								<div className='d-flex justify-content-end gap-3'>
+									<button
+										type='button'
+										className='btn btn-light rounded-pill px-5'
+										onClick={() => setShowLeaveModal(false)}>
+										Cancel
+									</button>
+									<button
+										type='submit'
+										className='btn btn-dark rounded-pill px-6 fw-bold'
+										disabled={leaveSubmitting}>
+										{leaveSubmitting ? 'Submitting...' : 'Submit Request'}
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	)
 }

@@ -349,6 +349,9 @@ const GomziNutritionProductVariationList: React.FC = () => {
 							totalPages={metaData?.totalPages}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={metaData?.totalRecords || variationData?.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='variations'
 						/>
 					)}
 				</div>

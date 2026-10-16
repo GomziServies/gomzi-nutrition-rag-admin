@@ -339,6 +339,14 @@ const AutoCommissionRequestsPage: React.FC = () => {
 							/>
 						</div>
 
+						<LengthMenu
+							expenseData={requests}
+							handleItemsPerPageChange={(val: number) => {
+								setItemsPerPage(val)
+								setCurrentPage(1)
+							}}
+						/>
+
 						<button
 							className='btn btn-light-info btn-icon rounded-circle'
 							style={{ width: '38px', height: '38px' }}
@@ -347,23 +355,6 @@ const AutoCommissionRequestsPage: React.FC = () => {
 							disabled={loading}>
 							<FontAwesomeIcon icon={faDownload} className='fs-4' />
 						</button>
-
-						<div className='w-220px'>
-							<DateFilter
-								onDateRangeChange={(val: any) => {
-									setDateRange(val)
-									setCurrentPage(1)
-								}}
-							/>
-						</div>
-
-						<LengthMenu
-							expenseData={requests}
-							handleItemsPerPageChange={(val: number) => {
-								setItemsPerPage(val)
-								setCurrentPage(1)
-							}}
-						/>
 
 						{/* Status Filter */}
 						<select
@@ -398,6 +389,16 @@ const AutoCommissionRequestsPage: React.FC = () => {
 								</option>
 							))}
 						</select>
+
+						<div className='w-220px'>
+							<DateFilter
+								onDateRangeChange={(val: any) => {
+									setDateRange(val)
+									setCurrentPage(1)
+								}}
+								rightValue='0'
+							/>
+						</div>
 					</div>
 
 					<div className='table-responsive'>

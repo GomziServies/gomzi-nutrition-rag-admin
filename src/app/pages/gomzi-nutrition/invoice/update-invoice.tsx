@@ -1,64 +1,72 @@
-import html2pdf from 'html2pdf.js'
-import { useEffect, useState } from 'react'
+/* eslint-disable */
+import React, { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faArrowRight,
+	faArrowLeft,
+	faPlus,
+	faTrash,
+	faCheck,
+	faFilePdf,
+} from '@fortawesome/free-solid-svg-icons'
 import toast from 'react-hot-toast'
-import { useLocation } from 'react-router-dom'
-import Swal from 'sweetalert2'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import InputField from '../../../components/InputField'
-import SelectField from '../../../components/SelectField'
-import TableButton from '../../../components/TableButton'
-import TermAndCondition from '../../../components/TermAndCondition'
-import TextareaField from '../../../components/TextareaField'
 import {
 	getInvoice,
+	getInvoiceBranches,
 	GetProductStocks,
 	GetTrainers,
 	updateInvoice,
 } from '../../../Functions/FGGroup'
-import './style.css'
+import {
+	CompanyInvoiceDocument,
+} from './CompanyInvoiceDocument'
+import './invoice-theme.css'
 
-// Add interfaces for location data
-
-interface ChargeItem {
-	charge_name: string
-	charge_amount: number
+interface PlanState {
+	_id?: string
+	product_id?: string
+	variant_id?: string
+	type?: string
+	items: string
+	item_type?: string
+	item_weight: string
+	item_weight_type: string
+	quantity: string
+	amount: string
+	gst: string
+	discount: string
+	totalPayment: string
+	duration_number: string
+	duration: string
+	inputField: boolean
+	isDiscountPercentage: boolean
 }
 
-const predefinedOptions = [
-	'All plan',
-	'Marketing Guru',
-	'Portfolio management service',
-	'Management Consultation',
-	'Business management course',
-	'Digital marketing course',
-	'Stock market course',
-	'Content shoot & Edit',
-	'Graphics designing',
-	'Social Media marketing',
-	'Website designing and development',
-	'Paid Advertisement',
-	'Content writing',
-	'SEO- Search engine optimization',
-	'SEM- Search engine management',
-	'GMB- Google my business profile maintain',
-	'ERP setup and service',
-	'Business solution',
-	'Logo design',
-]
-
 const NutritionUpdateInvoice: React.FC = () => {
+	const navigate = useNavigate()
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
-	const invoice_id: string | null = searchParams.get('invoice_id')
-	const [isSubmitting, setIsSubmitting] = useState(false)
-	const [formData, setFormData] = useState<any>({
+	const invoiceId = searchParams.get('invoice_id') || searchParams.get('id')
+
+	const [loading, setLoading] = useState<boolean>(true)
+	const [currentStep, setCurrentStep] = useState<number>(1)
+	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
+	// Form Data
+	const [formData, setFormData] = useState({
 		invoice_number: '',
 		date: '',
+		due_date: '',
+		payment_terms: 'Net 15 Days',
 		name: '',
-		// Update billing address fields
+		branch_name: '',
+		sales_person: '',
+		other_sales_person: '',
 		billing_address_line_1: '',
-		billing_country: '',
+		billing_country: 'India',
 		billing_state: '',
 		billing_city: '',
 		billing_pin_code: '',
@@ -66,1597 +74,1005 @@ const NutritionUpdateInvoice: React.FC = () => {
 		gst_number: '',
 		pan_number: '',
 		email: '',
-		duration: '',
-		duration_number: '',
-		items: [
-			{
-				product_id: '',
-				variant_id: '',
-				item_name: '',
-				item_type: '',
-				item_weight: '',
-				item_weight_type: 'kg',
-				amount: '',
-				totalAmount: '',
-				quantity: '',
-				duration: '',
-				duration_number: '',
-				delete: false,
-				inputField: false,
-				isDiscountPercentage: true,
-			},
-		],
-		payment_method: '',
-		gst: '',
-		discount: '',
-		net_amount: '',
-		paid_amount: '',
+		payment_method: 'UPI',
+		gst: '0',
+		discount: '0',
+		net_amount: '0',
+		paid_amount: '0',
 		note: '',
-		branch_name: '',
-		sales_person: '',
-		other_sales_person: '',
-		service_charge: [],
-		freight_charges: [],
+		reference_name: '',
 	})
-	const [invoiceData, setInvoiceData] = useState<any>({
-		invoice_number: '',
-		date: '',
-		name: '',
-		// Update billing address fields
-		billing_address_line_1: '',
-		billing_country: '',
-		billing_state: '',
-		billing_city: '',
-		billing_pin_code: '',
-		duration: '',
-		duration_number: '',
-		mobile: '',
-		gst_number: '',
-		pan_number: '',
-		email: '',
-		items: [],
-		payment_method: '',
-		amount: '',
-		gst: '',
-		discount: '',
-		net_amount: '',
-		paid_amount: '',
-		note: '',
-		item_weight: '',
-		item_type: '',
-		item_weight_type: '',
-		branch_name: '',
-		sales_person: '',
-		other_sales_person: '',
-		service_charge: [],
-		freight_charges: [],
-	})
-	const [dueAmount, setDueAmount] = useState('')
-	const [serviceCharges, setServiceCharges] = useState<ChargeItem[]>([])
-	const [freightCharges, setFreightCharges] = useState<ChargeItem[]>([])
+
+	const [plans, setPlans] = useState<PlanState[]>([])
 	const [salesPersonList, setSalesPersonList] = useState<any[]>([])
+	const [branchesData, setBranchesData] = useState<string[]>([])
 	const [productList, setProductList] = useState<any[]>([])
 
-	const productOptions = [
-		...productList.map((item) => ({
-			label: item.product_name,
-			value: item.variant_id || item.product_id,
-			product_id: item.product_id,
-			variant_id: item.variant_id,
-			amount: item.price,
-			stock: item.stock,
-			type: item.type,
-		})),
-
-		{
-			label: 'Other / Manual',
-			value: 'manual',
-		},
-	]
-
+	// Load invoice data
 	const fetchInvoiceData = async () => {
-		try {
-			const response: any = await getInvoice({ id: String(invoice_id) })
-			const data = response.data[0]
-
-
-			const parseDuration = (durationString: string) => {
-				if (!durationString) return { duration_number: '', duration: '' }
-				const [number, unit] = durationString.split(' ')
-				return {
-					duration_number: parseInt(number),
-					duration: unit.charAt(0).toUpperCase() + unit.slice(1).toLowerCase(), // e.g., "days" → "Days"
-				}
-			}
-
-			const plansData = data.items.map((plan: any) => {
-				const { duration_number, duration } = parseDuration(plan.duration)
-
-				// Use the isDiscountPercentage field from the plan if available, otherwise determine based on value
-				const isDiscountPercentage =
-					plan?.isDiscountPercentage !== undefined
-						? plan.isDiscountPercentage
-						: (() => {
-								// Determine discount type based on value: < 100 = percentage, >= 100 = rupee
-								const discountValue = parseFloat(plan?.discount) || 0
-								const amountValue = parseFloat(plan?.amount) || 0
-								return amountValue > 0 ? discountValue < 100 : true
-						  })()
-
-				return {
-					_id: plan?._id,
-					product_id: plan?.product_id,
-					variant_id: plan?.variant_id,
-					item_name: plan?.item_name,
-					item_type: plan?.item_type || '',
-					item_weight: plan?.item_weight || '',
-					item_weight_type: plan?.item_weight_type || 'kg',
-					amount: plan?.amount,
-					totalAmount: plan?.totalAmount,
-					quantity: plan?.quantity,
-					gst: plan?.gst || '',
-					discount: plan?.discount || '',
-					inputField: !predefinedOptions.includes(plan.item_name),
-					duration_number,
-					duration,
-					isDiscountPercentage,
-				}
-			})
-
-			const setData = {
-				invoice_number: data?.invoice_number,
-				date: DayJS(data?.date).format('YYYY-MM-DD'),
-				name: data?.name,
-				// Update billing address fields to match new structure
-				billing_address_line_1: data?.billing_address?.address_line_1 || '',
-				billing_country: data?.billing_address?.country || '',
-				billing_state: data?.billing_address?.state || '',
-				billing_city: data?.billing_address?.city || '',
-				billing_pin_code: data?.billing_address?.pin_code || '',
-				mobile: data?.mobile,
-				gst_number: data?.gst_number,
-				pan_number: data?.pan_number,
-				email: data?.email,
-				items: plansData,
-				payment_method: data?.payment_method,
-				net_amount: data?.net_amount,
-				paid_amount: data?.paid_amount,
-				note: data?.note,
-				gst: data?.gst || '',
-				discount: data?.discount || '',
-				service_charge: data?.service_charge || [],
-				freight_charges: data?.freight_charges || [],
-				branch_name: data?.branch_name || '',
-				sales_person: data?.sales_person || '',
-				other_sales_person: data?.other_sales_person || '',
-			}
-			setFormData(setData)
-			setInvoiceData({
-				...setData,
-				sales_person:
-					data?.sales_person === 'N/A'
-						? data?.other_sales_person
-						: salesPersonList.find((e: any) => e.employee_id === data?.sales_person)?.full_name ||
-						  data?.sales_person,
-			})
-
-			const due = data?.net_amount - data?.paid_amount
-			setDueAmount(due.toString())
-			setServiceCharges(data?.service_charge || [])
-			setFreightCharges(data?.freight_charges || [])
-		} catch (error) {
-			console.error(error)
+		if (!invoiceId) {
+			setLoading(false)
+			toast.error('No invoice ID provided')
+			return
 		}
-	}
 
-	// Update net amount when service charges or freight charges change
-	useEffect(() => {
-		// Calculate total amount from items
-		const totalAmount: number = formData.items.reduce((sum: number, item: any): number => {
-			if (!item.delete) {
-				return sum + (parseFloat(item.totalAmount) || 0)
-			}
-			return sum
-		}, 0)
-
-		// Update form data with new net amount including charges
-		setFormData((prevFormData: any) => ({
-			...prevFormData,
-			net_amount: String(totalAmount + serviceChargeTotal + freightChargeTotal),
-		}))
-
-		// Update due amount
-		const paidAmount = parseFloat(formData.paid_amount) || 0
-		const newDueAmount = totalAmount + serviceChargeTotal + freightChargeTotal - paidAmount
-		setDueAmount(newDueAmount.toString())
-	}, [serviceCharges, freightCharges, formData.items, formData.paid_amount])
-
-	const fetchProducts = async () => {
 		try {
-			const response: any = await GetProductStocks({
-				limit: 1000,
+			setLoading(true)
+
+			// Load dependencies in parallel
+			const [invoiceRes, trainersRes, branchesRes, productsRes]: any = await Promise.all([
+				getInvoice({ id: String(invoiceId) }),
+				GetTrainers({ limit: 1000 }).catch(() => ({ data: [] })),
+				getInvoiceBranches().catch(() => ({ data: [] })),
+				GetProductStocks({ limit: 1000 }).catch(() => ({ data: [] })),
+			])
+
+			if (trainersRes?.data) setSalesPersonList(trainersRes.data)
+			if (branchesRes?.data) {
+				const branches = branchesRes.data.map((item: any) => item.branch_name)
+				setBranchesData(branches)
+			}
+			if (productsRes?.data) setProductList(productsRes.data)
+
+			const data = invoiceRes?.data?.[0]
+			if (!data) {
+				toast.error('Invoice record not found')
+				setLoading(false)
+				return
+			}
+
+			const billingAddress = data?.billing_address || {}
+
+			setFormData({
+				invoice_number: String(data.invoice_number || ''),
+				date: data.date ? DayJS(data.date).format('YYYY-MM-DD') : '',
+				due_date: data.due_date
+					? DayJS(data.due_date).format('YYYY-MM-DD')
+					: data.date
+					? DayJS(data.date).add(15, 'day').format('YYYY-MM-DD')
+					: '',
+				payment_terms: data.payment_terms || 'Net 15 Days',
+				name: data.name || '',
+				branch_name: data.branch_name || '',
+				sales_person: data.sales_person || '',
+				other_sales_person: data.other_sales_person || '',
+				billing_address_line_1: billingAddress.address_line_1 || data.billing_address_line_1 || '',
+				billing_country: billingAddress.country || data.billing_country || 'India',
+				billing_state: billingAddress.state || data.billing_state || '',
+				billing_city: billingAddress.city || data.billing_city || '',
+				billing_pin_code: billingAddress.pin_code || data.billing_pin_code || '',
+				mobile: data.mobile || data.phoneNumber || '',
+				gst_number: data.gst_number || '',
+				pan_number: data.pan_number || '',
+				email: data.email || '',
+				payment_method: data.payment_method || 'UPI',
+				gst: String(data.gst || '0'),
+				discount: String(data.discount || '0'),
+				net_amount: String(data.net_amount || '0'),
+				paid_amount: String(data.paid_amount || '0'),
+				note: data.note || '',
+				reference_name: data.reference_name || '',
 			})
 
-			setProductList(response.data || [])
-		} catch (error: any) {
-			toast.error(error.message)
+			// Prepopulate plans
+			if (data.items && data.items.length > 0) {
+				const mappedPlans = data.items.map((item: any) => ({
+					_id: item._id,
+					product_id: item.product_id,
+					variant_id: item.variant_id,
+					type: item.product_id ? 'product' : 'manual',
+					items: item.item_name || '',
+					item_type: item.item_type || '',
+					item_weight: String(item.item_weight || ''),
+					item_weight_type: item.item_weight_type || 'kg',
+					quantity: String(item.quantity || '1'),
+					amount: String(item.amount || '0'),
+					gst: String(item.gst || '0'),
+					discount: String(item.discount || '0'),
+					totalPayment: String(item.totalAmount || '0'),
+					duration_number: '',
+					duration: '',
+					inputField: !item.product_id,
+					isDiscountPercentage: item.isDiscountPercentage !== undefined ? item.isDiscountPercentage : true,
+				}))
+				setPlans(mappedPlans)
+			} else {
+				setPlans([
+					{
+						items: '',
+						item_type: '',
+						type: '',
+						product_id: '',
+						variant_id: '',
+						item_weight: '',
+						item_weight_type: 'kg',
+						quantity: '1',
+						amount: '',
+						gst: '0',
+						discount: '0',
+						totalPayment: '',
+						duration_number: '',
+						duration: '',
+						inputField: false,
+						isDiscountPercentage: true,
+					},
+				])
+			}
+		} catch (err: any) {
+			console.error('Error fetching invoice for edit:', err)
+			toast.error('Failed to load invoice')
+		} finally {
+			setLoading(false)
 		}
 	}
 
 	useEffect(() => {
-		const initializeData = async () => {
-			fetchSalesPersons()
-			// Then load invoice data
-			await fetchInvoiceData()
-			fetchProducts()
-		}
+		fetchInvoiceData()
+	}, [invoiceId])
 
-		initializeData()
-	}, [])
-
-	const fetchSalesPersons = async () => {
-		try {
-			const response: any = await GetTrainers({ limit: 1000 })
-			if (response.data) {
-				const salesPersons = response.data
-				setSalesPersonList(salesPersons)
-			}
-		} catch (error) {
-			console.error('Error fetching sales persons:', error)
-		}
-	}
-
-	const salesPersonOptions = [
-		{ label: 'Select', value: '' },
-		...salesPersonList.map((emp: any) => ({
-			label: emp.full_name || emp.name || 'Unnamed',
-			value: emp._id,
-		})),
-		{ label: 'N/A', value: 'N/A' },
-	]
-
-	const handleUpdateInvoice = async () => {
-		if (!formData.sales_person) {
-			toast.error('Please select Sales Person')
-			return
-		}
-
-		if (formData.sales_person === 'N/A' && !formData.other_sales_person) {
-			toast.error('Please enter sales person name')
-			return
-		}
-		const plansData = formData.items.map((plan: any) => ({
-			_id: plan?._id,
-			product_id: plan?.product_id,
-			variant_id: plan?.variant_id,
-			item_name: plan?.item_name,
-			item_type: plan?.item_type || undefined,
-			item_weight: plan?.item_weight ? Number(plan?.item_weight) : 0,
-			item_weight_type: plan?.item_weight_type || undefined,
-			amount: Number(plan?.amount),
-			gst: Number(plan?.gst),
-			discount: Number(plan?.discount),
-			totalAmount: plan?.totalAmount,
-			quantity: plan?.quantity,
-			duration: plan?.duration_number + ' ' + plan?.duration,
-			delete: plan?.delete,
-			isDiscountPercentage: plan?.isDiscountPercentage,
-		}))
-
-		const totalAmount: number = plansData.reduce((sum: number, plan: any): number => {
-			return sum + (parseFloat(plan.totalAmount) || 0)
+	// Recalculate totals whenever plans change
+	useEffect(() => {
+		if (loading) return
+		const totalAmount: number = plans.reduce((sum: number, plan: PlanState): number => {
+			return sum + (parseFloat(plan.totalPayment) || 0)
 		}, 0)
 
-		const totalDiscount: number = plansData.reduce((sum: number, plan: any): number => {
+		const totalDiscount: number = plans.reduce((sum: number, plan: PlanState): number => {
 			const planDiscount = parseFloat(plan.discount) || 0
 			const planQuantity = parseFloat(plan.quantity) || 0
 			const planAmount = parseFloat(plan.amount) || 0
 			const baseAmount = planQuantity * planAmount
 
-			// Convert to rupee value for total calculation
 			let discountValue = planDiscount
-			const planIsDiscountPercentage =
-				plan.isDiscountPercentage !== undefined ? plan.isDiscountPercentage : true
-			if (planIsDiscountPercentage && planDiscount > 0) {
+			if (plan.isDiscountPercentage && planDiscount > 0) {
 				discountValue = (baseAmount * planDiscount) / 100
 			}
-
 			return sum + discountValue
 		}, 0)
 
-		try {
-			setIsSubmitting(true)
-			const payload: any = {
-				id: invoice_id,
-				invoice_number: Number(formData?.invoice_number),
-				date: DayJS(formData?.date).format('YYYY/MM/DD'),
-				name: formData?.name,
-				email: formData?.email,
-				mobile: formData?.mobile,
-				gst_number: formData?.gst_number,
-				pan_number: formData?.pan_number,
-				// Update billing address structure to match backend model
-				billing_address: {
-					address_line_1: formData?.billing_address_line_1,
-					city: formData?.billing_city,
-					state: formData?.billing_state,
-					pin_code: formData?.billing_pin_code,
-					country: formData?.billing_country,
-				},
-				payment_method: formData?.payment_method,
-				amount: Number(totalAmount),
-				gst: Number(plansData[0]?.gst),
-				discount: Number(totalDiscount),
-				net_amount: Number(formData?.net_amount),
-				paid_amount: parseInt(formData?.paid_amount),
-				note: formData?.note,
-				items: plansData,
-				branch_name: formData?.branch_name,
-				sales_person: formData?.sales_person,
-				other_sales_person: formData?.other_sales_person,
-				service_charge: serviceCharges.filter(
-					(charge) => charge.charge_name && charge.charge_amount
-				),
-				freight_charges: freightCharges.filter(
-					(charge) => charge.charge_name && charge.charge_amount
-				),
-			}
-			await updateInvoice(payload)
-			toast.success('Invoice Updated Successfully')
-			const due = payload?.net_amount - payload?.paid_amount
-			setDueAmount(due.toString())
-			fetchInvoiceData()
-			setIsSubmitting(false)
+		setFormData((prev) => ({
+			...prev,
+			net_amount: String(totalAmount),
+			discount: String(totalDiscount),
+		}))
+	}, [plans])
 
-			setTimeout(() => {
-				generatePDF(formData?.name)
-			}, 1000)
-		} catch (error: any) {
-			toast.error(error.message)
-			setIsSubmitting(false)
-			console.error(error)
-		}
-	}
-
-	const generatePDF = async (name: string) => {
-		const invoiceContent = document.getElementById('invoiceContent')
-		const termsContent = document.getElementById('invoiceTermAndCondition')
-
-		if (!invoiceContent || !termsContent) return
-
-		invoiceContent.classList.add('pdf-font-black')
-		termsContent.classList.add('pdf-font-black')
-
-		const wrapper = document.createElement('div')
-
-		wrapper.appendChild(invoiceContent.cloneNode(true))
-		wrapper.appendChild(termsContent.cloneNode(true))
-
-		const opt = {
-			margin: [8, 8, 8, 8] as [number, number, number, number],
-			filename: `${name || 'invoice'}.pdf`,
-			image: {
-				type: 'jpeg' as const,
-				quality: 1,
-			},
-			html2canvas: {
-				scale: 2,
-				useCORS: true,
-				scrollX: 0,
-				scrollY: 0,
-			},
-			jsPDF: {
-				unit: 'mm',
-				format: 'a4',
-				orientation: 'portrait' as const,
-			},
-			pagebreak: {
-				mode: ['css', 'legacy'],
-			},
-		}
-
-		await html2pdf().set(opt).from(wrapper).save()
-
-		invoiceContent.classList.remove('pdf-font-black')
-		termsContent.classList.remove('pdf-font-black')
-	}
-
-	const handleDeleteFeature = async (index: number) => {
-		Swal.fire({
-			title: 'Are you sure?',
-			text: 'Once deleted, you will not be able to recover!',
-			icon: 'warning',
-			showCancelButton: true,
-			confirmButtonColor: '#d33',
-			cancelButtonColor: '#3085d6',
-			confirmButtonText: 'Yes, delete it!',
-			cancelButtonText: 'Cancel',
-		}).then(async (result) => {
-			if (result.isConfirmed) {
-				try {
-					const updatedPlans = [...formData.items]
-					updatedPlans[index].delete = true // Soft-delete
-
-					// Filter out deleted items for calculation
-					const activePlans = updatedPlans.filter((plan) => !plan.delete)
-
-					const totalAmount: number = activePlans.reduce((sum, plan) => {
-						return sum + (parseFloat(plan.totalAmount) || 0)
-					}, 0)
-
-					const totalDiscount: number = activePlans.reduce((sum, plan) => {
-						const planDiscount = parseFloat(plan.discount) || 0
-						const planQuantity = parseFloat(plan.quantity) || 0
-						const planAmount = parseFloat(plan.amount) || 0
-						const baseAmount = planQuantity * planAmount
-
-						// Convert to rupee value for total calculation
-						let discountValue = planDiscount
-						const planIsDiscountPercentage =
-							plan.isDiscountPercentage !== undefined ? plan.isDiscountPercentage : true
-						if (planIsDiscountPercentage && planDiscount > 0) {
-							discountValue = (baseAmount * planDiscount) / 100
-						}
-
-						return sum + discountValue
-					}, 0)
-
-					const paidAmount = parseFloat(formData.paid_amount) || 0
-					const totalWithCharges = totalAmount + serviceChargeTotal + freightChargeTotal
-					const due = totalWithCharges - paidAmount
-
-					setFormData((prevFormData: any) => ({
-						...prevFormData,
-						items: updatedPlans,
-						net_amount: totalWithCharges.toFixed(0),
-						discount: totalDiscount.toFixed(0),
-					}))
-
-					setDueAmount(due.toFixed(0))
-					toast.success('Plan Deleted Successfully')
-				} catch (error: any) {
-					toast.error(error.message)
-					console.error(error)
-				}
-			}
-		})
-	}
-
-	// Update the handleInputChange function to handle the new address fields
-	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-		const { name, value } = event.target
-
-		const updatedFormData = { ...formData, [name]: value }
-
-		setFormData(updatedFormData)
-
-		if (name === 'net_amount' || name === 'paid_amount') {
-			const paidAmount = parseInt(updatedFormData.paid_amount) || 0
-			const netAmount = parseInt(updatedFormData.net_amount) || 0
-			const dueAmount = netAmount - paidAmount
-			setDueAmount(dueAmount.toString())
-		}
-	}
-
-	const handlePlanInputChange = (
-		index: number,
-		event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-	) => {
-		const { name, value } = event.target
-		const updatedPlans: any = [...formData.items]
-
-		if (name === 'item_name') {
-			if (predefinedOptions.includes(value)) {
-				updatedPlans[index].inputField = value === 'Other'
-			} else {
-				updatedPlans[index].inputField = true
-			}
-		}
-
-		updatedPlans[index][name] = value
-
-		const quantity = parseFloat(updatedPlans[index].quantity) || 0
-		const amount = parseFloat(updatedPlans[index].amount) || 0
-		const gst = parseFloat(updatedPlans[index].gst) || 0
-		const discount = parseFloat(updatedPlans[index].discount) || 0
-
-		// Apply discount type logic
-		const isDiscountPercentage =
-			updatedPlans[index].isDiscountPercentage !== undefined
-				? updatedPlans[index].isDiscountPercentage
-				: true
-		// We only convert for calculation, not for display
-		let discountForCalculation = discount
-		if (name === 'discount' && discount > 0) {
-			const baseAmount = quantity * amount
-			if (isDiscountPercentage) {
-				// For percentage, convert to rupee value for calculation but keep the percentage value for display
-				discountForCalculation = (baseAmount * discount) / 100
-			}
-		}
-
-		let total = quantity * amount
-
-		if (gst) {
-			total += (total * gst) / 100
-		}
-
-		if (discountForCalculation) {
-			// Apply discount based on type
-			const baseAmount = quantity * amount
-			if (isDiscountPercentage) {
-				// Convert percentage to rupee value for calculation
-				const discountRupee = (baseAmount * discount) / 100
-				total -= discountRupee
-			} else {
-				// Already in rupee value
-				total -= discount
-			}
-		}
-
-		updatedPlans[index].totalAmount = total.toFixed(0)
-
-		const totalAmount: number = updatedPlans.reduce((sum: number, plan: any) => {
-			return sum + (parseFloat(plan.totalAmount) || 0)
-		}, 0)
-
-		setFormData((prevFormData: any) => ({
-			...prevFormData,
-			items: updatedPlans,
-			net_amount: String(totalAmount + serviceChargeTotal + freightChargeTotal),
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+		const { name, value } = e.target
+		setFormData((prev) => ({
+			...prev,
+			[name]: value,
 		}))
 	}
 
-	// Calculate total product amount without discount and GST
-	const calculateTotalProductAmount = (): number => {
-		return invoiceData.items.reduce((sum: number, item: any) => {
-			const quantity = parseFloat(item.quantity?.toString() || '0') || 0
-			const amount = parseFloat(item.amount?.toString() || '0') || 0
-			return sum + quantity * amount
-		}, 0)
-	}
-
-	const removePlan = (index: number, event: React.MouseEvent<HTMLButtonElement>) => {
-		event.preventDefault()
-		handleDeleteFeature(index)
-	}
-
-	// Separate event handler for textarea
-	const handleNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-		const { name, value } = event.target
-		setFormData({ ...formData, [name]: value })
-	}
-
-	// Calculate totals for charges
-	const serviceChargeTotal = serviceCharges.reduce(
-		(sum, charge) => sum + (charge.charge_amount || 0),
-		0
-	)
-	const freightChargeTotal = freightCharges.reduce(
-		(sum, charge) => sum + (charge.charge_amount || 0),
-		0
-	)
-	const totalCharges = serviceChargeTotal + freightChargeTotal
-
-	const hasGst = invoiceData.items.some((item: any) => Number(item.gst) > 0)
-
-	const hasDiscount = invoiceData.items.some((item: any) => Number(item.discount) > 0)
-
 	const handleProductChange = (index: number, selectedName: string) => {
-		const updatedPlans = [...formData.items]
-
-		if (selectedName === 'Other / Manual') {
-			updatedPlans[index].product_id = ''
-			updatedPlans[index].variant_id = ''
-			updatedPlans[index].item_name = ''
-			updatedPlans[index].amount = ''
-
-			setFormData({
-				...formData,
-				items: updatedPlans,
-			})
-
+		const newPlans = [...plans]
+		if (selectedName === 'Other / Manual' || selectedName === 'manual') {
+			newPlans[index].type = 'manual'
+			newPlans[index].product_id = ''
+			newPlans[index].variant_id = ''
+			newPlans[index].items = ''
+			newPlans[index].amount = ''
+			newPlans[index].inputField = true
+			setPlans(newPlans)
 			return
 		}
 
-		const product: any = productOptions.find((x) => x.label === selectedName)
+		const product = productList.find((x) => x.product_name === selectedName)
+		if (product) {
+			newPlans[index].type = 'product'
+			newPlans[index].product_id = product.product_id
+			newPlans[index].variant_id = product.variant_id
+			newPlans[index].items = product.product_name
+			newPlans[index].amount = String(product.price || product.amount || 0)
+			newPlans[index].inputField = false
 
-		if (!product) return
-
-		updatedPlans[index].product_id = product.product_id
-		updatedPlans[index].variant_id = product.variant_id
-		updatedPlans[index].item_name = product.label
-		updatedPlans[index].amount = String(product.amount)
-
-		setFormData({
-			...formData,
-			items: updatedPlans,
-		})
+			const q = parseFloat(newPlans[index].quantity) || 1
+			const amt = parseFloat(newPlans[index].amount) || 0
+			const gst = parseFloat(newPlans[index].gst) || 0
+			let tot = q * amt
+			if (gst) tot += (tot * gst) / 100
+			newPlans[index].totalPayment = tot.toFixed(0)
+		}
+		setPlans(newPlans)
 	}
 
-	return (
-		<>
-			<PageTitle breadcrumbs={[]}>Update Invoice</PageTitle>
+	const handlePlanChange = (index: number, field: keyof PlanState, value: any) => {
+		const newPlans = [...plans]
+		;(newPlans[index] as any)[field] = value
 
-			{/* <h1 className='fw-bold text-dark fs-1 mb-6 '>Create Invoice</h1> */}
-			<div className='row'>
-				<div className='col-md-12 mt-3'>
-					<div className='card'>
-						<div className='card-body'>
-							<p className='fw-bold fs-2 mb-4'>Update Invoice</p>
+		const quantity = parseFloat(newPlans[index].quantity) || 0
+		const amount = parseFloat(newPlans[index].amount) || 0
+		const gst = parseFloat(newPlans[index].gst) || 0
+		const discount = parseFloat(newPlans[index].discount) || 0
 
-							<form>
-								<div className='row'>
-									<div className='col-12 row'>
-										<InputField
-											className='col-md-4 fv-row'
-											label='Invoice Number'
-											placeholder="Invoice Number'"
-											type='number'
-											name='invoice_number'
-											htmlFor='invoice_number'
-											value={formData?.invoice_number}
-											onChange={handleInputChange}
-										/>
-										<InputField
-											className='col-md-4 fv-row'
-											label='Branch Name'
-											placeholder="Branch Name'"
-											type='text'
-											name='branch_name'
-											htmlFor='branch_name'
-											value={formData?.branch_name}
-											onChange={handleInputChange}
-										/>
-										<SelectField
-											className={`${
-												formData.sales_person === 'N/A' ? 'col-md-2' : 'col-md-4'
-											} fv-row mb-7`}
-											label='Sales Person'
-											name='sales_person'
-											htmlFor='sales_person'
-											value={formData.sales_person}
-											onChange={handleInputChange}
-											options={salesPersonOptions}
-										/>
-										{formData.sales_person === 'N/A' && (
-											<InputField
-												className='col-md-2 fv-row'
-												label='Sales Person Name *'
-												placeholder='Enter Sales Person Name'
-												type='text'
-												name='other_sales_person'
-												htmlFor='other_sales_person'
-												value={formData.other_sales_person}
-												onChange={handleInputChange}
-											/>
-										)}
-										<InputField
-											className='col-md-4 fv-row'
-											label='Date'
-											placeholder="Date'"
-											type='date'
-											name='date'
-											htmlFor='date'
-											value={formData?.date}
-											onChange={handleInputChange}
-										/>
-										<InputField
-											className='col-md-4 fv-row'
-											label='Full Name'
-											placeholder='Enter Full Name'
-											type='text'
-											name='name'
-											htmlFor='name'
-											value={formData?.name}
-											onChange={handleInputChange}
-										/>
-										<InputField
-											className='col-md-4 fv-row'
-											label='Phone No.'
-											placeholder='Enter Phone No.'
-											type='Number'
-											name='mobile'
-											htmlFor='mobile'
-											value={formData?.mobile}
-											onChange={handleInputChange}
-										/>
-										<InputField
-											className='col-md-4 fv-row'
-											label='Email'
-											placeholder='Enter Email'
-											type='email'
-											name='email'
-											htmlFor='email'
-											value={formData?.email}
-											onChange={handleInputChange}
-										/>
-										<InputField
-											className='col-md-4 fv-row'
-											label='GST Number'
-											placeholder='Enter GST Number'
-											type='text'
-											name='gst_number'
-											htmlFor='gst_number'
-											value={formData?.gst_number}
-											onChange={handleInputChange}
-										/>
-										<InputField
-											className='col-md-4 fv-row'
-											label='PAN Number'
-											placeholder='Enter PAN Number'
-											type='text'
-											name='pan_number'
-											htmlFor='pan_number'
-											value={formData?.pan_number}
-											onChange={handleInputChange}
-										/>
+		let discountForCalc = discount
+		if (discount > 0 && newPlans[index].isDiscountPercentage) {
+			discountForCalc = (quantity * amount * discount) / 100
+		}
 
-										<h1 className='mb-4'>Billing Address:</h1>
-										<div className='col-12 mb-5'>
-											<div
-												className='row py-5 pb-0'
-												style={{
-													border: '1px solid #00000008',
-													borderRadius: '10px',
-													backgroundColor: '#00000008',
-												}}>
-												{/* <SelectField
-													className='col-md-4 fv-row mb-7'
-													label='Country'
-													name='billing_country'
-													value={formData.billing_country}
-													onChange={handleInputChange}
-													htmlFor='billing_country'
-													options={countries.map((country) => country.name)}
-													disabled={loadingCountries}
-												/> */}
-												<InputField
-													className='col-md-4 fv-row mb-7'
-													label='State'
-													placeholder='Enter State'
-													type='text'
-													name='billing_state'
-													htmlFor='billing_state'
-													value={formData?.billing_state}
-													onChange={handleInputChange}
-												/>
+		let total = quantity * amount
+		if (gst) total += (total * gst) / 100
+		if (discountForCalc) total -= discountForCalc
 
-												<InputField
-													className='col-md-4 fv-row mb-7'
-													label='City'
-													placeholder='Enter City'
-													type='text'
-													name='billing_city'
-													htmlFor='billing_city'
-													value={formData?.billing_city}
-													onChange={handleInputChange}
-												/>
-												<InputField
-													className='col-md-8 fv-row'
-													label='Address'
-													placeholder='Enter Address'
-													type='text'
-													name='billing_address_line_1'
-													htmlFor='billing_address_line_1'
-													value={formData?.billing_address_line_1}
-													onChange={handleInputChange}
-												/>
-												<InputField
-													className='col-md-4 fv-row'
-													label='Postal/Zip Code'
-													placeholder='Enter Postal/Zip Code'
-													type='text'
-													name='billing_pin_code'
-													htmlFor='billing_pin_code'
-													value={formData?.billing_pin_code}
-													onChange={handleInputChange}
-												/>
-											</div>
-										</div>
+		newPlans[index].totalPayment = Math.max(0, total).toFixed(0)
+		setPlans(newPlans)
+	}
+
+	const addPlanItem = () => {
+		setPlans([
+			...plans,
+			{
+				items: '',
+				item_type: '',
+				type: '',
+				product_id: '',
+				variant_id: '',
+				item_weight: '',
+				item_weight_type: 'kg',
+				quantity: '1',
+				amount: '',
+				gst: '0',
+				discount: '0',
+				totalPayment: '',
+				duration_number: '',
+				duration: '',
+				inputField: false,
+				isDiscountPercentage: true,
+			},
+		])
+	}
+
+	const removePlanItem = (index: number) => {
+		if (plans.length === 1) {
+			toast.error('Invoice must contain at least one line item')
+			return
+		}
+		const newPlans = [...plans]
+		newPlans.splice(index, 1)
+		setPlans(newPlans)
+	}
+
+	const handleUpdateInvoice = async () => {
+		setIsSubmitting(true)
+		try {
+			const plansData = plans.map((plan) => ({
+				_id: plan._id,
+				item_name: plan.items,
+				amount: plan.amount,
+				totalAmount: plan.totalPayment,
+				quantity: plan.quantity,
+				duration: plan.duration_number ? `${plan.duration_number} ${plan.duration}` : '1 Days',
+			}))
+
+			const payload: any = {
+				id: String(invoiceId),
+				invoice_number: Number(formData.invoice_number),
+				date: DayJS(formData.date).format('YYYY/MM/DD'),
+				name: formData.name,
+				branch_name: formData.branch_name,
+				sales_person: formData.sales_person,
+				other_sales_person: formData.other_sales_person,
+				email: formData.email,
+				mobile: formData.mobile,
+				payment_method: formData.payment_method,
+				net_amount: Number(formData.net_amount),
+				paid_amount: Number(formData.paid_amount),
+				note: formData.note,
+				items: plansData,
+				billing_address: {
+					address_line_1: formData.billing_address_line_1,
+					city: formData.billing_city,
+					state: formData.billing_state,
+					pin_code: formData.billing_pin_code,
+					country: formData.billing_country,
+				},
+			}
+
+			await updateInvoice(payload)
+			toast.success('Invoice updated successfully!')
+
+			setTimeout(() => {
+				navigate(`/rag/view-invoice?invoice_id=${invoiceId}`)
+			}, 600)
+		} catch (error: any) {
+			console.error('Update invoice error:', error)
+			toast.error(error?.message || 'Failed to update invoice')
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
+
+	if (loading) {
+		return (
+			<div className='gz-inv-container'>
+				<PageTitle breadcrumbs={[]}>Edit Invoice</PageTitle>
+
+				{/* BREADCRUMBS */}
+				<div className='gz-inv-breadcrumb'>
+					<Link to='/rag/invoice-list'>Invoices</Link>
+					<span>&gt;</span>
+					<span>Edit Invoice</span>
+				</div>
+
+				<div className='gz-inv-header'>
+					<div>
+						<div className='gz-inv-skeleton mb-2' style={{ width: '200px', height: '32px', borderRadius: '8px' }}></div>
+						<div className='gz-inv-skeleton' style={{ width: '280px', height: '14px', borderRadius: '4px' }}></div>
+					</div>
+				</div>
+
+				<div className='gz-inv-split-layout'>
+					{/* Left Side: Form Skeleton */}
+					<div className='gz-inv-form-side'>
+						{/* Stepper Skeleton */}
+						<div className='gz-inv-stepper mb-4'>
+							<div className='gz-inv-step active'>
+								<span className='gz-inv-step-num'>1</span>
+								<span className='gz-inv-step-text'>Client & Details</span>
+							</div>
+							<div className='gz-inv-step-line'></div>
+							<div className='gz-inv-step'>
+								<span className='gz-inv-step-num'>2</span>
+								<span className='gz-inv-step-text'>Items & Pricing</span>
+							</div>
+							<div className='gz-inv-step-line'></div>
+							<div className='gz-inv-step'>
+								<span className='gz-inv-step-num'>3</span>
+								<span className='gz-inv-step-text'>Review & Update</span>
+							</div>
+						</div>
+
+						{/* Form Card 1 Skeleton */}
+						<div className='gz-inv-form-card mb-4'>
+							<h3 className='gz-inv-form-card-title'>Client Information</h3>
+							<div className='row g-3'>
+								{Array.from({ length: 4 }).map((_, idx) => (
+									<div key={idx} className='col-12 col-md-6'>
+										<div className='gz-inv-skeleton mb-2' style={{ width: '80px', height: '12px', borderRadius: '4px' }}></div>
+										<div className='gz-inv-skeleton' style={{ width: '100%', height: '42px', borderRadius: '8px' }}></div>
 									</div>
+								))}
+							</div>
+						</div>
 
-									<h1 className='mb-4'>Product:</h1>
-									{formData.items.map(
-										(plan: any, index: any) =>
-											!plan.delete && (
-												<div
-													key={index}
-													className='col-12 mb-5'>
-													<div
-														className='row'
-														style={{
-															border: '1px solid #00000008',
-															borderRadius: '10px',
-															backgroundColor: '#00000008',
-														}}>
-														<div className='col-md-11 row py-5 pb-0'>
-															<SelectField
-																className='col-md-2 fv-row mb-7'
-																label='Product Type'
-																name='item_type'
-																value={plan?.item_type || ''}
-																onChange={(e: any) => handlePlanInputChange(index, e)}
-																htmlFor='item_type'
-																options={[
-																	'peanut butter',
-																	'mass gainer',
-																	'whey protein',
-																	'eaa',
-																	'bcaa',
-																	'pre-workout',
-																	'creatine',
-																	'energy drink',
-																]}
-															/>
-															{(plan.product_id || plan.variant_id) && (
-																<SelectField
-																	className='col-md-3'
-																	label='Product'
-																	htmlFor='product'
-																	name='items'
-																	value={
-																		productOptions.find(
-																			(x: any) =>
-																				x.product_id === plan.product_id &&
-																				x.variant_id === plan.variant_id
-																		)?.label || ''
-																	}
-																	options={productOptions.map((x) => x.label)}
-																	onChange={(e) => handleProductChange(index, e.target.value)}
-																/>
-															)}
-															{!plan.product_id && !plan.variant_id && (
-																<InputField
-																	className='col-md-4 fv-row'
-																	label='Product'
-																	placeholder='Enter Product'
-																	type='text'
-																	name='item_name'
-																	htmlFor='item_name'
-																	value={plan?.item_name}
-																	onChange={(e: any) => handlePlanInputChange(index, e)}
-																/>
-															)}
-															<div className='col-md-3 fv-row mb-7'>
-																<label
-																	className='fw-bold fs-6 mb-md-5 mb-2'
-																	htmlFor={`item_weight_${index}`}>
-																	Weight
-																</label>
-																<div className='d-flex align-items-center gap-3'>
-																	<input
-																		type='number'
-																		name='item_weight'
-																		id={`item_weight_${index}`}
-																		value={plan.item_weight}
-																		onChange={(e: any) => handlePlanInputChange(index, e)}
-																		placeholder='Enter Weight'
-																		className='form-control inputfield-bg flex-grow-1'
-																		style={{
-																			height: '38px',
-																			borderRadius: '8px',
-																			minWidth: 0,
-																		}}
-																	/>
-																	<div style={{ width: '95px', flexShrink: 0 }}>
-																		<SelectField
-																			showLabel={false}
-																			marginRemove
-																			name='item_weight_type'
-																			value={plan.item_weight_type || 'kg'}
-																			onChange={(e: any) => handlePlanInputChange(index, e)}
-																			options={['gm', 'kg', 'ml', 'ltr']}
-																			searchable={false}
-																			hideDefaultOption={true}
-																		/>
-																	</div>
-																</div>
-															</div>
-															<InputField
-																className='col-md-3 fv-row'
-																label='Rate'
-																placeholder='Enter Amount'
-																type='number'
-																name='amount'
-																htmlFor='amount'
-																value={plan?.amount}
-																onChange={(e: any) => handlePlanInputChange(index, e)}
-															/>
-															<InputField
-																className='col-md-3 fv-row'
-																label='Quantity'
-																placeholder='Enter Quantity'
-																type='number'
-																name='quantity'
-																htmlFor='quantity'
-																value={plan?.quantity}
-																onChange={(e: any) => handlePlanInputChange(index, e)}
-															/>
-															<InputField
-																className='col-md-3 fv-row'
-																label='Amount'
-																placeholder='Amount'
-																type='Number'
-																name='totalPayment'
-																htmlFor='totalPayment'
-																value={`${
-																	(Number(plan?.amount) || 0) * (Number(plan?.quantity) || 0)
-																}`}
-																disabled
-															/>
-															<InputField
-																className='col-md-3 fv-row'
-																label='GST'
-																placeholder='GST'
-																type='number'
-																name='gst'
-																htmlFor='gst'
-																value={plan.gst}
-																onChange={(e: any) => handlePlanInputChange(index, e)}
-															/>
-															<div className='col-md-3 fv-row'>
-																<div className='d-flex align-items-center mb-2'>
-																	<label
-																		htmlFor={`discount-${index}`}
-																		className='fw-bold fs-6 mb-3'>
-																		Discount
-																	</label>
-																	<div className='form-check form-switch form-check-custom form-check-solid mb-2 ms-2'>
-																		<input
-																			className='form-check-input w-25px h-15px'
-																			type='checkbox'
-																			id={`discountTypeSwitch-${index}`}
-																			checked={
-																				plan.isDiscountPercentage !== undefined
-																					? plan.isDiscountPercentage
-																					: true
-																			}
-																			onChange={() => {
-																				const updatedPlans = [...formData.items]
-																				const currentIsPercentage =
-																					plan.isDiscountPercentage !== undefined
-																						? plan.isDiscountPercentage
-																						: true
-																				const newIsPercentage = !currentIsPercentage
-
-																				// Convert discount value when switching types
-																				let discountValue = parseFloat(plan.discount) || 0
-																				const quantity = parseFloat(plan.quantity) || 0
-																				const amount = parseFloat(plan.amount) || 0
-																				const baseAmount = quantity * amount
-
-																				if (discountValue > 0 && baseAmount > 0) {
-																					if (currentIsPercentage && !newIsPercentage) {
-																						// Converting from percentage to rupee
-																						discountValue = (baseAmount * discountValue) / 100
-																					} else if (!currentIsPercentage && newIsPercentage) {
-																						// Converting from rupee to percentage
-																						discountValue = (discountValue / baseAmount) * 100
-																					}
-																				}
-
-																				updatedPlans[index].isDiscountPercentage = newIsPercentage
-																				updatedPlans[index].discount = discountValue.toString()
-																				setFormData({
-																					...formData,
-																					items: updatedPlans,
-																				})
-																			}}
-																		/>
-																		<label
-																			className='form-check-label fw-bold fs-8 ms-1'
-																			htmlFor={`discountTypeSwitch-${index}`}>
-																			{plan.isDiscountPercentage !== undefined
-																				? plan.isDiscountPercentage
-																					? '(%)'
-																					: '(₹)'
-																				: '(%)'}
-																		</label>
-																	</div>
-																</div>
-																<input
-																	type='number'
-																	className='form-control inputfield-bg'
-																	id={`discount-${index}`}
-																	name='discount'
-																	placeholder={`Discount in ${
-																		plan.isDiscountPercentage !== undefined
-																			? plan.isDiscountPercentage
-																				? 'percentage'
-																				: 'rupees'
-																			: 'percentage'
-																	}`}
-																	value={plan.discount}
-																	onChange={(e: any) => handlePlanInputChange(index, e)}
-																/>
-															</div>
-															<InputField
-																className='col-md-4 fv-row'
-																label='Total'
-																placeholder='Total'
-																type='Number'
-																name='totalPayment'
-																htmlFor='totalPayment'
-																value={plan?.totalAmount}
-																disabled
-															/>
-														</div>
-														<div className='col-md-1'>
-															<div className='mt-md-17 mb-md-0 mb-5 d-flex justify-content-md-end justify-content-center'>
-																<TableButton
-																	action='remove'
-																	backgroundDark={true}
-																	onClick={(e) => removePlan(index, e)}
-																/>
-															</div>
-														</div>
-													</div>
-												</div>
-											)
-									)}
-
-									<div className='col-12 row'>
-										<InputField
-											className='col-md-3 fv-row'
-											label='Total Amount'
-											placeholder='Enter Total Amount'
-											type='text'
-											name='net_amount'
-											htmlFor='net_amount'
-											value={formData?.net_amount}
-											onChange={handleInputChange}
-											disabled
-										/>
-										<InputField
-											className='col-md-3 fv-row'
-											label='Paid Amount'
-											placeholder='Enter Paid Amount'
-											type='text'
-											name='paid_amount'
-											htmlFor='paid_amount'
-											value={formData?.paid_amount}
-											onChange={handleInputChange}
-										/>
-										<InputField
-											className='col-md-3 fv-row'
-											label='Due Amount'
-											placeholder='Enter Due Amount'
-											type='text'
-											name='due_amount'
-											htmlFor='due_amount'
-											value={dueAmount}
-											onChange={handleInputChange}
-										/>{' '}
-										<SelectField
-											className='col-md-3 fv-row mb-7'
-											label='Payment Method'
-											name='payment_method'
-											value={formData?.payment_method}
-											onChange={handleInputChange}
-											htmlFor='txt_company'
-											options={[
-												'COD',
-												'Save In',
-												'EMI',
-												'Google Pay',
-												'Phone Pay',
-												'Bharat Pay',
-												'Paytm',
-												'Freecharg',
-												'Amazon pay',
-												'UPI ID Pay',
-												'MobikWik',
-												'PayU',
-												'Cred',
-												'Paypal',
-												'Bank Application Pay',
-												'Credit Card',
-												'Debit Card',
-												'RTGS',
-												'NEFT',
-												'Cheque',
-												'Cash',
-												'None',
-											]}
-										/>
-										<TextareaField
-											className='col-md-12 fv-row'
-											label='Description'
-											placeholder='Write Description'
-											name='note'
-											htmlFor='note'
-											value={formData?.note}
-											onChange={handleNotesChange}
-										/>
+						{/* Form Card 2 Skeleton */}
+						<div className='gz-inv-form-card'>
+							<h3 className='gz-inv-form-card-title'>Invoice Details</h3>
+							<div className='row g-3'>
+								{Array.from({ length: 4 }).map((_, idx) => (
+									<div key={idx} className='col-12 col-md-6'>
+										<div className='gz-inv-skeleton mb-2' style={{ width: '80px', height: '12px', borderRadius: '4px' }}></div>
+										<div className='gz-inv-skeleton' style={{ width: '100%', height: '42px', borderRadius: '8px' }}></div>
 									</div>
+								))}
+							</div>
+						</div>
+					</div>
 
-									<div className='col-md-12 fv-row mb-7'>
-										<div className='d-flex justify-content-end'>
-											<button
-												type='button'
-												className='btn btn-success mb-4 me-3'
-												onClick={() => generatePDF(invoiceData?.name)}>
-												Download Invoice
-											</button>
-											<button
-												type='button'
-												className={`btn btn-primary btn-block mb-4 ${
-													isSubmitting ? 'disabled' : ''
-												}`}
-												onClick={handleUpdateInvoice}
-												disabled={isSubmitting}>
-												{isSubmitting ? 'Please wait, updating invoice...' : 'Update Invoice'}
-											</button>
-										</div>
-									</div>
+					{/* Right Side: Preview Skeleton */}
+					<div className='gz-inv-preview-side'>
+						<div className='gz-inv-preview-sticky-wrap'>
+							<div className='gz-inv-preview-header'>
+								<div className='d-flex align-items-center gap-2'>
+									<FontAwesomeIcon icon={faFilePdf} />
+									<span>Invoice Preview</span>
 								</div>
-							</form>
+								<div className='gz-inv-skeleton' style={{ width: '80px', height: '22px', borderRadius: '999px' }}></div>
+							</div>
+							<div className='gz-inv-preview-card p-4'>
+								<div className='d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom'>
+									<div>
+										<div className='gz-inv-skeleton mb-2' style={{ width: '140px', height: '20px', borderRadius: '4px' }}></div>
+										<div className='gz-inv-skeleton' style={{ width: '90px', height: '12px', borderRadius: '4px' }}></div>
+									</div>
+									<div className='gz-inv-skeleton' style={{ width: '50px', height: '50px', borderRadius: '8px' }}></div>
+								</div>
+								<div className='d-flex flex-column gap-2 mb-4'>
+									<div className='gz-inv-skeleton' style={{ width: '100%', height: '36px', borderRadius: '6px' }}></div>
+									<div className='gz-inv-skeleton' style={{ width: '100%', height: '36px', borderRadius: '6px' }}></div>
+									<div className='gz-inv-skeleton' style={{ width: '100%', height: '36px', borderRadius: '6px' }}></div>
+								</div>
+								<div className='d-flex justify-content-end'>
+									<div className='gz-inv-skeleton' style={{ width: '160px', height: '28px', borderRadius: '6px' }}></div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div className='col-md-6 mt-3'>
-				<div className='card'>
-					<div className='card-body'>
-						<div id='invoiceContent'>
-							<p className='fw-bold fs-5 text-center mb-2'>TAX INVOICE</p>
-							<div className='border border-black'>
-								<div className='invoice-header row mt-2 p-3 align-items-start'>
-									<div className='col-md-7'>
-										<p className='fs-6 mb-1'>
-											<b>RAG STRENGTH AND NUTRITION</b>
-										</p>
-										<p
-											style={{ fontSize: '12px' }}
-											className='mt-1 mb-1'>
-											G-23-TIME SQUARE, Gaurav Path Road, Nr. Galaxy Circle, Pal, Surat, Gujarat
-											394510
-										</p>
-										<p
-											style={{ fontSize: '12px' }}
-											className='mb-1'>
-											Phone no.: +91 98752 70200
-										</p>
-										<p
-											style={{ fontSize: '12px' }}
-											className='mb-1'>
-											Email: info@ragnutrition.in
-										</p>
-										<p
-											style={{ fontSize: '12px' }}
-											className='mb-1'>
-											GSTIN: 24ABOFR2172H1Z2
-										</p>
-									</div>
-									<div className='col-md-5'>
-										<div className='text-end'>
-											<img
-												src='/media/logos/rag-logo.webp'
-												width='90%'
-												alt='Company Logo'
-											/>
-										</div>
-									</div>
-								</div>
-								<div className='invoice-details d-flex'>
-									<div className='col-md-6 border border-black px-0'>
-										<div
-											className='bill-to border-bottom border-black'
-											style={{ fontSize: '13px' }}>
-											Bill To
-										</div>
-										<strong>
-											<p
-												className='mt-2 px-2'
-												style={{ fontSize: '12px' }}
-												id='inv-name'>
-												Name: {invoiceData.name || 'N/A'}
-											</p>
+		)
+	}
 
-											<p
-												className='px-2'
-												style={{ fontSize: '12px' }}
-												id='inv-email'>
-												Email: {invoiceData.email || 'N/A'}
-											</p>
-											{/* {invoiceData.gst_number && ( */}
-											<p
-												className='px-2'
-												style={{ fontSize: '12px' }}
-												id='inv-gst_number'>
-												GST No: {invoiceData.gst_number || 'N/A'}
-											</p>
-											{/* )} */}
-											{/* {invoiceData.pan_number && ( */}
-											<p
-												className='px-2'
-												style={{ fontSize: '12px' }}
-												id='inv-pan_number'>
-												PAN No: {invoiceData.pan_number || 'N/A'}
-											</p>
-											{/* )} */}
-										</strong>
+	const netAmount = Number(formData.net_amount || 0)
+	const paidAmount = Number(formData.paid_amount || 0)
+	const dueAmount = Math.max(0, netAmount - paidAmount)
+	const invNumberDisplay = formData.invoice_number ? `#INV-${formData.invoice_number}` : ''
+
+	return (
+		<div className='gz-inv-container'>
+			<PageTitle breadcrumbs={[]}>Edit Invoice</PageTitle>
+
+			{/* =========================================================================
+			    BREADCRUMBS
+			    ========================================================================= */}
+			<div className='gz-inv-breadcrumb'>
+				<Link to='/rag/invoice-list'>Invoices</Link>
+				<span>&gt;</span>
+				<span>Edit Invoice</span>
+			</div>
+
+			{/* =========================================================================
+			    PAGE HEADER
+			    ========================================================================= */}
+			<div className='gz-inv-header mb-4'>
+				<div>
+					<h1 className='gz-inv-title'>{`Edit Invoice ${invNumberDisplay}`}</h1>
+					<p className='gz-inv-subtitle'>Update invoice details and items</p>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    SPLIT VIEW: STEPPER & FORM ON LEFT, LIVE INVOICE TEMPLATE PREVIEW ON RIGHT
+			    ========================================================================= */}
+			<div className='row g-4 align-items-start'>
+				{/* LEFT COLUMN: Stepper + Form */}
+				<div className='col-12 col-xl-6'>
+					{/* Stepper */}
+					<div className='gz-inv-stepper mb-4' style={{ maxWidth: '100%', margin: '0 0 24px 0' }}>
+						<div
+							className={`gz-inv-step-item ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}
+							onClick={() => setCurrentStep(1)}>
+							<div className='gz-inv-step-circle'>
+								{currentStep > 1 ? <FontAwesomeIcon icon={faCheck} /> : 1}
+							</div>
+							<span className='gz-inv-step-label'>Client & Details</span>
+						</div>
+
+						<div className='gz-inv-step-line' />
+
+						<div
+							className={`gz-inv-step-item ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}
+							onClick={() => setCurrentStep(2)}>
+							<div className='gz-inv-step-circle'>
+								{currentStep > 2 ? <FontAwesomeIcon icon={faCheck} /> : 2}
+							</div>
+							<span className='gz-inv-step-label'>Items & Pricing</span>
+						</div>
+
+						<div className='gz-inv-step-line' />
+
+						<div
+							className={`gz-inv-step-item ${currentStep === 3 ? 'active' : ''}`}
+							onClick={() => setCurrentStep(3)}>
+							<div className='gz-inv-step-circle'>3</div>
+							<span className='gz-inv-step-label'>Review & Update</span>
+						</div>
+					</div>
+
+					{/* STEP 1: CLIENT & DETAILS */}
+					{currentStep === 1 && (
+						<div>
+							{/* Client Information */}
+							<div className='gz-inv-form-card'>
+								<h3 className='gz-inv-form-card-title'>Client Information</h3>
+								<div className='row g-3'>
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>
+											Client Name <span className='required'>*</span>
+										</label>
+										<input
+											type='text'
+											name='name'
+											className='gz-inv-input'
+											value={formData.name}
+											onChange={handleInputChange}
+										/>
 									</div>
-									<div className='col-md-6 border border-black text-right'>
-										<div className='bill-name-date px-2'>
-											<p style={{ fontSize: '12px' }}>
-												<strong>Invoice No. :</strong>
-												<span id='inv-n'>{invoiceData.invoice_number || 'N/A'}</span>
-											</p>
-											{/* <p style={{ fontSize: '12px' }}>
-												<strong>Sales Person :</strong>
-												<span>{invoiceData.sales_person || '-'}</span>
-											</p> */}
-											<p style={{ fontSize: '12px' }}>
-												<strong>Date :-</strong>
-												<span id='inv-date'>{invoiceData.date || 'N/A'}</span>
-											</p>
-											<p style={{ fontSize: '12px' }}>
-												<strong>Phone No. :-</strong>
-												<span id='inv-mobile'>{invoiceData.mobile || 'N/A'}</span>
-											</p>
-											<p style={{ fontSize: '12px' }}>
-												<strong>Address :-</strong>
-												<span id='inv-address'>
-													{`${invoiceData.billing_address_line_1 || ''}${
-														invoiceData.billing_address_line_1 &&
-														(invoiceData.billing_city ||
-															invoiceData.billing_state ||
-															invoiceData.billing_pin_code ||
-															invoiceData.billing_country)
-															? ', '
-															: ''
-													}${invoiceData.billing_city || ''}${
-														invoiceData.billing_city &&
-														(invoiceData.billing_state || invoiceData.billing_pin_code)
-															? ', '
-															: ''
-													}${invoiceData.billing_state || ''}${
-														invoiceData.billing_state && invoiceData.billing_pin_code ? ', ' : ''
-													}${invoiceData.billing_pin_code || ''}${
-														(invoiceData.billing_city ||
-															invoiceData.billing_state ||
-															invoiceData.billing_pin_code) &&
-														invoiceData.billing_country
-															? ', '
-															: ''
-													}${invoiceData.billing_country || ''}`}
-												</span>
-											</p>
-										</div>
+
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>GSTIN</label>
+										<input
+											type='text'
+											name='gst_number'
+											className='gz-inv-input'
+											value={formData.gst_number}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>Email</label>
+										<input
+											type='email'
+											name='email'
+											className='gz-inv-input'
+											value={formData.email}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>Phone</label>
+										<input
+											type='tel'
+											name='mobile'
+											className='gz-inv-input'
+											value={formData.mobile}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									<div className='col-12'>
+										<label className='gz-inv-label'>Billing Address</label>
+										<input
+											type='text'
+											name='billing_address_line_1'
+											className='gz-inv-input'
+											value={formData.billing_address_line_1}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									<div className='col-6'>
+										<label className='gz-inv-label'>City</label>
+										<input
+											type='text'
+											name='billing_city'
+											className='gz-inv-input'
+											value={formData.billing_city}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									<div className='col-6'>
+										<label className='gz-inv-label'>Pin Code</label>
+										<input
+											type='text'
+											name='billing_pin_code'
+											className='gz-inv-input'
+											value={formData.billing_pin_code}
+											onChange={handleInputChange}
+										/>
 									</div>
 								</div>
-								<div className='invoice-items'>
-									<table className='border border-black'>
+							</div>
+
+							{/* Invoice Details */}
+							<div className='gz-inv-form-card'>
+								<h3 className='gz-inv-form-card-title'>Invoice Details</h3>
+								<div className='row g-3'>
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>
+											Invoice Date <span className='required'>*</span>
+										</label>
+										<input
+											type='date'
+											name='date'
+											className='gz-inv-input'
+											value={formData.date}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>
+											Due Date <span className='required'>*</span>
+										</label>
+										<input
+											type='date'
+											name='due_date'
+											className='gz-inv-input'
+											value={formData.due_date}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>Payment Terms</label>
+										<select
+											name='payment_terms'
+											className='gz-inv-select'
+											value={formData.payment_terms}
+											onChange={handleInputChange}>
+											<option value='Net 15 Days'>Net 15 Days</option>
+											<option value='Net 30 Days'>Net 30 Days</option>
+											<option value='Due on Receipt'>Due on Receipt</option>
+											<option value='Advance'>Advance Payment</option>
+										</select>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>Reference (Optional)</label>
+										<input
+											type='text'
+											name='reference_name'
+											className='gz-inv-input'
+											value={formData.reference_name}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>Sales Person</label>
+										<select
+											name='sales_person'
+											className='gz-inv-select'
+											value={formData.sales_person}
+											onChange={handleInputChange}>
+											<option value=''>Select Sales Person</option>
+											{salesPersonList.map((emp) => (
+												<option key={emp._id} value={emp.employee_id || emp._id}>
+													{emp.full_name || emp.name || 'Unnamed'}
+												</option>
+											))}
+											<option value='N/A'>N/A / Other</option>
+										</select>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>Store / Branch</label>
+										<select
+											name='branch_name'
+											className='gz-inv-select'
+											value={formData.branch_name}
+											onChange={handleInputChange}>
+											<option value=''>Select Store / Branch</option>
+											{branchesData.map((b) => (
+												<option key={b} value={b}>
+													{b}
+												</option>
+											))}
+										</select>
+									</div>
+
+									<div className='col-12'>
+										<label className='gz-inv-label'>Notes (Optional)</label>
+										<textarea
+											name='note'
+											className='gz-inv-textarea'
+											placeholder='Add any notes or terms for this invoice...'
+											value={formData.note}
+											onChange={handleInputChange}
+										/>
+									</div>
+								</div>
+							</div>
+
+							{/* Step 1 Actions */}
+							<div className='d-flex align-items-center justify-content-between pt-2 mb-4'>
+								<button
+									type='button'
+									className='gz-inv-btn-cancel'
+									onClick={() => navigate('/rag/invoice-list')}>
+									Cancel
+								</button>
+								<button
+									type='button'
+									className='gz-inv-btn-primary'
+									onClick={() => setCurrentStep(2)}>
+									<span>Next: Edit Items</span>
+									<FontAwesomeIcon icon={faArrowRight} />
+								</button>
+							</div>
+						</div>
+					)}
+
+					{/* STEP 2: ITEMS & PRICING */}
+					{currentStep === 2 && (
+						<div>
+							<div className='gz-inv-form-card'>
+								<div className='d-flex align-items-center justify-content-between mb-4'>
+									<h3 className='gz-inv-form-card-title mb-0'>Line Items & Products</h3>
+									<button
+										type='button'
+										className='gz-inv-btn-outline'
+										style={{ height: '36px', padding: '4px 14px', fontSize: '13px' }}
+										onClick={addPlanItem}>
+										<FontAwesomeIcon icon={faPlus} />
+										<span>Add Item</span>
+									</button>
+								</div>
+
+								<div className='d-flex flex-column gap-3'>
+									{plans.map((plan, idx) => (
+										<div
+											key={idx}
+											className='p-3 rounded-3'
+											style={{ background: '#F8FAFD', border: '1px solid #E4EAF2' }}>
+											<div className='row g-2 align-items-end'>
+												<div className='col-12 col-md-5'>
+													<label className='gz-inv-label'>Product</label>
+													<select
+														className='gz-inv-select'
+														value={plan.items}
+														onChange={(e) => handleProductChange(idx, e.target.value)}>
+														<option value=''>Select Product</option>
+														{productList.map((p) => (
+															<option key={p._id || p.product_name} value={p.product_name}>
+																{p.product_name} (₹{p.price || p.amount || 0})
+															</option>
+														))}
+														<option value='manual'>Other / Custom Item</option>
+													</select>
+												</div>
+
+												{plan.inputField && (
+													<div className='col-12'>
+														<label className='gz-inv-label'>Custom Item Name</label>
+														<input
+															type='text'
+															className='gz-inv-input'
+															value={plan.items}
+															onChange={(e) => handlePlanChange(idx, 'items', e.target.value)}
+														/>
+													</div>
+												)}
+
+												<div className='col-6 col-md-3'>
+													<label className='gz-inv-label'>Weight</label>
+													<input
+														type='text'
+														className='gz-inv-input'
+														value={plan.item_weight}
+														onChange={(e) => handlePlanChange(idx, 'item_weight', e.target.value)}
+													/>
+												</div>
+
+												<div className='col-6 col-md-4'>
+													<label className='gz-inv-label'>Rate (₹)</label>
+													<input
+														type='number'
+														className='gz-inv-input'
+														value={plan.amount}
+														onChange={(e) => handlePlanChange(idx, 'amount', e.target.value)}
+													/>
+												</div>
+
+												<div className='col-4 col-md-3'>
+													<label className='gz-inv-label'>Qty</label>
+													<input
+														type='number'
+														className='gz-inv-input'
+														value={plan.quantity}
+														min='1'
+														onChange={(e) => handlePlanChange(idx, 'quantity', e.target.value)}
+													/>
+												</div>
+
+												<div className='col-4 col-md-3'>
+													<label className='gz-inv-label'>GST%</label>
+													<input
+														type='number'
+														className='gz-inv-input'
+														value={plan.gst}
+														onChange={(e) => handlePlanChange(idx, 'gst', e.target.value)}
+													/>
+												</div>
+
+												<div className='col-4 col-md-4 text-end'>
+													<label className='gz-inv-label'>Total</label>
+													<div className='pt-2' style={{ fontWeight: 700, color: '#172B4D', fontSize: '15px' }}>
+														₹{plan.totalPayment || 0}
+													</div>
+												</div>
+
+												<div className='col-12 col-md-2 text-end'>
+													<button
+														type='button'
+														className='btn btn-sm btn-outline-danger'
+														onClick={() => removePlanItem(idx)}>
+														<FontAwesomeIcon icon={faTrash} />
+													</button>
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
+
+								{/* Payment details */}
+								<div className='row mt-4 pt-3 border-top g-3'>
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>Payment Method</label>
+										<select
+											name='payment_method'
+											className='gz-inv-select'
+											value={formData.payment_method}
+											onChange={handleInputChange}>
+											{['UPI', 'Google Pay', 'PhonePe', 'Paytm', 'Cash', 'Bank Transfer', 'Credit Card', 'Debit Card', 'Cheque'].map(
+												(m) => (
+													<option key={m} value={m}>
+														{m}
+													</option>
+												)
+											)}
+										</select>
+									</div>
+
+									<div className='col-12 col-md-6'>
+										<label className='gz-inv-label'>Paid Amount (₹)</label>
+										<input
+											type='number'
+											name='paid_amount'
+											className='gz-inv-input'
+											value={formData.paid_amount}
+											onChange={handleInputChange}
+										/>
+									</div>
+								</div>
+							</div>
+
+							{/* Step 2 Actions */}
+							<div className='d-flex align-items-center justify-content-between pt-2 mb-4'>
+								<button
+									type='button'
+									className='gz-inv-btn-outline'
+									onClick={() => setCurrentStep(1)}>
+									<FontAwesomeIcon icon={faArrowLeft} />
+									<span>Back to Details</span>
+								</button>
+								<button
+									type='button'
+									className='gz-inv-btn-primary'
+									onClick={() => setCurrentStep(3)}>
+									<span>Next: Review & Update</span>
+									<FontAwesomeIcon icon={faArrowRight} />
+								</button>
+							</div>
+						</div>
+					)}
+
+					{/* STEP 3: REVIEW & UPDATE */}
+					{currentStep === 3 && (
+						<div>
+							<div className='gz-inv-form-card'>
+								<h3 className='gz-inv-form-card-title'>Review Updated Invoice</h3>
+
+								<div className='p-3 rounded-3 mb-3' style={{ background: '#F8FAFD', border: '1px solid #E4EAF2' }}>
+									<div className='d-flex flex-column gap-1' style={{ fontSize: '13px' }}>
+										<div><strong>Client:</strong> {formData.name} ({formData.mobile || 'No phone'})</div>
+										<div><strong>Date:</strong> {formData.date} • <strong>Due:</strong> {formData.due_date}</div>
+										<div><strong>Payment Method:</strong> {formData.payment_method}</div>
+									</div>
+								</div>
+
+								{/* Items table preview */}
+								<div className='table-responsive mb-3'>
+									<table className='gz-inv-table'>
 										<thead>
 											<tr>
-												<th
-													className='border border-black'
-													style={{ fontSize: '13px' }}>
-													Product
-												</th>
-												{/* <th
-													className='border border-black'
-													style={{ fontSize: '13px' }}>
-													Flavor
-												</th> */}
-												<th
-													className='border border-black'
-													style={{ fontSize: '13px' }}>
-													Weight
-												</th>
-												<th
-													className='border border-black'
-													style={{ fontSize: '13px' }}>
-													Rate
-												</th>
-												<th
-													className='border border-black'
-													style={{ fontSize: '13px' }}>
-													Qty.
-												</th>
-												<th
-													className='border border-black'
-													style={{ fontSize: '13px' }}>
-													Amount
-												</th>
-												{hasGst && (
-													<th
-														className='border border-black'
-														style={{ fontSize: '13px' }}>
-														GST
-													</th>
-												)}
-
-												{hasDiscount && (
-													<th
-														className='border border-black'
-														style={{ fontSize: '13px' }}>
-														Dis
-													</th>
-												)}
-												<th
-													className='border border-black'
-													style={{ fontSize: '13px' }}>
-													Total
-												</th>
+												<th>Item</th>
+												<th>Qty</th>
+												<th style={{ textAlign: 'right' }}>Total</th>
 											</tr>
 										</thead>
 										<tbody>
-											{invoiceData.items.length == 0 ? (
-												<tr>
-													<td className='border border-black'>
-														<div id='inv-product'>-</div>
-													</td>
-													<td className='border border-black'>
-														<span className='inv-total'>-</span>
-													</td>
-													<td className='border border-black'>
-														<span className='inv-paid'>-</span>
-													</td>
-													<td className='border border-black'>
-														<span className='inv-total'>-</span>
-													</td>
-													<td className='border border-black'>
-														<span className='inv-total'>-</span>
-													</td>
-													<td className='border border-black'>
-														<span className='inv-total'>-</span>
-													</td>
+											{plans.map((p, idx) => (
+												<tr key={idx}>
+													<td style={{ fontWeight: 600 }}>{p.items}</td>
+													<td>{p.quantity}</td>
+													<td style={{ textAlign: 'right', fontWeight: 700 }}>₹{p.totalPayment}</td>
 												</tr>
-											) : (
-												invoiceData.items.map((item: any, index: any) => {
-													return (
-														<tr key={index}>
-															<td>
-																<div
-																	id='inv-product'
-																	style={{ fontSize: '12px' }}>
-																	{item.item_name}
-																</div>
-															</td>
-															{/* <td>
-																<div
-																	id='inv-product'
-																	style={{ fontSize: '12px' }}>
-																	{item.flavor}
-																</div>
-															</td> */}
-															<td>
-																<span
-																	className='inv-total'
-																	style={{ fontSize: '12px' }}>
-																	{item.item_weight
-																		? `${item.item_weight} ${item.item_weight_type || ''}`
-																		: '-'}
-																</span>
-															</td>
-															<td>
-																<span
-																	className='inv-total'
-																	style={{ fontSize: '12px' }}>
-																	₹{item.amount || '-'}/-
-																</span>
-															</td>
-															<td>
-																<span
-																	className='inv-paid'
-																	style={{ fontSize: '12px' }}>
-																	{item.quantity || '-'}
-																</span>
-															</td>
-															<td>
-																<span
-																	className='inv-paid'
-																	style={{ fontSize: '12px' }}>
-																	₹{item.amount * item.quantity || '-'}/-
-																</span>
-															</td>
-															{hasGst && (
-																<td>
-																	<span
-																		className='inv-paid'
-																		style={{ fontSize: '12px' }}>
-																		{Number(item.gst) > 0 ? `${item.gst}%` : '-'}
-																	</span>
-																</td>
-															)}
-															{hasDiscount && (
-																<td>
-																	<span
-																		className='inv-paid'
-																		style={{ fontSize: '12px' }}>
-																		{Number(item.discount) > 0
-																			? `${item.discount}${item.isDiscountPercentage ? '%' : '₹'}`
-																			: '-'}
-																	</span>
-																</td>
-															)}
-															<td>
-																<span
-																	className='inv-total'
-																	style={{ fontSize: '12px' }}>
-																	₹{item.totalAmount ? item.totalAmount : '-'}/-
-																</span>
-															</td>
-														</tr>
-													)
-												})
-											)}
+											))}
 										</tbody>
 									</table>
 								</div>
-								<div className='invoice-details d-flex'>
-									<div className={'border border-black px-0 col-md-12'}>
-										<div>
-											{invoiceData.note && (
-												<>
-													<div
-														className='bill-to px-2 border-bottom border-black'
-														style={{ fontSize: '13px' }}>
-														Description :-
-													</div>
-													<p
-														style={{ fontSize: '12px' }}
-														className='px-2'>
-														<span id='inv-notes'>{invoiceData.note}</span>
-													</p>
-												</>
-											)}
-											<div
-												className='bill-to px-2 border-bottom border-black'
-												style={{ fontSize: '13px' }}>
-												Amount :-
-											</div>
-											<div className='bill-name-date px-2 py-1'>
-												<div className='d-flex justify-content-between'>
-													<span
-														className='fw-bold'
-														style={{ fontSize: '12px' }}>
-														Amount:
-													</span>
-													<span
-														className='fw-bold'
-														style={{ fontSize: '12px' }}>
-														₹{calculateTotalProductAmount()}/-
-													</span>
-												</div>
-												{hasGst && (
-													<div className='d-flex justify-content-between'>
-														<span style={{ fontSize: '12px' }}>GST:</span>
-														<span style={{ fontSize: '12px' }}>
-															+
-															{invoiceData.items.reduce((sum: number, item: any) => {
-																const itemGst = parseFloat(item.gst) || 0
-																const itemAmount = parseFloat(item.amount) || 0
-																const itemQuantity = parseFloat(item.quantity) || 0
-																const baseAmount = itemAmount * itemQuantity
-																const gstAmount = (baseAmount * itemGst) / 100
 
-																return sum + gstAmount
-															}, 0)}
-															/-
-														</span>
-													</div>
-												)}
-
-												{hasDiscount && (
-													<div className='d-flex justify-content-between'>
-														<span style={{ fontSize: '12px' }}>Discount:</span>
-														<span style={{ fontSize: '12px' }}>
-															-{invoiceData.discount || '-'}/-
-														</span>
-													</div>
-												)}
-
-												<hr
-													className='my-2 border-dark'
-													style={{ borderStyle: 'dashed' }}
-												/>
-
-												<div className='d-flex justify-content-between fw-bold'>
-													<span style={{ fontSize: '12px' }}>Total Amount:</span>
-													<span style={{ fontSize: '12px' }}>
-														₹{invoiceData.net_amount || '-'}/-
-													</span>
-												</div>
-												<div className='d-flex justify-content-between fw-bold'>
-													<span style={{ fontSize: '12px' }}>Paid Amount:</span>
-													<span style={{ fontSize: '12px' }}>
-														{invoiceData.paid_amount || '-'}/-
-													</span>
-												</div>
-
-												<div className='d-flex justify-content-between fw-bold'>
-													<span style={{ fontSize: '12px' }}>Due Amount:</span>
-													<span style={{ fontSize: '12px' }}>₹{dueAmount || '-'}/-</span>
-												</div>
-											</div>
-										</div>
+								{/* Grand Total */}
+								<div
+									className='d-flex justify-content-between align-items-center p-3 rounded-3'
+									style={{ background: '#EAF1F8' }}>
+									<div>
+										<span style={{ fontSize: '13px', color: '#71809A' }}>Total Amount:</span>
+										<h3 style={{ fontSize: '20px', fontWeight: 800, color: '#172B4D', margin: 0 }}>
+											₹ {netAmount.toLocaleString('en-IN')}
+										</h3>
 									</div>
-								</div>
-								<div className='invoice-details d-flex'>
-									<div className='col-8 border border-black px-0'>
-										<div className='bill-to px-2 border-bottom border-black'>Payment Details</div>
-										<div className='d-flex align-items-center'>
-											<div className='px-2'>
-												<img
-													src='/media/gomzi-nutrition/rag-qr-code.png'
-													alt='sign'
-													width='110px'
-												/>
-											</div>
-											<div className='bill-name-date px-2'>
-												<p
-													className='my-1'
-													style={{ fontSize: '12px' }}>
-													<strong>UPI ID: bom260801350628@mahb</strong>
-												</p>
-												<p
-													className='my-1'
-													style={{ fontSize: '12px' }}>
-													<strong>Bank Name: Bank of Maharashtra, Jahangirabad</strong>
-												</p>
-												<p
-													className='my-1'
-													style={{ fontSize: '12px' }}>
-													<strong>Account Holder Name: RAG STRENGTH & NUTRITION</strong>
-												</p>
-												<p
-													className='my-1'
-													style={{ fontSize: '12px' }}>
-													<strong>Account Number: 60587480966</strong>
-												</p>
-												<p
-													className='my-1'
-													style={{ fontSize: '12px' }}>
-													<strong>IFSC: MAHB0002533</strong>
-												</p>
-												<p
-													className='my-1'
-													style={{ fontSize: '12px' }}>
-													<strong>Account Type: Current Account</strong>
-												</p>
-											</div>
-										</div>
-									</div>
-									<div
-										id='invoice-signature'
-										className='invoice-details col-md-4'>
-										<div className='bill-to px-2 border-bottom border-black'>Administrator:</div>
-										<div className='px-2 py-3 text-center'>
-											<img
-												src='/media/sign/chirag-pandey-sign.webp'
-												alt='sign'
-												width='90%'
-											/>
+									<div className='text-end'>
+										<span style={{ fontSize: '12px', color: '#71809A' }}>Paid: ₹{paidAmount}</span>
+										<div style={{ fontWeight: 700, color: dueAmount > 0 ? '#D94A62' : '#168064' }}>
+											Due: ₹{dueAmount.toLocaleString('en-IN')}
 										</div>
 									</div>
 								</div>
 							</div>
+
+							{/* Step 3 Actions */}
+							<div className='d-flex align-items-center justify-content-between pt-2 mb-4'>
+								<button
+									type='button'
+									className='gz-inv-btn-outline'
+									onClick={() => setCurrentStep(2)}>
+									<FontAwesomeIcon icon={faArrowLeft} />
+									<span>Back to Items</span>
+								</button>
+								<button
+									type='button'
+									className='gz-inv-btn-primary'
+									onClick={handleUpdateInvoice}
+									disabled={isSubmitting}>
+									<span>{isSubmitting ? 'Updating Invoice...' : 'Save Changes'}</span>
+									<FontAwesomeIcon icon={faCheck} />
+								</button>
+							</div>
 						</div>
-						<div className='col-md-12 fv-row mt-10 text-center'>
-							<button
-								type='button'
-								className='btn btn-success'
-								onClick={() => generatePDF(invoiceData?.name)}>
-								Download Invoice
-							</button>
+					)}
+				</div>
+
+				{/* RIGHT COLUMN: LIVE INVOICE TEMPLATE PREVIEW */}
+				<div className='col-12 col-xl-6'>
+					<div style={{ position: 'sticky', top: '24px' }}>
+						<div className='d-flex align-items-center justify-content-between mb-3 px-1'>
+							<div className='d-flex align-items-center gap-2'>
+								<div
+									className='rounded-3 d-flex align-items-center justify-content-center'
+									style={{ width: '32px', height: '32px', background: '#DCE8F8', color: '#172B4D' }}>
+									<FontAwesomeIcon icon={faFilePdf} style={{ fontSize: '14px' }} />
+								</div>
+								<div>
+									<h4 style={{ fontSize: '15px', fontWeight: 700, color: '#172B4D', margin: 0 }}>
+										Invoice Document Preview
+									</h4>
+									<span style={{ fontSize: '12px', color: '#71809A' }}>
+										Live preview of official company billing template
+									</span>
+								</div>
+							</div>
+							<span className='gz-inv-badge paid' style={{ fontSize: '11px', padding: '4px 10px' }}>
+								Live Preview
+							</span>
+						</div>
+
+						<div
+							style={{
+								background: '#FFFFFF',
+								borderRadius: '16px',
+								border: '1px solid #E4EAF2',
+								padding: '20px',
+								boxShadow: '0 4px 20px rgba(16, 31, 56, 0.05)',
+								maxHeight: 'calc(100vh - 120px)',
+								overflowY: 'auto',
+							}}>
+							<CompanyInvoiceDocument
+								invoiceData={{
+									name: formData.name,
+									email: formData.email,
+									mobile: formData.mobile,
+									gst_number: formData.gst_number,
+									pan_number: formData.pan_number,
+									invoice_number: formData.invoice_number,
+									date: formData.date ? DayJS(formData.date).format('YYYY/MM/DD') : '',
+									billing_address_line_1: formData.billing_address_line_1,
+									billing_city: formData.billing_city,
+									billing_state: formData.billing_state,
+									billing_pin_code: formData.billing_pin_code,
+									billing_country: formData.billing_country,
+									sales_person: formData.sales_person,
+									discount: formData.discount,
+									net_amount: formData.net_amount,
+									paid_amount: formData.paid_amount,
+									note: formData.note,
+								}}
+								items={plans.map((p) => ({
+									item_name: p.items,
+									item_weight: p.item_weight,
+									item_weight_type: p.item_weight_type,
+									amount: p.amount,
+									quantity: p.quantity,
+									gst: p.gst,
+									discount: p.discount,
+									isDiscountPercentage: p.isDiscountPercentage,
+									totalAmount: p.totalPayment,
+								}))}
+								dueAmount={dueAmount}
+								showTerms={false}
+								containerId='invoiceContent'
+							/>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div
-				className='col-md-6 mt-3'
-				style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '50%' }}>
-				<div className='card'>
-					<div className='card-body'>
-						<TermAndCondition />
-					</div>
-				</div>
-			</div>
-		</>
+		</div>
 	)
 }
 

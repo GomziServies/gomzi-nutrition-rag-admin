@@ -202,23 +202,24 @@ const HiringRequest: React.FC = () => {
 			<PageTitle breadcrumbs={[]}>Hiring Requests</PageTitle>
 
 			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
-				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
-					<div className='d-flex align-items-center gap-3 flex-wrap'>
-						<div className='d-flex align-items-center position-relative'>
-							<SearchFilter searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-column gap-4'>
+					{/* Header Top: Title & Right Add Request Button */}
+					<div className='d-flex align-items-center justify-content-between flex-wrap gap-3 w-100'>
+						<div>
+							<div className='d-flex align-items-center gap-2'>
+								<h2 className='fw-bolder text-gray-900 mb-0'>Hiring Requests</h2>
+								<span className='badge badge-light-primary fw-bold fs-8'>
+									{totalCount} records
+								</span>
+							</div>
+							<span className='text-muted fs-7 fw-semibold mt-1'>
+								Submit requisition requests for new team members and track approval status
+							</span>
 						</div>
-					</div>
-					<div className='d-flex align-items-center gap-3 flex-wrap'>
-						<DateFilter 
-							onDateRangeChange={handleDateRangeChange} 
-							rightValue='0'
-						/>
-						<LengthMenu
-							expenseData={hiringRequests}
-							handleItemsPerPageChange={handleItemsPerPageChange}
-						/>
+
 						<button
-							className='btn btn-primary rounded-pill px-5 fw-bold d-inline-flex align-items-center gap-2'
+							className='btn btn-primary d-inline-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '10px' }}
 							onClick={() => {
 								setEditingId(null)
 								setFormData({
@@ -232,6 +233,21 @@ const HiringRequest: React.FC = () => {
 							<FontAwesomeIcon icon={faPlus} />
 							<span>Add Request</span>
 						</button>
+					</div>
+
+					{/* Header Bottom: Filter Bar */}
+					<div className='d-flex align-items-center flex-wrap gap-3 w-100 pb-2'>
+						<div style={{ minWidth: '220px' }}>
+							<SearchFilter searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+						</div>
+						<LengthMenu
+							expenseData={hiringRequests}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+						/>
+						<DateFilter 
+							onDateRangeChange={handleDateRangeChange} 
+							rightValue='0'
+						/>
 					</div>
 				</div>
 

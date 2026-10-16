@@ -33,18 +33,26 @@ const NumberTicker: React.FC<NumberTickerProps> = ({
         text !== undefined && text !== null
             ? String(text)
             : value !== undefined && value !== null
-            ? Math.abs(value).toLocaleString()
+            ? `${value < 0 ? '-' : ''}${Math.abs(value).toLocaleString()}`
             : '0'
 
     const [isLoaded, setIsLoaded] = useState(false)
+    const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     useEffect(() => {
+        if (prefersReducedMotion) {
+            setIsLoaded(true)
+            return
+        }
         setIsLoaded(false)
         const timer = setTimeout(() => {
             setIsLoaded(true)
         }, 50)
         return () => clearTimeout(timer)
-    }, [rawTargetStr])
+    }, [rawTargetStr, prefersReducedMotion])
 
     const displayStr = `${prefix}${rawTargetStr}${suffix}`
 

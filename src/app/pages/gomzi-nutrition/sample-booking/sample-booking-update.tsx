@@ -1,10 +1,10 @@
+import { MapPin, Package, Plus, Trash2, UserRound } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import SelectField from '../../../components/SelectField'
-import TableButton from '../../../components/TableButton'
 import { GetGnSampleBooking, UpdateGnSampleBooking } from '../../../Functions/FGGroup'
 import './sample-booking.css'
 
@@ -235,9 +235,10 @@ const SampleBookingUpdate = () => {
 		return (
 			<div
 				className='d-flex justify-content-center align-items-center'
-				style={{ height: '300px' }}>
+				style={{ height: '320px' }}>
 				<div
-					className='spinner-border text-primary'
+					className='spinner-border'
+					style={{ color: '#172B4D', width: '2.5rem', height: '2.5rem' }}
 					role='status'>
 					<span className='visually-hidden'>Loading...</span>
 				</div>
@@ -248,13 +249,39 @@ const SampleBookingUpdate = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Edit Sample Booking</PageTitle>
-			<div className='card mt-3'>
-				<div className='card-body py-10'>
-					<div className='row'>
-						<div className='col-md-12 mb-5'>
-							<h3 className='fw-bold mb-0'>Client Information</h3>
+
+			{/* Page Heading */}
+			<div className='sb-page-header'>
+				<div>
+					<div className='sb-breadcrumb'>
+						<span>Sample Bookings</span>
+						<span className='sb-breadcrumb-separator'>/</span>
+						<span>Edit Booking</span>
+					</div>
+					<h1 className='sb-page-title'>Edit Sample Booking</h1>
+					<p className='sb-page-subtitle'>
+						Update customer shipping information, products, and courier tracking details.
+					</p>
+				</div>
+			</div>
+
+			<form onSubmit={(e) => e.preventDefault()} style={{ maxWidth: '1100px' }}>
+				{/* Section 1: Client Information & Address */}
+				<div className='sb-section-card'>
+					<div className='sb-section-header'>
+						<div className='sb-section-title-wrap'>
+							<span className='sb-section-icon-badge'>
+								<UserRound size={18} />
+							</span>
+							<div>
+								<h2 className='sb-section-title'>Client Information</h2>
+								<p className='sb-section-subtitle'>Customer contact details and delivery location</p>
+							</div>
 						</div>
-						<div className='col-md-6 mb-7'>
+					</div>
+
+					<div className='row'>
+						<div className='col-md-6 mb-4'>
 							<InputField
 								label='Customer Name'
 								name='customer_name'
@@ -263,9 +290,11 @@ const SampleBookingUpdate = () => {
 								placeholder='Enter Customer Name'
 								type='text'
 								htmlFor='customer_name'
+								required
+								labelMarginRemove
 							/>
 						</div>
-						<div className='col-md-6 mb-7'>
+						<div className='col-md-6 mb-4'>
 							<InputField
 								label='Mobile Number'
 								name='mobile'
@@ -274,113 +303,143 @@ const SampleBookingUpdate = () => {
 								placeholder='Enter Mobile Number'
 								type='text'
 								htmlFor='mobile'
+								required
+								labelMarginRemove
 							/>
 						</div>
-						<div className='col-md-12 mb-7'>
-							<h4 className='fw-bold mb-5'>Address:</h4>
-							<div className='row py-5 pb-0'>
-								<SelectField
-									className='col-md-4 fv-row mb-7'
-									label='Country'
-									name='country'
-									value={formData.country}
-									onChange={handleInputChange}
-									htmlFor='country'
-									options={countries.map((country) => country.name)}
-									disabled={loadingCountries}
-								/>
-								<SelectField
-									className='col-md-4 fv-row mb-7'
-									label='State'
-									name='state'
-									value={formData.state}
-									onChange={handleInputChange}
-									htmlFor='state'
-									options={states.map((state) => state.name)}
-									disabled={loadingStates || !formData.country}
-								/>
-								<SelectField
-									className='col-md-4 fv-row mb-7'
-									label='City'
-									name='city'
-									value={formData.city}
-									onChange={handleInputChange}
-									htmlFor='city'
-									options={cities.map((city) => city.name)}
-									disabled={loadingCities || !formData.state}
-								/>
-								<InputField
-									className='col-md-8 fv-row mb-7'
-									label='Address'
-									placeholder='Enter Full Address'
-									type='text'
-									name='address'
-									htmlFor='address'
-									value={formData.address}
-									onChange={handleInputChange}
-								/>
-								<InputField
-									className='col-md-4 fv-row mb-7'
-									label='Pincode'
-									placeholder='Enter Pincode'
-									type='text'
-									name='pincode'
-									htmlFor='pincode'
-									value={formData.pincode}
-									onChange={handleInputChange}
-								/>
+					</div>
+
+					<div className='sb-subsection-divider'></div>
+
+					<div className='sb-subsection-title'>
+						<MapPin size={16} color='#172B4D' />
+						<span>Delivery Address</span>
+					</div>
+
+					<div className='row'>
+						<div className='col-md-4 mb-4'>
+							<SelectField
+								label='Country'
+								name='country'
+								value={formData.country}
+								onChange={handleInputChange}
+								htmlFor='country'
+								options={countries.map((country) => country.name)}
+								disabled={loadingCountries}
+								marginRemove
+							/>
+						</div>
+						<div className='col-md-4 mb-4'>
+							<SelectField
+								label='State'
+								name='state'
+								value={formData.state}
+								onChange={handleInputChange}
+								htmlFor='state'
+								options={states.map((state) => state.name)}
+								disabled={loadingStates || !formData.country}
+								marginRemove
+							/>
+						</div>
+						<div className='col-md-4 mb-4'>
+							<SelectField
+								label='City'
+								name='city'
+								value={formData.city}
+								onChange={handleInputChange}
+								htmlFor='city'
+								options={cities.map((city) => city.name)}
+								disabled={loadingCities || !formData.state}
+								marginRemove
+							/>
+						</div>
+					</div>
+
+					<div className='row mt-1'>
+						<div className='col-md-8 mb-4'>
+							<InputField
+								label='Address'
+								placeholder='Enter Full Address'
+								type='text'
+								name='address'
+								htmlFor='address'
+								value={formData.address}
+								onChange={handleInputChange}
+								labelMarginRemove
+							/>
+						</div>
+						<div className='col-md-4 mb-4'>
+							<InputField
+								label='Pincode'
+								placeholder='Enter Pincode'
+								type='text'
+								name='pincode'
+								htmlFor='pincode'
+								value={formData.pincode}
+								onChange={handleInputChange}
+								labelMarginRemove
+							/>
+						</div>
+					</div>
+				</div>
+
+				{/* Section 2: Order Information */}
+				<div className='sb-section-card'>
+					<div className='sb-section-header'>
+						<div className='sb-section-title-wrap'>
+							<span className='sb-section-icon-badge'>
+								<Package size={18} />
+							</span>
+							<div>
+								<h2 className='sb-section-title'>Order Information</h2>
+								<p className='sb-section-subtitle'>Shipment identifiers, products, and courier tracking details</p>
 							</div>
 						</div>
-						<div className='border-bottom w-100 my-5'></div>
-						<div className='col-md-12 mb-5'>
-							<div className='d-flex align-items-center justify-content-between mb-3'>
-								<h3 className='fw-bold mb-0'>Order Information</h3>
-								<button
-									type='button'
-									className='btn btn-sm btn-primary'
-									onClick={addProduct}>
-									+ Add Product
-								</button>
+						<button
+							type='button'
+							className='sb-add-product-btn'
+							onClick={addProduct}>
+							<Plus size={15} />
+							<span>Add Product</span>
+						</button>
+					</div>
+
+					{/* Dynamic Product Rows */}
+					<div className='mb-4'>
+						<label className='sb-form-label'>Product Name(s)</label>
+						{products.map((product, index) => (
+							<div
+								key={index}
+								className='d-flex align-items-center gap-2 mb-3'>
+								<div className='flex-grow-1'>
+									<InputField
+										showLabel={false}
+										name={`product_name_${index}`}
+										value={product.product_name}
+										onChange={(e) =>
+											handleProductChange(index, 'product_name', e.target.value)
+										}
+										placeholder={index === 0 ? 'e.g., Whey Protein 500g' : `Additional Product ${index + 1}`}
+										type='text'
+										htmlFor={`product_name_${index}`}
+										marginRemove
+									/>
+								</div>
+								{products.length > 1 && (
+									<button
+										type='button'
+										className='sb-remove-btn'
+										title='Remove product'
+										onClick={() => removeProduct(index)}>
+										<Trash2 size={16} />
+									</button>
+								)}
 							</div>
-							<div className='row'>
-								{products.map((product, index) => (
-									<div
-										key={index}
-										className={`${products.length === 1 ? 'col-md-12' : 'col-md-6'} mb-7`}>
-										<div className='d-flex align-items-end gap-3'>
-											<div className='flex-grow-1'>
-												<InputField
-													label={index === 0 || index === 1 ? 'Product Name' : ''}
-													name={`product_name_${index}`}
-													value={product.product_name}
-													onChange={(e) =>
-														handleProductChange(index, 'product_name', e.target.value)
-													}
-													placeholder='e.g., Whey Protein'
-													type='text'
-													htmlFor={`product_name_${index}`}
-													marginRemove
-												/>
-											</div>
-											<div className='d-flex gap-2'>
-												{products.length > 1 && (
-													<button
-														type='button'
-														className='btn btn-light-danger d-grid p-0'
-														style={{ height: '40px', width: '40px', placeItems: 'center' }}
-														onClick={() => removeProduct(index)}>
-														<i
-															className='bi bi-trash fs-3 m-0 p-0'
-															style={{ lineHeight: '1' }}></i>
-													</button>
-												)}
-											</div>
-										</div>
-									</div>
-								))}
-							</div>
-						</div>
-						<div className='col-md-6 mb-7'>
+						))}
+					</div>
+
+					<div className='row'>
+						<div className='col-md-6 mb-4'>
 							<InputField
 								label='AWB Number'
 								name='awb'
@@ -389,9 +448,10 @@ const SampleBookingUpdate = () => {
 								placeholder='Enter AWB Number'
 								type='text'
 								htmlFor='awb'
+								labelMarginRemove
 							/>
 						</div>
-						<div className='col-md-6 mb-7'>
+						<div className='col-md-6 mb-4'>
 							<InputField
 								label='Client Order ID'
 								name='order_id'
@@ -400,9 +460,13 @@ const SampleBookingUpdate = () => {
 								placeholder='Enter Order ID'
 								type='text'
 								htmlFor='order_id'
+								labelMarginRemove
 							/>
 						</div>
-						<div className='col-md-6 mb-7'>
+					</div>
+
+					<div className='row'>
+						<div className='col-md-6 mb-4'>
 							<InputField
 								label='Tracking ID'
 								name='tracking_id'
@@ -411,9 +475,10 @@ const SampleBookingUpdate = () => {
 								placeholder='Enter Tracking ID'
 								type='text'
 								htmlFor='tracking_id'
+								labelMarginRemove
 							/>
 						</div>
-						<div className='col-md-6 mb-7'>
+						<div className='col-md-6 mb-4'>
 							<InputField
 								label='Courier Tracking Link'
 								name='tracking_link'
@@ -422,34 +487,50 @@ const SampleBookingUpdate = () => {
 								placeholder='Enter Tracking Link'
 								type='text'
 								htmlFor='tracking_link'
+								labelMarginRemove
 							/>
 						</div>
-						<div className='col-md-12 mb-7'>
+					</div>
+
+					<div className='row'>
+						<div className='col-md-12 mb-2'>
 							<InputField
 								label='Courier Name'
 								name='courier'
 								value={formData.courier}
 								onChange={handleInputChange}
-								placeholder='e.g., Delhivery'
+								placeholder='e.g., Delhivery, BlueDart, DTDC'
 								type='text'
 								htmlFor='courier'
-							/>
-						</div>
-					</div>
-					<div className='row justify-content-end mt-5'>
-						<div className='col-md-2 mb-7'>
-							<TableButton
-								action='edit'
-								onClick={handleUpdateButtonClick}
-								text={isSubmitting ? 'Please wait...' : 'Update Booking'}
-								showIcon={false}
-								disabled={isSubmitting}
-								className={`w-90 btn-primary ${isSubmitting ? 'disabled' : ''}`}
+								labelMarginRemove
 							/>
 						</div>
 					</div>
 				</div>
-			</div>
+
+				{/* Section 3: Update Action */}
+				<div className='sb-section-card'>
+					<div className='d-flex justify-content-end align-items-center'>
+						<button
+							type='button'
+							className='sb-btn-primary'
+							onClick={handleUpdateButtonClick}
+							disabled={isSubmitting}>
+							{isSubmitting ? (
+								<>
+									<span
+										className='spinner-border spinner-border-sm me-2'
+										role='status'
+										aria-hidden='true'></span>
+									<span>Please wait...</span>
+								</>
+							) : (
+								<span>Update Booking</span>
+							)}
+						</button>
+					</div>
+				</div>
+			</form>
 		</>
 	)
 }

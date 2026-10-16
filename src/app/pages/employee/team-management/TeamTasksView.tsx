@@ -525,6 +525,13 @@ const TeamTasksView: React.FC = () => {
 									/>
 								</div>
 
+								<LengthMenu
+									expenseData={assignTaskData}
+									handleItemsPerPageChange={(pageSize) =>
+										setPagination((prev) => ({ ...prev, itemsPerPage: pageSize }))
+									}
+								/>
+
 								<div className='w-200px'>
 									<SelectField
 										className='fv-row m-0'
@@ -556,16 +563,9 @@ const TeamTasksView: React.FC = () => {
 								<div className='w-220px'>
 									<DateFilter
 										onDateRangeChange={handleDateRangeChange}
-										leftValue='-270px'
+										rightValue='0'
 									/>
 								</div>
-
-								<LengthMenu
-									expenseData={assignTaskData}
-									handleItemsPerPageChange={(pageSize) =>
-										setPagination((prev) => ({ ...prev, itemsPerPage: pageSize }))
-									}
-								/>
 							</div>
 						</div>
 					</div>

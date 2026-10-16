@@ -431,63 +431,30 @@ export const HRDashboardPage: React.FC = () => {
 						{/* 1. UPCOMING BIRTHDAYS PANEL */}
 						{(() => {
 							const todayPerson = displayBirthdays.find((b) => b.isToday)
-							// Helper: check if male / boy. Defaults to true for "Demo" and male names.
-							const isBoy = (() => {
-								if (!todayPerson) return true
-								const g = (todayPerson.gender || todayPerson.employee?.gender || '').toLowerCase()
-								if (g.includes('fem') || g.startsWith('f')) return false
-								if (g.includes('male') || g.startsWith('m')) return true
-								const n = (todayPerson.name || todayPerson.full_name || '').toLowerCase()
-								const femaleNames = ['priya', 'nisha', 'sonya', 'isha', 'pooja', 'sneha', 'neha', 'divya', 'shreya', 'shahin', 'rina', 'rita', 'anita', 'simran', 'kavita']
-								if (femaleNames.some((fn) => n.includes(fn))) return false
-								return true
-							})()
-
 							const hasToday = Boolean(todayPerson)
 
 							return (
 								<div className='col-12 col-lg-6'>
-									<div className={`gz-hr-celebration-card ${hasToday ? `is-birthday-today ${isBoy ? 'is-boy' : 'is-girl'}` : ''}`}>
+									<div className={`gz-hr-celebration-card ${hasToday ? 'is-birthday-today' : ''}`}>
 										{/* BACKGROUND CELEBRATION EFFECTS WHEN BIRTHDAY IS TODAY */}
 										{hasToday && (
 											<div className='gz-hr-birthday-bg-celebration' aria-hidden='true'>
 												<svg viewBox='0 0 500 220' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'>
 													<defs>
-														{isBoy ? (
-															<>
-																<radialGradient id='bdayGlow' cx='85%' cy='50%' r='65%'>
-																	<stop offset='0%' stopColor='#2563eb' stopOpacity='0.16' />
-																	<stop offset='45%' stopColor='#38bdf8' stopOpacity='0.12' />
-																	<stop offset='75%' stopColor='#f59e0b' stopOpacity='0.06' />
-																	<stop offset='100%' stopColor='#ffffff' stopOpacity='0' />
-																</radialGradient>
-																<linearGradient id='ribbonGrad1' x1='0' y1='0' x2='1' y2='1'>
-																	<stop offset='0%' stopColor='#2563eb' />
-																	<stop offset='100%' stopColor='#38bdf8' />
-																</linearGradient>
-																<linearGradient id='ribbonGrad2' x1='0' y1='0' x2='1' y2='1'>
-																	<stop offset='0%' stopColor='#0284c7' />
-																	<stop offset='100%' stopColor='#93c5fd' />
-																</linearGradient>
-															</>
-														) : (
-															<>
-																<radialGradient id='bdayGlow' cx='85%' cy='50%' r='65%'>
-																	<stop offset='0%' stopColor='#f43f5e' stopOpacity='0.16' />
-																	<stop offset='45%' stopColor='#fbbf24' stopOpacity='0.10' />
-																	<stop offset='75%' stopColor='#38bdf8' stopOpacity='0.05' />
-																	<stop offset='100%' stopColor='#ffffff' stopOpacity='0' />
-																</radialGradient>
-																<linearGradient id='ribbonGrad1' x1='0' y1='0' x2='1' y2='1'>
-																	<stop offset='0%' stopColor='#f43f5e' />
-																	<stop offset='100%' stopColor='#fb7185' />
-																</linearGradient>
-																<linearGradient id='ribbonGrad2' x1='0' y1='0' x2='1' y2='1'>
-																	<stop offset='0%' stopColor='#f43f5e' />
-																	<stop offset='100%' stopColor='#fda4af' />
-																</linearGradient>
-															</>
-														)}
+														<radialGradient id='bdayGlow' cx='85%' cy='50%' r='65%'>
+															<stop offset='0%' stopColor='#2563eb' stopOpacity='0.16' />
+															<stop offset='45%' stopColor='#38bdf8' stopOpacity='0.12' />
+															<stop offset='75%' stopColor='#f59e0b' stopOpacity='0.06' />
+															<stop offset='100%' stopColor='#ffffff' stopOpacity='0' />
+														</radialGradient>
+														<linearGradient id='ribbonGrad1' x1='0' y1='0' x2='1' y2='1'>
+															<stop offset='0%' stopColor='#2563eb' />
+															<stop offset='100%' stopColor='#38bdf8' />
+														</linearGradient>
+														<linearGradient id='ribbonGrad2' x1='0' y1='0' x2='1' y2='1'>
+															<stop offset='0%' stopColor='#0284c7' />
+															<stop offset='100%' stopColor='#93c5fd' />
+														</linearGradient>
 														<linearGradient id='goldRibbon' x1='0' y1='0' x2='1' y2='1'>
 															<stop offset='0%' stopColor='#f59e0b' />
 															<stop offset='100%' stopColor='#fde68a' />
@@ -502,28 +469,14 @@ export const HRDashboardPage: React.FC = () => {
 													<path d='M180 30 Q260 80 320 40 T440 70' stroke='url(#ribbonGrad2)' strokeWidth='2.5' fill='none' strokeDasharray='5 3' opacity='0.45' />
 													<path d='M360 190 Q410 140 450 180 T490 150' stroke='url(#goldRibbon)' strokeWidth='3' fill='none' opacity='0.5' />
 
-													{/* Confetti pieces in Boy (Blue/Gold) or Girl (Pink/Gold) Palette */}
-													{isBoy ? (
-														<>
-															<rect x='60' y='45' width='7' height='7' fill='#2563eb' opacity='0.65' transform='rotate(25 63 48)' className='gz-hr-confetti-float' />
-															<rect x='190' y='140' width='6' height='6' fill='#38bdf8' opacity='0.55' transform='rotate(45 193 143)' />
-															<rect x='340' y='70' width='8' height='8' fill='#0284c7' opacity='0.6' transform='rotate(15 344 74)' className='gz-hr-confetti-float' />
-															<circle cx='110' cy='110' r='3.5' fill='#2563eb' opacity='0.55' />
-															<circle cx='280' cy='55' r='4' fill='#38bdf8' opacity='0.65' className='gz-hr-confetti-float' />
-															<rect x='220' y='175' width='10' height='4' rx='2' fill='#0284c7' opacity='0.5' transform='rotate(-20 225 177)' />
-															<circle cx='460' cy='95' r='3.5' fill='#38bdf8' opacity='0.55' />
-														</>
-													) : (
-														<>
-															<rect x='60' y='45' width='7' height='7' fill='#f43f5e' opacity='0.65' transform='rotate(25 63 48)' className='gz-hr-confetti-float' />
-															<rect x='190' y='140' width='6' height='6' fill='#fb7185' opacity='0.55' transform='rotate(45 193 143)' />
-															<rect x='340' y='70' width='8' height='8' fill='#f43f5e' opacity='0.6' transform='rotate(15 344 74)' className='gz-hr-confetti-float' />
-															<circle cx='110' cy='110' r='3.5' fill='#f43f5e' opacity='0.55' />
-															<circle cx='280' cy='55' r='4' fill='#fb7185' opacity='0.65' className='gz-hr-confetti-float' />
-															<rect x='220' y='175' width='10' height='4' rx='2' fill='#fb7185' opacity='0.5' transform='rotate(-20 225 177)' />
-															<circle cx='460' cy='95' r='3.5' fill='#fb7185' opacity='0.55' />
-														</>
-													)}
+													{/* Confetti pieces in Festive Palette */}
+													<rect x='60' y='45' width='7' height='7' fill='#2563eb' opacity='0.65' transform='rotate(25 63 48)' className='gz-hr-confetti-float' />
+													<rect x='190' y='140' width='6' height='6' fill='#38bdf8' opacity='0.55' transform='rotate(45 193 143)' />
+													<rect x='340' y='70' width='8' height='8' fill='#0284c7' opacity='0.6' transform='rotate(15 344 74)' className='gz-hr-confetti-float' />
+													<circle cx='110' cy='110' r='3.5' fill='#2563eb' opacity='0.55' />
+													<circle cx='280' cy='55' r='4' fill='#38bdf8' opacity='0.65' className='gz-hr-confetti-float' />
+													<rect x='220' y='175' width='10' height='4' rx='2' fill='#0284c7' opacity='0.5' transform='rotate(-20 225 177)' />
+													<circle cx='460' cy='95' r='3.5' fill='#38bdf8' opacity='0.55' />
 
 													{/* Gold Stars & Sparkles */}
 													<path d='M80 85 L82 89 L86 91 L82 93 L80 97 L78 93 L74 91 L78 89 Z' fill='#f59e0b' opacity='0.75' />
@@ -544,7 +497,7 @@ export const HRDashboardPage: React.FC = () => {
 												<h3>
 													<span style={{ fontSize: '18px' }}>🎂</span> Upcoming Birthdays
 													{hasToday && (
-														<span className={`badge ${isBoy ? 'badge-light-primary text-primary' : 'badge-light-danger text-danger'} fw-bold fs-9 py-1 px-2 ms-2`}>
+														<span className='badge badge-light-primary text-primary fw-bold fs-9 py-1 px-2 ms-2'>
 															<i className='bi bi-stars me-1'></i>Celebration Today!
 														</span>
 													)}
@@ -584,7 +537,7 @@ export const HRDashboardPage: React.FC = () => {
 																		}}
 																	/>
 																) : (
-																	<span className={`symbol-label fw-bold fs-6 ${isBoy ? 'bg-light-primary text-primary' : 'bg-light-danger text-danger'}`}>
+																	<span className='symbol-label fw-bold fs-6 bg-light-primary text-primary'>
 																		{emp.name?.charAt(0)}
 																	</span>
 																)}
@@ -598,7 +551,7 @@ export const HRDashboardPage: React.FC = () => {
 															<span
 																className={`badge py-0 px-2 fs-10 fw-bold ${
 																	emp.isToday
-																		? isBoy ? 'badge-light-primary text-primary' : 'badge-light-danger'
+																		? 'badge-light-primary text-primary'
 																		: 'badge-light text-muted'
 																}`}>
 																{emp.dateStr}
@@ -620,34 +573,34 @@ export const HRDashboardPage: React.FC = () => {
 												</div>
 											)}
 
-											{/* Right: Birthday Cake Vector (Theme: Blue for Boy / Pink for Girl) */}
+											{/* Right: Birthday Cake Vector (Gender-neutral Celebration) */}
 											<div className='text-center flex-shrink-0 ps-2'>
 												<svg width='110' height='90' viewBox='0 0 110 90' fill='none' xmlns='http://www.w3.org/2000/svg' className='gz-hr-cake-anim'>
 													{/* Sparkles / Confetti */}
-													<circle cx='18' cy='22' r='2.5' fill={isBoy ? '#38bdf8' : '#fb7185'} />
-													<circle cx='92' cy='20' r='2' fill={isBoy ? '#2563eb' : '#38bdf8'} />
+													<circle cx='18' cy='22' r='2.5' fill='#38bdf8' />
+													<circle cx='92' cy='20' r='2' fill='#2563eb' />
 													<circle cx='14' cy='48' r='2' fill='#fbbf24' />
-													<circle cx='96' cy='46' r='2.5' fill={isBoy ? '#10b981' : '#a855f7'} />
+													<circle cx='96' cy='46' r='2.5' fill='#10b981' />
 
 													{/* Cake Plate */}
-													<ellipse cx='55' cy='80' rx='42' ry='7' fill={isBoy ? '#2563eb' : '#f43f5e'} />
+													<ellipse cx='55' cy='80' rx='42' ry='7' fill='#1e3a5f' />
 
 													{/* Bottom Tier */}
-													<path d='M25 60 C25 56 30 52 55 52 C80 52 85 56 85 60 L85 75 C85 78 72 80 55 80 C38 80 25 78 25 75 Z' fill={isBoy ? '#93c5fd' : '#fda4af'} />
-													<path d='M25 60 C28 65 34 65 38 60 C42 65 48 65 52 60 C56 65 62 65 66 60 C70 65 76 65 80 60 C84 65 85 62 85 60' stroke={isBoy ? '#2563eb' : '#f43f5e'} strokeWidth='2' fill='none' />
+													<path d='M25 60 C25 56 30 52 55 52 C80 52 85 56 85 60 L85 75 C85 78 72 80 55 80 C38 80 25 78 25 75 Z' fill='#93c5fd' />
+													<path d='M25 60 C28 65 34 65 38 60 C42 65 48 65 52 60 C56 65 62 65 66 60 C70 65 76 65 80 60 C84 65 85 62 85 60' stroke='#2563eb' strokeWidth='2' fill='none' />
 
 													{/* Top Tier */}
-													<path d='M34 42 C34 38 38 35 55 35 C72 35 76 38 76 42 L76 56 C76 59 66 60 55 60 C44 60 34 59 34 56 Z' fill={isBoy ? '#e0f2fe' : '#ffe4e6'} />
+													<path d='M34 42 C34 38 38 35 55 35 C72 35 76 38 76 42 L76 56 C76 59 66 60 55 60 C44 60 34 59 34 56 Z' fill='#e0f2fe' />
 
 													{/* Candles */}
 													<rect x='44' y='22' width='3' height='13' fill='#38bdf8' rx='1' />
 													<rect x='54' y='18' width='3' height='17' fill='#fbbf24' rx='1' />
-													<rect x='64' y='22' width='3' height='13' fill={isBoy ? '#2563eb' : '#fb7185'} rx='1' />
+													<rect x='64' y='22' width='3' height='13' fill='#818cf8' rx='1' />
 
-													{/* Flames */}
-													<path d='M45.5 17 Q47 20 45.5 22 Q44 20 45.5 17' fill='#f97316' />
-													<path d='M55.5 13 Q57 16 55.5 18 Q54 16 55.5 13' fill='#f97316' />
-													<path d='M65.5 17 Q67 20 65.5 22 Q64 20 65.5 17' fill='#f97316' />
+													{/* Flames with gentle warm flicker that settles static */}
+													<path d='M45.5 17 Q47 20 45.5 22 Q44 20 45.5 17' fill='#f97316' className='gz-candle-flame-flicker' />
+													<path d='M55.5 13 Q57 16 55.5 18 Q54 16 55.5 13' fill='#f97316' className='gz-candle-flame-flicker' style={{ animationDelay: '0.15s' }} />
+													<path d='M65.5 17 Q67 20 65.5 22 Q64 20 65.5 17' fill='#f97316' className='gz-candle-flame-flicker' style={{ animationDelay: '0.3s' }} />
 												</svg>
 												<span
 													className='d-block fs-8 fw-bold text-dark'
@@ -856,7 +809,7 @@ export const HRDashboardPage: React.FC = () => {
 											)}
 
 											{/* Right: Golden Trophy Vector with Streamers */}
-											<div className='text-center flex-shrink-0 ps-2'>
+											<div className='text-center flex-shrink-0 ps-2' style={{ position: 'relative', overflow: 'hidden' }}>
 												<svg width='110' height='90' viewBox='0 0 110 90' fill='none' xmlns='http://www.w3.org/2000/svg' className='gz-hr-trophy-anim'>
 													{/* Ribbon Streamers / Confetti */}
 													<circle cx='20' cy='20' r='2.5' fill='#f59e0b' />
@@ -871,6 +824,11 @@ export const HRDashboardPage: React.FC = () => {
 													{/* Trophy Cup */}
 													<path d='M38 24 L72 24 C72 44 65 52 55 52 C45 52 38 44 38 24 Z' fill='#f59e0b' />
 													<path d='M42 27 L68 27 C68 42 63 48 55 48 C47 48 42 42 42 27 Z' fill='#fbbf24' />
+
+													{/* Light glint running once across trophy cup */}
+													<g className='gz-trophy-glint-bar'>
+														<rect x='32' y='20' width='8' height='36' fill='#ffffff' opacity='0.55' rx='2' />
+													</g>
 
 													{/* Handles */}
 													<path d='M38 28 C28 28 26 40 38 43' stroke='#f59e0b' strokeWidth='3.5' fill='none' strokeLinecap='round' />

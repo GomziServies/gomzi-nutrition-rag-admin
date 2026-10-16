@@ -215,39 +215,19 @@ const EmployeeExpenseReportsList: React.FC = () => {
 
 			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
 				{/* Modern Header */}
-				<div className='card-header border-0 pt-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
-					<div>
-						<div className='d-flex align-items-center gap-2'>
-							<h2 className='fw-bolder text-gray-900 mb-0'>My Expense Reports</h2>
-							<span className='badge badge-light-primary fw-bold fs-8'>
-								{metaData?.totalDocs || expenseReports.length} records
+				<div className='card-header border-0 pt-6 d-flex flex-column gap-4'>
+					{/* Header Top: Title & Right Create Button */}
+					<div className='d-flex align-items-center justify-content-between flex-wrap gap-3 w-100'>
+						<div>
+							<div className='d-flex align-items-center gap-2'>
+								<h2 className='fw-bolder text-gray-900 mb-0'>My Expense Reports</h2>
+								<span className='badge badge-light-primary fw-bold fs-8'>
+									{metaData?.totalDocs || expenseReports.length} records
+								</span>
+							</div>
+							<span className='text-muted fs-7 fw-semibold mt-1'>
+								Submit expense claims, track reimbursement approvals, and review disbursements
 							</span>
-						</div>
-						<span className='text-muted fs-7 fw-semibold mt-1'>
-							Submit expense claims, track reimbursement approvals, and review disbursements
-						</span>
-					</div>
-
-					<div className='d-flex align-items-center flex-wrap gap-3'>
-						<LengthMenu
-							expenseData={expenseReports}
-							handleItemsPerPageChange={(val) =>
-								setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))
-							}
-						/>
-
-						<DateFilter
-							onDateRangeChange={handleDateRangeChange}
-							leftValue='-270px'
-							storageKey='emp_expense_report_selectedDateRange'
-						/>
-
-						<div style={{ minWidth: '220px' }}>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-								placeholder='Search expense reports...'
-							/>
 						</div>
 
 						<button
@@ -258,6 +238,30 @@ const EmployeeExpenseReportsList: React.FC = () => {
 							<i className='bi bi-plus-lg fs-6'></i>
 							<span>Create Report</span>
 						</button>
+					</div>
+
+					{/* Header Bottom: Filter Bar */}
+					<div className='d-flex align-items-center flex-wrap gap-3 w-100 pb-2'>
+						<div style={{ minWidth: '220px' }}>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								placeholder='Search expense reports...'
+							/>
+						</div>
+
+						<LengthMenu
+							expenseData={expenseReports}
+							handleItemsPerPageChange={(val) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))
+							}
+						/>
+
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							storageKey='emp_expense_report_selectedDateRange'
+						/>
 					</div>
 				</div>
 

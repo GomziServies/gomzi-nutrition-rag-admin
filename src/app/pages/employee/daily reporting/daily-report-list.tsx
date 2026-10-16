@@ -83,6 +83,7 @@ const DailyReportList: React.FC = () => {
 		remark: '',
 		files: [],
 	})
+	const [isDragging, setIsDragging] = useState(false)
 
 	// Add state for URLs
 	const [urls, setUrls] = useState<Array<{ url_type: string; link: string }>>([])
@@ -304,15 +305,44 @@ const DailyReportList: React.FC = () => {
 		setSubmitLoading(false)
 	}
 
+	const handleFilesAdded = (addedFiles: File[]) => {
+		if (!addedFiles || addedFiles.length === 0) return
+		setTaskFormData((prevState) => ({
+			...prevState,
+			files: [...prevState.files, ...addedFiles],
+		}))
+	}
+
+	const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+		e.preventDefault()
+		e.stopPropagation()
+		setIsDragging(false)
+		if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+			handleFilesAdded(Array.from(e.dataTransfer.files))
+		}
+	}
+
+	const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+		e.preventDefault()
+		e.stopPropagation()
+		if (!isDragging) setIsDragging(true)
+	}
+
+	const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+		e.preventDefault()
+		e.stopPropagation()
+		setIsDragging(false)
+	}
+
 	const handleInputTask = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value, files } = e.target
 
 		if (name === 'file' && files) {
 			const selectedFiles = Array.from(files)
-			setTaskFormData((prevState) => ({
-				...prevState,
-				files: selectedFiles,
-			}))
+			handleFilesAdded(selectedFiles)
+			if (fileInputRef.current) {
+				fileInputRef.current.value = ''
+			}
 		} else {
 			setTaskFormData((prevState) => ({
 				...prevState,
@@ -951,37 +981,112 @@ const DailyReportList: React.FC = () => {
 						</Form.Group>
 
 						<Form.Group controlId='file' className='mb-4'>
-							<Form.Label className='fw-bold text-gray-700 fs-7'>File Upload (Optional)</Form.Label>
-							<Form.Control
+							<Form.Label className='fw-bold text-gray-800 fs-7 mb-2'>
+								File Upload / Image Attachments
+							</Form.Label>
+							
+							{/* Hidden File Input */}
+							<input
 								type='file'
 								name='file'
 								onChange={handleInputTask}
 								multiple
 								ref={fileInputRef}
-								style={{ borderRadius: '8px' }}
+								style={{ display: 'none' }}
+								accept='.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.csv'
 							/>
-							<small className='text-muted mt-1 d-block fs-8'>
-								Upload only <strong>images (jpg, png)</strong> or <strong>PDF/docs/sheets</strong>.
-							</small>
+
+							{/* Drag & Drop Upload Zone (Matching Image 2) */}
+							<div
+								className={`gz-drag-dropzone ${isDragging ? 'is-dragging' : ''}`}
+								onDragOver={handleDragOver}
+								onDragEnter={handleDragOver}
+								onDragLeave={handleDragLeave}
+								onDrop={handleDrop}
+								onClick={() => fileInputRef.current?.click()}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault()
+										fileInputRef.current?.click()
+									}
+								}}
+								role='button'
+								tabIndex={0}
+							>
+								<div className='gz-dropzone-icon-box'>
+									<i className='bi bi-cloud-arrow-up fs-2'></i>
+								</div>
+								<div className='gz-dropzone-text'>
+									Drag &amp; drop images or files here, or <span className='gz-browse-link'>browse</span>
+								</div>
+								<div className='gz-dropzone-hint'>
+									Supports JPG, PNG, WebP, PDF, Excel, Word (Multiple files allowed)
+								</div>
+							</div>
+
+							{/* Selected Files Badge List */}
 							{taskFormData.files.length > 0 && (
 								<div className='mt-3'>
-									<p className='fs-8 fw-bold text-gray-700 mb-2'>Selected Files ({taskFormData.files.length}):</p>
+									<div className='d-flex align-items-center justify-content-between mb-2'>
+										<span className='fs-8 fw-bold text-gray-700'>
+											Selected Attachments ({taskFormData.files.length}):
+										</span>
+										<button
+											type='button'
+											className='btn btn-link btn-color-danger p-0 fs-8 fw-semibold text-decoration-none'
+											onClick={() => {
+												setTaskFormData((prev) => ({ ...prev, files: [] }))
+												if (fileInputRef.current) fileInputRef.current.value = ''
+											}}
+										>
+											Clear all
+										</button>
+									</div>
 									<div className='d-flex flex-wrap gap-2'>
-										{taskFormData.files.map((file, index) => (
-											<div key={index} className='d-flex align-items-center bg-light border rounded px-3 py-1 gap-2'>
-												<i className='bi bi-file-earmark-check text-primary'></i>
-												<span className='fs-8 fw-semibold text-gray-800' style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-													{file.name}
-												</span>
-												<button
-													type='button'
-													className='btn btn-icon btn-xs btn-light-danger p-0'
-													style={{ width: '20px', height: '20px', borderRadius: '4px' }}
-													onClick={() => removeFile(index)}>
-													<i className='bi bi-x fs-7'></i>
-												</button>
-											</div>
-										))}
+										{taskFormData.files.map((file, index) => {
+											const isImg = file.type.startsWith('image/')
+											const sizeKb = Math.round(file.size / 1024)
+											return (
+												<div
+													key={index}
+													className='d-flex align-items-center bg-white border border-gray-300 rounded-3 px-3 py-2 gap-2 shadow-xs'
+													style={{ maxWidth: '260px' }}
+												>
+													<div
+														className='d-flex align-items-center justify-content-center rounded-2'
+														style={{
+															width: '28px',
+															height: '28px',
+															background: isImg ? '#EFF6FF' : '#FEF3C7',
+															color: isImg ? '#2563EB' : '#D97706',
+															flexShrink: 0,
+														}}
+													>
+														<i className={`bi ${isImg ? 'bi-image' : 'bi-file-earmark-text'} fs-7`}></i>
+													</div>
+													<div className='d-flex flex-column text-truncate' style={{ minWidth: 0, flex: 1 }}>
+														<span className='fs-8 fw-semibold text-gray-800 text-truncate' title={file.name}>
+															{file.name}
+														</span>
+														<span className='fs-9 text-muted'>
+															{sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`}
+														</span>
+													</div>
+													<button
+														type='button'
+														className='btn btn-icon btn-xs btn-light-danger p-0 ms-1'
+														style={{ width: '22px', height: '22px', borderRadius: '6px' }}
+														onClick={(e) => {
+															e.stopPropagation()
+															removeFile(index)
+														}}
+														title='Remove'
+													>
+														<i className='bi bi-x fs-6'></i>
+													</button>
+												</div>
+											)
+										})}
 									</div>
 								</div>
 							)}

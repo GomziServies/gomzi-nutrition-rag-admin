@@ -28,7 +28,18 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 	badge,
 }) => {
 	const { pathname } = useLocation()
-	const isActive = isActiveOverride !== undefined ? isActiveOverride : checkIsActive(pathname, to)
+	const cleanPath = pathname.split(/[?#]/)[0]
+	const isExact = cleanPath === to
+	const isSub = Boolean(
+		to &&
+		to !== '/' &&
+		to !== '/rag' &&
+		cleanPath.startsWith(to + '/') &&
+		!cleanPath.endsWith('/add-user') &&
+		!cleanPath.endsWith('/create') &&
+		!cleanPath.endsWith('/reference')
+	)
+	const isActive = isActiveOverride !== undefined ? isActiveOverride : (isExact || isSub)
 
 	const isEmployeeLogin = localStorage.getItem('is_employee_login') === 'true'
 	const currentPanel = localStorage.getItem('admin')
@@ -64,39 +75,47 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 
 	const tipId = `aside-tip-${(to || title).replace(/[^a-zA-Z0-9_-]/g, '')}`
 
+	const linkContent = (
+		<Link
+			className={clsx('menu-link without-sub', { active: isActive })}
+			to={to}>
+			{hasBullet && (
+				<span className='menu-bullet'>
+					<span className='bullet bullet-dot'></span>
+				</span>
+			)}
+			{Icon && (
+				<span className='menu-icon'>
+					<FontAwesomeIcon
+						icon={Icon as any}
+						className='fs-2'
+					/>
+				</span>
+			)}
+			{fontIcon && <i className={clsx('bi fs-3', fontIcon)}></i>}
+			<span className='menu-title'>{title}</span>
+			{badge !== undefined && badge !== null && (
+				<span className='gz-menu-badge'>{badge}</span>
+			)}
+		</Link>
+	)
+
 	return (
 		<div className='menu-item'>
-			<OverlayTrigger
-				placement='right'
-				delay={{ show: 120, hide: 50 }}
-				overlay={
-					<Tooltip id={tipId} className='gz-aside-tooltip'>
-						{title}
-					</Tooltip>
-				}>
-				<Link
-					className={clsx('menu-link without-sub', { active: isActive })}
-					to={to}>
-					{hasBullet && (
-						<span className='menu-bullet'>
-							<span className='bullet bullet-dot'></span>
-						</span>
-					)}
-					{Icon && (
-						<span className='menu-icon'>
-							<FontAwesomeIcon
-								icon={Icon as any}
-								className='fs-2'
-							/>
-						</span>
-					)}
-					{fontIcon && <i className={clsx('bi fs-3', fontIcon)}></i>}
-					<span className='menu-title'>{title}</span>
-					{badge !== undefined && badge !== null && (
-						<span className='gz-menu-badge'>{badge}</span>
-					)}
-				</Link>
-			</OverlayTrigger>
+			{hasBullet ? (
+				linkContent
+			) : (
+				<OverlayTrigger
+					placement='right'
+					delay={{ show: 120, hide: 50 }}
+					overlay={
+						<Tooltip id={tipId} className='gz-aside-tooltip'>
+							{title}
+						</Tooltip>
+					}>
+					{linkContent}
+				</OverlayTrigger>
+			)}
 			{children}
 		</div>
 	)

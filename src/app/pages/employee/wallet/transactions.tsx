@@ -442,6 +442,10 @@ export const Transactions: React.FC = () => {
 										setSearchTerm={setSearchTerm}
 									/>
 								</div>
+								<LengthMenu
+									expenseData={filteredTransactions}
+									handleItemsPerPageChange={handleItemsPerPageChange}
+								/>
 								<button
 									className='btn btn-light-info btn-icon rounded-circle'
 									style={{ width: '38px', height: '38px' }}
@@ -453,10 +457,6 @@ export const Transactions: React.FC = () => {
 										className='fs-4'
 									/>
 								</button>
-								<LengthMenu
-									expenseData={filteredTransactions}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-								/>
 								<div className='w-160px'>
 									<select
 										className='form-select form-select-solid'

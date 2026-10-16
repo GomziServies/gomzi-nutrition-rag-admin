@@ -1,18 +1,25 @@
-import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import {
+	faBox,
+	faCheckCircle,
+	faClock,
+	faDownload,
+	faEye,
+	faExternalLinkAlt,
+	faTruck,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import * as XLSX from 'xlsx'
-import { KTCard, toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import NumberTicker from '../../../components/NumberTicker'
 import SearchFilter from '../../../components/SearchFilter'
-import SelectField from '../../../components/SelectField'
-import Table from '../../../components/Table'
-import TableButton from '../../../components/TableButton'
-import UsersListPagination from '../../../components/TablePagination'
+import GomziTablePagination from '../../../components/GomziTablePagination'
 import { GetOrders } from '../../../Functions/FGGroup'
+import '../products-theme.css'
 
 const ProductOrder: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -23,10 +30,9 @@ const ProductOrder: React.FC = () => {
 	})
 	const [orderData, setOrderData] = useState<any[]>([])
 	const [metaData, setMetaData] = useState<any>()
-	const [sort, setSort] = useState('createdAt')
-	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
+	const [sort] = useState('createdAt')
 	const [loading, setLoading] = useState(false)
-	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
+	const [sortOrder] = useState<QuerySortOptions>('desc')
 	const [pagination, setPagination] = useState({
 		page: 1,
 		itemsPerPage: 10,
@@ -114,11 +120,6 @@ const ProductOrder: React.FC = () => {
 		setPagination({ page: 1, itemsPerPage: value })
 	}
 
-	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
-		setSort(newSort)
-		setSortOrder(newSortOrder)
-	}
-
 	const getOrderItemsList = (order: any): { name: string }[] => {
 		let items: { name: string }[] = []
 		switch (order?.order_item_type) {
@@ -176,52 +177,66 @@ const ProductOrder: React.FC = () => {
 				(tracking: { shipment_status: string; status: boolean }) =>
 					tracking.status && tracking.shipment_status === 'PLACED'
 			)?.shipment_status ||
-			'No Status Available'
+			'PLACED'
 		)
 	}
 
 	// Filter by search (user, receipt id, item) and shipment status
-	const filteredOrderData = orderData.filter((order: any) => {
-		// 1. Status Filter
-		if (shipmentStatus) {
-			const currentShipmentStatus = getShipmentStatus(order)
-			const matchesStatus =
-				order?.order_status === shipmentStatus ||
-				currentShipmentStatus === shipmentStatus
-			if (!matchesStatus) return false
-		}
+	const filteredOrderData = useMemo(() => {
+		return orderData.filter((order: any) => {
+			if (shipmentStatus) {
+				const currentShipmentStatus = getShipmentStatus(order)
+				const matchesStatus =
+					order?.order_status === shipmentStatus ||
+					currentShipmentStatus === shipmentStatus
+				if (!matchesStatus) return false
+			}
 
-		// 2. Search Filter (user, receipt ID, item)
-		if (!searchTerm || !searchTerm.trim()) return true
-		const term = searchTerm.toLowerCase().trim()
+			if (!searchTerm || !searchTerm.trim()) return true
+			const term = searchTerm.toLowerCase().trim()
 
-		// User details
-		const firstName = order?.user_info?.first_name || ''
-		const lastName = order?.user_info?.last_name || ''
-		const fullName = `${firstName} ${lastName}`.toLowerCase()
-		const mobile = (order?.user_info?.mobile || '').toString().toLowerCase()
-		const email = (order?.user_info?.email || '').toLowerCase()
-		const userId = (order?.user_info?.user_id || '').toLowerCase()
-		const userMatch =
-			fullName.includes(term) ||
-			firstName.toLowerCase().includes(term) ||
-			lastName.toLowerCase().includes(term) ||
-			mobile.includes(term) ||
-			email.includes(term) ||
-			userId.includes(term)
+			const firstName = order?.user_info?.first_name || ''
+			const lastName = order?.user_info?.last_name || ''
+			const fullName = `${firstName} ${lastName}`.toLowerCase()
+			const mobile = (order?.user_info?.mobile || '').toString().toLowerCase()
+			const email = (order?.user_info?.email || '').toLowerCase()
+			const userId = (order?.user_info?.user_id || '').toLowerCase()
+			const userMatch =
+				fullName.includes(term) ||
+				firstName.toLowerCase().includes(term) ||
+				lastName.toLowerCase().includes(term) ||
+				mobile.includes(term) ||
+				email.includes(term) ||
+				userId.includes(term)
 
-		// Receipt ID
-		const receiptId = (order?.receipt_id || '').toString().toLowerCase()
-		const gatewayId = (order?.gateway_order_id || '').toString().toLowerCase()
-		const receiptMatch = receiptId.includes(term) || gatewayId.includes(term)
+			const receiptId = (order?.receipt_id || '').toString().toLowerCase()
+			const gatewayId = (order?.gateway_order_id || '').toString().toLowerCase()
+			const receiptMatch = receiptId.includes(term) || gatewayId.includes(term)
 
-		// Items
-		const items = getOrderItemsList(order)
-		const itemNamesText = items.map((i) => i.name).join(' ').toLowerCase()
-		const itemMatch = itemNamesText.includes(term)
+			const items = getOrderItemsList(order)
+			const itemNamesText = items.map((i) => i.name).join(' ').toLowerCase()
+			const itemMatch = itemNamesText.includes(term)
 
-		return userMatch || receiptMatch || itemMatch
-	})
+			return userMatch || receiptMatch || itemMatch
+		})
+	}, [orderData, shipmentStatus, searchTerm])
+
+	// Derived metrics for summary cards
+	const metrics = useMemo(() => {
+		const total = metaData?.totalRecords || orderData.length
+		let placed = 0
+		let dispatched = 0
+		let delivered = 0
+
+		orderData.forEach((order) => {
+			const status = getShipmentStatus(order)
+			if (status === 'DELIVERED') delivered++
+			else if (status === 'DISPATCHED') dispatched++
+			else placed++
+		})
+
+		return { total, placed, dispatched, delivered }
+	}, [orderData, metaData])
 
 	const downloadExcel = () => {
 		const worksheetData = filteredOrderData.map((order: any, idx: number) => {
@@ -248,247 +263,327 @@ const ProductOrder: React.FC = () => {
 		XLSX.writeFile(workbook, `Product_Orders_${DayJS().format('YYYY-MM-DD')}.xlsx`)
 	}
 
-	const orderStatusOption = [
-		{ label: 'All Status', value: '' },
-		{ label: 'Placed', value: 'PLACED' },
-		{ label: 'Dispatched', value: 'DISPATCHED' },
-		{ label: 'Delivered', value: 'DELIVERED' },
-		{ label: 'Cancelled', value: 'CANCELLED' },
-		{ label: 'Return', value: 'RETURN' },
-	]
+	const getInitials = (first?: string, last?: string) => {
+		const f = (first || '').trim().charAt(0).toUpperCase()
+		const l = (last || '').trim().charAt(0).toUpperCase()
+		return f || l ? `${f}${l}` : 'U'
+	}
 
-	const sortableFields = [
-		{ title: 'User', field: 'user_info' },
-		{ title: 'Receipt ID', field: 'receipt_id' },
-		{ title: 'Items with Quantity', field: 'items' },
-		{ title: 'Total Price', field: 'total_price' },
-		{ title: 'Purchased On', field: 'createdAt' },
-		{ title: 'Shipment Status', field: 'order_status' },
-	]
-
-	const handleRowClick = (id: string) => {
-		if (window.innerWidth <= 1024) {
-			setVisibleDetails(visibleDetails === id ? null : id)
+	const renderStatusBadge = (status: string) => {
+		const s = status.toUpperCase()
+		if (s === 'DELIVERED') {
+			return <span className='gz-prod-badge delivered'>Delivered</span>
 		}
+		if (s === 'DISPATCHED') {
+			return <span className='gz-prod-badge dispatched'>Dispatched</span>
+		}
+		if (s === 'CANCELLED' || s === 'RETURN') {
+			return <span className='gz-prod-badge cancelled'>{s === 'CANCELLED' ? 'Cancelled' : 'Returned'}</span>
+		}
+		return <span className='gz-prod-badge placed'>{status || 'Placed'}</span>
 	}
 
 	return (
-		<>
-			<PageTitle breadcrumbs={[]}>User Product Order</PageTitle>
-			<KTCard>
-				{/* Filters Toolbar Row: Search, Dropdown (show entries), Excel, Status, DateFilter */}
-				<div className='card-header border-0 pt-6 px-6'>
-					<div className='d-flex flex-wrap align-items-center gap-3 w-100'>
-						{/* 1. Search Filter */}
-						<div>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-								className='me-0'
-							/>
-						</div>
+		<div className='gz-prod-container'>
+			<PageTitle breadcrumbs={[]}>Product Orders</PageTitle>
 
-						{/* 2. Entries per page dropdown */}
-						<div>
-							<LengthMenu
-								expenseData={filteredOrderData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-								className='me-0'
-							/>
-						</div>
+			{/* Breadcrumb */}
+			<div className='gz-prod-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<span>Products & Orders</span>
+				<span className='sep'>/</span>
+				<span className='current'>Product Orders</span>
+			</div>
 
-						{/* 3. Download Excel Button */}
-						<div>
-							<button
-								type='button'
-								className='btn btn-primary d-flex align-items-center justify-content-center'
-								style={{
-									width: '38px',
-									height: '38px',
-									padding: 0,
-									borderRadius: '8px',
-									fontSize: '14px',
-								}}
-								onClick={downloadExcel}
-								disabled={loading || filteredOrderData.length === 0}
-								title='Download Excel'>
-								<FontAwesomeIcon icon={faDownload} />
-							</button>
-						</div>
+			{/* Page Header */}
+			<div className='gz-prod-header'>
+				<div>
+					<h1 className='gz-prod-title'>Product Orders</h1>
+					<p className='gz-prod-subtitle'>View and manage customer orders.</p>
+				</div>
+			</div>
 
-						{/* 4. Status Filter */}
-						<div style={{ minWidth: '170px' }}>
-							<SelectField
-								showLabel={false}
-								marginRemove
-								name='shipmentStatus'
-								value={shipmentStatus}
-								onChange={(e) => {
-									setShipmentStatus(e.target.value)
-									setPagination((prev) => ({ ...prev, page: 1 }))
-								}}
-								options={orderStatusOption}
-								searchable={false}
-								hideDefaultOption={true}
-							/>
-						</div>
-
-						{/* 5. Date Filter */}
-						<div className='d-flex align-items-center'>
-							<DateFilter
-								onDateRangeChange={handleDateRangeChange}
-								rightValue='0'
-							/>
+			{/* Summary KPI Cards */}
+			<div className='gz-prod-summary-grid'>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-icon icon-blue'>
+						<FontAwesomeIcon icon={faBox} />
+					</div>
+					<div className='gz-prod-summary-content'>
+						<div className='gz-prod-summary-label'>Total Orders</div>
+						<div className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '48px', height: '24px' }} />
+							) : (
+								<NumberTicker value={metrics.total} />
+							)}
 						</div>
 					</div>
 				</div>
 
-				{/* Table Data */}
-				<div className='py-4 card-body'>
-					<div className='table-responsive'>
-						<Table
-							data={filteredOrderData}
-							columns={sortableFields}
-							sort={sort}
-							sortOrder={sortOrder}
-							onSortChange={handleSortChange}
-							renderRow={(order: any, index: number, actualIndex: number, isVisible: boolean) => {
-								const items = getOrderItemsList(order)
-								const shipment_status = getShipmentStatus(order)
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-icon icon-amber'>
+						<FontAwesomeIcon icon={faClock} />
+					</div>
+					<div className='gz-prod-summary-content'>
+						<div className='gz-prod-summary-label'>Placed / Pending</div>
+						<div className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '48px', height: '24px' }} />
+							) : (
+								<NumberTicker value={metrics.placed} />
+							)}
+						</div>
+					</div>
+				</div>
 
-								return (
-									<React.Fragment key={order?._id}>
-										<tr
-											onClick={() => handleRowClick(order?._id)}
-											className='data-row'>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-icon icon-blue'>
+						<FontAwesomeIcon icon={faTruck} />
+					</div>
+					<div className='gz-prod-summary-content'>
+						<div className='gz-prod-summary-label'>Dispatched</div>
+						<div className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '48px', height: '24px' }} />
+							) : (
+								<NumberTicker value={metrics.dispatched} />
+							)}
+						</div>
+					</div>
+				</div>
+
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-icon icon-green'>
+						<FontAwesomeIcon icon={faCheckCircle} />
+					</div>
+					<div className='gz-prod-summary-content'>
+						<div className='gz-prod-summary-label'>Delivered</div>
+						<div className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '48px', height: '24px' }} />
+							) : (
+								<NumberTicker value={metrics.delivered} />
+							)}
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Main Card with Toolbar & Table */}
+			<div className='gz-prod-card'>
+				{/* Standard Toolbar Placement: Search -> LengthMenu -> Status -> DateFilter -> Export */}
+				<div className='gz-prod-toolbar'>
+					<div className='gz-prod-toolbar-left'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search by customer, receipt, or item...'
+							className='me-0'
+						/>
+						<LengthMenu
+							expenseData={filteredOrderData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							className='me-0'
+						/>
+						<select
+							className='gz-prod-select'
+							value={shipmentStatus}
+							onChange={(e) => {
+								setShipmentStatus(e.target.value)
+								setPagination((prev) => ({ ...prev, page: 1 }))
+							}}
+							aria-label='Filter by shipment status'>
+							<option value=''>All Status</option>
+							<option value='PLACED'>Placed</option>
+							<option value='DISPATCHED'>Dispatched</option>
+							<option value='DELIVERED'>Delivered</option>
+							<option value='CANCELLED'>Cancelled</option>
+							<option value='RETURN'>Return</option>
+						</select>
+					</div>
+
+					<div className='gz-prod-toolbar-right'>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+						/>
+						<button
+							type='button'
+							className='gz-prod-btn-icon-export'
+							onClick={downloadExcel}
+							disabled={loading || filteredOrderData.length === 0}
+							title='Export Records to Excel'>
+							<FontAwesomeIcon icon={faDownload} />
+						</button>
+					</div>
+				</div>
+
+				{/* Orders Table */}
+				<div className='table-responsive' style={{ overflowX: 'auto' }}>
+					<table className='gz-prod-table'>
+						<thead>
+							<tr>
+								<th style={{ width: '60px' }}>No.</th>
+								<th>Customer</th>
+								<th>Receipt ID</th>
+								<th>Items with Quantity</th>
+								<th>Total Amount</th>
+								<th>Purchased On</th>
+								<th>Shipment Status</th>
+								<th style={{ textAlign: 'center', width: '100px' }}>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{loading ? (
+								Array.from({ length: 6 }).map((_, idx) => (
+									<tr key={`skeleton-${idx}`} className='gz-prod-skeleton-row'>
+										<td><span className='gz-prod-skeleton' style={{ width: '24px', height: '16px' }} /></td>
+										<td>
+											<div className='gz-prod-user-cell'>
+												<span className='gz-prod-skeleton' style={{ width: '38px', height: '38px', borderRadius: '50%' }} />
+												<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+													<span className='gz-prod-skeleton' style={{ width: '120px', height: '14px' }} />
+													<span className='gz-prod-skeleton' style={{ width: '80px', height: '12px' }} />
+												</div>
+											</div>
+										</td>
+										<td><span className='gz-prod-skeleton' style={{ width: '100px', height: '22px' }} /></td>
+										<td><span className='gz-prod-skeleton' style={{ width: '160px', height: '14px' }} /></td>
+										<td><span className='gz-prod-skeleton' style={{ width: '70px', height: '14px' }} /></td>
+										<td><span className='gz-prod-skeleton' style={{ width: '130px', height: '14px' }} /></td>
+										<td><span className='gz-prod-skeleton' style={{ width: '80px', height: '22px', borderRadius: '999px' }} /></td>
+										<td style={{ textAlign: 'center' }}><span className='gz-prod-skeleton' style={{ width: '64px', height: '32px', borderRadius: '8px' }} /></td>
+									</tr>
+								))
+							) : filteredOrderData.length === 0 ? (
+								<tr>
+									<td colSpan={8} className='gz-table-empty-cell'>
+										<div className='gz-empty-state-wrap'>
+											<div className='gz-prod-empty-icon'>
+												<FontAwesomeIcon icon={faBox} />
+											</div>
+											<h4 className='gz-empty-state-title'>No orders found</h4>
+											<p className='gz-empty-state-desc'>
+												{searchTerm || shipmentStatus
+													? 'No orders match your filter criteria. Try clearing filters.'
+													: 'There are currently no customer orders in the system.'}
+											</p>
+										</div>
+									</td>
+								</tr>
+							) : (
+								filteredOrderData.map((order: any, index: number) => {
+									const actualIndex = (pagination.page - 1) * pagination.itemsPerPage + index + 1
+									const items = getOrderItemsList(order)
+									const shipment_status = getShipmentStatus(order)
+									const user = order?.user_info
+									const fullName = `${user?.first_name || 'Customer'} ${user?.last_name || ''}`.trim()
+									const profileImg = user?.profile_image
+										? `https://files.fggroup.in/${user.profile_image}`
+										: null
+
+									return (
+										<tr key={order?._id || index}>
 											<td>
-												<span className='text-dark fw-bold ms-6 mb-1 fs-6'>
-													<FontAwesomeIcon
-														icon={faPlusCircle}
-														className='me-2 plus-icon'
-														style={{ color: '#607D8B', fontSize: '18px' }}
-													/>
-													{actualIndex}
-												</span>
+												<span style={{ fontWeight: 600, color: '#64748B' }}>{actualIndex}</span>
 											</td>
 											<td>
-												<div className='d-flex align-items-center'>
-													<div className='symbol symbol-45px me-3'>
+												<div className='gz-prod-user-cell'>
+													{profileImg ? (
 														<img
-															src={
-																order?.user_info?.profile_image
-																	? `https://files.fggroup.in/${order?.user_info?.profile_image}`
-																	: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-															}
-															alt='User'
-															style={{ width: '50px', height: '50px' }}
+															src={profileImg}
+															alt={fullName}
+															className='gz-prod-avatar'
+															onError={(e) => {
+																;(e.target as HTMLElement).style.display = 'none'
+															}}
 														/>
-													</div>
-													<div className='d-flex justify-content-start flex-column'>
-														<span className='text-dark fw-bold fs-6'>
-															{(order?.user_info?.first_name || 'DELETED USER') +
-																' ' +
-																(order?.user_info?.last_name || ' ') || 'N/A'}
-														</span>
-														<span className='text-muted fw-semibold text-muted d-flex fs-7'>
-															{order?.user_info?.mobile || 'N/A'}
-														</span>
+													) : (
+														<div className='gz-prod-avatar-fallback'>
+															{getInitials(user?.first_name, user?.last_name)}
+														</div>
+													)}
+													<div>
+														<div style={{ fontWeight: 600, color: '#172B4D', fontSize: '14px' }}>
+															{fullName}
+														</div>
+														<div style={{ fontSize: '12px', color: '#71809A', marginTop: '2px' }}>
+															{user?.mobile || user?.email || 'No contact info'}
+														</div>
 													</div>
 												</div>
 											</td>
 											<td>
-												<span className='text-dark fw-bold d-block mb-1 fs-6'>
+												<span className='gz-prod-receipt-id'>
 													{order.receipt_id || 'N/A'}
 												</span>
 											</td>
 											<td>
-												<span className='text-dark fw-bold d-block mb-1 fs-6'>
-													<ul className='mb-0 ps-4'>
-														{items.map((it: any, itemIdx: number) => (
-															<li key={itemIdx}>{it.name}</li>
-														))}
-													</ul>
+												<div className='gz-prod-items-summary'>
+													{items.length === 0 ? (
+														<span style={{ color: '#94A3B8', fontSize: '12.5px' }}>N/A</span>
+													) : (
+														items.map((it: any, itemIdx: number) => (
+															<div key={itemIdx} className='gz-prod-item-row'>
+																<span className='gz-prod-item-bullet' />
+																<span>{it.name}</span>
+															</div>
+														))
+													)}
+												</div>
+											</td>
+											<td>
+												<span style={{ fontWeight: 600, color: '#142447', fontSize: '14px' }}>
+													₹{(order.amount || 0).toLocaleString('en-IN')}
 												</span>
 											</td>
 											<td>
-												<span className='text-dark fw-bold d-block mb-1 fs-6'>
-													{order.amount + ' ' + (order.currency || 'INR')}
+												<span style={{ fontSize: '13px', color: '#475569' }}>
+													{DayJS(order.createdAt).format('DD MMM YYYY, hh:mm A')}
 												</span>
 											</td>
 											<td>
-												<span className='text-dark fw-bold d-block mb-1 fs-6'>
-													{DayJS(order.createdAt).format('DD/MM/YYYY hh:mm:ss A')}
-												</span>
+												{renderStatusBadge(shipment_status)}
 											</td>
 											<td>
-												<span className='text-dark fw-bold mb-1 fs-6'>
-													{shipment_status || 'N/A'}
-												</span>
-											</td>
-											<td>
-												<div className='d-flex align-items-center'>
-													<TableButton
-														action='view'
-														to={'/rag/product-order-view?order_id=' + order?._id}
-														title='View Details'
-														backgroundDark={true}
-													/>
-													<TableButton
-														action='explore'
-														to={'/rag/all-order/view-order?order_id=' + order?._id}
-														title='Explore Order'
-														backgroundDark={true}
-													/>
+												<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+													<Link
+														to={`/rag/product-order-view?order_id=${order?._id}`}
+														className='gz-prod-action-btn view'
+														title='View Order Details'>
+														<FontAwesomeIcon icon={faEye} />
+													</Link>
+													<Link
+														to={`/rag/all-order/view-order?order_id=${order?._id}`}
+														className='gz-prod-action-btn edit'
+														title='Explore Order'>
+														<FontAwesomeIcon icon={faExternalLinkAlt} />
+													</Link>
 												</div>
 											</td>
 										</tr>
-										{isVisible && (
-											<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-												<td colSpan={12}>
-													<div>
-														<strong>{sortableFields[1].title}: </strong>{' '}
-														<img
-															src={`https://files.fggroup.in/${order.cover_image}`}
-															alt={order.book_title}
-															className='fs-3 text-primary'
-															style={{ width: '65px', height: '65px', borderRadius: '20%' }}
-														/>
-														<br />
-														<strong>{sortableFields[0].title}: </strong> {order.book_title}
-														<br />
-														<strong>{sortableFields[2].title}: </strong> ₹ {order.amount}
-														<br />
-														<strong>{sortableFields[3].title}: </strong>{' '}
-														{DayJS(order.createdAt).format('DD/MM/YYYY hh:mm:ss A')}
-														<br />
-													</div>
-												</td>
-											</tr>
-										)}
-									</React.Fragment>
-								)
-							}}
-							visibleDetails={visibleDetails}
-							pagination={pagination}
-							setPagination={setPagination}
-							loading={loading}
-						/>
-					</div>
-					{filteredOrderData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
-					{filteredOrderData.length > 0 && (
-						<UsersListPagination
-							totalPages={metaData?.totalPages || 1}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					)}
+									)
+								})
+							)}
+						</tbody>
+					</table>
 				</div>
-			</KTCard>
-		</>
+
+				{/* Pagination Footer */}
+				{filteredOrderData.length > 0 && (
+					<GomziTablePagination
+						totalRecords={metaData?.totalRecords || filteredOrderData.length}
+						page={pagination.page}
+						itemsPerPage={pagination.itemsPerPage}
+						totalPages={metaData?.totalPages || Math.ceil((metaData?.totalRecords || filteredOrderData.length) / pagination.itemsPerPage) || 1}
+						onPageChange={handlePageChange}
+						entityName='orders'
+					/>
+				)}
+			</div>
+		</div>
 	)
 }
 

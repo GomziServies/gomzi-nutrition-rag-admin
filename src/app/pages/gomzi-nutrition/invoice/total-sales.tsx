@@ -1,68 +1,99 @@
-import {
-	faBuildingColumns,
-	faCircleDollarToSlot,
-	faDollarSign,
-	faDownload,
-	faPlusCircle,
-} from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+/* eslint-disable */
 import React, { useEffect, useRef, useState } from 'react'
-import toast from 'react-hot-toast'
+import { Link, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faPlus,
+	faEye,
+	faPenToSquare,
+	faChevronDown,
+	faFileInvoice,
+	faWallet,
+	faClock,
+	faDownload,
+	faAngleLeft,
+	faAngleRight,
+} from '@fortawesome/free-solid-svg-icons'
 import Swal from 'sweetalert2'
 import * as XLSX from 'xlsx'
-import { KTCard, toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import { StatisticsWidget2 } from '../../../../_metronic/partials/widgets'
 import DateFilter from '../../../components/DateRangePicker'
-import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
-import Table from '../../../components/Table'
-import TableButton from '../../../components/TableButton'
-import UsersListPagination from '../../../components/TablePagination'
+import LengthMenu from '../../../components/LengthMenu'
+import NumberTicker from '../../../components/NumberTicker'
 import {
-	deleteInvoice,
 	getInvoice,
 	getInvoiceBranches,
 	GetInvoiceInsights,
 	GetTrainers,
 } from '../../../Functions/FGGroup'
+import './invoice-theme.css'
 
 const NutritionTotalSalesList: React.FC = () => {
-	const [searchTerm, setSearchTerm] = useState('')
+	const navigate = useNavigate()
 	const masterData = localStorage.getItem('admin_type')
-	const [invoiceData, setInvoiceData] = useState<any>([])
+	const adminType = localStorage.getItem('admin')
+
+	// State
+	const [searchTerm, setSearchTerm] = useState('')
+	const [invoiceData, setInvoiceData] = useState<any[]>([])
 	const [branchesData, setBranchesData] = useState<string[]>([])
 	const [metaData, setMetaData] = useState<any>()
-	const [sort, setSort] = useState('createdAt')
-	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
+	const [sort] = useState('createdAt')
+	const [sortOrder] = useState<QuerySortOptions>('desc')
 	const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>(null)
-	const [loading, setLoading] = useState(false)
+	const [loading, setLoading] = useState(true)
 	const [dataInsight, setDataInsight] = useState<any>({})
-	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
-	const [selectedFilter, setSelectedFilter] = useState<string | null>(null)
+	const [selectedFilter, setSelectedFilter] = useState<string>('All')
+	const [statusDropdownOpen, setStatusDropdownOpen] = useState(false)
+	const statusDropdownRef = useRef<HTMLDivElement>(null)
+
 	const [pagination, setPagination] = useState({
 		page: 1,
 		itemsPerPage: 10,
 	})
+
 	const [selectedBranch, setSelectedBranch] = useState<string>('default')
-	const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('default')
+	const [selectedSalesPerson] = useState<string>('default')
 	const [salesPersonList, setSalesPersonList] = useState<any[]>([])
 
-	const adminType = localStorage.getItem('admin')
+	// Close dropdowns on outside click
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				statusDropdownRef.current &&
+				!statusDropdownRef.current.contains(event.target as Node)
+			) {
+				setStatusDropdownOpen(false)
+			}
+		}
+		document.addEventListener('mousedown', handleClickOutside)
+		return () => document.removeEventListener('mousedown', handleClickOutside)
+	}, [])
 
-	const fetchInvoiceData = async (page?: number, store?: any, createdById?: string) => {
+	const getDateRange = (): [Date, Date] => {
+		if (!selectedDateRange) {
+			return [new Date(0), new Date()]
+		}
+		const [selectedStart, selectedEnd] = selectedDateRange
+		const startDate = new Date(selectedStart)
+		startDate.setHours(0, 0, 0, 0)
+		const endDate = new Date(selectedEnd)
+		endDate.setHours(23, 59, 59, 999)
+		return [startDate, endDate]
+	}
+
+	const fetchInvoiceData = async (page?: number, store?: any) => {
 		setLoading(true)
-
 		try {
 			const category = adminType === 'Store' ? adminType : 'Gomzi Nutrition'
-
 			const [startDate, endDate] = getDateRange()
 
 			const response: any = await getInvoice({
 				invoice_category: category,
 				page: page || pagination.page,
-				branch_name: store,
+				branch_name: store !== undefined ? (store === 'default' ? undefined : store) : (selectedBranch === 'default' ? undefined : selectedBranch),
 				limit: pagination.itemsPerPage,
 				...(searchTerm && {
 					search: searchTerm,
@@ -76,30 +107,33 @@ const NutritionTotalSalesList: React.FC = () => {
 				sortOrder,
 			})
 
-			const metaData: any = response.metadata
-			setMetaData(metaData.pagination)
-
-			let filteredData = response.data
-
-			if (createdById) {
-				filteredData = filteredData.filter((item: any) => item.createdById === createdById)
+			const meta: any = response?.metadata
+			if (meta?.pagination) {
+				setMetaData(meta.pagination)
 			}
 
-			if (selectedFilter === 'Paid Amount') {
-				filteredData = filteredData.filter((invoice: any) => invoice?.paid_amount > 0)
-			} else if (selectedFilter === 'Due Amount') {
-				filteredData = filteredData.filter((invoice: any) => {
-					const dueAmount = (invoice?.net_amount || 0) - (invoice?.paid_amount || 0)
+			let filteredData = response?.data || []
 
-					return dueAmount > 0
+			// Filter based on Status
+			if (selectedFilter === 'Paid') {
+				filteredData = filteredData.filter((inv: any) => {
+					const net = Number(inv?.net_amount || 0)
+					const paid = Number(inv?.paid_amount || 0)
+					return paid >= net && net > 0
 				})
-			} else if (selectedFilter === 'Total Amount') {
-				filteredData = filteredData.filter((invoice: any) => invoice?.net_amount > 0)
+			} else if (selectedFilter === 'Pending') {
+				filteredData = filteredData.filter((inv: any) => {
+					const net = Number(inv?.net_amount || 0)
+					const paid = Number(inv?.paid_amount || 0)
+					return paid < net
+				})
+			} else if (selectedFilter === 'Overdue') {
+				filteredData = filteredData.filter((inv: any) => {
+					const net = Number(inv?.net_amount || 0)
+					const paid = Number(inv?.paid_amount || 0)
+					return paid < net
+				})
 			}
-
-			filteredData.sort(
-				(a: any, b: any) => new Date(b?.createdAt).getTime() - new Date(a?.createdAt).getTime()
-			)
 
 			setInvoiceData(filteredData)
 		} catch (error) {
@@ -109,28 +143,28 @@ const NutritionTotalSalesList: React.FC = () => {
 		}
 	}
 
-	const getDateRange = (): [Date, Date] => {
-		if (!selectedDateRange) {
-			return [new Date(0), new Date()]
+	const fetchInvoiceInsightData = async () => {
+		const [startDate, endDate] = getDateRange()
+		try {
+			const category = adminType === 'Store' ? adminType : 'Gomzi Nutrition'
+			const response: any = await GetInvoiceInsights({
+				invoice_category: category,
+				from_date: startDate,
+				to_date: endDate,
+			})
+			if (response?.data?.[0]) {
+				setDataInsight(response.data[0])
+			}
+		} catch (error) {
+			console.error('Error fetching invoice insights:', error)
 		}
-
-		const [selectedStart, selectedEnd] = selectedDateRange
-
-		const startDate = new Date(selectedStart)
-		startDate.setHours(0, 0, 0, 0)
-
-		const endDate = new Date(selectedEnd)
-		endDate.setHours(23, 59, 59, 999)
-
-		return [startDate, endDate]
 	}
 
 	const fetchSalesPersons = async () => {
 		try {
 			const response: any = await GetTrainers({ limit: 1000 })
-			if (response.data) {
-				const salesPersons = response.data
-				setSalesPersonList(salesPersons)
+			if (response?.data) {
+				setSalesPersonList(response.data)
 			}
 		} catch (error) {
 			console.error('Error fetching sales persons:', error)
@@ -140,47 +174,23 @@ const NutritionTotalSalesList: React.FC = () => {
 	const fetchInvoiceBranches = async () => {
 		try {
 			const response: any = await getInvoiceBranches()
-
-			const branches = response.data.map((item: any) => item.branch_name)
-
-			setBranchesData(branches)
+			if (response?.data) {
+				const branches = response.data.map((item: any) => item.branch_name)
+				setBranchesData(branches)
+			}
 		} catch (error) {
 			console.error('Error fetching branches:', error)
 		}
 	}
 
 	useEffect(() => {
-		if (selectedDateRange) {
-			fetchInvoiceInsightData()
-		}
-	}, [selectedDateRange])
-
-	const fetchInvoiceInsightData = async () => {
-		const [startDate, endDate] = getDateRange()
-
-		setLoading(true)
-
-		try {
-			const category = adminType === 'Store' ? adminType : 'Gomzi Nutrition'
-
-			const response: any = await GetInvoiceInsights({
-				invoice_category: category,
-				from_date: startDate,
-				to_date: endDate,
-			})
-
-			setDataInsight(response.data[0])
-		} catch (error) {
-			console.error(error)
-		} finally {
-			setLoading(false)
-		}
-	}
+		fetchInvoiceInsightData()
+		fetchSalesPersons()
+		fetchInvoiceBranches()
+	}, [])
 
 	useEffect(() => {
 		fetchInvoiceData()
-		fetchSalesPersons()
-		fetchInvoiceBranches()
 	}, [
 		pagination.itemsPerPage,
 		pagination.page,
@@ -189,602 +199,521 @@ const NutritionTotalSalesList: React.FC = () => {
 		selectedDateRange,
 		selectedFilter,
 		selectedSalesPerson,
+		selectedBranch,
 	])
 
 	const isFirstRender = useRef(true)
-
 	useEffect(() => {
 		if (isFirstRender.current) {
 			isFirstRender.current = false
 			return
 		}
-
-		if (searchTerm.trim() || searchTerm === '') {
+		const timer = setTimeout(() => {
 			setPagination((prev) => ({ ...prev, page: 1 }))
-			if (pagination.page === 1) fetchInvoiceData()
-		}
+			fetchInvoiceData(1)
+		}, 300)
+		return () => clearTimeout(timer)
 	}, [searchTerm])
-
-	useEffect(() => {
-		fetchInvoiceInsightData()
-	}, [])
 
 	const handleDateRangeChange = (range: [Date, Date] | null) => {
 		setSelectedDateRange(range)
-		setPagination({ ...pagination, page: 1 })
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
 	const handlePageChange = (page: number) => {
-		setPagination({ ...pagination, page })
+		setPagination((prev) => ({ ...prev, page }))
 	}
 
-	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value })
-	}
-
-	const handleSetStoreInvoice = (branchName: string) => {
-		setSelectedBranch(branchName)
-		setPagination((prev) => ({
-			...prev,
-			page: 1,
-		}))
-
-		if (branchName === 'default') {
-			fetchInvoiceData(1, undefined)
-		} else {
-			fetchInvoiceData(1, branchName)
+	const getPaginationItems = (currentPage: number, total: number): (number | '...')[] => {
+		if (total <= 7) {
+			return Array.from({ length: total }, (_, i) => i + 1)
 		}
-	}
-
-	const handleRowClick = (id: string) => {
-		if (window.innerWidth <= 1024) {
-			setVisibleDetails(visibleDetails === id ? null : id)
+		if (currentPage <= 4) {
+			return [1, 2, 3, 4, 5, '...', total]
 		}
+		if (currentPage >= total - 3) {
+			return [1, '...', total - 4, total - 3, total - 2, total - 1, total]
+		}
+		return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', total]
 	}
 
-	let sortableFields: any
-
-	selectedFilter
-		? (sortableFields = [
-				{ title: 'Invoice No.', field: 'id' },
-				{ title: 'User', field: 'fullName' },
-				...(selectedFilter === 'Paid Amount'
-					? [{ title: 'Paid Amount', field: 'paid_amount' }]
-					: selectedFilter === 'Due Amount'
-					? [{ title: 'Due Amount', field: 'duePayment' }]
-					: selectedFilter === 'Total Amount'
-					? [{ title: 'Total Amount', field: 'net_amount' }]
-					: []),
-				{ title: 'Sales Person', field: 'sales_person' },
-				{ title: 'Purchase Date', field: 'date' },
-		  ])
-		: (sortableFields = [
-				{ title: 'Invoice No.', field: 'id' },
-				{ title: 'User', field: 'fullName' },
-				{ title: 'Total Amount', field: 'net_amount' },
-				{ title: 'Paid Amount', field: 'paid_amount' },
-				{ title: 'Due Amount', field: 'duePayment' },
-				{ title: 'Sales Person', field: 'sales_person' },
-				{ title: 'Purchase Date', field: 'date' },
-		  ])
-
-	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
-		setSort(newSort)
-		setSortOrder(newSortOrder)
+	const handleItemsPerPageChange = (pageSize: number) => {
+		setPagination((prev) => ({ ...prev, page: 1, itemsPerPage: pageSize }))
 	}
 
 	const downloadExcel = async () => {
 		try {
 			setLoading(true)
-
-			let startDate: Date
-			let endDate: Date
-
-			if (selectedDateRange) {
-				;[startDate, endDate] = selectedDateRange
-			} else {
-				startDate = new Date(0)
-				endDate = new Date()
-			}
-
+			const [startDate, endDate] = getDateRange()
 			const category = adminType === 'Store' ? adminType : 'Gomzi Nutrition'
 
-			// Fetch ALL invoices instead of only current pagination page
 			const response: any = await getInvoice({
 				invoice_category: category,
 				page: 1,
 				limit: 100000,
-				...(selectedBranch !== 'default' && {
-					branch_name: selectedBranch,
-				}),
-				...(searchTerm && {
-					search: searchTerm,
-				}),
+				...(selectedBranch !== 'default' && { branch_name: selectedBranch }),
+				...(searchTerm && { search: searchTerm }),
 				from_date: startDate,
 				to_date: endDate,
-				...(selectedSalesPerson !== 'default' && {
-					sales_person: selectedSalesPerson,
-				}),
+				...(selectedSalesPerson !== 'default' && { sales_person: selectedSalesPerson }),
 				sort,
 				sortOrder,
 			})
 
-			let exportData = response?.data || []
-
-			// Apply the same amount filter used on the table
-			if (selectedFilter === 'Paid Amount') {
-				exportData = exportData.filter((invoice: any) => invoice?.paid_amount > 0)
-			} else if (selectedFilter === 'Due Amount') {
-				exportData = exportData.filter((invoice: any) => {
-					const dueAmount = (invoice?.net_amount || 0) - (invoice?.paid_amount || 0)
-
-					return dueAmount > 0
-				})
-			} else if (selectedFilter === 'Total Amount') {
-				exportData = exportData.filter((invoice: any) => invoice?.net_amount > 0)
-			}
-
+			const exportData = response?.data || []
 			if (exportData.length === 0) {
 				Swal.fire('No Data', 'There is no invoice data to export.', 'info')
 				return
 			}
 
 			const worksheetData = exportData.map((invoice: any) => {
-				const products = (invoice?.items || []).reduce((acc: any, item: any, i: number) => {
-					acc[`Product ${i + 1} Name`] = item?.item_name || 'N/A'
-
-					acc[`Product ${i + 1} Quantity`] = item?.quantity || 'N/A'
-
-					acc[`Product ${i + 1} Amount`] = item?.amount || 'N/A'
-
-					acc[`Product ${i + 1} Total Amount`] = item?.totalAmount || 'N/A'
-
-					return acc
-				}, {})
-
-				const dueAmount = (invoice?.net_amount || 0) - (invoice?.paid_amount || 0)
-
+				const due = (invoice?.net_amount || 0) - (invoice?.paid_amount || 0)
 				return {
-					'Invoice No.': invoice?.invoice_number || 'N/A',
+					'Invoice No.': invoice?.invoice_number ? `#INV-${invoice.invoice_number}` : 'N/A',
 					'User Name': invoice?.fullName || invoice?.name || 'N/A',
 					Mobile: invoice?.phoneNumber || invoice?.mobile || 'N/A',
 					Email: invoice?.email || 'N/A',
 					'Total Amount': invoice?.net_amount ?? 0,
 					'Paid Amount': invoice?.paid_amount ?? 0,
-					'Due Amount': dueAmount,
+					'Due Amount': due,
 					'Purchase Date': invoice?.date ? DayJS(invoice.date).format('YYYY-MM-DD') : 'N/A',
 					'Sales Person':
-						invoice?.sales_person === 'N/A'
-							? invoice?.other_sales_person || 'N/A'
-							: salesPersonList.find((e: any) => e._id === invoice?.sales_person)?.full_name ||
-							  invoice?.sales_person ||
-							  'N/A',
-
-					...products,
+						salesPersonList.find((e: any) => e._id === invoice?.sales_person)?.full_name ||
+						invoice?.sales_person ||
+						'N/A',
 				}
 			})
 
 			const worksheet = XLSX.utils.json_to_sheet(worksheetData)
-
-			// Auto-size Excel columns
-			const columnWidths = Object.keys(worksheetData[0]).map((key) => {
-				const maxLength = Math.max(
-					key.length,
-					...worksheetData.map((row: any) => String(row[key] ?? '').length)
-				)
-
-				return {
-					wch: Math.min(maxLength + 2, 40),
-				}
-			})
-
-			worksheet['!cols'] = columnWidths
-
 			const workbook = XLSX.utils.book_new()
-
 			XLSX.utils.book_append_sheet(workbook, worksheet, 'Invoices')
+			XLSX.writeFile(workbook, `Gomzi_Invoices_${DayJS(new Date()).format('DD-MM-YYYY')}.xlsx`)
 
-			XLSX.writeFile(workbook, `InvoiceData_${DayJS(new Date()).format('DD-MM-YYYY')}.xlsx`)
-
-			Swal.fire(
-				'Export Successful!',
-				`${exportData.length} invoices exported successfully.`,
-				'success'
-			)
+			Swal.fire('Export Successful!', `${exportData.length} invoices exported successfully.`, 'success')
 		} catch (error: any) {
 			console.error('Export error:', error)
-
 			Swal.fire('Export Failed!', 'Unable to export invoice data.', 'error')
 		} finally {
 			setLoading(false)
 		}
 	}
 
-	const getFilterAmount = (name: string) => {
-		if (selectedFilter === name) {
-			setSelectedFilter(null)
-		} else {
-			setSelectedFilter(name)
-		}
-	}
+	// Financial Summary calculation
+	const totalAmount = dataInsight?.total_amount || invoiceData.reduce((acc, curr) => acc + (Number(curr?.net_amount) || 0), 0)
+	const paidAmount = dataInsight?.total_paid_amount || invoiceData.reduce((acc, curr) => acc + (Number(curr?.paid_amount) || 0), 0)
+	const unpaidAmount = dataInsight?.total_unpaid_amount !== undefined ? dataInsight?.total_unpaid_amount : Math.max(0, totalAmount - paidAmount)
 
-	const removeInvoice = async (id: string) => {
-		try {
-			const { value: confirmText } = await Swal.fire({
-				title: `Are you sure?`,
-				text: `This action cannot be undone. Invoice will remove.`,
-				icon: 'question',
-				input: 'text',
-				inputPlaceholder: 'Write "confirm" here to remove invoice',
-				showCancelButton: true,
-				confirmButtonText: 'Remove',
-				showCloseButton: true,
-				inputValidator: (value) => {
-					if (!value || value.trim().toLowerCase() !== 'confirm') {
-						return 'Please type "confirm" to remove the invoice.'
-					}
-				},
-			})
-			if (confirmText && confirmText.trim().toLowerCase() === 'confirm') {
-				await deleteInvoice({ id: id })
-				toast.success('Invoice removed successfully')
-				fetchInvoiceData()
-			}
-		} catch (error: any) {
-			toast.error(error.message)
-			console.error(error)
-		}
-	}
+	const collectionRate = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0
+	const pendingRate = totalAmount > 0 ? Math.round((unpaidAmount / totalAmount) * 100) : 0
+
+	// Pagination calculations
+	const totalRecords = metaData?.totalDocs || metaData?.totalCount || invoiceData.length || 0
+	const totalPages = metaData?.totalPages || Math.ceil(totalRecords / pagination.itemsPerPage) || 1
+	const currentStart = totalRecords === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1
+	const currentEnd = Math.min(pagination.page * pagination.itemsPerPage, totalRecords)
 
 	return (
-		<>
-			<PageTitle breadcrumbs={[]}>Total Sales</PageTitle>
-			<div className='row g-4 mb-6'>
-				<div
-					className='col-12 col-md-4'
-					role='button'
-					onClick={() => getFilterAmount('Total Amount')}>
-					<StatisticsWidget2
-						className={`h-100 ${selectedFilter === 'Total Amount' ? 'gz-card-active' : ''}`}
-						Icon={faBuildingColumns}
-						color='primary'
-						title={dataInsight?.total_amount ? dataInsight?.total_amount : 0}
-						description='Total Amount'
-						badgeText={selectedFilter === 'Total Amount' ? 'Filtered' : undefined}
-					/>
-				</div>
+		<div className='gz-inv-container'>
+			<PageTitle breadcrumbs={[]}>Invoices</PageTitle>
 
-				<div
-					className='col-12 col-md-4'
-					role='button'
-					onClick={() => getFilterAmount('Paid Amount')}>
-					<StatisticsWidget2
-						className={`h-100 ${selectedFilter === 'Paid Amount' ? 'gz-card-active' : ''}`}
-						Icon={faDollarSign}
-						color='success'
-						title={dataInsight?.total_paid_amount ? dataInsight?.total_paid_amount : 0}
-						description='Paid Amount'
-						badgeText={selectedFilter === 'Paid Amount' ? 'Filtered' : undefined}
-					/>
+			{/* =========================================================================
+			    PAGE HEADER
+			    ========================================================================= */}
+			<div className='gz-inv-header'>
+				<div>
+					<h1 className='gz-inv-title'>Invoices</h1>
+					<p className='gz-inv-subtitle'>Manage client billing and collections</p>
 				</div>
-
-				<div
-					className='col-12 col-md-4'
-					role='button'
-					onClick={() => getFilterAmount('Due Amount')}>
-					<StatisticsWidget2
-						className={`h-100 ${selectedFilter === 'Due Amount' ? 'gz-card-active' : ''}`}
-						Icon={faCircleDollarToSlot}
-						color='danger'
-						title={dataInsight?.total_unpaid_amount ? dataInsight?.total_unpaid_amount : 0}
-						description='Due Amount'
-						badgeText={selectedFilter === 'Due Amount' ? 'Filtered' : undefined}
-					/>
+				<div className='d-flex align-items-center gap-3'>
+					{masterData === 'MASTER' && (
+						<button
+							type='button'
+							className='gz-inv-btn-outline'
+							onClick={downloadExcel}
+							disabled={loading}
+							title='Export to Excel'>
+							<FontAwesomeIcon icon={faDownload} />
+							<span>Export</span>
+						</button>
+					)}
+					<Link to='/rag/create-invoice' className='gz-inv-btn-primary'>
+						<FontAwesomeIcon icon={faPlus} />
+						<span>Create Invoice</span>
+					</Link>
 				</div>
 			</div>
-			<KTCard>
-				{/* Top Toolbar */}
-				<div className='card-header border-0 pt-6 px-6'>
-					<div className='d-flex flex-column flex-md-row align-items-md-center justify-content-between w-100 gap-4'>
-						{/* Items Per Page */}
-						<div className='d-flex align-items-center'>
-							<div className='d-md-block d-none'>
-								<LengthMenu
-									expenseData={invoiceData}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-								/>
-							</div>
-						</div>
 
-						{/* Action Buttons */}
-						<div className='d-flex align-items-center gap-3 w-100 w-md-auto justify-content-md-end'>
-							{/* Export - MASTER only */}
-							{masterData === 'MASTER' && (
-								<button
-									type='button'
-									className='btn btn-primary d-flex align-items-center justify-content-center gap-2 px-6'
-									onClick={downloadExcel}
-									disabled={loading}
-									style={{
-										height: '38px',
-										minWidth: '170px',
-									}}>
-									<FontAwesomeIcon
-										icon={faDownload}
-										className='fs-4'
-									/>
-									<span>{loading ? 'Exporting...' : 'Export Excel'}</span>
-								</button>
+			{/* =========================================================================
+			    FINANCIAL SUMMARY MODULES (3 CARDS WITH NUMBER TICKER)
+			    ========================================================================= */}
+			<div className='gz-inv-metrics-grid'>
+				{/* Total Invoiced */}
+				<div className='gz-inv-metric-card soft-blue'>
+					<div className='gz-inv-metric-content'>
+						<span className='gz-inv-metric-label'>Total Invoiced</span>
+						<span className='gz-inv-metric-amount'>
+							{loading ? (
+								<span className='gz-inv-skeleton' style={{ width: '130px', height: '26px', borderRadius: '6px' }}></span>
+							) : (
+								<>₹ <NumberTicker value={totalAmount} /></>
 							)}
-
-							{/* Create Invoice */}
-							<TableButton
-								action='add'
-								to='/rag/create-invoice'
-								text='Create Invoice'
-							/>
-						</div>
+						</span>
+						<span className='gz-inv-metric-subtext green'>
+							<span>↑ Real-time billing insight</span>
+						</span>
+					</div>
+					<div className='gz-inv-metric-icon blue'>
+						<FontAwesomeIcon icon={faFileInvoice} />
 					</div>
 				</div>
 
-				{/* Filters */}
-				<div className='card-body pt-2 pb-5 px-6'>
-					<div className='row g-3 align-items-end'>
-						{/* Search */}
-						<div className='col-12 col-md-6 col-lg-3'>
-							<label className='form-label fw-bold gz-filter-label'>Search</label>
+				{/* Collected */}
+				<div className='gz-inv-metric-card pale-mint'>
+					<div className='gz-inv-metric-content'>
+						<span className='gz-inv-metric-label'>Collected</span>
+						<span className='gz-inv-metric-amount'>
+							{loading ? (
+								<span className='gz-inv-skeleton' style={{ width: '120px', height: '26px', borderRadius: '6px' }}></span>
+							) : (
+								<>₹ <NumberTicker value={paidAmount} /></>
+							)}
+						</span>
+						<span className='gz-inv-metric-subtext green'>
+							<span><NumberTicker value={collectionRate} />% collection rate</span>
+						</span>
+					</div>
+					<div className='gz-inv-metric-icon green'>
+						<FontAwesomeIcon icon={faWallet} />
+					</div>
+				</div>
 
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-								style={{ width: '100%' }}
-							/>
-						</div>
+				{/* Outstanding */}
+				<div className='gz-inv-metric-card soft-pink'>
+					<div className='gz-inv-metric-content'>
+						<span className='gz-inv-metric-label'>Outstanding</span>
+						<span className='gz-inv-metric-amount'>
+							{loading ? (
+								<span className='gz-inv-skeleton' style={{ width: '120px', height: '26px', borderRadius: '6px' }}></span>
+							) : (
+								<>₹ <NumberTicker value={unpaidAmount} /></>
+							)}
+						</span>
+						<span className='gz-inv-metric-subtext red'>
+							<span><NumberTicker value={pendingRate} />% pending</span>
+						</span>
+					</div>
+					<div className='gz-inv-metric-icon red'>
+						<FontAwesomeIcon icon={faClock} />
+					</div>
+				</div>
+			</div>
 
-						{/* Store */}
-						{adminType !== 'Store' && (
-							<div className='col-12 col-md-6 col-lg-3'>
-								<label className='form-label fw-bold gz-filter-label'>Select Store</label>
+			{/* =========================================================================
+			    FILTER TOOLBAR (EMPLOYEE DASHBOARD SPECIFIC SEQUENCE & NO OVERLAPPING SEARCH ICON)
+			    1. Searchbar -> 2. LengthMenu -> 3. Status -> 4. Store -> 5. DateFilter
+			    ========================================================================= */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center flex-wrap gap-3'>
+					{/* 1. Searchbar (Fixed padding & flex layout, no overlap) */}
+					<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search by invoice no., client name...'
+						/>
+					</div>
 
-								<select
-									name='Select Store'
-									className='form-select gz-filter-select'
-									value={selectedBranch}
-									onChange={(e) => handleSetStoreInvoice(e.target.value)}>
-									<option value='default'>Select Store</option>
+					{/* 2. Page Size / Length Menu */}
+					<div>
+						<LengthMenu
+							data={invoiceData}
+							itemsPerPage={pagination.itemsPerPage}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+						/>
+					</div>
 
-									{branchesData.map((branch: any) => (
-										<option
-											key={branch}
-											value={branch}>
-											{branch}
-										</option>
-									))}
-								</select>
+					{/* 3. Status Filter Dropdown */}
+					<div className='position-relative' ref={statusDropdownRef}>
+						<button
+							type='button'
+							className={`gz-inv-dropdown-btn ${statusDropdownOpen ? 'active' : ''}`}
+							style={{ height: '38px', borderRadius: '8px' }}
+							onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}>
+							<span>{selectedFilter === 'All' ? 'Status' : selectedFilter}</span>
+							<FontAwesomeIcon icon={faChevronDown} style={{ fontSize: '11px', opacity: 0.7 }} />
+						</button>
+
+						{statusDropdownOpen && (
+							<div className='gz-inv-dropdown-menu' style={{ zIndex: 10000 }}>
+								{['All', 'Paid', 'Pending'].map((st) => (
+									<div
+										key={st}
+										className={`gz-inv-dropdown-item ${selectedFilter === st ? 'selected' : ''}`}
+										onClick={() => {
+											setSelectedFilter(st)
+											setStatusDropdownOpen(false)
+											setPagination((prev) => ({ ...prev, page: 1 }))
+										}}>
+										<span>{st === 'All' ? 'All Statuses' : st}</span>
+									</div>
+								))}
 							</div>
 						)}
+					</div>
 
-						{/* Sales Person */}
-						<div className='col-12 col-md-6 col-lg-3'>
-							<label className='form-label fw-bold gz-filter-label'>Sales Person</label>
+					{/* 4. Store / Branch Dropdown */}
+					{adminType !== 'Store' && branchesData.length > 0 && (
+						<select
+							className='gz-inv-select'
+							style={{ width: 'auto', minWidth: '150px', height: '38px', borderRadius: '8px' }}
+							value={selectedBranch}
+							onChange={(e) => {
+								setSelectedBranch(e.target.value)
+								setPagination((prev) => ({ ...prev, page: 1 }))
+							}}>
+							<option value='default'>All Stores</option>
+							{branchesData.map((branch: any) => (
+								<option key={branch} value={branch}>
+									{branch}
+								</option>
+							))}
+						</select>
+					)}
 
-							<select
-								name='Select Sales Person'
-								className='form-select gz-filter-select'
-								value={selectedSalesPerson}
-								onChange={(e) => setSelectedSalesPerson(e.target.value)}>
-								<option value='default'>Select Sales Person</option>
+					{/* Spacer */}
+					<div className='d-none d-md-block' style={{ flexGrow: 1 }}></div>
 
-								{salesPersonList.map((item: any) => (
-									<option
-										key={item._id}
-										value={item._id}>
-										{item.full_name}
-									</option>
-								))}
-							</select>
-						</div>
-
-						{/* Date Range */}
-						<div className='col-12 col-md-6 col-lg-3'>
-							<label className='form-label fw-bold gz-filter-label'>Purchase Date</label>
-
-							<div className='w-100'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-								/>
-							</div>
-						</div>
+					{/* 5. Date Filter (at last) */}
+					<div>
+						<DateFilter onDateRangeChange={handleDateRangeChange} rightValue='0' />
 					</div>
 				</div>
-				<div className='py-4 card-body'>
-					<div className='table-responsive'>
-						<Table
-							data={invoiceData}
-							columns={sortableFields}
-							sort={sort}
-							sortOrder={sortOrder}
-							onSortChange={handleSortChange}
-							renderRow={(item: any, index: number, actualIndex: number, isVisible: boolean) => (
-								<React.Fragment key={item._id}>
-									<tr
-										className='data-row'
-										onClick={() => handleRowClick(item._id)}>
-										<td className='text-center'>
-											<div
-												className='d-flex ms-8'
-												role='button'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>{actualIndex}</span>
-											</div>
-										</td>
-										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{item?.invoice_number}
-											</span>
-										</td>
-										<td>
-											<div className='d-flex align-items-center'>
-												<div className='d-flex justify-content-start flex-column'>
-													<span className='text-dark fw-bold  fs-6'>{item?.name}</span>
-													<span className='text-muted fw-semibold text-muted d-flex fs-7'>
-														{item?.mobile || ''}
-													</span>
-												</div>
-											</div>
-										</td>
+			</div>
 
-										{selectedFilter ? (
-											selectedFilter == 'Paid Amount' ? (
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{item?.paid_amount}
-													</span>
-												</td>
-											) : selectedFilter == 'Due Amount' ? (
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{item?.net_amount - item?.paid_amount}
-													</span>
-												</td>
-											) : selectedFilter == 'Total Amount' ? (
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{item?.net_amount}
-													</span>
-												</td>
-											) : (
-												''
-											)
-										) : (
-											<>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{item?.net_amount}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{item?.paid_amount}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{item?.net_amount - item?.paid_amount}
-													</span>
-												</td>
-											</>
-										)}
-										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{item?.sales_person === 'N/A' ? (
-													<div className='d-flex flex-column'>
-														<span className='text-dark fw-bold fs-6'>
-															{item?.other_sales_person}
-														</span>
-														<span className='text-muted fw-semibold fs-7'>N/A</span>
-													</div>
-												) : (
-													salesPersonList.find((e: any) => e._id === item?.sales_person)
-														?.full_name ||
-													item?.sales_person ||
-													'N/A'
-												)}
-											</span>
+			{/* =========================================================================
+			    INVOICES TABLE
+			    ========================================================================= */}
+			<div className='gz-inv-table-card'>
+				<div className='table-responsive'>
+					<table className='gz-inv-table'>
+						<thead>
+							<tr>
+								<th style={{ width: '48px', textAlign: 'center' }}>#</th>
+								<th>Invoice No.</th>
+								<th>Client / Company</th>
+								<th>Invoice Date</th>
+								<th style={{ textAlign: 'right' }}>Amount</th>
+								<th style={{ textAlign: 'center' }}>Status</th>
+								<th style={{ textAlign: 'center', width: '110px' }}>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{loading ? (
+								Array.from({ length: 6 }).map((_, sIdx) => (
+									<tr key={`inv-skel-${sIdx}`} className='gz-inv-skeleton-row'>
+										<td style={{ textAlign: 'center' }}>
+											<span className='gz-inv-skeleton' style={{ width: '20px', height: '14px', borderRadius: '4px' }}></span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{DayJS(item?.date).format('YYYY-MM-DD')}
-											</span>
+											<span className='gz-inv-skeleton' style={{ width: '90px', height: '16px', borderRadius: '4px' }}></span>
 										</td>
 										<td>
-											<TableButton
-												action='edit'
-												to={`/rag/update-invoice?invoice_id=` + item?._id}
-											/>
-											<TableButton
-												action='remove'
-												onClick={() => removeInvoice(item?._id)}
-											/>
+											<div className='d-flex flex-column gap-1'>
+												<span className='gz-inv-skeleton' style={{ width: `${140 - sIdx * 8}px`, height: '15px', borderRadius: '4px' }}></span>
+												<span className='gz-inv-skeleton' style={{ width: '95px', height: '12px', borderRadius: '4px' }}></span>
+											</div>
+										</td>
+										<td>
+											<span className='gz-inv-skeleton' style={{ width: '85px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td style={{ textAlign: 'right' }}>
+											<span className='gz-inv-skeleton' style={{ width: '75px', height: '16px', borderRadius: '4px' }}></span>
+										</td>
+										<td style={{ textAlign: 'center' }}>
+											<span className='gz-inv-skeleton' style={{ width: '60px', height: '22px', borderRadius: '999px' }}></span>
+										</td>
+										<td style={{ textAlign: 'center' }}>
+											<div className='d-flex align-items-center justify-content-center gap-2'>
+												<span className='gz-inv-skeleton' style={{ width: '32px', height: '32px', borderRadius: '8px' }}></span>
+												<span className='gz-inv-skeleton' style={{ width: '32px', height: '32px', borderRadius: '8px' }}></span>
+											</div>
 										</td>
 									</tr>
-									{isVisible && (
-										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-											<td colSpan={12}>
-												<div>
-													<strong>Invoice No.:</strong> {item?.invoice_number}
-													<br />
-													<div className='d-flex align-items-center'>
-														<div className='symbol symbol-45px me-3'>
-															<img
-																src={
-																	item?.profile_image
-																		? `https://files.fggroup.in/${item?.profile_image}`
-																		: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-																}
-																alt='User'
-																style={{ width: '50px', height: '50px' }}
-															/>
-														</div>
-														<div className='d-flex justify-content-start flex-column'>
-															<span className='text-dark fw-bold  fs-6'>{item?.name}</span>
-															<span className='text-muted fw-semibold text-muted d-flex fs-7'>
-																{item?.mobile || ''}
-															</span>
-														</div>
-													</div>
-													<br />
-													<strong>Total Amount:</strong> {item?.net_amount}
-													<br />
-													<strong>Paid Amount:</strong> {item?.paid_amount}
-													<br />
-													<strong>Due Amount:</strong> {item?.net_amount - item?.paid_amount}
-													<br />
-													<strong>Date:</strong> {DayJS(item?.date).format('YYYY-MM-DD')}
-													<br />
-													{item?.sales_person === 'N/A' ? (
-														<div className='d-inline-flex flex-column align-items-start'>
-															<span className='fw-bold'>{item?.other_sales_person}</span>
-															<span className='text-muted fs-7'>N/A</span>
-														</div>
-													) : (
-														salesPersonList.find((e: any) => e._id === item?.sales_person)
-															?.full_name ||
-														item?.sales_person ||
-														'N/A'
+								))
+							) : invoiceData.length === 0 ? (
+								<tr>
+									<td colSpan={7} className='gz-table-empty-cell'>
+										<div className='gz-empty-state-wrap'>
+											{!searchTerm ? (
+												<Link to='/rag/create-invoice' className='gz-empty-plus-btn' title='Create Invoice'>
+													<FontAwesomeIcon icon={faPlus} />
+												</Link>
+											) : (
+												<div className='gz-prod-empty-icon'>
+													<FontAwesomeIcon icon={faFileInvoice} />
+												</div>
+											)}
+											<h4 className='gz-empty-state-title'>
+												No invoices found
+											</h4>
+											<p className='gz-empty-state-desc'>
+												{searchTerm ? 'No invoices matched your search criteria.' : 'Create your first invoice to begin tracking client billing.'}
+											</p>
+										</div>
+									</td>
+								</tr>
+							) : (
+								invoiceData.map((item: any, index: number) => {
+									const net = Number(item?.net_amount || 0)
+									const paid = Number(item?.paid_amount || 0)
+									const isPaid = paid >= net && net > 0
+
+									const formattedDate = item?.date ? DayJS(item.date).format('DD MMM YYYY') : '-'
+									const invNumber = item?.invoice_number ? `#INV-${item.invoice_number}` : (item?.id || '-')
+
+									return (
+										<tr key={item._id || index}>
+											<td style={{ textAlign: 'center', color: '#71809A', fontSize: '12.5px' }}>
+												{currentStart + index}
+											</td>
+											<td>
+												<span style={{ fontWeight: 600, color: '#172B4D' }}>
+													{invNumber}
+												</span>
+											</td>
+											<td>
+												<div className='d-flex flex-column'>
+													<span style={{ fontWeight: 600, color: '#142447', fontSize: '13.5px' }}>
+														{item?.name || 'Walk-in Customer'}
+													</span>
+													{item?.mobile && (
+														<span style={{ color: '#71809A', fontSize: '12px' }}>
+															{item.mobile}
+														</span>
 													)}
 												</div>
 											</td>
+											<td>
+												<span style={{ color: '#71809A', fontSize: '13px' }}>
+													{formattedDate}
+												</span>
+											</td>
+											<td style={{ textAlign: 'right', fontWeight: 700, color: '#172B4D', fontVariantNumeric: 'tabular-nums' }}>
+												₹{net.toLocaleString('en-IN')}
+											</td>
+											<td style={{ textAlign: 'center' }}>
+												{isPaid ? (
+													<span className='gz-inv-badge paid'>Paid</span>
+												) : paid > 0 ? (
+													<span className='gz-inv-badge pending'>Partial</span>
+												) : (
+													<span className='gz-inv-badge due'>Pending</span>
+												)}
+											</td>
+											<td style={{ textAlign: 'center' }}>
+												<div className='d-flex align-items-center justify-content-center gap-2'>
+													{/* View Action Button */}
+													<button
+														type='button'
+														className='gz-inv-action-btn view'
+														title='View invoice'
+														onClick={() => navigate(`/rag/view-invoice?invoice_id=${item._id}`)}>
+														<FontAwesomeIcon icon={faEye} />
+													</button>
+
+													{/* Edit Action Button */}
+													<button
+														type='button'
+														className='gz-inv-action-btn edit'
+														title='Edit invoice'
+														onClick={() => navigate(`/rag/update-invoice?invoice_id=${item._id}`)}>
+														<FontAwesomeIcon icon={faPenToSquare} />
+													</button>
+												</div>
+											</td>
 										</tr>
-									)}
-								</React.Fragment>
+									)
+								})
 							)}
-							visibleDetails={visibleDetails}
-							pagination={pagination}
-							setPagination={setPagination}
-							loading={loading}
-						/>
-					</div>
-					{invoiceData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
-					{invoiceData.length > 0 && (
-						<UsersListPagination
-							totalPages={metaData?.totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					)}
+						</tbody>
+					</table>
 				</div>
-			</KTCard>
-		</>
+
+				{/* =========================================================================
+				    PAGINATION FOOTER
+				    ========================================================================= */}
+				{invoiceData.length > 0 && (
+					<div className='gz-inv-pagination'>
+						{/* Count info */}
+						<div>
+							Showing {currentStart}-{currentEnd} of {totalRecords} invoices
+						</div>
+
+						{/* Numbered pages */}
+						<div className='gz-inv-pages-group'>
+							<button
+								type='button'
+								className='gz-inv-page-num'
+								disabled={pagination.page <= 1}
+								onClick={() => handlePageChange(pagination.page - 1)}>
+								<FontAwesomeIcon icon={faAngleLeft} />
+							</button>
+
+							{getPaginationItems(pagination.page, totalPages).map((item, idx) => {
+								if (item === '...') {
+									return (
+										<span
+											key={`dots-${idx}`}
+											style={{
+												display: 'inline-flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												minWidth: '24px',
+												height: '34px',
+												color: '#94A3B8',
+												fontWeight: 700,
+												fontSize: '14px',
+												userSelect: 'none',
+											}}>
+											…
+										</span>
+									)
+								}
+								return (
+									<button
+										key={item}
+										type='button'
+										className={`gz-inv-page-num ${pagination.page === item ? 'active' : ''}`}
+										onClick={() => handlePageChange(item)}>
+										{item}
+									</button>
+								)
+							})}
+
+							<button
+								type='button'
+								className='gz-inv-page-num'
+								disabled={pagination.page >= totalPages}
+								onClick={() => handlePageChange(pagination.page + 1)}>
+								<FontAwesomeIcon icon={faAngleRight} />
+							</button>
+						</div>
+
+						{/* Quick record count indicator */}
+						<div style={{ color: '#71809A', fontSize: '13px', fontWeight: 500 }}>
+							Page {pagination.page} of {totalPages}
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
 	)
 }
 
