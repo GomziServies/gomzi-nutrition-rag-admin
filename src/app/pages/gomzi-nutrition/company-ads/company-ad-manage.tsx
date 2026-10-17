@@ -77,6 +77,11 @@ export const CompanyAdManage: React.FC = () => {
 	const [formData, setFormData] = useState<Partial<CompanyAdItem>>({
 		company: '',
 		title: '',
+		subtitle: '',
+		badge: '',
+		discountText: '',
+		couponCode: '',
+		buttonText: '',
 		image: '',
 		url: '/gomzi-supplement',
 		status: true,
@@ -115,6 +120,11 @@ export const CompanyAdManage: React.FC = () => {
 		setFormData({
 			company: defaultCompany,
 			title: '',
+			subtitle: '',
+			badge: 'INDIA VERIFIED PARTNER',
+			discountText: 'SPECIAL OFFER • EXTRA 15% OFF',
+			couponCode: defaultCompany ? `${defaultCompany.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase()}15` : 'PROMO15',
+			buttonText: defaultCompany ? `Explore ${defaultCompany} Store` : 'Explore Brand Store',
 			image: '',
 			url: defaultCompany ? `/gomzi-supplement?brand=${encodeURIComponent(defaultCompany)}` : '/gomzi-supplement',
 			status: true,
@@ -129,6 +139,11 @@ export const CompanyAdManage: React.FC = () => {
 		setFormData({
 			company: ad.company || '',
 			title: ad.title || '',
+			subtitle: ad.subtitle || '',
+			badge: ad.badge || '',
+			discountText: ad.discountText || '',
+			couponCode: ad.couponCode || '',
+			buttonText: ad.buttonText || '',
 			image: ad.image || '',
 			url: ad.url || '/gomzi-supplement',
 			status: ad.status !== undefined ? ad.status : true,
@@ -177,6 +192,11 @@ export const CompanyAdManage: React.FC = () => {
 			const payload: Partial<CompanyAdItem> = {
 				company: formData.company.trim(),
 				title: formData.title.trim(),
+				subtitle: formData.subtitle ? formData.subtitle.trim() : '',
+				badge: formData.badge ? formData.badge.trim() : 'INDIA VERIFIED PARTNER',
+				discountText: formData.discountText ? formData.discountText.trim() : '',
+				couponCode: formData.couponCode ? formData.couponCode.trim() : '',
+				buttonText: formData.buttonText ? formData.buttonText.trim() : '',
 				image: formData.image.trim(),
 				url: formData.url ? formData.url.trim() : `/gomzi-supplement?brand=${encodeURIComponent(formData.company.trim())}`,
 				status: formData.status !== undefined ? formData.status : true,
@@ -453,14 +473,14 @@ export const CompanyAdManage: React.FC = () => {
 						return (
 							<div key={targetId || idx} className='col-12 col-lg-6'>
 								<div className='card bg-body shadow-sm border h-100 overflow-hidden'>
-									{/* Top Banner Graphic Preview */}
-									<div className='position-relative' style={{ height: 200, background: '#09090b' }}>
+									{/* Top Banner Graphic Preview - Clean, Full Aspect Ratio, No Overlays */}
+									<div className='position-relative bg-light text-center border-bottom' style={{ height: 210 }}>
 										{ad.image ? (
 											<img
 												src={getPreviewUrl(ad.image)}
-												alt={ad.title}
+												alt={ad.company}
 												className='w-100 h-100'
-												style={{ objectFit: 'cover' }}
+												style={{ objectFit: 'contain' }}
 											/>
 										) : (
 											<div className='w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted'>
@@ -468,7 +488,6 @@ export const CompanyAdManage: React.FC = () => {
 												<span className='fs-8'>No Image Uploaded</span>
 											</div>
 										)}
-										<div className='position-absolute top-0 start-0 w-100 h-100' style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)' }} />
 
 										{/* Badges on Top */}
 										<div className='position-absolute top-3 start-3 d-flex align-items-center gap-2'>
@@ -480,19 +499,20 @@ export const CompanyAdManage: React.FC = () => {
 
 										<div className='position-absolute top-3 end-3'>
 											<span className={`badge ${ad.status ? 'bg-success' : 'bg-danger'} text-white fw-bold fs-9 px-2 py-1 shadow-sm`}>
-												{ad.status ? 'Live & Active on Website' : 'Hidden'}
+												{ad.status ? 'Live & Active' : 'Hidden'}
 											</span>
-										</div>
-
-										{/* Bottom Banner Title Overlay */}
-										<div className='position-absolute bottom-3 start-3 end-3 text-white'>
-											<div className='fs-6 fw-bolder text-truncate mb-0'>{ad.title}</div>
 										</div>
 									</div>
 
 									{/* Card Content & Action Bar */}
 									<div className='card-body p-4 d-flex flex-column justify-content-between'>
 										<div className='mb-3'>
+											{ad.title && ad.title !== '1' && (
+												<div className='fs-6 fw-bolder text-dark mb-1 text-truncate'>{ad.title}</div>
+											)}
+											{ad.subtitle && (
+												<div className='fs-8 text-muted mb-2 text-truncate'>{ad.subtitle}</div>
+											)}
 											<div className='fs-8 text-muted d-flex align-items-center gap-1 text-truncate'>
 												<FontAwesomeIcon icon={faExternalLinkAlt} className='text-primary me-1' />
 												<span className='fw-bold text-gray-700'>Redirect URL: </span>
@@ -605,16 +625,74 @@ export const CompanyAdManage: React.FC = () => {
 											</select>
 										</div>
 
-										{/* Field 2: Title */}
+										{/* Field 2: Title / Tagline */}
 										<div className='col-12'>
-											<label className='form-label fw-bold required fs-7'>Title</label>
+											<label className='form-label fw-bold required fs-7'>Ad Headline / Tagline</label>
 											<input
 												type='text'
 												className='form-control form-control-solid fs-7'
-												placeholder='Enter ad title / headline'
+												placeholder='e.g., PREMIUM SCIENCE-BACKED SUPPLEMENTS'
 												value={formData.title}
 												onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
 												required
+											/>
+										</div>
+
+										{/* Field 2b: Subtitle / Description */}
+										<div className='col-12'>
+											<label className='form-label fw-bold fs-7'>Description / Subtitle</label>
+											<input
+												type='text'
+												className='form-control form-control-solid fs-7'
+												placeholder='e.g., Clinically Formulated Nutrition for Peak Athletic Performance'
+												value={formData.subtitle || ''}
+												onChange={(e) => setFormData((prev) => ({ ...prev, subtitle: e.target.value }))}
+											/>
+										</div>
+
+										{/* Field 2c: Badge & Discount Pill */}
+										<div className='col-12 col-md-6'>
+											<label className='form-label fw-bold fs-7'>Offer Badge</label>
+											<input
+												type='text'
+												className='form-control form-control-solid fs-7'
+												placeholder='e.g., INDIA VERIFIED PARTNER'
+												value={formData.badge || ''}
+												onChange={(e) => setFormData((prev) => ({ ...prev, badge: e.target.value }))}
+											/>
+										</div>
+
+										<div className='col-12 col-md-6'>
+											<label className='form-label fw-bold fs-7'>Special Offer / Discount Pill</label>
+											<input
+												type='text'
+												className='form-control form-control-solid fs-7'
+												placeholder='e.g., SPECIAL OFFER • EXTRA 15% OFF'
+												value={formData.discountText || ''}
+												onChange={(e) => setFormData((prev) => ({ ...prev, discountText: e.target.value }))}
+											/>
+										</div>
+
+										{/* Field 2d: Coupon Code & Button Text */}
+										<div className='col-12 col-md-6'>
+											<label className='form-label fw-bold fs-7'>Coupon Code</label>
+											<input
+												type='text'
+												className='form-control form-control-solid fs-7 font-monospace'
+												placeholder='e.g., GN15'
+												value={formData.couponCode || ''}
+												onChange={(e) => setFormData((prev) => ({ ...prev, couponCode: e.target.value.toUpperCase() }))}
+											/>
+										</div>
+
+										<div className='col-12 col-md-6'>
+											<label className='form-label fw-bold fs-7'>Button CTA Label</label>
+											<input
+												type='text'
+												className='form-control form-control-solid fs-7'
+												placeholder='e.g., Explore Gomzi Nutrition Store'
+												value={formData.buttonText || ''}
+												onChange={(e) => setFormData((prev) => ({ ...prev, buttonText: e.target.value }))}
 											/>
 										</div>
 

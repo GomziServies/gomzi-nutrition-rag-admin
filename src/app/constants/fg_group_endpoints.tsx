@@ -19,6 +19,10 @@ export const FileUpload = `${AdminV1Route}/file-upload`
 // Product Categories
 export const GetCategories = `${AdminV1Route}/categories`
 export const ManageCategory = `${AdminV1Route}/categories`
+export const GetCompanies = `${AdminV1Route}/companies`
+export const ManageCompany = `${AdminV1Route}/companies`
+export const GetCompanyAds = `${AdminV1Route}/company-ads`
+export const ManageCompanyAd = `${AdminV1Route}/company-ads`
 
 // Science Journal / Blogs
 export const GetBlogs = `${AdminV1Route}/blogs`
