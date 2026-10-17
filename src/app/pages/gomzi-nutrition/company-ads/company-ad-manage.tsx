@@ -20,6 +20,7 @@ import {
 	faSearch,
 	faBullhorn,
 	faImage,
+	faChevronDown,
 } from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import {
@@ -67,6 +68,7 @@ export const CompanyAdManage: React.FC = () => {
 	const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
 	const [currentId, setCurrentId] = useState<string>('')
 	const [imagePreview, setImagePreview] = useState<string>('')
+	const [uploadedImages, setUploadedImages] = useState<string[]>([])
 
 	// Form State with ONLY the 5 requested fields:
 	// 1. company (Company / Brand)
@@ -77,15 +79,30 @@ export const CompanyAdManage: React.FC = () => {
 	const [formData, setFormData] = useState<Partial<CompanyAdItem>>({
 		company: '',
 		title: '',
-		subtitle: '',
-		badge: '',
-		discountText: '',
-		couponCode: '',
-		buttonText: '',
 		image: '',
 		url: '/gomzi-supplement',
 		status: true,
 	})
+
+	// Searchable Company Dropdown State
+	const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false)
+	const [companySearchQuery, setCompanySearchQuery] = useState('')
+	const companyDropdownRef = useRef<HTMLDivElement>(null)
+	const companySearchInputRef = useRef<HTMLInputElement>(null)
+
+	useEffect(() => {
+		const handleOutsideClick = (e: MouseEvent) => {
+			if (companyDropdownRef.current && !companyDropdownRef.current.contains(e.target as Node)) {
+				setCompanyDropdownOpen(false)
+			}
+		}
+		if (companyDropdownOpen) {
+			document.addEventListener('mousedown', handleOutsideClick)
+		}
+		return () => {
+			document.removeEventListener('mousedown', handleOutsideClick)
+		}
+	}, [companyDropdownOpen])
 
 	const loadData = async () => {
 		try {
@@ -116,15 +133,13 @@ export const CompanyAdManage: React.FC = () => {
 		setModalMode('create')
 		setCurrentId('')
 		setImagePreview('')
+		setUploadedImages([])
+		setCompanyDropdownOpen(false)
+		setCompanySearchQuery('')
 		const defaultCompany = companies.length > 0 ? companies[0].name : ''
 		setFormData({
 			company: defaultCompany,
 			title: '',
-			subtitle: '',
-			badge: 'INDIA VERIFIED PARTNER',
-			discountText: 'SPECIAL OFFER • EXTRA 15% OFF',
-			couponCode: defaultCompany ? `${defaultCompany.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase()}15` : 'PROMO15',
-			buttonText: defaultCompany ? `Explore ${defaultCompany} Store` : 'Explore Brand Store',
 			image: '',
 			url: defaultCompany ? `/gomzi-supplement?brand=${encodeURIComponent(defaultCompany)}` : '/gomzi-supplement',
 			status: true,
@@ -136,14 +151,11 @@ export const CompanyAdManage: React.FC = () => {
 		setModalMode('edit')
 		setCurrentId(ad._id || ad.id || '')
 		setImagePreview(getPreviewUrl(ad.image))
+		setCompanyDropdownOpen(false)
+		setCompanySearchQuery('')
 		setFormData({
 			company: ad.company || '',
 			title: ad.title || '',
-			subtitle: ad.subtitle || '',
-			badge: ad.badge || '',
-			discountText: ad.discountText || '',
-			couponCode: ad.couponCode || '',
-			buttonText: ad.buttonText || '',
 			image: ad.image || '',
 			url: ad.url || '/gomzi-supplement',
 			status: ad.status !== undefined ? ad.status : true,
@@ -153,16 +165,17 @@ export const CompanyAdManage: React.FC = () => {
 
 	const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (!e.target.files || e.target.files.length === 0) return
-		const file = e.target.files[0]
-		setImagePreview(URL.createObjectURL(file))
+		const files = Array.from(e.target.files)
+		setImagePreview(URL.createObjectURL(files[0]))
 
 		try {
 			setUploadingImage(true)
-			const res: any = await FileUploadToFGGroup([file], { directory: 'company-ads' })
-			const fileUrl = res?.data?.fileURLs?.[0]
-			if (fileUrl) {
-				setFormData((prev) => ({ ...prev, image: fileUrl }))
-				toast.success('Ad banner uploaded successfully!')
+			const res: any = await FileUploadToFGGroup(files, { directory: 'company-ads' })
+			const fileUrls: string[] = res?.data?.fileURLs || []
+			if (fileUrls.length > 0) {
+				setUploadedImages(fileUrls)
+				setFormData((prev) => ({ ...prev, image: fileUrls[0] }))
+				toast.success(`${fileUrls.length} ${fileUrls.length === 1 ? 'banner' : 'banners'} uploaded successfully!`)
 			}
 		} catch (err: any) {
 			console.error('Ad banner upload failed:', err)
@@ -192,11 +205,6 @@ export const CompanyAdManage: React.FC = () => {
 			const payload: Partial<CompanyAdItem> = {
 				company: formData.company.trim(),
 				title: formData.title.trim(),
-				subtitle: formData.subtitle ? formData.subtitle.trim() : '',
-				badge: formData.badge ? formData.badge.trim() : 'INDIA VERIFIED PARTNER',
-				discountText: formData.discountText ? formData.discountText.trim() : '',
-				couponCode: formData.couponCode ? formData.couponCode.trim() : '',
-				buttonText: formData.buttonText ? formData.buttonText.trim() : '',
 				image: formData.image.trim(),
 				url: formData.url ? formData.url.trim() : `/gomzi-supplement?brand=${encodeURIComponent(formData.company.trim())}`,
 				status: formData.status !== undefined ? formData.status : true,
@@ -204,11 +212,24 @@ export const CompanyAdManage: React.FC = () => {
 			}
 
 			if (modalMode === 'create') {
-				const res: any = await CreateCompanyAdAdmin(payload)
-				if (res?.data?.ad) {
-					toast.success('Company ad created successfully!')
+				if (uploadedImages.length > 1) {
+					for (let i = 0; i < uploadedImages.length; i++) {
+						await CreateCompanyAdAdmin({
+							...payload,
+							image: uploadedImages[i],
+							order: ads.length + i + 1,
+						})
+					}
+					toast.success(`${uploadedImages.length} company ad banners created successfully!`)
 					setShowModal(false)
 					loadData()
+				} else {
+					const res: any = await CreateCompanyAdAdmin(payload)
+					if (res?.data?.ad) {
+						toast.success('Company ad created successfully!')
+						setShowModal(false)
+						loadData()
+					}
 				}
 			} else {
 				const res: any = await UpdateCompanyAdAdmin({
@@ -510,9 +531,6 @@ export const CompanyAdManage: React.FC = () => {
 											{ad.title && ad.title !== '1' && (
 												<div className='fs-6 fw-bolder text-dark mb-1 text-truncate'>{ad.title}</div>
 											)}
-											{ad.subtitle && (
-												<div className='fs-8 text-muted mb-2 text-truncate'>{ad.subtitle}</div>
-											)}
 											<div className='fs-8 text-muted d-flex align-items-center gap-1 text-truncate'>
 												<FontAwesomeIcon icon={faExternalLinkAlt} className='text-primary me-1' />
 												<span className='fw-bold text-gray-700'>Redirect URL: </span>
@@ -599,100 +617,197 @@ export const CompanyAdManage: React.FC = () => {
 
 								<div className='modal-body p-6'>
 									<div className='row g-4'>
-										{/* Field 1: Company / Brand */}
+										{/* Field 1: Company / Brand with Search Bar */}
 										<div className='col-12'>
 											<label className='form-label fw-bold required fs-7'>Company / Brand</label>
-											<select
-												className='form-select form-select-solid fs-7'
-												value={formData.company}
-												onChange={(e) => {
-													const val = e.target.value
-													setFormData((prev) => ({
-														...prev,
-														company: val,
-														url: prev.url === '/gomzi-supplement' || !prev.url
-															? `/gomzi-supplement?brand=${encodeURIComponent(val)}`
-															: prev.url,
-													}))
-												}}
-												required>
-												<option value=''>-- Select Company / Brand --</option>
-												{companies.map((c, i) => (
-													<option key={i} value={c.name}>
-														{c.name}
-													</option>
-												))}
-											</select>
+											<div className='position-relative' ref={companyDropdownRef}>
+												{/* Trigger Button */}
+												<div
+													onClick={() => {
+														setCompanyDropdownOpen((prev) => {
+															const next = !prev
+															if (next) {
+																setTimeout(() => companySearchInputRef.current?.focus(), 60)
+															}
+															return next
+														})
+													}}
+													className={`form-select form-select-solid fs-7 d-flex align-items-center justify-content-between cursor-pointer ${
+														companyDropdownOpen ? 'border-primary shadow-xs' : ''
+													}`}
+													style={{
+														height: 42,
+														backgroundColor: '#f5f8fa',
+														borderColor: companyDropdownOpen ? '#009ef7' : '#e4e6ef',
+														userSelect: 'none',
+													}}>
+													<div className='d-flex align-items-center gap-2 text-truncate'>
+														<FontAwesomeIcon icon={faBuilding} className='text-primary fs-8' />
+														<span className={formData.company ? 'fw-bold text-dark' : 'text-muted'}>
+															{formData.company || '-- Select Company / Brand --'}
+														</span>
+													</div>
+													<div className='d-flex align-items-center gap-2'>
+														{formData.company && (
+															<span
+																role='button'
+																tabIndex={0}
+																onClick={(e) => {
+																	e.stopPropagation()
+																	setFormData((prev) => ({ ...prev, company: '' }))
+																}}
+																className='badge badge-circle badge-light-danger btn-icon w-20px h-20px'
+																title='Clear selection'>
+																<FontAwesomeIcon icon={faTimes} style={{ fontSize: 9 }} />
+															</span>
+														)}
+														<FontAwesomeIcon
+															icon={faChevronDown}
+															className='text-muted fs-8'
+															style={{
+																transform: companyDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+																transition: 'transform 0.2s ease',
+															}}
+														/>
+													</div>
+												</div>
+
+												{/* Dropdown Menu with Search Bar */}
+												{companyDropdownOpen && (
+													<div
+														className='position-absolute start-0 end-0 bg-white rounded-3 shadow-lg border mt-1 p-2'
+														style={{
+															zIndex: 1070,
+															borderColor: '#e4e6ef',
+															minWidth: '100%',
+														}}>
+														{/* Search Bar Input */}
+														<div className='position-relative mb-2'>
+															<FontAwesomeIcon
+																icon={faSearch}
+																className='position-absolute top-50 translate-middle-y ms-3 text-muted fs-8'
+															/>
+															<input
+																ref={companySearchInputRef}
+																type='text'
+																className='form-control form-control-sm form-control-solid ps-9 pe-8 fs-7'
+																placeholder='Search company / brand...'
+																value={companySearchQuery}
+																onChange={(e) => setCompanySearchQuery(e.target.value)}
+																onKeyDown={(e) => {
+																	if (e.key === 'Enter') {
+																		e.preventDefault()
+																		const matches = companies.filter((c) =>
+																			c.name.toLowerCase().includes(companySearchQuery.toLowerCase().trim())
+																		)
+																		if (matches.length > 0) {
+																			const selected = matches[0].name
+																			setFormData((prev) => ({
+																				...prev,
+																				company: selected,
+																				url:
+																					prev.url === '/gomzi-supplement' || !prev.url
+																						? `/gomzi-supplement?brand=${encodeURIComponent(selected)}`
+																						: prev.url,
+																			}))
+																			setCompanyDropdownOpen(false)
+																			setCompanySearchQuery('')
+																		}
+																	} else if (e.key === 'Escape') {
+																		setCompanyDropdownOpen(false)
+																	}
+																}}
+															/>
+															{companySearchQuery && (
+																<button
+																	type='button'
+																	onClick={() => {
+																		setCompanySearchQuery('')
+																		companySearchInputRef.current?.focus()
+																	}}
+																	className='btn btn-icon btn-sm position-absolute top-50 end-0 translate-middle-y me-1 p-0 text-muted hover-color-primary'
+																	style={{ width: 22, height: 22 }}>
+																	<FontAwesomeIcon icon={faTimes} style={{ fontSize: 10 }} />
+																</button>
+															)}
+														</div>
+
+														{/* Dropdown Options List */}
+														<div style={{ maxHeight: 210, overflowY: 'auto' }}>
+															{(() => {
+																const matches = companies.filter((c) =>
+																	companySearchQuery.trim()
+																		? c.name.toLowerCase().includes(companySearchQuery.toLowerCase().trim())
+																		: true
+																)
+
+																if (matches.length === 0) {
+																	return (
+																		<div className='p-3 text-center text-muted fs-8'>
+																			No company found matching "{companySearchQuery}"
+																		</div>
+																	)
+																}
+
+																return matches.map((c, i) => {
+																	const isSelected = formData.company === c.name
+																	return (
+																		<div
+																			key={i}
+																			onClick={() => {
+																				setFormData((prev) => ({
+																					...prev,
+																					company: c.name,
+																					url:
+																						prev.url === '/gomzi-supplement' || !prev.url
+																							? `/gomzi-supplement?brand=${encodeURIComponent(c.name)}`
+																							: prev.url,
+																				}))
+																				setCompanyDropdownOpen(false)
+																				setCompanySearchQuery('')
+																			}}
+																			className={`d-flex align-items-center justify-content-between px-3 py-2 rounded-2 cursor-pointer transition ${
+																				isSelected
+																					? 'bg-light-primary text-primary fw-bolder'
+																					: 'text-gray-800 hover-bg-light fw-medium'
+																			}`}
+																			style={{
+																				fontSize: '0.875rem',
+																				backgroundColor: isSelected ? 'rgba(0, 158, 247, 0.08)' : undefined,
+																			}}>
+																			<div className='d-flex align-items-center gap-2 text-truncate'>
+																				<div
+																					className={`rounded-circle d-flex align-items-center justify-content-center ${
+																						isSelected ? 'bg-primary text-white' : 'bg-light text-muted'
+																					}`}
+																					style={{ width: 22, height: 22, fontSize: 10 }}>
+																					<FontAwesomeIcon icon={faBuilding} />
+																				</div>
+																				<span className='text-truncate'>{c.name}</span>
+																			</div>
+																			{isSelected && (
+																				<FontAwesomeIcon icon={faCheck} className='text-primary fs-8' />
+																			)}
+																		</div>
+																	)
+																})
+															})()}
+														</div>
+													</div>
+												)}
+											</div>
 										</div>
 
-										{/* Field 2: Title / Tagline */}
+										{/* Field 2: Title */}
 										<div className='col-12'>
-											<label className='form-label fw-bold required fs-7'>Ad Headline / Tagline</label>
+											<label className='form-label fw-bold required fs-7'>Title</label>
 											<input
 												type='text'
 												className='form-control form-control-solid fs-7'
-												placeholder='e.g., PREMIUM SCIENCE-BACKED SUPPLEMENTS'
+												placeholder='Enter ad title / headline'
 												value={formData.title}
 												onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
 												required
-											/>
-										</div>
-
-										{/* Field 2b: Subtitle / Description */}
-										<div className='col-12'>
-											<label className='form-label fw-bold fs-7'>Description / Subtitle</label>
-											<input
-												type='text'
-												className='form-control form-control-solid fs-7'
-												placeholder='e.g., Clinically Formulated Nutrition for Peak Athletic Performance'
-												value={formData.subtitle || ''}
-												onChange={(e) => setFormData((prev) => ({ ...prev, subtitle: e.target.value }))}
-											/>
-										</div>
-
-										{/* Field 2c: Badge & Discount Pill */}
-										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold fs-7'>Offer Badge</label>
-											<input
-												type='text'
-												className='form-control form-control-solid fs-7'
-												placeholder='e.g., INDIA VERIFIED PARTNER'
-												value={formData.badge || ''}
-												onChange={(e) => setFormData((prev) => ({ ...prev, badge: e.target.value }))}
-											/>
-										</div>
-
-										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold fs-7'>Special Offer / Discount Pill</label>
-											<input
-												type='text'
-												className='form-control form-control-solid fs-7'
-												placeholder='e.g., SPECIAL OFFER • EXTRA 15% OFF'
-												value={formData.discountText || ''}
-												onChange={(e) => setFormData((prev) => ({ ...prev, discountText: e.target.value }))}
-											/>
-										</div>
-
-										{/* Field 2d: Coupon Code & Button Text */}
-										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold fs-7'>Coupon Code</label>
-											<input
-												type='text'
-												className='form-control form-control-solid fs-7 font-monospace'
-												placeholder='e.g., GN15'
-												value={formData.couponCode || ''}
-												onChange={(e) => setFormData((prev) => ({ ...prev, couponCode: e.target.value.toUpperCase() }))}
-											/>
-										</div>
-
-										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold fs-7'>Button CTA Label</label>
-											<input
-												type='text'
-												className='form-control form-control-solid fs-7'
-												placeholder='e.g., Explore Gomzi Nutrition Store'
-												value={formData.buttonText || ''}
-												onChange={(e) => setFormData((prev) => ({ ...prev, buttonText: e.target.value }))}
 											/>
 										</div>
 
@@ -735,6 +850,7 @@ export const CompanyAdManage: React.FC = () => {
 												ref={fileInputRef}
 												type='file'
 												accept='image/*'
+												multiple={modalMode === 'create'}
 												className='d-none'
 												onChange={handleImageFileChange}
 											/>
