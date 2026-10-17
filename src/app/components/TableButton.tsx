@@ -1,6 +1,7 @@
 import {
 	faCheck,
 	faCompass,
+	faDownload,
 	faEdit,
 	faEye,
 	faPaperPlane,
@@ -26,6 +27,7 @@ type ActionType =
 	| 'qr'
 	| 'star'
 	| 'explore'
+	| 'download'
 
 type Props = {
 	action: ActionType
@@ -77,6 +79,8 @@ const TableButton: FC<Props> = ({
 					return 'btn btn-light-warning gz-table-text-btn'
 				case 'explore':
 					return 'btn btn-light-info gz-table-text-btn'
+				case 'download':
+					return 'btn btn-light-primary gz-table-text-btn'
 				default:
 					return 'btn btn-light-primary gz-table-text-btn'
 			}
@@ -100,6 +104,8 @@ const TableButton: FC<Props> = ({
 				return 'btn btn-icon btn-light-dark btn-sm gz-table-action-btn is-qr'
 			case 'explore':
 				return 'btn btn-icon btn-light-info btn-sm gz-table-action-btn is-explore'
+			case 'download':
+				return 'btn btn-icon btn-light-primary btn-sm gz-table-action-btn is-download'
 			default:
 				return 'btn btn-icon btn-light-primary btn-sm gz-table-action-btn is-default'
 		}
@@ -127,6 +133,8 @@ const TableButton: FC<Props> = ({
 				return faStar
 			case 'explore':
 				return faCompass
+			case 'download':
+				return faDownload
 			default:
 				return faPlus
 		}
@@ -156,6 +164,8 @@ const TableButton: FC<Props> = ({
 				return 'Rating'
 			case 'explore':
 				return 'Explore'
+			case 'download':
+				return 'Download'
 			default:
 				return 'Action'
 		}
