@@ -1,12 +1,16 @@
+import { faPlus } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Modal, Spinner } from 'react-bootstrap'
 import toast from 'react-hot-toast'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -49,6 +53,7 @@ const TeamRatingView: React.FC = () => {
 	const teamId = searchParams.get('team_id')
 	const navigate = useNavigate()
 
+	const [searchTerm, setSearchTerm] = useState('')
 	const [ratings, setRatings] = useState<any[]>([])
 	const [loading, setLoading] = useState(false)
 	const [teamName, setTeamName] = useState('Team')
@@ -345,7 +350,20 @@ const TeamRatingView: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>{`Team Rating: ${teamName}`}</PageTitle>
 
-			<KTCard>
+			{/* Top Bar with Back Link */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<Link
+					to='/hr/team-management'
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
+					<i className='bi bi-arrow-left fs-6'></i>
+					<span className='fw-semibold'>Back to Team Management</span>
+				</Link>
+				<h3 className='fw-bold m-0 fs-4' style={{ color: '#142447' }}>
+					Team Rating: {teamName}
+				</h3>
+			</div>
+
+			<KTCard className='mb-5'>
 				<div className='row g-5 mx-5 my-3'>
 					<div className='col-xl-4'>
 						<div
@@ -430,42 +448,79 @@ const TeamRatingView: React.FC = () => {
 						</div>
 					</div>
 				</div>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title'>
-						<h3 className='fw-bolder m-0'>Performance</h3>
-					</div>
-					<div className='card-toolbar'>
-						<div className='d-flex align-items-center me-3'>
-							<LengthMenu
-								expenseData={ratings}
-								handleItemsPerPageChange={(pageSize) =>
-									setPagination((prev) => ({ ...prev, itemsPerPage: pageSize, page: 1 }))
-								}
-							/>
+			</KTCard>
+
+				{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date -> Right Action) */}
+				<div className='gz-filter-card mb-5'>
+					<div className='d-flex align-items-center justify-content-between flex-wrap gap-3 w-100'>
+						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+							{/* 1. Searchbar */}
+							<div style={{ minWidth: '220px', maxWidth: '340px', flex: '1 1 220px' }}>
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									placeholder='Search rating type, remarks...'
+									className='me-0'
+								/>
+							</div>
+
+							{/* 2. Page Size */}
+							<div>
+								<LengthMenu
+									expenseData={ratings}
+									handleItemsPerPageChange={(pageSize) =>
+										setPagination((prev) => ({ ...prev, itemsPerPage: pageSize, page: 1 }))
+									}
+									className='me-0'
+								/>
+							</div>
+
+							{/* 3. Download Excel Button */}
+							<div>
+								<DownloadExcelButton
+									data={ratings}
+									columns={[
+										{ title: 'Position', field: 'type' },
+										{ title: 'Total Score', field: 'total_score' },
+										{ title: 'Remarks', field: 'remarks' },
+										{ title: 'Date', field: 'createdAt' },
+									]}
+									filename='Team_Ratings'
+								/>
+							</div>
+
+							{/* 4. Date Filter */}
+							<div>
+								<DateFilter
+									onDateRangeChange={(range) => {
+										setSelectedDateRange(range)
+										setPagination((prev) => ({ ...prev, page: 1 }))
+									}}
+									rightValue='0'
+								/>
+							</div>
 						</div>
-						<div className='me-3'>
-							<DateFilter
-								onDateRangeChange={(range) => {
-									setSelectedDateRange(range)
-									setPagination((prev) => ({ ...prev, page: 1 }))
-								}}
-								leftValue='-480px'
-							/>
+
+						{/* 6. End me right side Add Rating Button */}
+						<div className='flex-shrink-0 ms-auto'>
+							<Button
+								variant='primary'
+								className='btn-sm fw-bold px-4 d-flex align-items-center gap-2'
+								style={{ height: '38px', borderRadius: '8px' }}
+								onClick={() => {
+									setIsEditing(false)
+									setShowModal(true)
+								}}>
+								<FontAwesomeIcon icon={faPlus} className='fs-6 text-white' />
+								<span>Add Rating</span>
+							</Button>
 						</div>
-						<Button
-							variant='primary'
-							className='btn-sm fw-bold px-4 py-3'
-							onClick={() => {
-								setIsEditing(false)
-								setShowModal(true)
-							}}>
-							<i className='bi bi-plus fs-1 me-1'></i>
-							Add Rating
-						</Button>
 					</div>
 				</div>
 
-				<div className='card-body py-4'>
+				{/* Table Card */}
+				<div className='gz-inv-table-card'>
+					<div className='card-body py-4'>
 					<div className='table-responsive'>
 						<Table
 							data={ratings}
@@ -568,10 +623,12 @@ const TeamRatingView: React.FC = () => {
 							totalPages={Math.ceil(totalItems / pagination.itemsPerPage) || 1}
 							currentPage={pagination.page}
 							onPageChange={(p) => setPagination({ ...pagination, page: p })}
+							totalRecords={totalItems || ratings.length}
+							itemsPerPage={pagination.itemsPerPage}
 						/>
 					)}
 				</div>
-			</KTCard>
+			</div>
 
 			<Modal
 				show={showModal}

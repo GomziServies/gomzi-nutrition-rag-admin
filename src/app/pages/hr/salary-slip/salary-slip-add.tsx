@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { errorToast, successToast } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import TableButton from '../../../components/TableButton'
@@ -201,6 +202,16 @@ const SalarySlipAdd = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Add Salary Slip</PageTitle>
+
+			{/* Top Action Bar with Back Link */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<Link
+					to='/hr/salary-slip'
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
+					<i className='bi bi-arrow-left fs-6'></i>
+					<span className='fw-semibold'>Back to Salary Slips</span>
+				</Link>
+			</div>
 
 			<div className='card mb-5 mb-xl-10'>
 				<div className='card-body p-9'>

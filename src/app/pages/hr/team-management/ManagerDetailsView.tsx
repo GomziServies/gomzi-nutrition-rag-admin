@@ -3,12 +3,13 @@ import { Button, Form, Modal } from 'react-bootstrap'
 import Card from 'react-bootstrap/Card'
 import toast from 'react-hot-toast'
 import { MultiSelect } from 'react-multi-select-component'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -352,11 +353,14 @@ const ManagerDetailsView: React.FC = () => {
 									</span>
 								</div>
 							</div>
-							{/* <div className='ms-auto'>
-                 <button className='btn btn-light-primary btn-sm' onClick={() => navigate('/hr/team-management')}>
-                    <i className='bi bi-arrow-left me-2'></i>Back to List
-                 </button>
-              </div> */}
+							<div className='ms-auto'>
+								<Link
+									to='/hr/team-management'
+									className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
+									<i className='bi bi-arrow-left fs-6'></i>
+									<span className='fw-semibold'>Back to Team Management</span>
+								</Link>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -378,26 +382,51 @@ const ManagerDetailsView: React.FC = () => {
 						</div>
 					</div>
 
-					<div className='row mb-4'>
-						<div className='col-md-5'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-						</div>
-						<div className='col-md-7 d-flex justify-content-end gap-3'>
-							<LengthMenu
-								expenseData={assignedTeams}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-							/>
-							<TableButton
-								action='add'
-								onClick={handleCreateTeam}
-								text='Assign Team'
-							/>
+					{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date -> Right Action) */}
+					<div className='gz-filter-card mb-5'>
+						<div className='d-flex align-items-center justify-content-between flex-wrap gap-3 w-100'>
+							<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+								{/* 1. Search */}
+								<div style={{ flex: '1 1 240px', maxWidth: '360px' }}>
+									<SearchFilter
+										searchTerm={searchTerm}
+										setSearchTerm={setSearchTerm}
+										placeholder='Search team...'
+										className='me-0'
+									/>
+								</div>
+
+								{/* 2. Page Size */}
+								<div>
+									<LengthMenu
+										expenseData={assignedTeams}
+										handleItemsPerPageChange={handleItemsPerPageChange}
+										className='me-0'
+									/>
+								</div>
+
+								{/* 3. Download Excel Button */}
+								<div>
+									<DownloadExcelButton
+										data={assignedTeams}
+										columns={sortableFields}
+										filename='Manager_Teams'
+									/>
+								</div>
+							</div>
+
+							{/* 6. End me right side Assign Team Button */}
+							<div className='flex-shrink-0 ms-auto'>
+								<TableButton
+									action='add'
+									onClick={handleCreateTeam}
+									text='Assign Team'
+								/>
+							</div>
 						</div>
 					</div>
 
+					<div className='gz-inv-table-card'>
 					<div className='table-responsive'>
 						{assignedTeams.length === 0 && !loading ? (
 							<div
@@ -463,13 +492,11 @@ const ManagerDetailsView: React.FC = () => {
 												</span>
 											</td>
 											<td className='d-flex align-items-center gap-2'>
-												<button
-													className='btn btn-light-warning btn-sm'
+												<TableButton
+													action='star'
 													title='Team Rating'
-													onClick={() => navigate(`/hr/team-rating?id=${id}&team_id=${team.id}`)}>
-													<i className='bi bi-star-fill fs-4 me-1'></i>
-													Rating
-												</button>
+													onClick={() => navigate(`/hr/team-rating?id=${id}&team_id=${team.id}`)}
+												/>
 												<TableButton
 													action='view'
 													onClick={() => handleViewTeamTasks(team)}
@@ -487,14 +514,15 @@ const ManagerDetailsView: React.FC = () => {
 					</div>
 
 					{filteredAssignedTeams.length > 0 && (
-						<div className='mt-5'>
-							<UsersListPagination
-								totalPages={metaData.totalPages}
-								currentPage={pagination.page}
-								onPageChange={(p) => setPagination({ ...pagination, page: p })}
-							/>
-						</div>
+						<UsersListPagination
+							totalPages={metaData.totalPages}
+							currentPage={pagination.page}
+							onPageChange={(p) => setPagination({ ...pagination, page: p })}
+							totalRecords={metaData.totalDocs || assignedTeams.length}
+							itemsPerPage={pagination.itemsPerPage}
+						/>
 					)}
+					</div>
 				</Card.Body>
 			</Card>
 

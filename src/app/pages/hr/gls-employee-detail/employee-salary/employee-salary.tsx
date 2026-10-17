@@ -6,9 +6,11 @@ import { toAbsoluteUrl } from '../../../../../_metronic/helpers'
 import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import DateFilter from '../../../../components/DateRangePicker'
+import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
 import Table from '../../../../components/Table'
 import TableButton from '../../../../components/TableButton'
+import DownloadExcelButton from '../../../../components/DownloadExcelButton'
 import UsersListPagination from '../../../../components/TablePagination'
 import { GetAdminUsers } from '../../../../Functions/FGGroup/AdminUsers'
 import { GetGlsSalary } from '../../../../Functions/FGGroup/GlsSalary'
@@ -264,74 +266,73 @@ const GlsEmployeeSalary = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Salary</PageTitle>
-			<div className='card'>
-				<div className='row justify-content-between mt-7 mx-6'>
-					<div className='col-md-9'>
-						<h3 className='card-title align-items-start flex-column'>
-							<span className='card-label fw-bold fs-3 mb-1'>Employee Salary Sheet</span>
-						</h3>
-					</div>
-				</div>
 
-				<div className='card-header row border-0 pt-6'>
-					<div className='col-md-6 d-flex'>
+			{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date) */}
+			<div className='gz-filter-card mb-5'>
+				<div className='d-flex align-items-center flex-wrap gap-3 w-100'>
+					{/* 1. Search */}
+					<div style={{ flex: '1 1 240px', maxWidth: '360px' }}>
 						<SearchFilter
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
+							placeholder='Search employee name...'
 						/>
-						<div className='d-md-block d-none'>
-							{salaryData?.length > 0 && (
-								<select
-									className='form-select form-select-sm mx-3'
-									style={{ width: '80px' }}
-									value={pagination.itemsPerPage}
-									onChange={(e) =>
-										setPagination((prev) => ({
-											...prev,
-											itemsPerPage: Number(e.target.value),
-											page: 1,
-										}))
-									}>
-									<option value='10'>10</option>
-									<option value='50'>50</option>
-									<option value='100'>100</option>
-								</select>
-							)}
-						</div>
 					</div>
-					<div className='col-md-6 pe-md-6'>
-						<div className='row justify-content-end'>
-							<div className='col-md-8 my-md-0 my-5 pe-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									leftValue='-600px'
-									lastMonth={true}
-								/>
-								{/* <input type="month" name="" id="" /> */}
-							</div>
-						</div>
+
+					{/* 2. Page Size */}
+					<div>
+						<LengthMenu
+							data={filteredAdminData}
+							itemsPerPage={pagination.itemsPerPage}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+						/>
 					</div>
-					<div className='col-md-3 d-flex d-md-none justify-content-between p-0'>
-						{salaryData?.length > 0 && (
+
+					{/* 3. Export to Excel */}
+					<div>
+						<DownloadExcelButton
+							data={filteredAdminData}
+							columns={[
+								{ title: 'Employee', field: 'full_name' },
+								{ title: 'Salary', field: 'total_salary' },
+								{ title: 'Final Salary', field: 'final_salary' },
+								{ title: 'Present', field: 'total_present' },
+								{ title: 'Absent', field: 'total_absent' },
+								{ title: 'Period', field: 'period' },
+							]}
+							filename='gls_employee_salary_report'
+						/>
+					</div>
+
+					{/* 4. Employee Dropdown */}
+					{employeeOptions.length > 0 && (
+						<div style={{ minWidth: '220px' }}>
 							<select
-								className='form-select form-select-sm'
-								style={{ width: '80px' }}
-								value={pagination.itemsPerPage}
-								onChange={(e) =>
-									setPagination((prev) => ({
-										...prev,
-										itemsPerPage: Number(e.target.value),
-										page: 1,
-									}))
-								}>
-								<option value='10'>10</option>
-								<option value='50'>50</option>
-								<option value='100'>100</option>
+								className='form-select form-select-sm gz-inv-select'
+								value={selectedEmployeeLabel}
+								onChange={handleEmployeeChange}>
+								{selectOptions.map((opt) => (
+									<option key={opt} value={opt}>
+										{opt}
+									</option>
+								))}
 							</select>
-						)}
+						</div>
+					)}
+
+					{/* 5. Date Filter */}
+					<div>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							lastMonth={true}
+						/>
 					</div>
 				</div>
+			</div>
 
+			{/* Table Card */}
+			<div className='gz-inv-table-card'>
 				<div className='card-body py-3'>
 					<div className='table-responsive'>
 						<Table
@@ -357,7 +358,15 @@ const GlsEmployeeSalary = () => {
 										</td>
 										<td>
 											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
+												<div
+													className='symbol symbol-circle overflow-hidden flex-shrink-0 me-4'
+													style={{
+														width: '42px',
+														height: '42px',
+														minWidth: '42px',
+														minHeight: '42px',
+														borderRadius: '10px',
+													}}>
 													<img
 														src={
 															salary?.employee_photo || salary?.photo
@@ -367,7 +376,15 @@ const GlsEmployeeSalary = () => {
 																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 														}
 														alt={salary?.employee_name || salary?.full_name}
-														style={{ width: '50px', height: '50px' }}
+														style={{
+															width: '42px',
+															height: '42px',
+															minWidth: '42px',
+															minHeight: '42px',
+															borderRadius: '10px',
+															objectFit: 'cover',
+															display: 'block',
+														}}
 													/>
 												</div>
 												<div className='d-flex justify-content-start flex-column'>
@@ -434,7 +451,15 @@ const GlsEmployeeSalary = () => {
 											<td colSpan={12}>
 												<div>
 													<div className='d-flex align-items-center'>
-														<div className='symbol symbol-45px me-5'>
+														<div
+															className='symbol symbol-circle overflow-hidden flex-shrink-0 me-4'
+															style={{
+																width: '42px',
+																height: '42px',
+																minWidth: '42px',
+																minHeight: '42px',
+																borderRadius: '10px',
+															}}>
 															<img
 																src={
 																	salary?.photo
@@ -442,7 +467,15 @@ const GlsEmployeeSalary = () => {
 																		: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 																}
 																alt={salary?.full_name}
-																style={{ width: '50px', height: '50px' }}
+																style={{
+																	width: '42px',
+																	height: '42px',
+																	minWidth: '42px',
+																	minHeight: '42px',
+																	borderRadius: '10px',
+																	objectFit: 'cover',
+																	display: 'block',
+																}}
 															/>
 														</div>
 														<div className='d-flex justify-content-start flex-column'>
@@ -498,6 +531,8 @@ const GlsEmployeeSalary = () => {
 							totalPages={Math.ceil(filteredAdminData.length / pagination.itemsPerPage)}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={filteredAdminData.length}
+							itemsPerPage={pagination.itemsPerPage}
 						/>
 					)}
 				</div>

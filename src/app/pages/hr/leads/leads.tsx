@@ -6,6 +6,7 @@ import UsersListPagination from '../../../components/TablePagination'
 import SelectField from '../../../components/SelectField'
 import SearchFilter from '../../../components/SearchFilter'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
@@ -171,21 +172,28 @@ const HRLead: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className='row'>
-                            <div className='col-12'>
-                                <div className='d-flex align-items-center justify-content-between'>
-                                    <div className='ms-5 d-flex'>
-                                        <SearchFilter
-                                            searchTerm={searchTerm}
-                                            setSearchTerm={setSearchTerm}
-                                        />
-                                    </div>
-                                    <div className='mt-1 me-4'>
-                                        <LengthMenu
-                                            expenseData={leadsData}
-                                            handleItemsPerPageChange={handlePageChange}
-                                        />
-                                    </div>
+                        <div className='px-5 py-2'>
+                            <div className='d-flex align-items-center flex-wrap gap-2 gap-md-3'>
+                                <div>
+                                    <SearchFilter
+                                        searchTerm={searchTerm}
+                                        setSearchTerm={setSearchTerm}
+                                        className='me-0'
+                                    />
+                                </div>
+                                <div>
+                                    <LengthMenu
+                                        expenseData={leadsData}
+                                        handleItemsPerPageChange={handlePageChange}
+                                        className='me-0'
+                                    />
+                                </div>
+                                <div>
+                                    <DownloadExcelButton
+                                        data={leadsData}
+                                        columns={sortableFields}
+                                        filename='Employee_Leads'
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -324,6 +332,8 @@ const HRLead: React.FC = () => {
                                 <UsersListPagination
                                     totalPages={Math.ceil(leadsData.length / pagination.itemsPerPage)}
                                     currentPage={pagination.page}
+                                    totalRecords={leadsData.length}
+                                    itemsPerPage={pagination.itemsPerPage}
                                     onPageChange={handlePageChange}
                                 />
                             )}

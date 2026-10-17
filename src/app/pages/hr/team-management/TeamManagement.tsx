@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { Button, Form, Modal, Spinner } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import { faListCheck, faPlus, faStar } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -181,61 +184,83 @@ const TeamManagement: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Team Management</PageTitle>
 
-			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title'>
-						<div className='d-flex align-items-center position-relative my-1'>
+			{/* Filter Toolbar (Order: SearchFilter -> LengthMenu -> Manager -> Add Task Button) */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+					<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+						{/* 1. Search */}
+						<div style={{ minWidth: '240px', maxWidth: '340px', flex: '1 1 240px' }}>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
+								placeholder='Search manager...'
+								className='me-0'
 							/>
 						</div>
-					</div>
-					<div className='card-toolbar gap-3 d-flex align-items-end'>
-						<div className='d-flex flex-column'>
-							<div className='row g-3 align-items-end'>
-								<div className='col-auto'>
-									{selectedManagerForTask && (
-										<Button
-											variant='primary'
-											className='btn-sm fw-bold px-4 py-3 mt-7'
-											onClick={handleAddTaskNavigation}>
-											<i className='bi bi-plus fs-2 me-1'></i>
-											Add Task
-										</Button>
-									)}
-								</div>
-								<div className='col-auto'>
-									<label className='fw-bold fs-6 mb-1'>Select Manager</label>
-									<Form.Select
-										className='form-select form-select-solid fw-bold w-200px'
-										value={selectedManagerForTask}
-										onChange={(e) => setSelectedManagerForTask(e.target.value)}>
-										<option value=''>Select</option>
-										{managers.map((m) => (
-											<option
-												key={m.id}
-												value={m.id}>
-												{m.name}
-											</option>
-										))}
-									</Form.Select>
-								</div>
-								<div className='col-auto ms-md-n3'>
-									<LengthMenu
-										expenseData={managers}
-										handleItemsPerPageChange={(val) =>
-											setPagination({ ...pagination, itemsPerPage: val, page: 1 })
-										}
-									/>
-								</div>
-							</div>
+
+						{/* 2. Page Size */}
+						<div>
+							<LengthMenu
+								expenseData={managers}
+								handleItemsPerPageChange={(val) =>
+									setPagination({ ...pagination, itemsPerPage: val, page: 1 })
+								}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={selectedManagers}
+								columns={sortableFields}
+								filename='Manager_List'
+							/>
+						</div>
+
+						{/* 4. Manager Dropdown */}
+						<div style={{ minWidth: '180px' }}>
+							<select
+								className='gz-inv-select'
+								style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+								value={selectedManagerForTask}
+								onChange={(e) => setSelectedManagerForTask(e.target.value)}>
+								<option value=''>All Managers</option>
+								{managers.map((m) => (
+									<option key={m.id} value={m.id}>
+										{m.name}
+									</option>
+								))}
+							</select>
 						</div>
 					</div>
-				</div>
 
-				<div className='card-body py-4'>
-					<div className='table-responsive'>
+					{/* 6. End me right side Add Task Button */}
+					{selectedManagerForTask && (
+						<div className='flex-shrink-0 ms-auto'>
+							<button
+								type='button'
+								className='btn btn-primary d-flex align-items-center gap-2 px-4'
+								style={{ height: '38px', borderRadius: '8px' }}
+								onClick={handleAddTaskNavigation}>
+								<FontAwesomeIcon icon={faPlus} className='text-white' />
+								<span>Add Task</span>
+							</button>
+						</div>
+					)}
+				</div>
+			</div>
+
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
+				<div className='table-responsive'>
 						<Table
 							data={paginatedSelectedManagers}
 							columns={sortableFields}
@@ -288,22 +313,24 @@ const TeamManagement: React.FC = () => {
 										</td>
 
 										<td className='text-start'>
-											<div className='d-flex align-items-center justify-content-start'>
+											<div className='d-flex align-items-center justify-content-start gap-2'>
 												<TableButton
 													action='view'
 													onClick={() => handleViewDetails(manager)}
 												/>
 												<button
-													className='btn btn-light-warning btn-sm mx-2'
+													type='button'
+													className='gz-inv-action-btn warning'
+													title='Manager Rating'
 													onClick={() => navigate(`/hr/manager-rating?id=${manager.id}`)}>
-													<i className='bi bi-star-fill fs-3 me-1'></i>
-													Rating
+													<FontAwesomeIcon icon={faStar} />
 												</button>
 												<button
-													className='btn btn-light-primary btn-sm mx-2'
+													type='button'
+													className='gz-inv-action-btn edit'
+													title='Manager Tasks'
 													onClick={() => navigate(`/hr/manager-tasks-view?id=${manager.id}`)}>
-													<i className='bi bi-list-check fs-3 me-1'></i>
-													View Task
+													<FontAwesomeIcon icon={faListCheck} />
 												</button>
 											</div>
 										</td>
@@ -317,11 +344,12 @@ const TeamManagement: React.FC = () => {
 						<UsersListPagination
 							totalPages={metaData?.totalPages || 1}
 							currentPage={pagination.page}
+							totalRecords={metaData?.totalRecords || metaData?.total || metaData?.count}
+							itemsPerPage={pagination.itemsPerPage}
 							onPageChange={(p) => setPagination({ ...pagination, page: p })}
 						/>
 					</div>
 				</div>
-			</KTCard>
 
 			<Modal
 				show={showTeamsModal}

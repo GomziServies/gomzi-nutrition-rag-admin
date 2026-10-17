@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useIntl } from 'react-intl'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import { KTCard, KTIcon } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -15,6 +15,7 @@ import SearchFilter from '../../../components/SearchFilter'
 import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
@@ -500,72 +501,113 @@ const HRTeamTasksView: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>{`Team Tasks: ${teamPosition}`}</PageTitle>
-			<KTCard>
-				<h2 className='m-6 mb-0'>Currently Running Tasks</h2>
-				<div className='row card-header border-0 pt-0 align-items-end ms-0 mx-md-6 p-0'>
-					<div className='col-md-9'>
-						<div className='row justify-content-between align-items-end'>
-							<div className='col-md-3 fv-row ps-md-0'>
-								<SelectField
-									className='fv-row m-0'
-									label='Select Employee'
-									name='employee'
-									value={selectedEmployee?.name}
-									onChange={handleEmployeeSelect}
-									htmlFor='employee'
-									options={employeeData.map((el: any) => el.name)}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-2 fv-row ps-md-2'>
-								<SelectField
-									className='fv-row m-0'
-									label='Status'
-									name='hrStatus'
-									value={hrStatus}
-									onChange={handleStatusChange}
-									htmlFor='hrStatus'
-									options={['Select', 'Pending', 'Employee Done', 'HR Done']}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-7 d-flex justify-content-end align-items-end card-toolbar mb-3 mb-lg-0'>
-								<div className='d-md-flex'>
-									<div className='d-md-flex me-3 d-none'>
-										<LengthMenu
-											expenseData={assignTaskData}
-											handleItemsPerPageChange={(pageSize) =>
-												setPagination((prev) => ({ ...prev, itemsPerPage: pageSize }))
-											}
-										/>
-									</div>
-									<DateFilter
-										onDateRangeChange={handleDateRangeChange}
-										leftValue='-270px'
-									/>
-									<div className='mt-md-0 mt-4 me-md-3 me-0'>
-										<button
-											onClick={() => handleNavigate('add')}
-											className='ms-md-3 btn btn-primary btn-sm w-md-20 w-100'>
-											<KTIcon
-												iconName='plus'
-												className='fs-2'
-											/>
-											Add Task
-										</button>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div className='col-md-3 mt-md-0 mt-2 d-flex align-items-end position-relative ps-0 mb-3 mb-lg-0'>
+
+			{/* Top Bar with Back Link */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<Link
+					to='/hr/team-management'
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
+					<i className='bi bi-arrow-left fs-6'></i>
+					<span className='fw-semibold'>Back to Team Management</span>
+				</Link>
+				<h3 className='fw-bold m-0 fs-4' style={{ color: '#142447' }}>
+					Team Tasks: {teamPosition}
+				</h3>
+			</div>
+
+			{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date -> Right Action) */}
+			<div className='gz-filter-card mb-5'>
+				<div className='d-flex align-items-center flex-wrap gap-3 w-100'>
+					{/* 1. Search */}
+					<div style={{ flex: '1 1 240px', maxWidth: '360px' }}>
 						<SearchFilter
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
+							placeholder='Search task...'
 						/>
 					</div>
-				</div>
 
+					{/* 2. Page Size */}
+					<div>
+						<LengthMenu
+							expenseData={assignTaskData}
+							handleItemsPerPageChange={(pageSize) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: pageSize }))
+							}
+						/>
+					</div>
+
+					{/* 3. Export to Excel */}
+					<div>
+						<DownloadExcelButton
+							data={assignTaskData}
+							columns={[
+								{ title: 'Task', field: 'task_title' },
+								{ title: 'Employee', field: 'employee_name' },
+								{ title: 'Start Date', field: 'start_date' },
+								{ title: 'End Date', field: 'end_date' },
+								{ title: 'Employee Status', field: 'employee_status' },
+								{ title: 'HR Status', field: 'status' },
+								{ title: 'Completed Date', field: 'completed_date' },
+							]}
+							filename='team_tasks_report'
+						/>
+					</div>
+
+					{/* 4. Employee Select */}
+					<div style={{ minWidth: '180px' }}>
+						<select
+							className='form-select form-select-sm gz-inv-select'
+							value={selectedEmployee?.name || 'Select Employee'}
+							onChange={handleEmployeeSelect}>
+							<option value='Select Employee'>All Employees</option>
+							{employeeData.map((el: any) => (
+								<option key={el.id} value={el.name}>
+									{el.name}
+								</option>
+							))}
+						</select>
+					</div>
+
+					{/* 5. Status Select */}
+					<div style={{ minWidth: '160px' }}>
+						<select
+							className='form-select form-select-sm gz-inv-select'
+							value={hrStatus}
+							onChange={handleStatusChange}>
+							<option value='Select'>All Statuses</option>
+							<option value='Pending'>Pending</option>
+							<option value='Employee Done'>Employee Done</option>
+							<option value='HR Done'>HR Done</option>
+						</select>
+					</div>
+
+					{/* 6. Date Filter */}
+					<div>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+						/>
+					</div>
+
+					{/* 7. Add Task Button (Right-aligned) */}
+					<div className='ms-auto'>
+						<button
+							onClick={() => handleNavigate('add')}
+							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '8px' }}>
+							<KTIcon
+								iconName='plus'
+								className='fs-2 text-white'
+							/>
+							<span className='fw-semibold'>Add Task</span>
+						</button>
+					</div>
+				</div>
+			</div>
+
+			{/* Table Card */}
+			<div className='gz-inv-table-card'>
 				{assignTaskData.some(
 					(task) => task.status === 'COMPLETED' && task.hr_status === 'pending'
 				) && (
@@ -781,10 +823,12 @@ const HRTeamTasksView: React.FC = () => {
 							totalPages={Math.ceil(assignTaskData.length / pagination.itemsPerPage)}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={assignTaskData.length}
+							itemsPerPage={pagination.itemsPerPage}
 						/>
 					)}
 				</div>
-			</KTCard>
+			</div>
 		</>
 	)
 }

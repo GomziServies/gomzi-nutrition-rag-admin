@@ -1,12 +1,14 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { toAbsoluteUrl } from '../../../../../_metronic/helpers'
 import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import DateFilter from '../../../../components/DateRangePicker'
+import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
+import DownloadExcelButton from '../../../../components/DownloadExcelButton'
 import Table from '../../../../components/Table'
 import TableButton from '../../../../components/TableButton'
 import UsersListPagination from '../../../../components/TablePagination'
@@ -77,7 +79,7 @@ const AttendenceList = () => {
 			const employeeResponse: any = await GetGlsEmployees({
 				page: page || pagination.page,
 				limit: pagination.itemsPerPage,
-				sort,
+				sort: sort === 'Name' ? 'full_name' : sort,
 				sortOrder,
 				search: searchTerm,
 			})
@@ -107,7 +109,7 @@ const AttendenceList = () => {
 			})
 
 			setAttendanceData(mergedData)
-			setMetaData(employeeResponse.metadata?.pagination)
+			setMetaData(employeeResponse?.metadata?.pagination || employeeResponse?.metadata || {})
 		} catch (error) {
 			console.error(error)
 		}
@@ -224,71 +226,66 @@ const AttendenceList = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Attendance</PageTitle>
-			<div className='card shadow-sm border-0' style={{ borderRadius: '14px' }}>
-				{/* Card Header & Controls */}
-				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
-					<div className='d-flex flex-column'>
-						<div className='d-flex align-items-center gap-2'>
-							<h3 className='card-title fw-bold text-gray-900 fs-3 m-0'>GLS Attendance Sheet</h3>
-							{attendanceData?.length > 0 && (
-								<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
-									{attendanceData.length} Staff
-								</span>
-							)}
-						</div>
-						<span className='text-muted fs-7 fw-semibold mt-1'>
-							Track GLS workforce presence, half days, absences, and attendance logs
-						</span>
+			{/* Filter Toolbar */}
+			<div className='gz-filter-card mb-5'>
+				<div className='d-flex align-items-center flex-wrap gap-3 w-100'>
+					{/* 1. Search */}
+					<div style={{ flex: '1 1 240px', maxWidth: '360px' }}>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search employee name...'
+							className='me-0'
+						/>
 					</div>
 
-					<div className='d-flex align-items-center flex-wrap gap-3'>
-						<div style={{ minWidth: '220px' }}>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-								placeholder='Search employee name...'
-							/>
-						</div>
-
-						<DateFilter
-							onDateRangeChange={handleDateRangeChange}
-							leftValue='-600px'
+					{/* 2. Page Size */}
+					<div>
+						<LengthMenu
+							data={attendanceData}
+							itemsPerPage={pagination.itemsPerPage}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							className='me-0'
 						/>
+					</div>
 
-						{attendanceData?.length > 0 && (
-							<div className='d-flex align-items-center gap-2'>
-								<span className='fs-8 text-muted fw-semibold d-none d-sm-inline'>Show:</span>
-								<select
-									className='form-select form-select-sm gz-pagination-select'
-									style={{ width: '82px' }}
-									value={pagination.itemsPerPage}
-									onChange={(e) =>
-										setPagination((prev) => ({
-											...prev,
-											itemsPerPage: Number(e.target.value),
-											page: 1,
-										}))
-									}>
-									<option value='10'>10</option>
-									<option value='50'>50</option>
-									<option value='100'>100</option>
-								</select>
-							</div>
-						)}
+					{/* 3. Download Excel Button */}
+					<div>
+						<DownloadExcelButton
+							data={attendanceData}
+							columns={sortableFields}
+							filename='GLS_Attendance'
+						/>
+					</div>
 
+					{/* 4. Sync Button */}
+					<div>
 						<button
 							type='button'
 							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
-							style={{ height: '38px', borderRadius: '10px' }}
+							style={{ height: '38px', borderRadius: '8px' }}
 							onClick={handleSyncButton}
 							disabled={isRotating}>
 							<i className={`bi bi-arrow-repeat fs-6 text-white ${isRotating ? 'rotate' : ''}`}></i>
 							<span className='fw-semibold'>Sync</span>
 						</button>
 					</div>
-				</div>
 
-				{/* Table Body */}
+					{/* Spacer */}
+					<div className='d-none d-md-block' style={{ flexGrow: 1 }}></div>
+
+					{/* 5. Date Filter */}
+					<div>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+						/>
+					</div>
+				</div>
+			</div>
+
+			{/* Table Card */}
+			<div className='gz-inv-table-card'>
 				<div className='card-body py-2 px-6'>
 					<div className='table-responsive'>
 						<Table
@@ -316,8 +313,17 @@ const AttendenceList = () => {
 										<td>
 											<div className='d-flex align-items-center gap-3'>
 												<div
-													className='symbol symbol-45px symbol-circle overflow-hidden flex-shrink-0'
-													style={{ border: '2px solid #e2e8f0' }}>
+													className='symbol symbol-circle overflow-hidden flex-shrink-0'
+													style={{
+														width: '42px',
+														height: '42px',
+														minWidth: '42px',
+														minHeight: '42px',
+														maxWidth: '42px',
+														maxHeight: '42px',
+														borderRadius: '50%',
+														border: '2px solid #e2e8f0',
+													}}>
 													<img
 														src={
 															attendance?.photo
@@ -325,7 +331,12 @@ const AttendenceList = () => {
 																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 														}
 														alt={attendance?.Name}
-														className='w-100 h-100 object-fit-cover'
+														style={{
+															width: '100%',
+															height: '100%',
+															objectFit: 'cover',
+															display: 'block',
+														}}
 													/>
 												</div>
 												<div className='d-flex flex-column'>
@@ -357,8 +368,7 @@ const AttendenceList = () => {
 										<td>
 											<button
 												type='button'
-												className='btn btn-icon btn-sm btn-light-primary'
-												style={{ width: '34px', height: '34px', borderRadius: '8px' }}
+												className='gz-inv-action-btn view'
 												title='View Details'
 												onClick={() => {
 													if (selectedDateRange) {
@@ -372,7 +382,7 @@ const AttendenceList = () => {
 													}
 													window.location.href = `/hr/gls-attendance-view?employee_code=${attendance?.employee_code}`
 												}}>
-												<i className='bi bi-calendar2-check fs-5'></i>
+												<FontAwesomeIcon icon={faEye} />
 											</button>
 										</td>
 									</tr>
@@ -380,7 +390,16 @@ const AttendenceList = () => {
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12} className='bg-light-subtle p-4'>
 												<div className='d-flex align-items-center gap-4'>
-													<div className='symbol symbol-50px symbol-circle'>
+													<div
+														className='symbol symbol-circle overflow-hidden flex-shrink-0'
+														style={{
+															width: '48px',
+															height: '48px',
+															minWidth: '48px',
+															minHeight: '48px',
+															borderRadius: '50%',
+															border: '2px solid #e2e8f0',
+														}}>
 														<img
 															src={
 																attendance?.photo
@@ -388,6 +407,12 @@ const AttendenceList = () => {
 																	: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 															}
 															alt={attendance?.Name}
+															style={{
+																width: '100%',
+																height: '100%',
+																objectFit: 'cover',
+																display: 'block',
+															}}
 														/>
 													</div>
 													<div>
@@ -418,17 +443,20 @@ const AttendenceList = () => {
 						</div>
 					)}
 					{attendanceData.length > 0 && (
-						<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
-							<div className='text-muted fs-7 fw-semibold'>
-								Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, filteredEmployeeData.length)} to{' '}
-								{Math.min(pagination.page * pagination.itemsPerPage, filteredEmployeeData.length)} of {filteredEmployeeData.length} records
-							</div>
-							<UsersListPagination
-								totalPages={metaData?.totalPages || Math.ceil(filteredEmployeeData.length / pagination.itemsPerPage)}
-								currentPage={pagination.page}
-								onPageChange={handlePageChange}
-							/>
-						</div>
+						<UsersListPagination
+							totalPages={
+								metaData?.totalPages ||
+								metaData?.total_pages ||
+								Math.ceil(
+									(metaData?.totalEmployees || metaData?.totalDocs || attendanceData.length) /
+										pagination.itemsPerPage
+								)
+							}
+							currentPage={pagination.page}
+							onPageChange={handlePageChange}
+							totalRecords={metaData?.totalEmployees || metaData?.totalDocs || attendanceData.length}
+							itemsPerPage={pagination.itemsPerPage}
+						/>
 					)}
 				</div>
 			</div>

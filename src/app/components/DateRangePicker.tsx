@@ -151,12 +151,37 @@ const DateFilter: React.FC<DateFilterProps> = ({
 
 	const inputRanges: any[] = []
 
+	const isAllDates = (range: DateRange | null): boolean => {
+		if (!range || !range[0] || !range[1]) return true
+		const start = new Date(range[0])
+		return start.getFullYear() <= 2015
+	}
+
 	// Format date range for input display
 	const formatDateRange = (range: DateRange | null): string => {
-		if (!range || !range[0] || !range[1]) return 'Select Date'
+		if (!range || !range[0] || !range[1]) return 'All Date'
+		if (isAllDates(range)) return 'All Date'
 		const start = range[0].toLocaleDateString()
 		const end = range[1].toLocaleDateString()
 		return `${start} - ${end}`
+	}
+
+	const handleResetToAllDates = (e: React.MouseEvent) => {
+		e.stopPropagation()
+		const allDatesStart = new Date(2015, 0, 1)
+		allDatesStart.setHours(0, 0, 0, 0)
+		const now = new Date()
+		now.setHours(23, 59, 59, 999)
+		const allRange: DateRange = [allDatesStart, now]
+		setSelectedRange(allRange)
+		setTempRange(allRange)
+		onDateRangeChange(allRange)
+		if (key) {
+			localStorage.setItem(
+				key,
+				JSON.stringify([allDatesStart.toISOString(), now.toISOString()])
+			)
+		}
 	}
 
 	// Handle date range change from the picker
@@ -229,39 +254,66 @@ const DateFilter: React.FC<DateFilterProps> = ({
 				style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
 				<input
 					className='form-control gz-filter-date-input'
-					style={{ paddingRight: '2.5rem', cursor: 'pointer' }}
+					style={{ paddingRight: '3.4rem', cursor: 'pointer' }}
 					readOnly
 					placeholder='Select Date'
 					value={formatDateRange(selectedRange)}
 				/>
-				{customIcon ? (
-					<div
-						style={{
-							position: 'absolute',
-							right: '0.85rem',
-							top: '50%',
-							transform: 'translateY(-50%)',
-							pointerEvents: 'none',
-							display: 'inline-flex',
-							alignItems: 'center',
-							justifyContent: 'center',
-						}}>
-						{customIcon}
-					</div>
-				) : (
-					<FontAwesomeIcon
-						icon={faCalendarDays as any}
-						style={{
-							position: 'absolute',
-							right: '0.85rem',
-							top: '50%',
-							transform: 'translateY(-50%)',
-							pointerEvents: 'none',
-							color: '#94a3b8',
-							fontSize: '13.5px',
-						}}
-					/>
-				)}
+				<div
+					style={{
+						position: 'absolute',
+						right: '0.85rem',
+						top: '50%',
+						transform: 'translateY(-50%)',
+						display: 'inline-flex',
+						alignItems: 'center',
+						gap: '6px',
+					}}>
+					{!isAllDates(selectedRange) && (
+						<button
+							type='button'
+							onClick={handleResetToAllDates}
+							title='Reset to All Date'
+							aria-label='Reset to All Date'
+							style={{
+								border: 'none',
+								background: 'transparent',
+								padding: '2px 4px',
+								cursor: 'pointer',
+								color: '#94a3b8',
+								display: 'inline-flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								fontSize: '12px',
+								borderRadius: '4px',
+								lineHeight: 1,
+							}}
+							onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
+							onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}>
+							<FontAwesomeIcon icon={faXmark as any} />
+						</button>
+					)}
+					{customIcon ? (
+						<div
+							style={{
+								display: 'inline-flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								pointerEvents: 'none',
+							}}>
+							{customIcon}
+						</div>
+					) : (
+						<FontAwesomeIcon
+							icon={faCalendarDays as any}
+							style={{
+								color: '#94a3b8',
+								fontSize: '13.5px',
+								pointerEvents: 'none',
+							}}
+						/>
+					)}
+				</div>
 			</div>
 
 			{/* Centered Modal Backdrop via createPortal */}

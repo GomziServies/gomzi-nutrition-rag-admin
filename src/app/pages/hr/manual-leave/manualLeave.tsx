@@ -9,6 +9,7 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -53,7 +54,12 @@ const HRManualLeave: React.FC = () => {
 
 			const response = await GetEmployeeLeaves()
 			let filteredData: any = response.data
-			let adminLeave = filteredData.filter((data: any) => data?.admin_id?._id === admin_id)
+			let adminLeave = filteredData
+				.filter((data: any) => data?.admin_id?._id === admin_id)
+				.map((data: any) => ({
+					...data,
+					name: data?.admin_id?.full_name || '',
+				}))
 
 			adminLeave.sort((a: any, b: any) => {
 				return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -297,55 +303,93 @@ const HRManualLeave: React.FC = () => {
 	)
 
 	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value })
+		setPagination({ ...pagination, itemsPerPage: value, page: 1 })
+	}
+
+	const handleSearchChange = (term: React.SetStateAction<string>) => {
+		setSearchTerm((prev) => {
+			const next = typeof term === 'function' ? term(prev) : term
+			if (next !== prev) {
+				setPagination((p) => (p.page === 1 ? p : { ...p, page: 1 }))
+			}
+			return next
+		})
 	}
 
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Festival Leave</PageTitle>
+
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Festival & Manual Leave</h2>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Manage official holiday calendars and company festival leave records
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date -> Right Action) */}
 			<div
-				className='accordion'
-				id='kt_accordion_1'>
-				<KTCard className='accordion-item mt-5'>
-					<div
-						id='kt_accordion_1_body_1'
-						className='accordion-collapse collapse show'>
-						<div className='row mx-6 my-4 align-items-center justify-content-between'>
-							<div className='col-md-8 col-12'>
-								<div className='d-md-flex'>
-									<SearchFilter
-										searchTerm={searchTerm}
-										setSearchTerm={setSearchTerm}
-									/>
-									<div className='d-md-block d-none'>
-										<LengthMenu
-											expenseData={leaveData}
-											handleItemsPerPageChange={handleItemsPerPageChange}
-										/>
-									</div>
-								</div>
-							</div>
-							<div className='col-md-4 col-12 px-0 d-flex justify-content-end mb-md-0 mt-4'>
-								<div className='d-md-none d-block me-md-3'>
-									<LengthMenu
-										expenseData={leaveData}
-										handleItemsPerPageChange={handleItemsPerPageChange}
-									/>
-								</div>
-								<TableButton
-									action='add'
-									text='Add Leave'
-									onClick={() => setShowModal(true)}
-								/>
-							</div>
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+					<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+						{/* 1. Searchbar */}
+						<div>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={handleSearchChange}
+								placeholder='Search festival leave...'
+								className='me-0'
+							/>
 						</div>
-						<div className='py-4 card-body'>
-							<div className='table-responsive'>
+
+						{/* 2. Page Size / Length Menu */}
+						<div>
+							<LengthMenu
+								data={leaveData}
+								itemsPerPage={pagination.itemsPerPage}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={leaveData}
+								columns={sortableFields}
+								filename='Festival_Leaves'
+							/>
+						</div>
+					</div>
+
+					{/* 6. End me right side Add Leave Button */}
+					<div className='flex-shrink-0 ms-auto'>
+						<TableButton
+							action='add'
+							text='Add Leave'
+							onClick={() => setShowModal(true)}
+						/>
+					</div>
+				</div>
+			</div>
+
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
+				<div className='table-responsive'>
 								<Table
 									data={paginatedAdminData}
 									columns={sortableFields}
 									sort={sort}
-									disableSortFields={['name', 'to_date', 'from_date', 'reason', 'notes']}
+									disableSortFields={[]}
 									sortOrder={sortOrder}
 									onSortChange={handleSortChange}
 									renderRow={(
@@ -495,21 +539,20 @@ const HRManualLeave: React.FC = () => {
 									loading={loading}
 								/>
 							</div>
-							{paginatedAdminData.length === 0 && !loading && (
-								<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-									<b>No records found</b>
-								</div>
-							)}
-							{paginatedAdminData.length > 0 && (
-								<UsersListPagination
-									totalPages={Math.ceil(leaveData.length / pagination.itemsPerPage)}
-									currentPage={pagination.page}
-									onPageChange={handlePageChange}
-								/>
-							)}
-						</div>
+				{paginatedAdminData.length === 0 && !loading && (
+					<div className='d-flex text-center w-100 align-content-center justify-content-center py-12'>
+						<b>No records found</b>
 					</div>
-				</KTCard>
+				)}
+				{paginatedAdminData.length > 0 && (
+					<UsersListPagination
+						totalPages={Math.ceil(filteredAdminData.length / pagination.itemsPerPage)}
+						currentPage={pagination.page}
+						totalRecords={filteredAdminData.length}
+						itemsPerPage={pagination.itemsPerPage}
+						onPageChange={handlePageChange}
+					/>
+				)}
 			</div>
 
 			<Modal

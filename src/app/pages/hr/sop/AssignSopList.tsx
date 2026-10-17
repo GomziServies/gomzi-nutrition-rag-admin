@@ -9,6 +9,9 @@ import { KTCard, KTIcon } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import SelectFieldManual from '../../../components/SelectFieldManual'
+import SearchFilter from '../../../components/SearchFilter'
+import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -472,21 +475,36 @@ const HRAssignSopList: React.FC = () => {
 								)}
 							</div>
 						</div>
-						<div className='card-header border-0 align-items-center px-5'>
-							<h2 className='mb-0'>Updated Sop's</h2>
-							<div>
-								<div className='d-flex align-items-center position-relative my-1'>
-									<KTIcon
-										iconName='magnifier'
-										className='fs-1 position-absolute ms-6'
+						<div className='gz-filter-card mb-4 mx-5'>
+							<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1 w-100'>
+								{/* 1. Searchbar */}
+								<div style={{ minWidth: '220px', maxWidth: '340px', flex: '1 1 220px' }}>
+									<SearchFilter
+										searchTerm={searchTerm}
+										setSearchTerm={setSearchTerm}
+										placeholder='Search SOP...'
+										className='me-0'
 									/>
-									<input
-										type='text'
-										data-kt-user-table-filter='search'
-										className='form-control form-control-solid w-250px ps-14'
-										placeholder='Search..'
-										value={searchTerm}
-										onChange={(e) => setSearchTerm(e.target.value)}
+								</div>
+
+								{/* 2. Page Size */}
+								<div>
+									<LengthMenu
+										data={assignSOPData}
+										itemsPerPage={pagination.itemsPerPage}
+										handleItemsPerPageChange={(val) =>
+											setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))
+										}
+										className='me-0'
+									/>
+								</div>
+
+								{/* 3. Download Excel Button */}
+								<div>
+									<DownloadExcelButton
+										data={assignSOPData}
+										columns={sortableFields}
+										filename='Assigned_SOPs'
 									/>
 								</div>
 							</div>
@@ -532,11 +550,23 @@ const HRAssignSopList: React.FC = () => {
 														{sop?.completed_by[0] ? sop?.completed_by[0]?.remarks : '-'}
 													</span>
 													{sop?.completed_by[0]?.file_url && (
-														<img
-															src={'https://files.fggroup.in' + sop?.completed_by[0]?.file_url}
-															alt='Attachment'
-															style={{ width: '100px', height: '100px' }}
-														/>
+														<a
+															href={'https://files.fggroup.in' + sop?.completed_by[0]?.file_url}
+															target='_blank'
+															rel='noopener noreferrer'
+															className='d-inline-block mt-1'>
+															<img
+																src={'https://files.fggroup.in' + sop?.completed_by[0]?.file_url}
+																alt='Attachment'
+																style={{
+																	width: '42px',
+																	height: '42px',
+																	objectFit: 'cover',
+																	borderRadius: '8px',
+																	border: '1px solid #e2e8f0',
+																}}
+															/>
+														</a>
 													)}
 												</td>
 												<td>
@@ -560,11 +590,23 @@ const HRAssignSopList: React.FC = () => {
 															<strong>{sortableFields[2].title}:</strong>{' '}
 															{sop?.completed_by[0] ? sop?.completed_by[0]?.remarks : '-'}
 															{sop?.completed_by[0]?.file_url && (
-																<img
-																	src={'https://files.fggroup.in' + sop?.completed_by[0]?.file_url}
-																	alt='Attachment'
-																	style={{ width: '100px', height: '100px' }}
-																/>
+																<a
+																	href={'https://files.fggroup.in' + sop?.completed_by[0]?.file_url}
+																	target='_blank'
+																	rel='noopener noreferrer'
+																	className='d-inline-block mt-1'>
+																	<img
+																		src={'https://files.fggroup.in' + sop?.completed_by[0]?.file_url}
+																		alt='Attachment'
+																		style={{
+																			width: '60px',
+																			height: '60px',
+																			objectFit: 'cover',
+																			borderRadius: '8px',
+																			border: '1px solid #e2e8f0',
+																		}}
+																	/>
+																</a>
 															)}
 															<br />
 															<strong>{sortableFields[3].title}:</strong>{' '}
@@ -600,6 +642,8 @@ const HRAssignSopList: React.FC = () => {
 								<UsersListPagination
 									totalPages={Math.ceil(assignSOPData.length / pagination.itemsPerPage)}
 									currentPage={pagination.page}
+									totalRecords={assignSOPData.length}
+									itemsPerPage={pagination.itemsPerPage}
 									onPageChange={handlePageChange}
 								/>
 							)}
@@ -714,6 +758,8 @@ const HRAssignSopList: React.FC = () => {
 								<UsersListPagination
 									totalPages={Math.ceil(assignSOPData.length / pagination.itemsPerPage)}
 									currentPage={pagination.page}
+									totalRecords={assignSOPData.length}
+									itemsPerPage={pagination.itemsPerPage}
 									onPageChange={handlePageChange}
 								/>
 							)}

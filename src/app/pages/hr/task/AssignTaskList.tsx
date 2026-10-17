@@ -6,11 +6,13 @@ import toast from 'react-hot-toast'
 import { useIntl } from 'react-intl'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import { KTCard, KTIcon } from '../../../../_metronic/helpers'
+import { KTIcon } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import SearchFilter from '../../../components/SearchFilter'
+import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -696,10 +698,7 @@ const HRAssignTaskList: React.FC = () => {
 
 	const groupedTasks = groupTasksByPriority()
 
-	const paginatedTaskData = filteredTaskData.slice(
-		(pagination.page - 1) * pagination.itemsPerPage,
-		pagination.page * pagination.itemsPerPage
-	)
+	const paginatedTaskData = filteredTaskData
 
 	const [expandedDescription, setExpandedDescription] = useState<{ [key: number]: boolean }>({})
 
@@ -754,89 +753,121 @@ const HRAssignTaskList: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Task Assignment</PageTitle>
-			<KTCard>
-				<h2 className='m-6 mb-0'>Currently Running Tasks</h2>
-				<div className='row card-header border-0 pt-0 align-items-end ms-0 mx-md-6 p-0 mb-4'>
-					<div className='col-md-9'>
-						<div className='row justify-content-between align-items-end'>
-							<div className='col-md-4 col-xl-3 fv-row ps-md-0'>
-								<SelectField
-									className='fv-row m-0'
-									label='Select Employee'
-									name='employee'
-									value={selectedEmployee?.name}
-									onChange={handleEmployeeSelect}
-									htmlFor='employee'
-									options={employeeData.map((el: any) => el.name)}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-3 col-xl-2 fv-row ps-md-2'>
-								<SelectField
-									className='fv-row m-0'
-									label='Status'
-									name='hrStatus'
-									value={hrStatus}
-									onChange={handleStatusChange}
-									htmlFor='hrStatus'
-									options={['Select', 'Pending', 'Employee Done', 'HR Done']}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-5 col-xl-7 d-flex justify-content-md-end align-items-end card-toolbar mb-1'>
-								<div className='d-flex flex-nowrap align-items-center justify-content-end gap-2'>
-									<div className='d-none d-xxl-block'>
-										{assignTaskData?.length > 0 && (
-											<select
-												className='form-select form-select-sm'
-												value={pagination.itemsPerPage}
-												onChange={(e) =>
-													setPagination((prev) => ({
-														...prev,
-														itemsPerPage: Number(e.target.value),
-														page: 1,
-													}))
-												}>
-												<option value='10'>10</option>
-												<option value='50'>50</option>
-												<option value='100'>100</option>
-											</select>
-										)}
-									</div>
-									<div style={{ maxWidth: '210px' }}>
-										<DateFilter
-											onDateRangeChange={handleDateRangeChange}
-											leftValue='-270px'
-										/>
-									</div>
-									<button
-										type='button'
-										onClick={handleAllDataClick}
-										className='btn btn-light btn-sm text-nowrap'>
-										All Data
-									</button>
-									{selectedEmployee && (
-										<button
-											onClick={() => handleNavigate('add')}
-											className='btn btn-primary btn-sm text-nowrap'>
-											<KTIcon
-												iconName='plus'
-												className='fs-2'
-											/>
-											Add Task
-										</button>
-									)}
-								</div>
-							</div>
+
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Task Assignment</h2>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Manage, assign, and track employee task workflows and deadlines
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date -> Right Action Buttons) */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+					<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+						{/* 1. Searchbar */}
+						<div style={{ minWidth: '240px', maxWidth: '340px', flex: '1 1 240px' }}>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={setSearchTerm}
+								placeholder='Search tasks...'
+								className='me-0'
+							/>
+						</div>
+
+						{/* 2. Page Size / Length Menu */}
+						<div>
+							<LengthMenu
+								data={assignTaskData}
+								itemsPerPage={pagination.itemsPerPage}
+								handleItemsPerPageChange={(value) =>
+									setPagination((prev) => ({ ...prev, itemsPerPage: value, page: 1 }))
+								}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={assignTaskData}
+								columns={sortableFields}
+								filename='Assigned_Tasks'
+							/>
+						</div>
+
+						{/* 4. Employee Dropdown */}
+						<div style={{ minWidth: '180px' }}>
+							<select
+								className='gz-inv-select'
+								style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+								value={selectedEmployee?.name || ''}
+								onChange={handleEmployeeSelect}>
+								<option value=''>All Employees</option>
+								{employeeData.map((el: any) => (
+									<option key={el._id || el.id || el.name} value={el.name}>
+										{el.name}
+									</option>
+								))}
+							</select>
+						</div>
+
+						{/* 5. Status Dropdown */}
+						<div style={{ minWidth: '150px' }}>
+							<select
+								className='gz-inv-select'
+								style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+								value={hrStatus || 'Select'}
+								onChange={handleStatusChange}>
+								<option value='Select'>All Statuses</option>
+								<option value='Pending'>Pending</option>
+								<option value='Employee Done'>Employee Done</option>
+								<option value='HR Done'>HR Done</option>
+							</select>
+						</div>
+
+						{/* 6. Date Filter */}
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+							/>
 						</div>
 					</div>
-					<div className='col-md-3 d-flex align-items-end position-relative ps-0 mb-1'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-						/>
+
+					{/* 7. End me right side Action Buttons */}
+					<div className='d-flex align-items-center gap-2 flex-shrink-0 ms-auto'>
+						<button
+							type='button'
+							onClick={handleAllDataClick}
+							className='btn btn-light-primary btn-sm text-nowrap'
+							style={{ height: '38px', borderRadius: '8px' }}>
+							All Data
+						</button>
+						{selectedEmployee && (
+							<button
+								onClick={() => handleNavigate('add')}
+								className='btn btn-primary btn-sm text-nowrap d-flex align-items-center gap-2'
+								style={{ height: '38px', borderRadius: '8px' }}>
+								<KTIcon iconName='plus' className='fs-3' />
+								<span>Add Task</span>
+							</button>
+						)}
 					</div>
 				</div>
+			</div>
+
+			<div className='gz-inv-table-card'>
 
 				{/* Bulk Actions Section */}
 				{filteredTaskData.some(
@@ -909,20 +940,7 @@ const HRAssignTaskList: React.FC = () => {
 							sort={sort}
 							sortOrder={sortOrder}
 							onSortChange={handleSortChange}
-							disableSortFields={[
-								'task_title',
-								'remark_by_employee',
-								'remark_by_hr',
-								'file_url',
-								'start_date',
-								'end_date',
-								'work status',
-								'completed_date',
-								'employee_name',
-								'select',
-								'employee_status',
-								'status',
-							]}
+							disableSortFields={['select', 'file_url']}
 							renderRow={(task: any, index: number, actualIndex: number, isVisible: boolean) => (
 								<React.Fragment key={task._id}>
 									<tr
@@ -1144,8 +1162,17 @@ const HRAssignTaskList: React.FC = () => {
 
 					{paginatedTaskData.length > 0 && (
 						<UsersListPagination
-							totalPages={Math.ceil(assignTaskData.length / pagination.itemsPerPage)}
+							totalPages={
+								(metaData as any)?.totalPages ||
+								(metaData as any)?.total_pages ||
+								Math.ceil(
+									((metaData as any)?.totalTasks || (metaData as any)?.totalDocs || assignTaskData.length) /
+										pagination.itemsPerPage
+								)
+							}
 							currentPage={pagination.page}
+							totalRecords={(metaData as any)?.totalTasks || (metaData as any)?.totalDocs || assignTaskData.length}
+							itemsPerPage={pagination.itemsPerPage}
 							onPageChange={handlePageChange}
 						/>
 					)}
@@ -1481,7 +1508,7 @@ const HRAssignTaskList: React.FC = () => {
 						</div>
 					</div>
 				</Modal>
-			</KTCard>
+			</div>
 		</>
 	)
 }

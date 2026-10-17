@@ -1,0 +1,83 @@
+/* Attendance View — new navy theme (visual-only, scoped to this page) */
+
+.gz-att-back-btn {
+	background-color: #ffffff !important;
+	border: 1px solid #e4eaf2 !important;
+	color: #172b4d !important;
+	border-radius: 8px !important;
+	height: 38px !important;
+	padding: 0 14px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+	transition: all 0.18s ease !important;
+}
+
+.gz-att-back-btn i,
+.gz-att-back-btn span,
+.gz-att-back-btn svg {
+	color: #172b4d !important;
+	transition: color 0.18s ease !important;
+}
+
+.gz-att-back-btn:hover,
+.gz-att-back-btn:focus,
+.gz-att-back-btn:active,
+.gz-att-back-btn:focus-visible {
+	background-color: #172b4d !important;
+	border-color: #172b4d !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.28) !important;
+	transform: translateY(-1px) !important;
+	text-decoration: none !important;
+}
+
+.gz-att-back-btn:hover i,
+.gz-att-back-btn:hover span,
+.gz-att-back-btn:hover svg,
+.gz-att-back-btn:focus i,
+.gz-att-back-btn:focus span,
+.gz-att-back-btn:focus svg,
+.gz-att-back-btn:active i,
+.gz-att-back-btn:active span,
+.gz-att-back-btn:active svg {
+	color: #ffffff !important;
+}
+
+/* Export action — white bordered default, navy fill + white text/icon on hover */
+.gz-att-export-btn {
+	background-color: #ffffff !important;
+	border: 1px solid #e4eaf2 !important;
+	color: #172b4d !important;
+	border-radius: 8px !important;
+	height: 38px !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+	transition: all 0.18s ease !important;
+}
+
+.gz-att-export-btn i,
+.gz-att-export-btn span,
+.gz-att-export-btn svg {
+	color: #172b4d !important;
+	transition: color 0.18s ease !important;
+}
+
+.gz-att-export-btn:hover,
+.gz-att-export-btn:focus,
+.gz-att-export-btn:active {
+	background-color: #172b4d !important;
+	border-color: #172b4d !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.28) !important;
+	transform: translateY(-1px) !important;
+}
+
+.gz-att-export-btn:hover i,
+.gz-att-export-btn:hover span,
+.gz-att-export-btn:hover svg,
+.gz-att-export-btn:focus i,
+.gz-att-export-btn:focus span,
+.gz-att-export-btn:active i,
+.gz-att-export-btn:active span {
+	color: #ffffff !important;
+}

@@ -13,6 +13,7 @@ import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
 import { GetEmployees, UpdateEmployee } from '../../../Functions/FGGroup/Employee'
+import './employee-view.css'
 
 const POSITION_OPTIONS = [
 	'Web Developer',
@@ -395,10 +396,9 @@ const HRMemberDetail = () => {
 			<div className='d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5'>
 				<Link
 					to='/hr/employee-detail'
-					className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2'
-					style={{ borderRadius: '10px', height: '38px', padding: '0 14px' }}>
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-emp-back-btn'>
 					<i className='bi bi-arrow-left fs-6'></i>
-					<span className='fw-bold'>Back to Directory</span>
+					<span className='fw-semibold'>Back to Directory</span>
 				</Link>
 
 				<div className='d-flex align-items-center flex-wrap gap-2'>
@@ -426,7 +426,7 @@ const HRMemberDetail = () => {
 						onClick={() => handleUpdateDocument('Employee')}
 						disabled={documentLoading}
 						className='btn btn-sm btn-primary d-inline-flex align-items-center gap-2 px-4 ms-2'
-						style={{ borderRadius: '10px', height: '38px' }}>
+						style={{ borderRadius: '8px', height: '38px' }}>
 						<i className='bi bi-check2-circle fs-5'></i>
 						<span className='fw-bold'>Save Changes</span>
 					</button>
@@ -438,8 +438,9 @@ const HRMemberDetail = () => {
 				className='card shadow-sm border-0 mb-6'
 				style={{
 					borderRadius: '14px',
-					border: '1px solid #ded8d2',
+					border: '1px solid #E4EAF2',
 					background: '#ffffff',
+					boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
 				}}>
 				<div className='card-body p-6'>
 					<div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
@@ -451,11 +452,11 @@ const HRMemberDetail = () => {
 									height: '80px',
 									minWidth: '80px',
 									minHeight: '80px',
-									borderRadius: '16px',
+									borderRadius: '14px',
 									overflow: 'hidden',
-									border: '2px solid #e2e8f0',
-									boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-									background: '#f8fafc',
+									border: '1px solid #E4EAF2',
+									boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+									background: '#F5F7FB',
 									display: 'flex',
 									alignItems: 'center',
 									justifyContent: 'center',
@@ -480,7 +481,7 @@ const HRMemberDetail = () => {
 
 							<div>
 								<div className='d-flex align-items-center gap-2 mb-1'>
-									<h2 className='fw-bold text-gray-900 fs-2 m-0'>
+									<h2 className='fw-bold fs-2 m-0' style={{ color: '#142447' }}>
 										{memberDetailData?.name || 'Unnamed Employee'}
 									</h2>
 									{memberDetailData?.branch_name && (
@@ -535,12 +536,13 @@ const HRMemberDetail = () => {
 							<div
 								className='p-3 rounded-3 text-center'
 								style={{
-									background: '#f8fafc',
-									border: '1px solid #e2e8f0',
+									background: '#F5F7FB',
+									border: '1px solid #E4EAF2',
+									borderRadius: '12px',
 									minWidth: '120px',
 								}}>
-								<span className='text-muted fs-8 fw-bold text-uppercase d-block mb-1'>Salary</span>
-								<span className='fs-5 fw-bolder text-gray-900'>
+								<span className='fs-8 fw-bold text-uppercase d-block mb-1' style={{ color: '#71809A', letterSpacing: '0.05em' }}>Salary</span>
+								<span className='fs-5 fw-bolder' style={{ color: '#142447' }}>
 									{memberDetailData?.salary
 										? `₹${Number(memberDetailData.salary).toLocaleString()}`
 										: '₹0'}
@@ -550,12 +552,13 @@ const HRMemberDetail = () => {
 							<div
 								className='p-3 rounded-3 text-center'
 								style={{
-									background: '#f8fafc',
-									border: '1px solid #e2e8f0',
+									background: '#F5F7FB',
+									border: '1px solid #E4EAF2',
+									borderRadius: '12px',
 									minWidth: '120px',
 								}}>
-								<span className='text-muted fs-8 fw-bold text-uppercase d-block mb-1'>Tenure</span>
-								<span className='fs-6 fw-bold text-gray-800'>
+								<span className='fs-8 fw-bold text-uppercase d-block mb-1' style={{ color: '#71809A', letterSpacing: '0.05em' }}>Tenure</span>
+								<span className='fs-6 fw-bold' style={{ color: '#142447' }}>
 									{joiningTime || '-'}
 								</span>
 							</div>
@@ -563,12 +566,13 @@ const HRMemberDetail = () => {
 							<div
 								className='p-3 rounded-3 text-center'
 								style={{
-									background: '#f8fafc',
-									border: '1px solid #e2e8f0',
+									background: '#EAF1FB',
+									border: '1px solid #DCE8F8',
+									borderRadius: '12px',
 									minWidth: '120px',
 								}}>
-								<span className='text-muted fs-8 fw-bold text-uppercase d-block mb-1'>Documents</span>
-								<span className='fs-5 fw-bolder text-primary'>
+								<span className='fs-8 fw-bold text-uppercase d-block mb-1' style={{ color: '#71809A', letterSpacing: '0.05em' }}>Documents</span>
+								<span className='fs-5 fw-bolder' style={{ color: '#172B4D' }}>
 									{memberData?.length || 0} Files
 								</span>
 							</div>
@@ -578,9 +582,14 @@ const HRMemberDetail = () => {
 
 				{/* Navigation Tabs Bar */}
 				<div
-					className='px-6 border-top border-gray-200'
-					style={{ background: '#fafaf9', borderBottomLeftRadius: '14px', borderBottomRightRadius: '14px' }}>
-					<div className='d-flex flex-wrap align-items-center gap-2 py-2'>
+					className='px-6 border-top'
+					style={{
+						background: '#F5F7FB',
+						borderTop: '1px solid #E4EAF2',
+						borderBottomLeftRadius: '14px',
+						borderBottomRightRadius: '14px',
+					}}>
+					<div className='d-flex flex-wrap align-items-center gap-2 py-3'>
 						{[
 							{ id: 'profile', label: 'Personal & Job', icon: 'bi-person-circle' },
 							{ id: 'banking', label: 'Payroll & Banking', icon: 'bi-bank' },
@@ -602,24 +611,8 @@ const HRMemberDetail = () => {
 									key={tab.id}
 									type='button'
 									onClick={() => setActiveTab(tab.id as any)}
-									className='btn btn-sm d-inline-flex align-items-center gap-2'
-									style={{
-										height: '38px',
-										padding: '0 14px',
-										borderRadius: '9px',
-										fontSize: '13px',
-										fontWeight: isActive ? 700 : 500,
-										color: isActive ? '#2563eb' : '#475569',
-										backgroundColor: isActive ? '#eff6ff' : 'transparent',
-										border: isActive ? '1px solid #bfdbfe' : '1px solid transparent',
-										transition: 'all 0.15s ease',
-									}}>
-									<i
-										className={`bi ${tab.icon}`}
-										style={{
-											fontSize: '14px',
-											color: isActive ? '#2563eb' : '#94a3b8',
-										}}></i>
+									className={`btn btn-sm d-inline-flex align-items-center gap-2 gz-emp-tab${isActive ? ' is-active' : ''}`}>
+									<i className={`bi ${tab.icon}`}></i>
 									<span>{tab.label}</span>
 								</button>
 							)
@@ -635,14 +628,14 @@ const HRMemberDetail = () => {
 					<div className='col-lg-4 col-md-5'>
 						<div
 							className='card shadow-sm border-0 mb-6'
-							style={{ borderRadius: '14px', border: '1px solid #ded8d2' }}>
+							style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
 							<div className='card-header border-0 pt-5 pb-2 px-6'>
 								<h3 className='card-title fw-bold text-gray-900 fs-5 m-0'>Profile Photo</h3>
 							</div>
 							<div className='card-body px-6 pb-6 pt-2 text-center'>
 								<div
 									className='p-3 rounded-3 bg-light-subtle d-flex align-items-center justify-content-center'
-									style={{ border: '1px dashed #cbd5e1', minHeight: '220px' }}>
+									style={{ border: '1px dashed #E4EAF2', minHeight: '220px' }}>
 									{memberDetailData?.photo ? (
 										<img
 											src={'https://files.fggroup.in/' + memberDetailData.photo}
@@ -665,14 +658,14 @@ const HRMemberDetail = () => {
 
 						<div
 							className='card shadow-sm border-0'
-							style={{ borderRadius: '14px', border: '1px solid #ded8d2' }}>
+							style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
 							<div className='card-header border-0 pt-5 pb-2 px-6'>
 								<h3 className='card-title fw-bold text-gray-900 fs-5 m-0'>Identity Proof</h3>
 							</div>
 							<div className='card-body px-6 pb-6 pt-2 text-center'>
 								<div
 									className='p-3 rounded-3 bg-light-subtle d-flex align-items-center justify-content-center'
-									style={{ border: '1px dashed #cbd5e1', minHeight: '180px' }}>
+									style={{ border: '1px dashed #E4EAF2', minHeight: '180px' }}>
 									{memberDetailData?.proof ? (
 										<img
 											src={'https://files.fggroup.in/' + memberDetailData.proof}
@@ -698,7 +691,7 @@ const HRMemberDetail = () => {
 					<div className='col-lg-8 col-md-7'>
 						<div
 							className='card shadow-sm border-0'
-							style={{ borderRadius: '14px', border: '1px solid #ded8d2' }}>
+							style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
 							<div className='card-header border-0 pt-6 pb-3 px-6 d-flex align-items-center justify-content-between'>
 								<div>
 									<h3 className='card-title fw-bold text-gray-900 fs-4 m-0'>
@@ -831,7 +824,7 @@ const HRMemberDetail = () => {
 									onClick={() => handleUpdateDocument('Employee')}
 									disabled={documentLoading}
 									className='btn btn-primary px-6 d-flex align-items-center gap-2'
-									style={{ borderRadius: '10px', height: '40px' }}>
+									style={{ borderRadius: '8px', height: '40px' }}>
 									<i className='bi bi-check2-circle fs-5'></i>
 									<span className='fw-bold'>Save Personal Info</span>
 								</button>
@@ -845,7 +838,7 @@ const HRMemberDetail = () => {
 			{activeTab === 'banking' && (
 				<div
 					className='card shadow-sm border-0'
-					style={{ borderRadius: '14px', border: '1px solid #ded8d2' }}>
+					style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
 					<div className='card-header border-0 pt-6 pb-3 px-6'>
 						<div>
 							<h3 className='card-title fw-bold text-gray-900 fs-4 m-0'>
@@ -923,7 +916,7 @@ const HRMemberDetail = () => {
 							onClick={() => handleUpdateDocument('Employee')}
 							disabled={documentLoading}
 							className='btn btn-primary px-6 d-flex align-items-center gap-2'
-							style={{ borderRadius: '10px', height: '40px' }}>
+							style={{ borderRadius: '8px', height: '40px' }}>
 							<i className='bi bi-check2-circle fs-5'></i>
 							<span className='fw-bold'>Save Banking Info</span>
 						</button>
@@ -935,7 +928,7 @@ const HRMemberDetail = () => {
 			{activeTab === 'shift' && (
 				<div
 					className='card shadow-sm border-0'
-					style={{ borderRadius: '14px', border: '1px solid #ded8d2' }}>
+					style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
 					<div className='card-header border-0 pt-6 pb-3 px-6'>
 						<div>
 							<h3 className='card-title fw-bold text-gray-900 fs-4 m-0'>
@@ -976,7 +969,7 @@ const HRMemberDetail = () => {
 							<div className='col-md-4'>
 								<div
 									className='p-4 rounded-3 text-center'
-									style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+									style={{ background: '#F5F7FB', border: '1px solid #E4EAF2' }}>
 									<span className='text-muted fs-8 fw-bold text-uppercase d-block mb-1'>Configured Shift</span>
 									<span className='fs-5 fw-bold text-primary'>
 										{memberDetailData.in_time || '09:30'} — {memberDetailData.out_time || '18:30'}
@@ -993,7 +986,7 @@ const HRMemberDetail = () => {
 							onClick={() => handleUpdateDocument('Employee')}
 							disabled={documentLoading}
 							className='btn btn-primary px-6 d-flex align-items-center gap-2'
-							style={{ borderRadius: '10px', height: '40px' }}>
+							style={{ borderRadius: '8px', height: '40px' }}>
 							<i className='bi bi-check2-circle fs-5'></i>
 							<span className='fw-bold'>Save Shift Timing</span>
 						</button>
@@ -1005,7 +998,7 @@ const HRMemberDetail = () => {
 			{activeTab === 'family' && (
 				<div
 					className='card shadow-sm border-0'
-					style={{ borderRadius: '14px', border: '1px solid #ded8d2' }}>
+					style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
 					<div className='card-header border-0 pt-6 pb-3 px-6 d-flex align-items-center justify-content-between'>
 						<div>
 							<h3 className='card-title fw-bold text-gray-900 fs-4 m-0'>
@@ -1018,8 +1011,8 @@ const HRMemberDetail = () => {
 						<button
 							type='button'
 							onClick={(e) => addPlan(e)}
-							className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2'
-							style={{ borderRadius: '9px', height: '36px' }}>
+							className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2 gz-emp-light-action'
+							style={{ borderRadius: '8px', height: '36px' }}>
 							<i className='bi bi-plus-lg fs-6'></i>
 							<span className='fw-semibold'>Add Family Member</span>
 						</button>
@@ -1030,10 +1023,10 @@ const HRMemberDetail = () => {
 							{family_details.map((family, index) => (
 								<div
 									key={index}
-									className='p-4 rounded-3 border border-gray-200'
-									style={{ backgroundColor: '#fafaf9' }}>
-									<div className='d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-gray-200'>
-										<span className='fw-bold text-gray-800 fs-7 text-uppercase' style={{ letterSpacing: '0.5px' }}>
+									className='p-4 rounded-3 border'
+									style={{ backgroundColor: '#F8FAFD', borderColor: '#E4EAF2' }}>
+									<div className='d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom' style={{ borderColor: '#E4EAF2' }}>
+										<span className='fw-bold fs-7 text-uppercase' style={{ letterSpacing: '0.5px', color: '#142447' }}>
 											Family Member #{index + 1}
 										</span>
 										{family_details.length > 1 && index !== 0 && (
@@ -1085,7 +1078,7 @@ const HRMemberDetail = () => {
 							onClick={() => handleUpdateDocument('Employee')}
 							disabled={documentLoading}
 							className='btn btn-primary px-6 d-flex align-items-center gap-2'
-							style={{ borderRadius: '10px', height: '40px' }}>
+							style={{ borderRadius: '8px', height: '40px' }}>
 							<i className='bi bi-check2-circle fs-5'></i>
 							<span className='fw-bold'>Save Family Contacts</span>
 						</button>
@@ -1099,7 +1092,7 @@ const HRMemberDetail = () => {
 					{/* Card A: Upload New Document */}
 					<div
 						className='card shadow-sm border-0'
-						style={{ borderRadius: '14px', border: '1px solid #ded8d2' }}>
+						style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
 						<div className='card-header border-0 pt-6 pb-2 px-6'>
 							<h3 className='card-title fw-bold text-gray-900 fs-4 m-0 d-flex align-items-center gap-2'>
 								<i className='bi bi-file-earmark-arrow-up text-primary fs-3'></i>
@@ -1184,7 +1177,7 @@ const HRMemberDetail = () => {
 								onClick={() => handleUpdateDocument('Document')}
 								disabled={documentLoading}
 								className='btn btn-primary px-6 d-flex align-items-center gap-2'
-								style={{ borderRadius: '10px', height: '40px' }}>
+								style={{ borderRadius: '8px', height: '40px' }}>
 								<i className='bi bi-cloud-arrow-up fs-5'></i>
 								<span className='fw-bold'>Upload Document</span>
 							</button>
@@ -1194,7 +1187,7 @@ const HRMemberDetail = () => {
 					{/* Card B: Document Repository */}
 					<div
 						className='card shadow-sm border-0'
-						style={{ borderRadius: '14px', border: '1px solid #ded8d2' }}>
+						style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
 						<div className='card-header border-0 pt-6 pb-2 px-6 d-flex align-items-center justify-content-between'>
 							<div className='d-flex align-items-center gap-2'>
 								<h3 className='card-title fw-bold text-gray-900 fs-4 m-0'>Stored Documents</h3>
@@ -1253,14 +1246,14 @@ const HRMemberDetail = () => {
 													<td width={'35%'}>
 														{isPdf ? (
 															<div className='d-flex align-items-center gap-3'>
-																<div className='d-flex align-items-center gap-2 px-3 py-2 bg-light rounded-2 border border-gray-200'>
+																<div className='d-flex align-items-center gap-2 px-3 py-2 bg-light rounded-2 border' style={{ borderColor: '#E4EAF2' }}>
 																	<i className='bi bi-file-earmark-pdf-fill text-danger fs-4'></i>
-																	<span className='text-gray-800 fw-semibold fs-7'>PDF Document</span>
+																	<span className='fw-semibold fs-7' style={{ color: '#142447' }}>PDF Document</span>
 																</div>
 																<button
 																	type='button'
 																	onClick={() => window.open(fileUrl)}
-																	className='btn btn-sm btn-light-primary px-3 py-1.5'
+																	className='btn btn-sm btn-light-primary px-3 py-1.5 gz-emp-light-action'
 																	style={{ borderRadius: '8px' }}>
 																	<i className='bi bi-box-arrow-up-right me-1'></i> View PDF
 																</button>
@@ -1278,7 +1271,7 @@ const HRMemberDetail = () => {
 																		height: '52px',
 																		borderRadius: '10px',
 																		objectFit: 'cover',
-																		border: '1px solid #e2e8f0',
+																		border: '1px solid #E4EAF2',
 																	}}
 																	alt='Document preview'
 																/>
@@ -1314,17 +1307,13 @@ const HRMemberDetail = () => {
 							)}
 
 							{memberData.length > 0 && (
-								<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
-									<div className='text-muted fs-7 fw-semibold'>
-										Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, memberData.length)} to{' '}
-										{Math.min(pagination.page * pagination.itemsPerPage, memberData.length)} of {memberData.length} documents
-									</div>
-									<UsersListPagination
-										totalPages={Math.ceil(memberData.length / pagination.itemsPerPage)}
-										currentPage={pagination.page}
-										onPageChange={handlePageChange}
-									/>
-								</div>
+								<UsersListPagination
+									totalPages={Math.ceil(memberData.length / pagination.itemsPerPage)}
+									currentPage={pagination.page}
+									onPageChange={handlePageChange}
+									totalRecords={memberData.length}
+									itemsPerPage={pagination.itemsPerPage}
+								/>
 							)}
 						</div>
 					</div>

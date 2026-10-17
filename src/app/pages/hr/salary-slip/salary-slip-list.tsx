@@ -12,6 +12,7 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -202,6 +203,16 @@ const SalarySlipList = () => {
 		setSortOrder(newSortOrder)
 	}
 
+	const handleSearchChange = (term: React.SetStateAction<string>) => {
+		setSearchTerm((prev) => {
+			const next = typeof term === 'function' ? term(prev) : term
+			if (next !== prev) {
+				setPagination((p) => (p.page === 1 ? p : { ...p, page: 1 }))
+			}
+			return next
+		})
+	}
+
 	const handleDirectDownload = async (id: string) => {
 		setIsGeneratingPDF(true)
 		const loadingId = toast.loading('Generating PDF...')
@@ -313,49 +324,80 @@ const SalarySlipList = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Salary Slip List</PageTitle>
-			<div className='card'>
-				<div className='row justify-content-between mt-7 mx-6'>
-					<div className='col-md-9'>
-						<h3 className='card-title align-items-start flex-column'>
-							<span className='card-label fw-bold fs-3 mb-1'>Salary Slip Records</span>
-						</h3>
-					</div>
-				</div>
 
-				<div className='card-header row border-0 pt-6'>
-					<div className='col-md-6 d-flex'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-						/>
-						<div className='d-md-block d-none'>
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Salary Slip Records</h2>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Generate, manage, and print monthly salary slips for employees
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date -> Right Action) */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+					<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+						{/* 1. Searchbar */}
+						<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={handleSearchChange}
+								placeholder='Search salary slip...'
+								className='me-0'
+							/>
+						</div>
+
+						{/* 2. Page Size / Length Menu */}
+						<div>
 							<LengthMenu
-								expenseData={salaryData}
+								data={salaryData}
+								itemsPerPage={pagination.itemsPerPage}
 								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={salaryData}
+								columns={columns}
+								filename='Salary_Slips'
+							/>
+						</div>
+
+						{/* 4. Date Filter */}
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
 							/>
 						</div>
 					</div>
-					<div className='col-md-6 pe-md-6'>
-						<div className='row justify-content-end align-items-center'>
-							<div className='col-md-8 my-md-0 my-0 pe-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									leftValue='-600px'
-								/>
-							</div>
-							<div className='col-md-3 p-0 ms-0 d-flex justify-content-end'>
-								<TableButton
-									action='add'
-									text='Add'
-									onClick={() => (window.location.href = '/hr/salary-slip-add')}
-								/>
-							</div>
-						</div>
+
+					{/* 6. End me right side Add Salary Slip Button */}
+					<div className='flex-shrink-0 ms-auto'>
+						<TableButton
+							action='add'
+							text='Add Salary Slip'
+							onClick={() => (window.location.href = '/hr/salary-slip-add')}
+						/>
 					</div>
 				</div>
+			</div>
 
-				<div className='card-body py-3'>
-					<div className='table-responsive kesar-salary-slip-table'>
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
+				<div className='table-responsive kesar-salary-slip-table'>
 						<Table
 							data={salaryData}
 							columns={columns}
@@ -385,7 +427,15 @@ const SalarySlipList = () => {
 										</td>
 										<td>
 											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
+												<div
+													className='symbol symbol-circle overflow-hidden flex-shrink-0 me-4'
+													style={{
+														width: '42px',
+														height: '42px',
+														minWidth: '42px',
+														minHeight: '42px',
+														borderRadius: '10px',
+													}}>
 													<img
 														src={
 															slip?.employee_details?.photo
@@ -395,7 +445,15 @@ const SalarySlipList = () => {
 																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 														}
 														alt={slip?.employee_details?.full_name}
-														style={{ width: '50px', height: '50px' }}
+														style={{
+															width: '42px',
+															height: '42px',
+															minWidth: '42px',
+															minHeight: '42px',
+															borderRadius: '10px',
+															objectFit: 'cover',
+															display: 'block',
+														}}
 													/>
 												</div>
 												<div className='d-flex justify-content-start flex-column'>
@@ -422,15 +480,12 @@ const SalarySlipList = () => {
 													window.location.href = `/hr/salary-slip-view?id=${slip?._id}`
 												}}
 											/>
-											<button
-												className='btn btn-sm btn-light-primary mx-2 me-1 gap-2'
+											<TableButton
+												action='download'
+												title='Download Salary Slip'
 												disabled={isGeneratingPDF}
-												onClick={() => handleDirectDownload(slip?._id)}>
-												<FontAwesomeIcon
-													icon={faDownload}
-													className='fs-3'
-												/>
-											</button>
+												onClick={() => handleDirectDownload(slip?._id)}
+											/>
 											<TableButton
 												action='edit'
 												onClick={() => {
@@ -465,19 +520,20 @@ const SalarySlipList = () => {
 							loading={loading}
 						/>
 					</div>
-					{paginatedData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
-					{paginatedData.length > 0 && (
-						<UsersListPagination
-							totalPages={Math.ceil(totalRecords / pagination.itemsPerPage)}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					)}
-				</div>
+				{salaryData.length === 0 && !loading && (
+					<div className='d-flex text-center w-100 align-content-center justify-content-center py-12'>
+						<b>No records found</b>
+					</div>
+				)}
+				{salaryData.length > 0 && (
+					<UsersListPagination
+						totalPages={Math.ceil(totalRecords / pagination.itemsPerPage)}
+						currentPage={pagination.page}
+						totalRecords={totalRecords}
+						itemsPerPage={pagination.itemsPerPage}
+						onPageChange={handlePageChange}
+					/>
+				)}
 			</div>
 
 			{/* Hidden PDF Template for Capture */}

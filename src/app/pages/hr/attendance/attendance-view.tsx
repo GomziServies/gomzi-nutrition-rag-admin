@@ -15,6 +15,7 @@ import UsersListPagination from '../../../components/TablePagination'
 import { GetEmployees } from '../../../Functions/FGGroup'
 import { GetAttendance } from '../../../Functions/FGGroup/Attendance'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
+import './attendance-view.css'
 
 const AttendanceViewUser = () => {
 	const location = useLocation()
@@ -246,11 +247,10 @@ const AttendanceViewUser = () => {
 			<PageTitle breadcrumbs={[]}>Attendance Details</PageTitle>
 
 			{/* Top Bar with Back Link */}
-			<div className='d-flex align-items-center justify-content-between mb-5'>
+			<div className='d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5'>
 				<Link
 					to='/hr/attendance'
-					className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2'
-					style={{ borderRadius: '9px', height: '36px' }}>
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-att-back-btn'>
 					<i className='bi bi-arrow-left fs-6'></i>
 					<span className='fw-semibold'>Back to Attendance List</span>
 				</Link>
@@ -265,13 +265,28 @@ const AttendanceViewUser = () => {
 			</div>
 
 			{/* Employee Profile Header Card */}
-			<div className='card shadow-sm border-0 mb-6' style={{ borderRadius: '14px' }}>
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '14px',
+					border: '1px solid #E4EAF2',
+					background: '#ffffff',
+					boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+				}}>
 				<div className='card-body p-6'>
 					<div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
 						<div className='d-flex align-items-center gap-4'>
 							<div
-								className='symbol symbol-70px symbol-circle overflow-hidden flex-shrink-0'
-								style={{ border: '2px solid #e2e8f0' }}>
+								className='symbol symbol-circle overflow-hidden flex-shrink-0'
+								style={{
+									width: '64px',
+									height: '64px',
+									minWidth: '64px',
+									minHeight: '64px',
+									borderRadius: '50%',
+									border: '1px solid #E4EAF2',
+									background: '#F5F7FB',
+								}}>
 								<img
 									src={
 										employeeData?.photo
@@ -279,14 +294,19 @@ const AttendanceViewUser = () => {
 											: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 									}
 									alt={employeeData?.Name || 'Employee'}
-									className='w-100 h-100 object-fit-cover'
+									style={{
+										width: '100%',
+										height: '100%',
+										objectFit: 'cover',
+										display: 'block',
+									}}
 								/>
 							</div>
 							<div>
-								<h3 className='fw-bold text-gray-900 fs-3 mb-1'>
+								<h3 className='fw-bold fs-3 mb-1' style={{ color: '#142447' }}>
 									{employeeData?.Name || 'Employee Attendance Log'}
 								</h3>
-								<div className='d-flex align-items-center gap-3 text-muted fs-7'>
+								<div className='d-flex align-items-center gap-3 fs-7' style={{ color: '#71809A' }}>
 									<span>
 										<i className='bi bi-person-badge text-primary me-1'></i>
 										{employeeData?.employee_code || '-'}
@@ -303,11 +323,10 @@ const AttendanceViewUser = () => {
 						<div className='d-flex align-items-center gap-2'>
 							<button
 								type='button'
-								className='btn btn-sm btn-light-success d-flex align-items-center gap-2 px-4'
-								style={{ height: '38px', borderRadius: '10px' }}
+								className='btn btn-sm d-flex align-items-center gap-2 px-4 gz-att-export-btn'
 								onClick={downloadExcel}
 								disabled={loading}>
-								<i className='bi bi-file-earmark-excel-fill text-success fs-5'></i>
+								<i className='bi bi-file-earmark-excel-fill fs-5'></i>
 								<span className='fw-semibold'>Export Excel</span>
 							</button>
 						</div>
@@ -315,51 +334,46 @@ const AttendanceViewUser = () => {
 				</div>
 			</div>
 
-			{/* Attendance Logs Table Card */}
-			<div className='card shadow-sm border-0' style={{ borderRadius: '14px' }}>
-				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
-					<div className='d-flex flex-column'>
-						<div className='d-flex align-items-center gap-2'>
-							<h3 className='card-title fw-bold text-gray-900 fs-3 m-0'>Daily Attendance Log</h3>
-							{attendanceData?.length > 0 && (
-								<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
-									{attendanceData.length} Entries
-								</span>
-							)}
-						</div>
-						<span className='text-muted fs-7 fw-semibold mt-1'>
-							In-time, out-time, overtime, and daily presence history
-						</span>
-					</div>
-
-					<div className='d-flex align-items-center flex-wrap gap-3'>
+			{/* Filter Toolbar */}
+			<div className='gz-filter-card mb-5'>
+				<div className='d-flex align-items-center flex-wrap gap-3 w-100'>
+					{/* 1. Page Size / Length Menu */}
+					<div>
 						<LengthMenu
 							expenseData={attendanceData}
 							handleItemsPerPageChange={handleItemsPerPageChange}
 						/>
+					</div>
 
+					{/* 2. Filter Status Dropdown */}
+					<div style={{ minWidth: '160px' }}>
+						<select
+							className='form-select form-select-sm gz-inv-select'
+							value={selectedStatus}
+							onChange={handleChangeStatus}>
+							<option value=''>All Statuses</option>
+							<option value='Present'>Present</option>
+							<option value='Absent'>Absent</option>
+							<option value='Leave'>Leave</option>
+						</select>
+					</div>
+
+					{/* Spacer */}
+					<div className='d-none d-md-block' style={{ flexGrow: 1 }}></div>
+
+					{/* 3. Date Filter */}
+					<div>
 						<DateFilter
 							onDateRangeChange={handleDateRangeChange}
 							rightValue='0'
 						/>
-
-						<div style={{ minWidth: '150px' }}>
-							<SelectField
-								className='mb-0'
-								label='Filter Status'
-								showLabel={false}
-								name='selectedStatus'
-								value={selectedStatus}
-								onChange={handleChangeStatus}
-								htmlFor='selectedStatus'
-								options={['Present', 'Absent', 'Leave']}
-							/>
-						</div>
 					</div>
 				</div>
+			</div>
 
-				<div className='card-body py-2 px-6'>
-					<div className='table-responsive'>
+			{/* Attendance Logs Table Card */}
+			<div className='gz-inv-table-card'>
+				<div className='table-responsive'>
 						<Table
 							data={attendanceData}
 							columns={sortableFields}
@@ -384,7 +398,7 @@ const AttendanceViewUser = () => {
 											</span>
 										</td>
 										<td>
-											<span className='text-gray-900 fw-bold fs-7'>
+											<span className='fw-bold fs-7' style={{ color: '#142447' }}>
 												{attendance?.DateString
 													? DayJS(attendance?.DateString).format('DD MMM YYYY')
 													: 'N/A'}
@@ -469,25 +483,20 @@ const AttendanceViewUser = () => {
 					{attendanceData.length === 0 && !loading && (
 						<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
 							<i className='bi bi-calendar-check text-muted fs-2x mb-2'></i>
-							<span className='text-gray-700 fw-bold fs-6'>No attendance logs found for this period</span>
+							<span className='fw-bold fs-6' style={{ color: '#142447' }}>No attendance logs found for this period</span>
 							<span className='text-muted fs-7'>Try selecting a different date range or status filter</span>
 						</div>
 					)}
 					{attendanceData.length > 0 && (
-						<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
-							<div className='text-muted fs-7 fw-semibold'>
-								Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, attendanceData.length)} to{' '}
-								{Math.min(pagination.page * pagination.itemsPerPage, attendanceData.length)} of {attendanceData.length} records
-							</div>
-							<UsersListPagination
-								totalPages={metaData?.totalPages || Math.ceil(attendanceData.length / pagination.itemsPerPage)}
-								currentPage={pagination.page}
-								onPageChange={handlePageChange}
-							/>
-						</div>
+						<UsersListPagination
+							totalPages={metaData?.totalPages || Math.ceil(attendanceData.length / pagination.itemsPerPage)}
+							currentPage={pagination.page}
+							onPageChange={handlePageChange}
+							totalRecords={metaData?.totalRecords || attendanceData.length}
+							itemsPerPage={pagination.itemsPerPage}
+						/>
 					)}
 				</div>
-			</div>
 		</>
 	)
 }

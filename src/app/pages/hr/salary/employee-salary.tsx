@@ -7,6 +7,7 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -197,49 +198,72 @@ const HREmployeeSalary = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Salary</PageTitle>
-			<div className='card'>
-				<div className='row justify-content-between mt-7 mx-6'>
-					<div className='col-md-9'>
-						<h3 className='card-title align-items-start flex-column'>
-							<span className='card-label fw-bold fs-3 mb-1'>Employee Salary Sheet</span>
-						</h3>
-					</div>
-				</div>
 
-				<div className='card-header row border-0 pt-6'>
-					<div className='col-md-6 d-flex'>
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Employee Salary Sheet</h2>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Monthly employee compensation, attendance adjustments, and payroll records
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar (Order: SearchFilter -> LengthMenu -> Spacer -> DateFilter) */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center flex-wrap gap-3'>
+					{/* 1. Searchbar */}
+					<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
 						<SearchFilter
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
+							placeholder='Search employee name...'
+							className='me-0'
 						/>
-						<div className='d-md-block d-none'>
-							<LengthMenu
-								expenseData={salaryData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-							/>
-						</div>
 					</div>
-					<div className='col-md-6 pe-md-6'>
-						<div className='row justify-content-end'>
-							<div className='col-md-8 my-md-0 my-5 pe-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									leftValue='-600px'
-									lastMonth={true}
-								/>
-								{/* <input type="month" name="" id="" /> */}
-							</div>
-						</div>
-					</div>
-					<div className='col-md-3 d-flex d-md-none justify-content-between p-0'>
+
+					{/* 2. Page Size / Length Menu */}
+					<div>
 						<LengthMenu
-							expenseData={salaryData}
+							data={salaryData}
+							itemsPerPage={pagination.itemsPerPage}
 							handleItemsPerPageChange={handleItemsPerPageChange}
+							className='me-0'
+						/>
+					</div>
+
+					{/* 3. Download Excel Button */}
+					<div>
+						<DownloadExcelButton
+							data={salaryData}
+							columns={sortableFields}
+							filename='Employee_Salaries'
+						/>
+					</div>
+
+					{/* Spacer */}
+					<div className='d-none d-md-block' style={{ flexGrow: 1 }}></div>
+
+					{/* 4. Date Filter */}
+					<div>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							lastMonth={true}
 						/>
 					</div>
 				</div>
+			</div>
 
-				<div className='card-body py-3'>
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
 					<div className='table-responsive'>
 						<Table
 							data={paginatedAdminData}
@@ -264,7 +288,15 @@ const HREmployeeSalary = () => {
 										</td>
 										<td>
 											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
+												<div
+													className='symbol symbol-circle overflow-hidden flex-shrink-0 me-4'
+													style={{
+														width: '42px',
+														height: '42px',
+														minWidth: '42px',
+														minHeight: '42px',
+														borderRadius: '10px',
+													}}>
 													<img
 														src={
 															salary?.photo
@@ -272,7 +304,15 @@ const HREmployeeSalary = () => {
 																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 														}
 														alt={salary?.full_name}
-														style={{ width: '50px', height: '50px' }}
+														style={{
+															width: '42px',
+															height: '42px',
+															minWidth: '42px',
+															minHeight: '42px',
+															borderRadius: '10px',
+															objectFit: 'cover',
+															display: 'block',
+														}}
 													/>
 												</div>
 												<div className='d-flex justify-content-start flex-column'>
@@ -346,7 +386,15 @@ const HREmployeeSalary = () => {
 											<td colSpan={12}>
 												<div>
 													<div className='d-flex align-items-center'>
-														<div className='symbol symbol-45px me-5'>
+														<div
+															className='symbol symbol-circle overflow-hidden flex-shrink-0 me-4'
+															style={{
+																width: '42px',
+																height: '42px',
+																minWidth: '42px',
+																minHeight: '42px',
+																borderRadius: '10px',
+															}}>
 															<img
 																src={
 																	salary?.photo
@@ -354,7 +402,15 @@ const HREmployeeSalary = () => {
 																		: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 																}
 																alt={salary?.full_name}
-																style={{ width: '50px', height: '50px' }}
+																style={{
+																	width: '42px',
+																	height: '42px',
+																	minWidth: '42px',
+																	minHeight: '42px',
+																	borderRadius: '10px',
+																	objectFit: 'cover',
+																	display: 'block',
+																}}
 															/>
 														</div>
 														<div className='d-flex justify-content-start flex-column'>
@@ -400,19 +456,20 @@ const HREmployeeSalary = () => {
 							loading={loading}
 						/>
 					</div>
-					{paginatedAdminData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
-					{paginatedAdminData.length > 0 && (
-						<UsersListPagination
-							totalPages={Math.ceil(salaryData.length / pagination.itemsPerPage)}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					)}
-				</div>
+				{paginatedAdminData.length === 0 && !loading && (
+					<div className='d-flex text-center w-100 align-content-center justify-content-center py-12'>
+						<b>No records found</b>
+					</div>
+				)}
+				{paginatedAdminData.length > 0 && (
+					<UsersListPagination
+						totalPages={Math.ceil(salaryData.length / pagination.itemsPerPage)}
+						currentPage={pagination.page}
+						totalRecords={salaryData.length}
+						itemsPerPage={pagination.itemsPerPage}
+						onPageChange={handlePageChange}
+					/>
+				)}
 			</div>
 		</>
 	)

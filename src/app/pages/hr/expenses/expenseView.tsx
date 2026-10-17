@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
@@ -121,6 +121,17 @@ export default function ExpenseView() {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Expense Report Details</PageTitle>
+
+			{/* Top Action Bar with Back Link */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<Link
+					to='/hr/expenses'
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
+					<i className='bi bi-arrow-left fs-6'></i>
+					<span className='fw-semibold'>Back to Expense Reports</span>
+				</Link>
+			</div>
+
 			<KTCard>
 				<div className='card-body'>
 					<div className='row mb-4'>

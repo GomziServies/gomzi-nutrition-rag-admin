@@ -1,3 +1,5 @@
+import { faDownload, faEye, faPlus, faSort, faSortDown, faSortUp, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import React, { useEffect, useState } from 'react'
@@ -6,11 +8,14 @@ import Swal from 'sweetalert2'
 import { errorToast, successToast } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
+import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { DeleteEmployeeMemo, GetEmployees } from '../../../Functions/FGGroup/Employee'
 
 function MemoList() {
 	const navigate = useNavigate()
+	const [searchTerm, setSearchTerm] = useState('')
 	const [employees, setEmployees] = useState<any[]>([])
 	const [filteredEmployees, setFilteredEmployees] = useState<any[]>([])
 	const [loading, setLoading] = useState(false)
@@ -23,6 +28,27 @@ function MemoList() {
 		page: 1,
 		itemsPerPage: 10,
 	})
+	const [sort, setSort] = useState<string>('created_date')
+	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+
+	const handleSort = (field: string) => {
+		if (sort === field) {
+			setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+		} else {
+			setSort(field)
+			setSortOrder('asc')
+		}
+	}
+
+	const handleSearchChange = (term: React.SetStateAction<string>) => {
+		setSearchTerm((prev) => {
+			const next = typeof term === 'function' ? term(prev) : term
+			if (next !== prev) {
+				setPagination((p) => (p.page === 1 ? p : { ...p, page: 1 }))
+			}
+			return next
+		})
+	}
 
 	// Fetch all employees with memos
 	useEffect(() => {
@@ -463,13 +489,58 @@ function MemoList() {
 			}
 		})
 
-		// Sort by created_date (latest first)
-		return allMemos.sort((a, b) => {
-			return new Date(b.memo.created_date).getTime() - new Date(a.memo.created_date).getTime()
+		// Filter by search term if provided
+		const filtered = searchTerm
+			? allMemos.filter((item) => {
+					const term = searchTerm.toLowerCase()
+					return (
+						item.employee?.full_name?.toLowerCase().includes(term) ||
+						item.employee?.employee?.employee_code?.toLowerCase().includes(term) ||
+						item.memo?.subject?.toLowerCase().includes(term) ||
+						item.memo?.reason?.toLowerCase().includes(term)
+					)
+			  })
+			: allMemos
+
+		// Sort by selected field and order
+		return filtered.sort((a, b) => {
+			let aVal: any
+			let bVal: any
+
+			if (sort === 'employee') {
+				aVal = a.employee?.full_name || ''
+				bVal = b.employee?.full_name || ''
+			} else if (sort === 'subject') {
+				aVal = a.memo?.subject || ''
+				bVal = b.memo?.subject || ''
+			} else if (sort === 'date') {
+				aVal = new Date(a.memo?.date || 0).getTime()
+				bVal = new Date(b.memo?.date || 0).getTime()
+			} else {
+				aVal = new Date(a.memo?.created_date || 0).getTime()
+				bVal = new Date(b.memo?.created_date || 0).getTime()
+			}
+
+			if (typeof aVal === 'number' && typeof bVal === 'number') {
+				return sortOrder === 'asc' ? aVal - bVal : bVal - aVal
+			}
+
+			return sortOrder === 'asc'
+				? String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' })
+				: String(bVal).localeCompare(String(aVal), undefined, { numeric: true, sensitivity: 'base' })
 		})
 	}
 
 	const sortedMemos = getAllMemosSorted()
+
+	// Exportable data structure for DownloadExcelButton
+	const exportMemosData = sortedMemos.map((item) => ({
+		'Employee Name': item.employee?.full_name || '-',
+		'Employee Code': item.employee?.employee?.employee_code || '-',
+		Subject: item.memo?.subject || '-',
+		Date: item.memo?.date ? formatDate(item.memo.date) : '-',
+		'Issued At': item.memo?.created_date ? formatDate(item.memo.created_date) : '-',
+	}))
 
 	// Pagination calculations
 	const totalPages = Math.ceil(sortedMemos.length / pagination.itemsPerPage)
@@ -489,47 +560,100 @@ function MemoList() {
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Memos</PageTitle>
 
-			<div className='card mb-5 mb-xl-8'>
-				<div className='card-header border-0 pt-5'>
-					<h3 className='card-title align-items-start flex-column'>
-						<span className='card-label fw-bold fs-3 mb-1'>Employee Memos</span>
-						<span className='text-muted mt-1 fw-semibold fs-7'>
-							{filteredEmployees.reduce(
-								(count, emp) => count + (emp.employee?.memo?.length || 0),
-								0
-							)}{' '}
-							memos
-						</span>
-					</h3>
-					<div className='card-toolbar d-flex align-items-center gap-3'>
-						<LengthMenu
-							expenseData={sortedMemos}
-							handleItemsPerPageChange={handleItemsPerPageChange}
-						/>
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<div className='d-flex align-items-center gap-2'>
+						<h2 className='text-gray-900 fw-bold fs-2 m-0'>Employee Memos</h2>
+						{sortedMemos.length > 0 && (
+							<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
+								{sortedMemos.length} Memos
+							</span>
+						)}
+					</div>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Issue, review, and track formal employee notices, warnings, and official memos
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar Card */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div
+					className='card-body d-flex align-items-center justify-content-between flex-wrap gap-3'
+					style={{ padding: '12px 18px' }}>
+					<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3'>
+						{/* 1. Searchbar */}
+						<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={handleSearchChange}
+								placeholder='Search employee or subject...'
+								className='me-0'
+							/>
+						</div>
+
+						{/* 2. Page Size / Length Menu */}
+						<div>
+							<LengthMenu
+								data={sortedMemos}
+								itemsPerPage={pagination.itemsPerPage}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={exportMemosData}
+								filename='Employee_Memos'
+							/>
+						</div>
+
+						{/* 4. Employee Select Dropdown */}
+						<div style={{ minWidth: '220px' }}>
+							<select
+								className='gz-inv-select'
+								style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+								value={selectedEmployee}
+								onChange={(e) => setSelectedEmployee(e.target.value)}>
+								<option value=''>All Employees</option>
+								{employees.map((employee) => (
+									<option
+										key={employee.employee_id}
+										value={employee.employee_id}>
+										{employee.full_name} ({employee.employee?.employee_code})
+									</option>
+								))}
+							</select>
+						</div>
+					</div>
+
+					{/* 6. End me right side Create Memo Button */}
+					<div className='flex-shrink-0 ms-auto'>
 						<button
 							type='button'
-							className='btn btn-sm btn-primary'
+							className='btn btn-primary d-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '8px' }}
 							onClick={() => navigate('/hr/create-memo')}>
-							<i className='ki-duotone ki-plus fs-2'></i>Create Memo
+							<FontAwesomeIcon icon={faPlus} className='fs-6 text-white' />
+							<span>Create Memo</span>
 						</button>
 					</div>
 				</div>
-				<div className='card-body py-3'>
-					<div className='d-flex align-items-center position-relative my-1 mb-5'>
-						<select
-							className='form-select form-select-solid w-250px'
-							value={selectedEmployee}
-							onChange={(e) => setSelectedEmployee(e.target.value)}>
-							<option value=''>All Employees</option>
-							{employees.map((employee) => (
-								<option
-									key={employee.employee_id}
-									value={employee.employee_id}>
-									{employee.full_name} ({employee.employee?.employee_code})
-								</option>
-							))}
-						</select>
-					</div>
+			</div>
+
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
+				<div className='card-body py-4'>
 
 					{loading ? (
 						<div
@@ -546,10 +670,30 @@ function MemoList() {
 							<table className='table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4'>
 								<thead>
 									<tr className='fw-bold text-muted'>
-										<th className='min-w-150px'>Employee</th>
-										<th className='min-w-150px'>Subject</th>
-										<th className='min-w-100px'>Date</th>
-										<th className='min-w-100px'>Created Date</th>
+										<th className='min-w-150px' onClick={() => handleSort('employee')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+											<div className='d-flex align-items-center gap-2'>
+												<span>Employee</span>
+												<FontAwesomeIcon icon={sort === 'employee' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'employee' ? 1 : 0.35, fontSize: '11px' }} />
+											</div>
+										</th>
+										<th className='min-w-150px' onClick={() => handleSort('subject')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+											<div className='d-flex align-items-center gap-2'>
+												<span>Subject</span>
+												<FontAwesomeIcon icon={sort === 'subject' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'subject' ? 1 : 0.35, fontSize: '11px' }} />
+											</div>
+										</th>
+										<th className='min-w-100px' onClick={() => handleSort('date')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+											<div className='d-flex align-items-center gap-2'>
+												<span>Date</span>
+												<FontAwesomeIcon icon={sort === 'date' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'date' ? 1 : 0.35, fontSize: '11px' }} />
+											</div>
+										</th>
+										<th className='min-w-100px' onClick={() => handleSort('created_date')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+											<div className='d-flex align-items-center gap-2'>
+												<span>Created Date</span>
+												<FontAwesomeIcon icon={sort === 'created_date' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'created_date' ? 1 : 0.35, fontSize: '11px' }} />
+											</div>
+										</th>
 										<th className='min-w-100px text-end'>Actions</th>
 									</tr>
 								</thead>
@@ -594,45 +738,36 @@ function MemoList() {
 													</span>
 												</td>
 												<td>
-													<div className='d-flex justify-content-end flex-shrink-0'>
+													<div className='d-flex align-items-center justify-content-end gap-2'>
 														<button
+															type='button'
 															onClick={() => handleViewMemo(employee, memo)}
-															className='btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1'
+															className='gz-inv-action-btn view'
 															title='View Memo'>
-															<i className='ki-duotone ki-eye fs-3'>
-																<span className='path1'></span>
-																<span className='path2'></span>
-															</i>
+															<FontAwesomeIcon icon={faEye} />
 														</button>
 														<button
+															type='button'
 															onClick={() => generatePDF(employee, memo)}
-															className='btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1'
+															className='gz-inv-action-btn edit'
 															title='Download PDF'
 															disabled={downloadingIds.has(memo.id)}>
 															{downloadingIds.has(memo.id) ? (
 																<span className='spinner-border spinner-border-sm'></span>
 															) : (
-																<i className='ki-duotone ki-arrow-down fs-3'>
-																	<span className='path1'></span>
-																	<span className='path2'></span>
-																</i>
+																<FontAwesomeIcon icon={faDownload} />
 															)}
 														</button>
 														<button
+															type='button'
 															onClick={() => handleDeleteMemo(employee, memo)}
 															disabled={deleting}
-															className='btn btn-icon btn-danger btn-sm'
+															className='gz-inv-action-btn delete'
 															title='Delete Memo'>
 															{deleting ? (
 																<span className='spinner-border spinner-border-sm'></span>
 															) : (
-																<i className='ki-duotone ki-trash fs-3'>
-																	<span className='path1'></span>
-																	<span className='path2'></span>
-																	<span className='path3'></span>
-																	<span className='path4'></span>
-																	<span className='path5'></span>
-																</i>
+																<FontAwesomeIcon icon={faTrash} />
 															)}
 														</button>
 													</div>
@@ -646,10 +781,12 @@ function MemoList() {
 					)}
 				</div>
 				{sortedMemos.length > 0 && (
-					<div className='card-footer'>
+					<div className='card-footer p-0 border-0'>
 						<UsersListPagination
 							totalPages={totalPages}
 							currentPage={pagination.page}
+							totalRecords={sortedMemos.length}
+							itemsPerPage={pagination.itemsPerPage}
 							onPageChange={handlePageChange}
 						/>
 					</div>

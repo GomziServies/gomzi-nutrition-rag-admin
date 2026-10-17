@@ -1,4 +1,4 @@
-import { faCheck, faPlusCircle, faX } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faPlusCircle, faSort, faSortDown, faSortUp, faX } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import duration from 'dayjs/plugin/duration'
 import React, { useEffect, useState } from 'react'
@@ -9,6 +9,7 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import {
@@ -118,10 +119,64 @@ const HRLeave: React.FC = () => {
 		}
 	}
 
+	const handleSearchChange = (term: React.SetStateAction<string>) => {
+		setSearchTerm((prev) => {
+			const next = typeof term === 'function' ? term(prev) : term
+			if (next !== prev) {
+				setPagination((p) => (p.page === 1 ? p : { ...p, page: 1 }))
+			}
+			return next
+		})
+	}
+
+	const handleSort = (field: string) => {
+		if (sort === field) {
+			setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+		} else {
+			setSort(field)
+			setSortOrder('asc')
+		}
+	}
+
 	const filteredData = leaveData.filter((sale: any) =>
-		(sale?.admin_id?.full_name || '').toLowerCase().includes((searchTerm || '').toLowerCase())
+		(sale?.admin_id?.full_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+		(sale?.reason || '').toLowerCase().includes((searchTerm || '').toLowerCase())
 	)
-	const paginatedData = filteredData.slice(
+
+	const sortedLeaveData = [...filteredData].sort((a: any, b: any) => {
+		let aVal: any
+		let bVal: any
+
+		if (sort === 'name') {
+			aVal = a?.admin_id?.full_name || ''
+			bVal = b?.admin_id?.full_name || ''
+		} else if (sort === 'from_date') {
+			aVal = new Date(a?.from_date || 0).getTime()
+			bVal = new Date(b?.from_date || 0).getTime()
+		} else if (sort === 'to_date') {
+			aVal = new Date(a?.to_date || 0).getTime()
+			bVal = new Date(b?.to_date || 0).getTime()
+		} else if (sort === 'reason') {
+			aVal = a?.reason || ''
+			bVal = b?.reason || ''
+		} else if (sort === 'status') {
+			aVal = a?.status || ''
+			bVal = b?.status || ''
+		} else {
+			aVal = new Date(a?.from_date || a?.createdAt || 0).getTime()
+			bVal = new Date(b?.from_date || b?.createdAt || 0).getTime()
+		}
+
+		if (typeof aVal === 'number' && typeof bVal === 'number') {
+			return sortOrder === 'asc' ? aVal - bVal : bVal - aVal
+		}
+
+		return sortOrder === 'asc'
+			? String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' })
+			: String(bVal).localeCompare(String(aVal), undefined, { numeric: true, sensitivity: 'base' })
+	})
+
+	const paginatedData = sortedLeaveData.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
 		pagination.page * pagination.itemsPerPage
 	)
@@ -146,46 +201,108 @@ const HRLeave: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Leave</PageTitle>
+
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Employee Leave Requests</h2>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Review, approve, and track employee leave applications and balances
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar (Order: SearchFilter -> LengthMenu) */}
 			<div
-				className='accordion'
-				id='kt_accordion_1'>
-				<KTCard className='accordion-item mt-5'>
-					<div
-						id='kt_accordion_1_body_1'
-						className='accordion-collapse collapse show'>
-						<div className='row mx-6 my-4'>
-							<div className='col-12'>
-								<div className='row align-items-center justify-content-between'>
-									<div className='col-md-6'>
-										<SearchFilter
-											searchTerm={searchTerm}
-											setSearchTerm={setSearchTerm}
-										/>
-									</div>
-									<div className='col-md-6 d-flex justify-content-end mt-md-0 mt-3'>
-										<LengthMenu
-											expenseData={leaveData}
-											handleItemsPerPageChange={handlePageChange}
-										/>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div className='py-4 card-body'>
-							<div className='table-responsive'>
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center flex-wrap gap-3'>
+					{/* 1. Searchbar */}
+					<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={handleSearchChange}
+							placeholder='Search by employee name or reason...'
+							className='me-0'
+						/>
+					</div>
+
+					{/* 2. Page Size / Length Menu */}
+					<div>
+						<LengthMenu
+							data={leaveData}
+							itemsPerPage={pagination.itemsPerPage}
+							handleItemsPerPageChange={(value) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: value, page: 1 }))
+							}
+							className='me-0'
+						/>
+					</div>
+
+					{/* 3. Download Excel Button */}
+					<div>
+						<DownloadExcelButton
+							data={leaveData}
+							columns={[
+								{ title: 'Employee Name', field: 'employee_details.full_name' },
+								{ title: 'Start Date', field: 'start_date' },
+								{ title: 'End Date', field: 'end_date' },
+								{ title: 'Time', field: 'time' },
+								{ title: 'Reason', field: 'reason' },
+								{ title: 'Status', field: 'status' },
+							]}
+							filename='Leave_Requests'
+						/>
+					</div>
+				</div>
+			</div>
+
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
+				<div className='table-responsive'>
 								<table
 									id='kt_table_users'
 									className='table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer table-row-dashed table-row-gray-300 align-middle'>
 									<thead>
 										<tr className='fw-bold text-muted bg-light border-bottom-0'>
-											<th className='ps-4 rounded-start'>No.</th>
-											<th>Name</th>
-											<th>Start Date</th>
-											<th>End Date</th>
+											<th className='ps-4 rounded-start' style={{ width: '60px' }}>No.</th>
+											<th onClick={() => handleSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+												<div className='d-flex align-items-center gap-2'>
+													<span>Name</span>
+													<FontAwesomeIcon icon={sort === 'name' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'name' ? 1 : 0.35, fontSize: '11px' }} />
+												</div>
+											</th>
+											<th onClick={() => handleSort('from_date')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+												<div className='d-flex align-items-center gap-2'>
+													<span>Start Date</span>
+													<FontAwesomeIcon icon={sort === 'from_date' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'from_date' ? 1 : 0.35, fontSize: '11px' }} />
+												</div>
+											</th>
+											<th onClick={() => handleSort('to_date')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+												<div className='d-flex align-items-center gap-2'>
+													<span>End Date</span>
+													<FontAwesomeIcon icon={sort === 'to_date' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'to_date' ? 1 : 0.35, fontSize: '11px' }} />
+												</div>
+											</th>
 											<th>Time</th>
-											<th>Reason</th>
-											<th>Status</th>
-											<th className='ps-4 rounded-end'>Action</th>
+											<th onClick={() => handleSort('reason')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+												<div className='d-flex align-items-center gap-2'>
+													<span>Reason</span>
+													<FontAwesomeIcon icon={sort === 'reason' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'reason' ? 1 : 0.35, fontSize: '11px' }} />
+												</div>
+											</th>
+											<th onClick={() => handleSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+												<div className='d-flex align-items-center gap-2'>
+													<span>Status</span>
+													<FontAwesomeIcon icon={sort === 'status' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'status' ? 1 : 0.35, fontSize: '11px' }} />
+												</div>
+											</th>
+											<th className='ps-4 rounded-end text-center'>Action</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -378,21 +495,20 @@ const HRLeave: React.FC = () => {
 									</tbody>
 								</table>
 							</div>
-							{filteredData.length === 0 && !loading && (
-								<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-									<b>No records found</b>
-								</div>
-							)}
-							{filteredData.length > 0 && (
-								<UsersListPagination
-									totalPages={Math.ceil(filteredData.length / pagination.itemsPerPage)}
-									currentPage={pagination.page}
-									onPageChange={handlePageChange}
-								/>
-							)}
-						</div>
+				{filteredData.length === 0 && !loading && (
+					<div className='d-flex text-center w-100 align-content-center justify-content-center py-12'>
+						<b>No records found</b>
 					</div>
-				</KTCard>
+				)}
+				{filteredData.length > 0 && (
+					<UsersListPagination
+						totalPages={Math.ceil(filteredData.length / pagination.itemsPerPage)}
+						currentPage={pagination.page}
+						totalRecords={filteredData.length}
+						itemsPerPage={pagination.itemsPerPage}
+						onPageChange={handlePageChange}
+					/>
+				)}
 			</div>
 
 			{/* Modal for Approve/Reject Leave */}

@@ -10,6 +10,7 @@ import { PageTitle, useLayout } from '../../../../_metronic/layout/core'
 import { GetEmployees } from '../../../Functions/FGGroup'
 import { GetChatEmployees } from '../../../Functions/FGGroup/EmployeeChat'
 import { HRChatInner } from './ChatInner'
+import './hr-chat.css'
 
 const HRChatPage = () => {
 	const { config } = useLayout()
@@ -163,208 +164,209 @@ const HRChatPage = () => {
 
 	return (
 		<>
-			<div className='d-flex flex-column flex-lg-row p-0'>
+			<div className='d-flex flex-column flex-lg-row p-0 gz-chat-container' style={{ minHeight: 'calc(100vh - 130px)' }}>
 				<PageTitle breadcrumbs={[]}>Chat</PageTitle>
 				<div
-					className={`flex-column flex-lg-row-auto w-100 w-lg-350px w-xl-350px mb-0  ${
+					className={`flex-column flex-lg-row-auto w-100 w-lg-350px w-xl-350px mb-0 ${
 						userId ? 'd-md-block d-none' : 'd-md-block d-block'
-					} `}>
+					}`}
+					style={{ borderRight: '1px solid #E4EAF2', display: 'flex', flexDirection: 'column' }}>
 					<div
-						className='card card-flush whatsapp-msg-box'
+						className='card card-flush h-100'
 						id='style-4'
-						style={{ zIndex: '10' }}>
-						{/* Search */}
+						style={{ zIndex: '10', border: 'none', borderRadius: '0' }}>
+						{/* Header */}
 						<div
-							className='card-header px-2'
-							id='kt_chat_contacts_header'
-							style={{ backgroundColor: '#2d2d43', borderRadius: '0px' }}>
+							className='gz-chat-sidebar-header'
+							id='kt_chat_contacts_header'>
 							<div className='w-100 d-flex align-items-center justify-content-between'>
-								<div className='d-flex align-items-center justify-content-between'>
+								<div className='d-flex align-items-center'>
 									<div className='me-3'>
 										<img
 											alt='Logo'
 											src={toAbsoluteUrl('/media/logos/rag-favicon-logo.png')}
-											className='h-25px h-lg-45px'
+											className='h-25px h-lg-35px'
+											style={{ filter: 'brightness(0) invert(1)' }}
 										/>
 									</div>
-									<div className='me-3 mt-2'>
-										<h1 className='text-white'>Chats</h1>
+									<div>
+										<h1 className='gz-chat-sidebar-title'>Chats</h1>
 									</div>
 								</div>
 								<div
-									className='me-3 mt-1'
+									className='text-white'
 									role='button'
-									onClick={backPage}>
+									title='Back'
+									onClick={backPage}
+									style={{ cursor: 'pointer', opacity: 0.9 }}>
 									<FontAwesomeIcon
 										icon={faRightFromBracket}
-										className='text-white fs-2'
+										className='fs-3'
 									/>
 								</div>
 							</div>
 						</div>
 
+						{/* Search */}
+						<div className='gz-chat-search-wrap'>
+							<div className='gz-chat-search-box'>
+								<KTIcon
+									iconName='magnifier'
+									className='gz-chat-search-icon fs-3'
+								/>
+								<input
+									type='text'
+									data-kt-user-table-filter='search'
+									className='gz-chat-search-input'
+									placeholder='Search chats or employees...'
+									value={localSearchTerm}
+									onChange={(e) => setLocalSearchTerm(e.target.value)}
+								/>
+							</div>
+						</div>
+
 						{/* Chat List */}
-						<div>
+						<div className='flex-grow-1 overflow-hidden' id='kt_chat_contacts_body'>
 							<div
-								className='pt-3 px-4 chat-text-color'
-								id='kt_chat_contacts_body'>
-								<div
-									className='pb-3'
-									style={{ borderBottom: '1px solid #ccc' }}>
-									<div className='d-flex align-items-center position-relative'>
-										<KTIcon
-											iconName='magnifier'
-											className='fs-1 position-absolute ms-6'
-										/>
-										<input
-											type='text'
-											data-kt-user-table-filter='search'
-											className='form-control form-control-solid bg-secondary ps-14'
-											placeholder='Search...'
-											value={localSearchTerm}
-											onChange={(e) => setLocalSearchTerm(e.target.value)}
-										/>
-									</div>
-								</div>
-								<div
-									className='scroll-y me-n5 pe-5 smooth-scroll'
-									data-kt-scroll='true'
-									id='scrollableDiv'
-									data-kt-scroll-activate='{default: false, lg: true}'
-									data-kt-scroll-dependencies='#kt_header, #kt_toolbar, #kt_footer, #kt_chat_contacts_header'
-									data-kt-scroll-wrappers='#kt_content, #kt_chat_contacts_body'
-									data-kt-scroll-offset='0px'
-									style={{ height: 'calc(100vh - 153px)', overflow: 'auto' }}>
-									{userData.length === 0 ? (
-										<div className='text-muted fs-4 fw-bold text-center'>No chat found.</div>
-									) : (
-										<InfiniteScroll
-											dataLength={userData.length}
-											next={loadMore}
-											hasMore={pagination.page < pagination.totalPages}
-											loader={
-												<div className='d-flex justify-content-center align-items-center mb-4 my-7'>
-													<div
-														className='spinner-border text-primary'
-														role='status'>
-														<span className='visually-hidden'>Loading...</span>
-													</div>
+								className='scroll-y smooth-scroll'
+								data-kt-scroll='true'
+								id='scrollableDiv'
+								data-kt-scroll-activate='{default: false, lg: true}'
+								data-kt-scroll-dependencies='#kt_header, #kt_toolbar, #kt_footer, #kt_chat_contacts_header'
+								data-kt-scroll-wrappers='#kt_content, #kt_chat_contacts_body'
+								data-kt-scroll-offset='0px'
+								style={{ height: 'calc(100vh - 225px)', overflowY: 'auto' }}>
+								{userData.length === 0 ? (
+									<div className='text-muted fs-6 fw-bold text-center py-10'>No chat found.</div>
+								) : (
+									<InfiniteScroll
+										dataLength={userData.length}
+										next={loadMore}
+										hasMore={pagination.page < pagination.totalPages}
+										loader={
+											<div className='d-flex justify-content-center align-items-center mb-4 my-7'>
+												<div
+													className='spinner-border text-primary'
+													role='status'>
+													<span className='visually-hidden'>Loading...</span>
 												</div>
-											}
-											endMessage={
-												<p
-													style={{ textAlign: 'center' }}
-													className='p-3'>
-													<b>Yay! You have seen it all</b>
-												</p>
-											}
-											scrollableTarget='scrollableDiv'
-											pullDownToRefresh
-											pullDownToRefreshThreshold={50}
-											pullDownToRefreshContent={
-												<h3 style={{ textAlign: 'center' }}>&#8595; Pull down to refresh</h3>
-											}
-											releaseToRefreshContent={
-												<h3 style={{ textAlign: 'center' }}>&#8593; Release to refresh</h3>
-											}
-											refreshFunction={() => fetchUserData(1, true)}>
-											{section ? (
-												<>
-													{userData
-														.filter((user) =>
-															user?.chat_employees?.some((chatUser: any) => chatUser.isAdmin)
+											</div>
+										}
+										endMessage={
+											<p
+												style={{ textAlign: 'center', color: '#8A99AD' }}
+												className='p-3 fs-8 mb-0'>
+												All conversations loaded
+											</p>
+										}
+										scrollableTarget='scrollableDiv'
+										pullDownToRefresh
+										pullDownToRefreshThreshold={50}
+										pullDownToRefreshContent={
+											<h3 style={{ textAlign: 'center' }}>&#8595; Pull down to refresh</h3>
+										}
+										releaseToRefreshContent={
+											<h3 style={{ textAlign: 'center' }}>&#8593; Release to refresh</h3>
+										}
+										refreshFunction={() => fetchUserData(1, true)}>
+										{section ? (
+											<>
+												{userData
+													.filter((user) =>
+														user?.chat_employees?.some((chatUser: any) => chatUser.isAdmin)
+													)
+													.map((user) => {
+														const sender = user.chat_employees.find(
+															(chatUser: any) => chatUser.isSender
 														)
-														.map((user) => {
-															const sender = user.chat_employees.find(
-																(chatUser: any) => chatUser.isSender
-															)
-															const receiver = user.chat_employees.find(
-																(chatUser: any) => chatUser.isReceiver
-															)
+														const receiver = user.chat_employees.find(
+															(chatUser: any) => chatUser.isReceiver
+														)
 
-															const adminUser = sender.isAdmin
-																? sender
-																: receiver.isAdmin
-																? receiver
-																: null
-															const otherUser = sender.isAdmin ? receiver : sender
+														const adminUser = sender?.isAdmin
+															? sender
+															: receiver?.isAdmin
+															? receiver
+															: null
+														const otherUser = sender?.isAdmin ? receiver : sender
 
-															if (!adminUser || displayedIds.has(otherUser._id)) {
-																return null
-															}
+														if (!adminUser || !otherUser || displayedIds.has(otherUser._id)) {
+															return null
+														}
 
-															displayedIds.add(otherUser._id)
+														displayedIds.add(otherUser._id)
 
-															const isAdminSender = adminUser.isSender
+														const isAdminSender = adminUser.isSender
+														const isSelected = otherUser._id === userId
 
-															return (
-																<button
-																	key={otherUser._id}
-																	className='btn p-0 w-100'
-																	style={{ borderBottom: '1px solid #ccc' }}
-																	onClick={() =>
-																		userHandle(
-																			otherUser?.full_name,
-																			otherUser._id,
-																			`https://files.fggroup.in/` + otherUser?.photo
-																		)
-																	}>
-																	<div className='d-flex flex-stack py-4'>
-																		<div className='d-flex align-items-center'>
-																			{otherUser?.photo ? (
-																				<div className='symbol symbol-45px symbol-circle'>
-																					<img
-																						alt='Pic'
-																						src={`https://files.fggroup.in/` + otherUser?.photo}
-																					/>
-																				</div>
-																			) : (
-																				<div className='symbol symbol-45px symbol-circle'>
-																					<span
-																						className='symbol-label text-white fs-6 fw-bolder'
-																						style={{ backgroundColor: '#2d2d43' }}>
-																						{otherUser?.full_name?.charAt(0).toUpperCase()}
-																					</span>
-																				</div>
-																			)}
-																			<div className='ms-5'>
-																				<p className='text-start fs-6 fw-bolder text-gray-900  mb-0'>
-																					{otherUser?.full_name ? otherUser?.full_name : 'FG User'}
-																				</p>
-																				<div
-																					className={`fw-bold text-start fs-7 ${
-																						isAdminSender ? 'text-muted' : 'text-primary'
-																					}`}>
-																					<b title={user.lastMessage}>
-																						{truncateText(user.lastMessage, 20)}
-																					</b>
-																				</div>
+														return (
+															<button
+																key={otherUser._id}
+																className={`gz-chat-contact-btn ${isSelected ? 'is-active' : ''}`}
+																onClick={() =>
+																	userHandle(
+																		otherUser?.full_name,
+																		otherUser._id,
+																		`https://files.fggroup.in/` + otherUser?.photo
+																	)
+																}>
+																<div className='d-flex align-items-center justify-content-between'>
+																	<div className='d-flex align-items-center' style={{ minWidth: 0 }}>
+																		{otherUser?.photo ? (
+																			<div className='symbol symbol-45px symbol-circle me-3 flex-shrink-0'>
+																				<img
+																					alt='Pic'
+																					src={`https://files.fggroup.in/` + otherUser?.photo}
+																				/>
+																			</div>
+																		) : (
+																			<div className='symbol symbol-45px symbol-circle me-3 flex-shrink-0'>
+																				<span
+																					className='symbol-label text-white fs-6 fw-bolder'
+																					style={{ backgroundColor: '#1E3A5F' }}>
+																					{otherUser?.full_name?.charAt(0).toUpperCase()}
+																				</span>
+																			</div>
+																		)}
+																		<div className='text-truncate' style={{ minWidth: 0 }}>
+																			<p className='text-start fs-6 fw-bold mb-0 text-truncate' style={{ color: '#142447' }}>
+																				{otherUser?.full_name ? otherUser?.full_name : 'FG User'}
+																			</p>
+																			<div
+																				className={`text-start fs-7 text-truncate ${
+																					isAdminSender ? 'text-muted' : 'fw-semibold'
+																				}`}
+																				style={{ color: isAdminSender ? '#71809A' : '#1E3A5F' }}>
+																				<span title={user.lastMessage}>
+																					{truncateText(user.lastMessage, 24)}
+																				</span>
 																			</div>
 																		</div>
-																		<div className='d-flex flex-column align-items-end ms-2'>
-																			<span className='text-muted fs-7 mb-1'>
-																				{DayJS().isSame(DayJS(user.lastChat), 'day')
-																					? DayJS(user.lastChat).format('h:mm A')
-																					: DayJS()
-																							.subtract(1, 'day')
-																							.isSame(DayJS(user.lastChat), 'day')
-																					? 'Yesterday'
-																					: DayJS(user.lastChat).format('MMM D, YYYY')}
-																			</span>
-																		</div>
 																	</div>
-																	<div className='separator separator-dashed d-none'></div>
-																</button>
-															)
-														})}
-												</>
-											) : (
-												<>
-													{userData.map((user) => (
+																	<div className='d-flex flex-column align-items-end ms-2 flex-shrink-0'>
+																		<span className='fs-8 mb-1' style={{ color: '#8A99AD' }}>
+																			{DayJS().isSame(DayJS(user.lastChat), 'day')
+																				? DayJS(user.lastChat).format('h:mm A')
+																				: DayJS()
+																						.subtract(1, 'day')
+																						.isSame(DayJS(user.lastChat), 'day')
+																				? 'Yesterday'
+																				: DayJS(user.lastChat).format('MMM D')}
+																		</span>
+																	</div>
+																</div>
+															</button>
+														)
+													})}
+											</>
+										) : (
+											<>
+												{userData.map((user) => {
+													const isSelected = user._id === userId
+													return (
 														<button
 															key={user._id}
-															className='btn p-0 w-100'
-															style={{ borderBottom: '1px solid #ccc' }}
+															className={`gz-chat-contact-btn ${isSelected ? 'is-active' : ''}`}
 															onClick={() =>
 																userHandle(
 																	user?.full_name,
@@ -372,68 +374,59 @@ const HRChatPage = () => {
 																	`https://files.fggroup.in/` + user?.employee?.photo
 																)
 															}>
-															<div className='d-flex flex-stack py-4'>
-																<div className='d-flex align-items-center'>
+															<div className='d-flex align-items-center justify-content-between'>
+																<div className='d-flex align-items-center' style={{ minWidth: 0 }}>
 																	{user?.employee?.photo ? (
-																		<div className='symbol symbol-45px symbol-circle'>
+																		<div className='symbol symbol-45px symbol-circle me-3 flex-shrink-0'>
 																			<img
 																				alt='Pic'
 																				src={`https://files.fggroup.in/` + user?.employee?.photo}
 																			/>
 																		</div>
 																	) : (
-																		<div className='symbol symbol-45px symbol-circle'>
+																		<div className='symbol symbol-45px symbol-circle me-3 flex-shrink-0'>
 																			<span
 																				className='symbol-label text-white fs-6 fw-bolder'
-																				style={{ backgroundColor: '#2d2d43' }}>
+																				style={{ backgroundColor: '#1E3A5F' }}>
 																				{user?.full_name?.charAt(0).toUpperCase()}
 																			</span>
 																		</div>
 																	)}
-																	<div className='ms-5'>
-																		<p className='text-start fs-6 fw-bolder text-gray-900  mb-0'>
+																	<div className='text-truncate' style={{ minWidth: 0 }}>
+																		<p className='text-start fs-6 fw-bold mb-0 text-truncate' style={{ color: '#142447' }}>
 																			{user?.full_name}
 																		</p>
-																		<div className='fw-bold text-gray-400 fs-7'>
+																		<div className='fs-7 text-truncate' style={{ color: '#71809A' }}>
 																			{user?.chat_data ? (
-																				<b title={user?.chat_data?.lastMessage}>
-																					{truncateText(user?.chat_data?.lastMessage, 20)}
-																				</b>
+																				<span title={user?.chat_data?.lastMessage}>
+																					{truncateText(user?.chat_data?.lastMessage, 24)}
+																				</span>
 																			) : (
 																				''
 																			)}
 																		</div>
 																	</div>
 																</div>
-																<div className='d-flex flex-column align-items-end ms-2'>
-																	<span className='text-muted fs-7 mb-1'>
+																<div className='d-flex flex-column align-items-end ms-2 flex-shrink-0'>
+																	<span className='fs-8 mb-1' style={{ color: '#8A99AD' }}>
 																		{DayJS().isSame(DayJS(user?.createdAt), 'day')
 																			? DayJS(user?.createdAt).format('h:mm A')
 																			: DayJS()
 																					.subtract(1, 'day')
 																					.isSame(DayJS(user?.createdAt), 'day')
 																			? 'Yesterday'
-																			: DayJS(user?.createdAt).format('MMM D, YYYY')}
+																			: DayJS(user?.createdAt).format('MMM D')}
 																	</span>
 																</div>
 															</div>
-															<div className='separator separator-dashed d-none'></div>
 														</button>
-													))}
-												</>
-											)}
-										</InfiniteScroll>
-									)}
-								</div>
+													)
+												})}
+											</>
+										)}
+									</InfiniteScroll>
+								)}
 							</div>
-							<div
-								className='whatsapp-footer'
-								style={{
-									backgroundColor: '#2d2d43',
-									width: '100%',
-									height: '20px',
-									borderRadius: '0px',
-								}}></div>
 						</div>
 					</div>
 				</div>
@@ -441,74 +434,85 @@ const HRChatPage = () => {
 				{/* chat section */}
 				{userId ? (
 					<div
-						className={`flex-lg-row-fluid  ${userId ? 'd-md-block d-block' : 'd-md-block d-none'}`}>
+						className={`flex-lg-row-fluid ${userId ? 'd-md-block d-block' : 'd-md-block d-none'}`}
+						style={{ display: 'flex', flexDirection: 'column' }}>
 						<div
-							className='card'
-							id='kt_chat_messenger'>
+							className='card h-100'
+							id='kt_chat_messenger'
+							style={{ border: 'none', borderRadius: '0', display: 'flex', flexDirection: 'column' }}>
 							<div
-								className='card-header-1 d-flex flex-nowrap'
-								id='kt_chat_messenger_header'
-								style={{ backgroundColor: '#2d2d43', borderRadius: '0px' }}>
-								<div className='card-title'>
-									<div className='symbol-group symbol-hover'></div>
-									<div className='d-flex justify-content-center flex-column me-3'>
-										<div className='fs-4 fw-bolder d-flex align-items-center text-white  mb-0 me-1'>
-											<div
-												role='button'
-												onClick={() => setUserId('')}>
-												<FontAwesomeIcon
-													icon={faChevronLeft}
-													className='me-5 text-white'
-												/>
-											</div>
-											{currentUser?.profileImg !== 'https://files.fggroup.in/undefined' ? (
-												<div className='symbol symbol-45px symbol-circle me-5'>
-													<img
-														alt='Pic'
-														src={toAbsoluteUrl(currentUser.profileImg)}
-													/>
-												</div>
-											) : currentUser.name ? (
-												<div className='symbol symbol-45px symbol-circle me-5'>
-													<span className='symbol-label bg-light-success text-dark fs-6 fw-bolder'>
-														{currentUser.name[0]}
-													</span>
-												</div>
-											) : (
-												''
-											)}
+								className='gz-chat-msg-header'
+								id='kt_chat_messenger_header'>
+								<div className='d-flex align-items-center'>
+									<div
+										role='button'
+										title='Back to list'
+										onClick={() => setUserId('')}
+										className='me-3 d-lg-none d-flex align-items-center justify-content-center'
+										style={{
+											width: '32px',
+											height: '32px',
+											borderRadius: '6px',
+											border: '1px solid #DFE7F0',
+											background: '#FFFFFF',
+											cursor: 'pointer',
+										}}>
+										<FontAwesomeIcon
+											icon={faChevronLeft}
+											style={{ color: '#1E3A5F', fontSize: '13px' }}
+										/>
+									</div>
+									{currentUser?.profileImg !== 'https://files.fggroup.in/undefined' ? (
+										<div className='symbol symbol-45px symbol-circle me-3'>
+											<img
+												alt='Pic'
+												src={toAbsoluteUrl(currentUser.profileImg)}
+											/>
+										</div>
+									) : currentUser.name ? (
+										<div className='symbol symbol-45px symbol-circle me-3'>
+											<span
+												className='symbol-label text-white fs-6 fw-bolder'
+												style={{ backgroundColor: '#1E3A5F' }}>
+												{currentUser.name[0]}
+											</span>
+										</div>
+									) : null}
+									<div>
+										<div className='fs-5 fw-bold' style={{ color: '#142447' }}>
 											{currentUser.name.includes('undefined') ? 'FG User' : currentUser.name}
+										</div>
+										<div className='fs-8' style={{ color: '#10B981', fontWeight: 600 }}>
+											● Active
 										</div>
 									</div>
 								</div>
 
 								<div className='card-toolbar'>
-									<div className='me-n3'>
-										<div className='dropdown'>
-											<button
-												className='btn btn-sm btn-icon btn-active-light-primary dropdown-toggle'
-												type='button'
-												id='dropdownMenuButton'
-												data-bs-toggle='dropdown'
-												aria-expanded='false'>
-												<i className='bi bi-three-dots fs-2'></i>
-											</button>
-											<ul
-												className='dropdown-menu'
-												aria-labelledby='dropdownMenuButton'>
-												<li>
-													<Link
-														to={'/fwg/users/user-view-details?user_id=' + userId}
-														className='dropdown-item'>
-														View User
-													</Link>
-												</li>
-											</ul>
-										</div>
+									<div className='dropdown'>
+										<button
+											className='btn btn-sm btn-icon btn-active-light-primary dropdown-toggle'
+											type='button'
+											id='dropdownMenuButton'
+											data-bs-toggle='dropdown'
+											aria-expanded='false'>
+											<i className='bi bi-three-dots fs-2' style={{ color: '#1E3A5F' }}></i>
+										</button>
+										<ul
+											className='dropdown-menu dropdown-menu-end'
+											aria-labelledby='dropdownMenuButton'>
+											<li>
+												<Link
+													to={'/fwg/users/user-view-details?user_id=' + userId}
+													className='dropdown-item'>
+													View User Profile
+												</Link>
+											</li>
+										</ul>
 									</div>
 								</div>
 							</div>
-							<div>
+							<div className='flex-grow-1' style={{ position: 'relative', overflow: 'hidden' }}>
 								<HRChatInner
 									id={userId}
 									isChatHistory={isChatHistoryFetched}
@@ -517,11 +521,27 @@ const HRChatPage = () => {
 						</div>
 					</div>
 				) : (
-					<div className='flex-lg-row-fluid d-md-block d-none'>
-						<div
-							className='card h-100 w-100 d-flex justify-content-center align-items-center'
-							id='kt_chat_messenger'>
-							<h1 className='my-5'>Select User to see chat</h1>
+					<div
+						className='flex-lg-row-fluid d-md-flex d-none justify-content-center align-items-center'
+						style={{ background: '#F8FAFD' }}>
+						<div className='text-center p-8' style={{ maxWidth: '420px' }}>
+							<div
+								className='d-inline-flex align-items-center justify-content-center mb-4'
+								style={{
+									width: '72px',
+									height: '72px',
+									borderRadius: '50%',
+									background: '#E8F0F8',
+									color: '#1E3A5F',
+								}}>
+								<KTIcon iconName='message-text-2' className='fs-3x text-primary' />
+							</div>
+							<h3 className='fw-bold mb-2' style={{ color: '#142447' }}>
+								Select a conversation
+							</h3>
+							<p className='fs-6 mb-0' style={{ color: '#71809A' }}>
+								Choose an employee from the left sidebar to view message history, send announcements, and communicate in real-time.
+							</p>
 						</div>
 					</div>
 				)}

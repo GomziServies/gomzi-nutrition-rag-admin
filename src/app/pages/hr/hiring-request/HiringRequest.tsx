@@ -2,7 +2,6 @@ import { faCheck, faX } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Form, Modal } from 'react-bootstrap'
-import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -13,6 +12,7 @@ import toast from 'react-hot-toast'
 import UsersListPagination from '../../../components/TablePagination'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 
 const HiringRequest: React.FC = () => {
 	const [loading, setLoading] = useState(false)
@@ -37,7 +37,7 @@ const HiringRequest: React.FC = () => {
 	const [requestStatus, setRequestStatus] = useState('')
 
 	const sortableFields = [
-		{ title: 'Manager Name', field: 'employee_id' },
+		{ title: 'Manager Name', field: 'employee_name' },
 		{ title: 'Position', field: 'position' },
 		{ title: 'Budget', field: 'budget' },
 		{ title: 'Experience', field: 'experience' },
@@ -61,15 +61,25 @@ const HiringRequest: React.FC = () => {
 				GetEmployees({ limit: 1000 }), // Fetch all employees for mapping
 			])
 
-			if (requestsRes.status === 200) {
-				setRequests(requestsRes.data)
-				setMetaData(requestsRes.metadata)
-				if ((requestsRes.metadata as any)?.pagination) {
-					setTotalItems((requestsRes.metadata as any).pagination.totalDocs)
-				}
+			const emps = employeesRes?.status === 200 ? employeesRes.data : []
+			if (employeesRes?.status === 200) {
+				setEmployees(emps)
 			}
-			if (employeesRes.status === 200) {
-				setEmployees(employeesRes.data)
+
+			if (requestsRes?.status === 200) {
+				const mappedRequests = (requestsRes.data || []).map((item: any) => {
+					const emp = emps.find(
+						(e: any) => e.employee_id === item.employee_id || e.employee?._id === item.employee_id || e._id === item.employee_id
+					)
+					return {
+						...item,
+						employee_name: emp ? emp.full_name : 'Unknown',
+					}
+				})
+				setRequests(mappedRequests)
+				setMetaData(requestsRes.metadata)
+				const total = (requestsRes.metadata as any)?.pagination?.totalDocs || (requestsRes.metadata as any)?.total || mappedRequests.length
+				setTotalItems(total)
 			}
 		} catch (error) {
 			console.error('Error fetching data:', error)
@@ -79,22 +89,21 @@ const HiringRequest: React.FC = () => {
 	}
 
 	useEffect(() => {
-		fetchData()
-	}, [pagination.page, pagination.itemsPerPage, sort, sortOrder, requestStatus])
+		const timeout = setTimeout(() => {
+			fetchData()
+		}, 300)
+		return () => clearTimeout(timeout)
+	}, [pagination.page, pagination.itemsPerPage, sort, sortOrder, requestStatus, searchTerm])
 
-	const isFirstRender = useRef(true)
-
-	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false
-			return
-		}
-
-		if (searchTerm.trim() || searchTerm === '') {
-			setPagination((prev) => ({ ...prev, page: 1 }))
-			if (pagination.page === 1) fetchData()
-		}
-	}, [searchTerm])
+	const handleSearchChange = (term: React.SetStateAction<string>) => {
+		setSearchTerm((prev) => {
+			const next = typeof term === 'function' ? term(prev) : term
+			if (next !== prev) {
+				setPagination((p) => (p.page === 1 ? p : { ...p, page: 1 }))
+			}
+			return next
+		})
+	}
 
 	const handlePageChange = (page: number) => {
 		setPagination({ ...pagination, page })
@@ -153,39 +162,82 @@ const HiringRequest: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Hiring Request</PageTitle>
-			<KTCard>
-				<div className='row mx-6 my-4 align-items-center justify-content-between'>
-					<div className='col-md-8 col-12'>
-						<div className='d-md-flex'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-							<div className='ms-md-3 mt-md-0 mt-3 d-md-block d-none'>
-								<LengthMenu
-									expenseData={requests}
-									handleItemsPerPageChange={(limit) =>
-										setPagination({ ...pagination, itemsPerPage: limit, page: 1 })
-									}
-								/>
-							</div>
-							<div className='ms-md-3 mt-md-0 mt-3'>
-								<Form.Select
-									value={requestStatus}
-									onChange={(e) => setRequestStatus(e.target.value)}
-									className='form-select form-select-sm form-select-solid'
-									style={{ width: '150px' }}
-								>
-									<option value=''>All Status</option>
-									<option value='Pending'>Pending</option>
-									<option value='Approved'>Approved</option>
-									<option value='Rejected'>Rejected</option>
-									<option value='Completed'>Completed</option>
-								</Form.Select>
-							</div>
-						</div>
+
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Hiring Requests</h2>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Manage, review, and track departmental recruitment requirements
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar Card */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div
+					className='card-body d-flex align-items-center flex-wrap gap-3'
+					style={{ padding: '12px 18px' }}>
+					{/* 1. Searchbar */}
+					<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={handleSearchChange}
+							placeholder='Search hiring requests...'
+							className='me-0'
+						/>
+					</div>
+
+					{/* 2. Page Size / Length Menu */}
+					<div>
+						<LengthMenu
+							expenseData={requests}
+							itemsPerPage={pagination.itemsPerPage}
+							handleItemsPerPageChange={(limit) =>
+								setPagination({ ...pagination, itemsPerPage: limit, page: 1 })
+							}
+							className='me-0'
+						/>
+					</div>
+
+					{/* 3. Download Excel Button */}
+					<div>
+						<DownloadExcelButton
+							data={requests}
+							columns={sortableFields}
+							filename='Hiring_Requests'
+						/>
+					</div>
+
+					{/* 4. Status Filter */}
+					<div style={{ minWidth: '150px' }}>
+						<select
+							value={requestStatus}
+							onChange={(e) => {
+								setRequestStatus(e.target.value)
+								setPagination((prev) => ({ ...prev, page: 1 }))
+							}}
+							className='gz-inv-select'
+							style={{ width: '100%', height: '38px', borderRadius: '8px' }}>
+							<option value=''>All Statuses</option>
+							<option value='Pending'>Pending</option>
+							<option value='Approved'>Approved</option>
+							<option value='Rejected'>Rejected</option>
+							<option value='Completed'>Completed</option>
+						</select>
 					</div>
 				</div>
+			</div>
+
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
 				<div className='py-4 card-body'>
 					<style>{`
 						.hiring-request-table thead tr th {
@@ -274,11 +326,13 @@ const HiringRequest: React.FC = () => {
 						<UsersListPagination
 							totalPages={Math.ceil(totalItems / pagination.itemsPerPage) || 1}
 							currentPage={pagination.page}
+							totalRecords={totalItems}
+							itemsPerPage={pagination.itemsPerPage}
 							onPageChange={handlePageChange}
 						/>
 					)}
 				</div>
-			</KTCard>
+			</div>
 
 			{/* Modal for Approve/Reject Hiring Request */}
 			<Modal

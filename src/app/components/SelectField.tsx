@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { MultiSelect, Option } from 'react-multi-select-component'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faChevronDown, faSearch } from '@fortawesome/free-solid-svg-icons'
 
 type Props = {
 	className?: string
@@ -191,15 +193,40 @@ const SelectField: React.FC<Props> = ({
 							}`}>
 							{displayLabel}
 						</span>
-						<i className='bi bi-chevron-down gz-select-chevron'></i>
+						<FontAwesomeIcon
+							icon={faChevronDown}
+							className='gz-select-chevron'
+						/>
 					</div>
 
 					{/* Custom Dropdown Popup Menu */}
 					{isOpen && !disabled && (
 						<div className='gz-custom-select-dropdown'>
 							{showSearch && (
-								<div className='gz-select-search-box'>
-									<i className='bi bi-search'></i>
+								<div
+									className='gz-select-search-box'
+									style={{
+										padding: '6px 8px',
+										borderBottom: '1px solid #F1F5F9',
+										position: 'relative',
+										display: 'flex',
+										alignItems: 'center',
+										boxSizing: 'border-box',
+									}}>
+									<FontAwesomeIcon
+										icon={faSearch}
+										className='gz-select-search-icon'
+										style={{
+											position: 'absolute',
+											left: '18px',
+											top: '50%',
+											transform: 'translateY(-50%)',
+											fontSize: '12px',
+											color: '#71809A',
+											pointerEvents: 'none',
+											zIndex: 5,
+										}}
+									/>
 									<input
 										type='text'
 										placeholder='Search...'
@@ -207,6 +234,21 @@ const SelectField: React.FC<Props> = ({
 										autoFocus
 										onChange={(e) => setSearchTerm(e.target.value)}
 										onClick={(e) => e.stopPropagation()}
+										style={{
+											width: '100%',
+											height: '34px',
+											minHeight: '34px',
+											lineHeight: 'normal',
+											backgroundColor: '#F8FAFD',
+											border: '1px solid #DFE7F0',
+											borderRadius: '6px',
+											padding: '0 10px 0 34px',
+											fontSize: '12.5px',
+											fontWeight: 500,
+											color: '#142447',
+											outline: 'none',
+											boxSizing: 'border-box',
+										}}
 									/>
 								</div>
 							)}
@@ -223,7 +265,12 @@ const SelectField: React.FC<Props> = ({
 													handleOptionSelect(opt.value)
 												}}>
 												<span>{opt.label}</span>
-												{isSelected && <i className='bi bi-check2'></i>}
+												{isSelected && (
+													<FontAwesomeIcon
+														icon={faCheck}
+														className='gz-select-check-icon'
+													/>
+												)}
 											</div>
 										)
 									})

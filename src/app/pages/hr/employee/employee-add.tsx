@@ -2,13 +2,14 @@
 /* eslint-disable jsx-a11y/img-redundant-alt */
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import SelectField from '../../../components/SelectField'
 import TableButton from '../../../components/TableButton'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
 import { CreateEmployee, GetNextEmployeeCode } from '../../../Functions/FGGroup/Employee'
+import './employee-add.css'
 
 const HREmployeeAdd = () => {
 	const navigate = useNavigate()
@@ -212,14 +213,98 @@ const HREmployeeAdd = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Add Employee</PageTitle>
-			<div className='row'>
-				<div className='col-12 mt-3'>
-					<div className='card py-10'>
-						<div className='card-body'>
-							<div className='row'>
-								<div className='col-md-12'>
-									<h2 className='mb-5'>Personal Details:</h2>
-									<div className='row'>
+
+			{/* Top Bar with Back Navigation */}
+			<div className='d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5'>
+				<Link
+					to='/hr/employee-detail'
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-add-back-btn'>
+					<i className='bi bi-arrow-left fs-6'></i>
+					<span className='fw-semibold'>Back to Directory</span>
+				</Link>
+
+				<div className='d-flex align-items-center flex-wrap gap-2'>
+					{(employeeData.employee_code || employee_code) && (
+						<span
+							className='badge badge-light-secondary fw-bold px-3 py-2 fs-7'
+							style={{ letterSpacing: '0.5px', color: '#142447' }}>
+							<i className='bi bi-person-badge text-muted me-1.5'></i>
+							{employeeData.employee_code ? employeeData.employee_code : employee_code}
+						</span>
+					)}
+					<span className='badge badge-light-success fw-bold px-3 py-2 fs-7'>
+						New Joining
+					</span>
+				</div>
+			</div>
+
+			{/* Top Bar with Back Link */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<Link
+					to='/hr/employee-detail'
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
+					<i className='bi bi-arrow-left fs-6'></i>
+					<span className='fw-semibold'>Back to Directory</span>
+				</Link>
+			</div>
+
+			{/* Header Card */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '14px',
+					border: '1px solid #E4EAF2',
+					background: '#ffffff',
+					boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+				}}>
+				<div className='card-body p-6 d-flex flex-wrap align-items-center gap-4'>
+					<div
+						className='d-flex align-items-center justify-content-center flex-shrink-0'
+						style={{
+							width: '56px',
+							height: '56px',
+							borderRadius: '14px',
+							background: '#EAF1FB',
+							border: '1px solid #DCE8F8',
+						}}>
+						<i
+							className='bi bi-person-plus-fill fs-3'
+							style={{ color: '#172B4D' }}></i>
+					</div>
+					<div>
+						<h2
+							className='fw-bold fs-3 m-0'
+							style={{ color: '#142447' }}>
+							New Employee
+						</h2>
+						<span
+							className='fs-7'
+							style={{ color: '#71809A' }}>
+							Create the directory profile, payroll credentials and shift schedule
+						</span>
+					</div>
+				</div>
+			</div>
+
+			{/* Section 1: Personal & Job Details */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '14px',
+					border: '1px solid #E4EAF2',
+					background: '#ffffff',
+					boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+				}}>
+				<div className='card-header border-0 pt-6 pb-3 px-6'>
+					<div>
+						<h3 className='gz-add-panel-title'>Personal & Job Details</h3>
+						<p className='gz-add-panel-sub'>
+							Identity, designation and primary contact information
+						</p>
+					</div>
+				</div>
+				<div className='card-body px-6 py-4'>
+					<div className='row'>
 										<div className='col-md-3 fv-row mb-7'>
 											<InputField
 												placeholder='Employee Code'
@@ -380,68 +465,124 @@ const HREmployeeAdd = () => {
 												onChange={handleInputChange}
 											/>
 										</div>
-										<div className='col-md-12 mt-3'>
-											<h2 className='mb-5'>Family Details:</h2>
+									</div>
+								</div>
+							</div>
+
+						{/* Section 2: Family Details & Emergency Contacts */}
+						<div
+							className='card shadow-sm border-0 mb-6'
+							style={{
+								borderRadius: '14px',
+								border: '1px solid #E4EAF2',
+								background: '#ffffff',
+								boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+							}}>
+							<div className='card-header border-0 pt-6 pb-3 px-6 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+								<div>
+									<h3 className='gz-add-panel-title'>Family Details & Emergency Contacts</h3>
+									<p className='gz-add-panel-sub'>
+										Primary emergency contacts and family relationships on record
+									</p>
+								</div>
+								<button
+									type='button'
+									className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2 gz-add-light-action'
+									style={{ borderRadius: '8px', height: '36px' }}
+									onClick={(e) => addPlan(e)}>
+									<i className='bi bi-plus-lg fs-6'></i>
+									<span className='fw-semibold'>Add Family Member</span>
+								</button>
+							</div>
+							<div className='card-body px-6 py-4'>
+								<div className='d-flex flex-column gap-4'>
+									{family_details.map((family, index) => (
+										<div
+											className='p-4 rounded-3 border'
+											style={{ backgroundColor: '#F8FAFD', borderColor: '#E4EAF2' }}
+											key={index}>
+											<div
+												className='d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom'
+												style={{ borderColor: '#E4EAF2' }}>
+												<span
+													className='fw-bold fs-7 text-uppercase'
+													style={{ letterSpacing: '0.5px', color: '#142447' }}>
+													Family Member #{index + 1}
+												</span>
+												{family_details.length > 1 && index != 0 ? (
+													<TableButton
+														action='remove'
+														backgroundDark={true}
+														onClick={(e) => removePlan(index, e)}
+													/>
+												) : (
+													''
+												)}
+											</div>
 											<div className='row'>
-												{family_details.map((family, index) => (
-													<div
-														className='row'
-														key={index}>
-														<div className='col-md-5 fv-row'>
-															<InputField
-																placeholder='Name'
-																type='text'
-																className='col-12 fv-row'
-																name='name'
-																label='Name'
-																htmlFor='name'
-																value={family.name}
-																onChange={(e: any) => handleFamilyChange(index, e)}
-															/>
-														</div>
-														<div className='col-md-5 fv-row'>
-															<InputField
-																placeholder='Contact Number'
-																type='number'
-																className='col-12 fv-row'
-																name='mobile'
-																label='Contact Number'
-																htmlFor='number'
-																value={family.mobile}
-																onChange={(e: any) => handleFamilyChange(index, e)}
-															/>
-														</div>
-														{family_details.length > 1 && index != 0 ? (
-															<div className='col-2 d-flex  align-items-center'>
-																<div className='d-flex mt-5 justify-content-center align-items-center'>
-																	<TableButton
-																		action='remove'
-																		backgroundDark={true}
-																		onClick={(e) => removePlan(index, e)}
-																	/>
-																</div>
-															</div>
-														) : (
-															''
-														)}
-													</div>
-												))}
+												<div className='col-md-6 fv-row mb-2'>
+													<InputField
+														placeholder='Full Name (e.g. Spouse, Father)'
+														type='text'
+														className='col-12 fv-row'
+														name='name'
+														label='Relation / Name'
+														htmlFor={`family-name-${index}`}
+														value={family.name}
+														onChange={(e: any) => handleFamilyChange(index, e)}
+													/>
+												</div>
+												<div className='col-md-6 fv-row mb-2'>
+													<InputField
+														placeholder='Emergency Contact Number'
+														type='number'
+														className='col-12 fv-row'
+														name='mobile'
+														label='Contact Number'
+														htmlFor={`family-mobile-${index}`}
+														value={family.mobile}
+														onChange={(e: any) => handleFamilyChange(index, e)}
+													/>
+												</div>
 											</div>
 										</div>
+									))}
+								</div>
+							</div>
+						</div>
 
-										<div className='col-12 my-3 d-flex justify-content-end'>
-											<button
-												className='btn-primary btn gap-2 mx-2 btn-sm me-1'
-												onClick={(e) => addPlan(e)}>
-												<strong>
-													<big>+</big>
-												</strong>{' '}
-												Add
-											</button>
-										</div>
-										<div className='col-md-12 mt-3'>
-											<h2 className='mb-5'>Account Details:</h2>
-											<div className='row'>
+						{/* Section 3: Payroll & Banking */}
+						<div
+							className='card shadow-sm border-0 mb-6'
+							style={{
+								borderRadius: '14px',
+								border: '1px solid #E4EAF2',
+								background: '#ffffff',
+								boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+							}}>
+							<div className='card-header border-0 pt-6 pb-3 px-6'>
+								<div>
+									<h3 className='gz-add-panel-title'>Payroll & Banking Credentials</h3>
+									<p className='gz-add-panel-sub'>
+										Direct deposit accounts, IFSC routing code and monthly compensation
+									</p>
+								</div>
+							</div>
+							<div className='card-body px-6 py-4'>
+								<div
+									className='p-4 rounded-3 mb-6 d-flex align-items-center gap-3'
+									style={{ background: '#EAF1FB', border: '1px solid #DCE8F8' }}>
+									<i
+										className='bi bi-info-circle-fill fs-3 flex-shrink-0'
+										style={{ color: '#172B4D' }}></i>
+									<span
+										className='fs-7'
+										style={{ color: '#142447' }}>
+										Double-check the account number and IFSC code — these are used for
+										salary disbursal and cannot be auto-verified.
+									</span>
+								</div>
+								<div className='row'>
 												<div className='col-md-4 fv-row mb-7'>
 													<InputField
 														placeholder='Bank Name'
@@ -480,49 +621,67 @@ const HREmployeeAdd = () => {
 												</div>
 											</div>
 										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<InputField
-												placeholder='Upload Photo'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='photo'
-												label='Upload Photo'
-												htmlFor='photo'
-												onChange={handleFileChange}
-											/>
+									</div>
+
+									{/* Section 4: Documents & Shift Schedule */}
+									<div
+										className='card shadow-sm border-0 mb-6'
+										style={{
+											borderRadius: '14px',
+											border: '1px solid #E4EAF2',
+											background: '#ffffff',
+											boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+										}}>
+										<div className='card-header border-0 pt-6 pb-3 px-6'>
+											<div>
+												<h3 className='gz-add-panel-title'>Documents & Shift Schedule</h3>
+												<p className='gz-add-panel-sub'>
+													Identity documents and daily reporting schedule for attendance
+												</p>
+											</div>
 										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<InputField
-												placeholder='Upload Proof'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='proof'
-												label='Upload Proof'
-												htmlFor='proof'
-												onChange={handleFileChange}
-											/>
-										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<InputField
-												placeholder='Upload Pdf'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='document'
-												label='Upload Pdf'
-												htmlFor='document'
-												onChange={handleFileChange}
-											/>
-										</div>
-										<div className='col-md-12 mt-3'>
-											<h2 className='mb-5'>Shift Time:</h2>
+										<div className='card-body px-6 py-4'>
 											<div className='row'>
+												<div className='col-md-4 fv-row mb-7'>
+													<InputField
+														placeholder='Upload Photo'
+														type='file'
+														className='col-12 fv-row mb-7'
+														name='photo'
+														label='Upload Photo'
+														htmlFor='photo'
+														onChange={handleFileChange}
+													/>
+												</div>
+												<div className='col-md-4 fv-row mb-7'>
+													<InputField
+														placeholder='Upload Proof'
+														type='file'
+														className='col-12 fv-row mb-7'
+														name='proof'
+														label='Upload Proof'
+														htmlFor='proof'
+														onChange={handleFileChange}
+													/>
+												</div>
+												<div className='col-md-4 fv-row mb-7'>
+													<InputField
+														placeholder='Upload Pdf'
+														type='file'
+														className='col-12 fv-row mb-7'
+														name='document'
+														label='Upload Pdf'
+														htmlFor='document'
+														onChange={handleFileChange}
+													/>
+												</div>
 												<div className='col-md-4 fv-row mb-md-7'>
 													<InputField
 														placeholder='In-Time'
 														type='time'
 														className='col-12 fv-row mb-7'
 														name='in_time'
-														label='In-Time'
+														label='Standard In-Time'
 														htmlFor='in_time'
 														value={employeeData.in_time}
 														onChange={handleInputChange}
@@ -534,31 +693,73 @@ const HREmployeeAdd = () => {
 														type='time'
 														className='col-12 fv-row mb-7'
 														name='out_time'
-														label='Out-Time'
+														label='Standard Out-Time'
 														htmlFor='out_time'
 														value={employeeData.out_time}
 														onChange={handleInputChange}
 													/>
 												</div>
+												<div className='col-md-4'>
+													<div
+														className='p-4 rounded-3 text-center h-100 d-flex flex-column justify-content-center'
+														style={{ background: '#F5F7FB', border: '1px solid #E4EAF2' }}>
+														<span
+															className='fs-8 fw-bold text-uppercase d-block mb-1'
+															style={{ color: '#71809A', letterSpacing: '0.05em' }}>
+															Configured Shift
+														</span>
+														<span
+															className='fs-5 fw-bold'
+															style={{ color: '#172B4D' }}>
+															{employeeData.in_time || '09:30'} — {employeeData.out_time || '18:30'}
+														</span>
+														<span
+															className='fs-8 d-block mt-1'
+															style={{ color: '#71809A' }}>
+															Standard Day Shift
+														</span>
+													</div>
+												</div>
 											</div>
 										</div>
+									</div>
 
-										<div className='col-md-12 fv-row mt-4 mb-2 d-flex justify-content-end'>
-											<button
-												type='button'
-												className='btn btn-success mx-2 mb-4'
-												onClick={handleAddButtonClick}
-												disabled={isSubmitting}>
-												{isSubmitting ? 'Submitting...' : 'Submit'}
-											</button>
+									{/* Submit Bar */}
+									<div
+										className='card shadow-sm border-0'
+										style={{
+											borderRadius: '14px',
+											border: '1px solid #E4EAF2',
+											background: '#ffffff',
+											boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+										}}>
+										<div className='card-body p-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+											<span
+												className='fs-7'
+												style={{ color: '#71809A' }}>
+												Review personal, family and banking details before creating the profile.
+											</span>
+											<div className='d-flex align-items-center gap-2'>
+												<Link
+													to='/hr/employee-detail'
+													className='btn btn-sm btn-light d-inline-flex align-items-center gap-2 px-5'
+													style={{ borderRadius: '8px', height: '42px' }}>
+													<span className='fw-semibold'>Cancel</span>
+												</Link>
+												<button
+													type='button'
+													className='btn btn-sm btn-primary d-inline-flex align-items-center gap-2 px-6'
+													style={{ borderRadius: '8px', height: '42px' }}
+													onClick={handleAddButtonClick}
+													disabled={isSubmitting}>
+													<i className='bi bi-check2-circle fs-5'></i>
+													<span className='fw-bold'>
+														{isSubmitting ? 'Submitting...' : 'Create Employee'}
+													</span>
+												</button>
+											</div>
 										</div>
 									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 		</>
 	)
 }

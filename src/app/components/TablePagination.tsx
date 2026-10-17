@@ -36,8 +36,10 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 
 	const pageItems = getPaginationItems(currentPage, totalPages)
 
-	const currentStart = totalRecords !== undefined ? Math.min((currentPage - 1) * itemsPerPage + 1, totalRecords) : null
-	const currentEnd = totalRecords !== undefined ? Math.min(currentPage * itemsPerPage, totalRecords) : null
+	const fallbackTotal = totalPages * itemsPerPage
+	const displayTotal = totalRecords !== undefined ? totalRecords : fallbackTotal
+	const displayStart = displayTotal === 0 ? 0 : Math.max(1, (currentPage - 1) * itemsPerPage + 1)
+	const displayEnd = Math.min(currentPage * itemsPerPage, displayTotal)
 
 	return (
 		<div
@@ -55,17 +57,9 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 				gap: '16px',
 				width: '100%',
 			}}>
-			{/* Left: Showing count */}
-			<div style={{ color: '#556987', fontSize: '13px' }}>
-				{totalRecords !== undefined ? (
-					<>
-						Showing <strong>{currentStart}</strong>–<strong>{currentEnd}</strong> of <strong>{totalRecords}</strong> {entityName}
-					</>
-				) : (
-					<>
-						Showing Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
-					</>
-				)}
+			{/* Left: Showing count (x-y of z) */}
+			<div style={{ flex: '1 1 0', minWidth: '160px', color: '#556987', fontSize: '13px', textAlign: 'left' }}>
+				Showing <strong>{displayStart}</strong>–<strong>{displayEnd}</strong> of <strong>{displayTotal}</strong> {entityName}
 			</div>
 
 			{/* Middle: Numbered pagination group */}
@@ -174,7 +168,7 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 			</div>
 
 			{/* Right: Page X of Y */}
-			<div style={{ color: '#71809A', fontSize: '13px', fontWeight: 500 }}>
+			<div style={{ flex: '1 1 0', minWidth: '160px', color: '#71809A', fontSize: '13px', fontWeight: 500, textAlign: 'right' }}>
 				Page {currentPage} of {totalPages}
 			</div>
 		</div>

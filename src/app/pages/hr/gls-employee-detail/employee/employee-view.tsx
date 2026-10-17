@@ -4,7 +4,7 @@ import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import CopyableInput from '../../../../components/CopyableInput'
 import InputField from '../../../../components/InputField'
@@ -15,11 +15,15 @@ import UsersListPagination from '../../../../components/TablePagination'
 import { FileUploadToFGGroup } from '../../../../Functions/FGGroup'
 import { GetGlsEmployees, UpdateGlsEmployee } from '../../../../Functions/FGGroup'
 import { DayJS } from '../../../../../_metronic/helpers/Utils'
+import './gls-employee-view.css'
 
 const EmployeeView = () => {
     const location = useLocation()
     const searchParams = new URLSearchParams(location.search)
     const employee_id: any = searchParams.get('employee_id')
+    const [activeTab, setActiveTab] = useState<
+        'profile' | 'banking' | 'shift' | 'family' | 'documents'
+    >('profile')
     const [loading, setLoading] = useState(false)
     const [documentLoading, setDocumentLoading] = useState(false)
     const [sort, setSort] = useState('createdAt')
@@ -345,49 +349,329 @@ const EmployeeView = () => {
 
     return (
 			<>
-				<PageTitle breadcrumbs={[]}>Employee Detail</PageTitle>
-				<>
-					<div className='card pb-3'>
-						<div className='card-body'>
-							<h1 className='fw-bold text-dark fs-1 mb-6 mt-3 '>Member Detail</h1>
+				<PageTitle breadcrumbs={[]}>Employee Profile</PageTitle>
 
-							<div className='row'>
-								<div className='col-md-3 d-md-block d-flex mb-md-0 mb-5'>
-									<div>
-										<label
-											htmlFor='proof'
-											className='fw-bold ms-md-0 ms-6 fs-6 mb-md-5 mb-2'>
-											Profile :
-										</label>
-										<br />
-										<div className=' d-md-block d-flex justify-content-center'>
-											<img
-												src={'https://files.fggroup.in/' + memberDetailData?.photo}
-												className='w-75'
-												style={{ borderRadius: '5px' }}
-												alt='Image preview'
-											/>
-										</div>
+				{/* Top Bar with Back Navigation & Quick Actions */}
+				<div className='d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5'>
+					<Link
+						to='/hr/gls-employees'
+						className='btn btn-sm d-inline-flex align-items-center gap-2 gz-gls-back-btn'>
+						<i className='bi bi-arrow-left fs-6'></i>
+						<span className='fw-semibold'>Back to Directory</span>
+					</Link>
+
+					<div className='d-flex align-items-center flex-wrap gap-2'>
+						{memberDetailData?.employee_code && (
+							<span
+								className='badge badge-light-secondary fw-bold px-3 py-2 fs-7'
+								style={{ letterSpacing: '0.5px', color: '#142447' }}>
+								<i className='bi bi-person-badge text-muted me-1.5'></i>
+								{memberDetailData.employee_code}
+							</span>
+						)}
+						{memberDetailData?.position && (
+							<span className='badge badge-light-primary fw-bold px-3 py-2 fs-7'>
+								{memberDetailData.position}
+							</span>
+						)}
+						{joiningTime && (
+							<span className='badge badge-light-success fw-bold px-3 py-2 fs-7'>
+								<i className='bi bi-clock-history me-1'></i>
+								{joiningTime}
+							</span>
+						)}
+						<button
+							type='button'
+							onClick={() => handleUpdateDocument('Employee')}
+							disabled={documentLoading}
+							className='btn btn-sm btn-primary d-inline-flex align-items-center gap-2 px-4 ms-2'
+							style={{ borderRadius: '8px', height: '38px' }}>
+							<i className='bi bi-check2-circle fs-5'></i>
+							<span className='fw-bold'>Save Changes</span>
+						</button>
+					</div>
+				</div>
+
+				{/* Hero Profile Card */}
+				<div
+					className='card shadow-sm border-0 mb-6'
+					style={{
+						borderRadius: '14px',
+						border: '1px solid #E4EAF2',
+						background: '#ffffff',
+						boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+					}}>
+					<div className='card-body p-6'>
+						<div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
+							{/* Left: Avatar & Info */}
+							<div className='d-flex align-items-center gap-4'>
+								<div
+									style={{
+										width: '80px',
+										height: '80px',
+										minWidth: '80px',
+										minHeight: '80px',
+										borderRadius: '14px',
+										overflow: 'hidden',
+										border: '1px solid #E4EAF2',
+										boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+										background: '#F5F7FB',
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+									}}>
+									{memberDetailData?.photo ? (
+										<img
+											src={'https://files.fggroup.in/' + memberDetailData.photo}
+											alt={memberDetailData.name || 'Employee Photo'}
+											style={{
+												width: '100%',
+												height: '100%',
+												objectFit: 'cover',
+												display: 'block',
+											}}
+										/>
+									) : (
+										<span className='fs-1 fw-bolder text-primary'>
+											{memberDetailData?.name ? memberDetailData.name.charAt(0).toUpperCase() : 'E'}
+										</span>
+									)}
+								</div>
+
+								<div>
+									<div className='d-flex align-items-center gap-2 mb-1'>
+										<h2
+											className='fw-bold fs-2 m-0'
+											style={{ color: '#142447' }}>
+											{memberDetailData?.name || 'Unnamed Employee'}
+										</h2>
 									</div>
-									<div className='mt-md-5'>
-										<label
-											htmlFor='proof'
-											className='fw-bold ms-md-0 ms-6 fs-6 mb-md-5 mb-2'>
-											Proof :
-										</label>
-										<br />
-										<div className=' d-md-block d-flex justify-content-center'>
-											<img
-												src={'https://files.fggroup.in/' + memberDetailData?.proof}
-												className='w-75'
-												alt='Image preview'
-												style={{ borderRadius: '5px' }}
-											/>
-										</div>
+									<div
+										className='fs-7 fw-semibold mb-2'
+										style={{ color: '#71809A' }}>
+										{memberDetailData?.position || 'Team Member'}
+										{memberDetailData?.employee_code ? ` • ${memberDetailData.employee_code}` : ''}
+									</div>
+
+									{/* Quick Contact Chips */}
+									<div className='d-flex flex-wrap align-items-center gap-2'>
+										{memberDetailData?.mobile && (
+											<a
+												href={`tel:${memberDetailData.mobile}`}
+												className='badge badge-light text-muted fw-semibold fs-8 px-2.5 py-1.5 text-decoration-none'
+												title='Call'>
+												<i className='bi bi-telephone text-success me-1'></i>
+												{memberDetailData.mobile}
+											</a>
+										)}
+										{memberDetailData?.blood_group && (
+											<span className='badge badge-light-danger fw-semibold fs-8 px-2.5 py-1.5'>
+												<i className='bi bi-droplet-fill me-1'></i>
+												{memberDetailData.blood_group}
+											</span>
+										)}
+										{(memberDetailData?.in_time || memberDetailData?.out_time) && (
+											<span className='badge badge-light-warning fw-semibold fs-8 px-2.5 py-1.5'>
+												<i className='bi bi-clock me-1'></i>
+												{memberDetailData.in_time || '09:30'} - {memberDetailData.out_time || '18:30'}
+											</span>
+										)}
 									</div>
 								</div>
-								<div className='col-md-9'>
-									<div className='row'>
+							</div>
+
+							{/* Right: Quick Overview Pills */}
+							<div className='d-flex align-items-center flex-wrap gap-3'>
+								<div
+									className='p-3 rounded-3 text-center'
+									style={{
+										background: '#F5F7FB',
+										border: '1px solid #E4EAF2',
+										borderRadius: '12px',
+										minWidth: '120px',
+									}}>
+									<span
+										className='fs-8 fw-bold text-uppercase d-block mb-1'
+										style={{ color: '#71809A', letterSpacing: '0.05em' }}>
+										Salary
+									</span>
+									<span
+										className='fs-5 fw-bolder'
+										style={{ color: '#142447' }}>
+										{memberDetailData?.salary
+											? `₹${Number(memberDetailData.salary).toLocaleString()}`
+											: '₹0'}
+									</span>
+								</div>
+
+								<div
+									className='p-3 rounded-3 text-center'
+									style={{
+										background: '#F5F7FB',
+										border: '1px solid #E4EAF2',
+										borderRadius: '12px',
+										minWidth: '120px',
+									}}>
+									<span
+										className='fs-8 fw-bold text-uppercase d-block mb-1'
+										style={{ color: '#71809A', letterSpacing: '0.05em' }}>
+										Tenure
+									</span>
+									<span
+										className='fs-6 fw-bold'
+										style={{ color: '#142447' }}>
+										{joiningTime || '-'}
+									</span>
+								</div>
+
+								<div
+									className='p-3 rounded-3 text-center'
+									style={{
+										background: '#EAF1FB',
+										border: '1px solid #DCE8F8',
+										borderRadius: '12px',
+										minWidth: '120px',
+									}}>
+									<span
+										className='fs-8 fw-bold text-uppercase d-block mb-1'
+										style={{ color: '#71809A', letterSpacing: '0.05em' }}>
+										Documents
+									</span>
+									<span
+										className='fs-5 fw-bolder'
+										style={{ color: '#172B4D' }}>
+										{memberData?.length || 0} Files
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Navigation Tabs Bar — same as HR employee-view */}
+					<div
+						className='px-6 border-top'
+						style={{
+							background: '#F5F7FB',
+							borderTop: '1px solid #E4EAF2',
+							borderBottomLeftRadius: '14px',
+							borderBottomRightRadius: '14px',
+						}}>
+						<div className='d-flex flex-wrap align-items-center gap-2 py-3'>
+							{[
+								{ id: 'profile', label: 'Personal & Job', icon: 'bi-person-circle' },
+								{ id: 'banking', label: 'Payroll & Banking', icon: 'bi-bank' },
+								{ id: 'shift', label: 'Shift & Schedule', icon: 'bi-clock-history' },
+								{
+									id: 'family',
+									label: `Family & Emergency (${family_details.filter((f) => f.name).length})`,
+									icon: 'bi-people',
+								},
+								{
+									id: 'documents',
+									label: `Documents & Records (${memberData?.length || 0})`,
+									icon: 'bi-folder2-open',
+								},
+							].map((tab) => {
+								const isActive = activeTab === tab.id
+								return (
+									<button
+										key={tab.id}
+										type='button'
+										onClick={() => setActiveTab(tab.id as any)}
+										className={`btn btn-sm d-inline-flex align-items-center gap-2 gz-gls-tab${isActive ? ' is-active' : ''}`}>
+										<i className={`bi ${tab.icon}`}></i>
+										<span>{tab.label}</span>
+									</button>
+								)
+							})}
+						</div>
+					</div>
+				</div>
+
+				{/* TAB 1: PERSONAL & JOB PROFILE — same as HR employee-view */}
+				{activeTab === 'profile' && (
+				<div className='row g-6'>
+					{/* Left: Photos & Proofs */}
+					<div className='col-lg-4 col-md-5'>
+						<div
+							className='card shadow-sm border-0 mb-6'
+							style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
+							<div className='card-header border-0 pt-5 pb-2 px-6'>
+								<h3 className='card-title fw-bold fs-5 m-0' style={{ color: '#142447' }}>Profile Photo</h3>
+							</div>
+							<div className='card-body px-6 pb-6 pt-2 text-center'>
+								<div
+									className='p-3 rounded-3 bg-light-subtle d-flex align-items-center justify-content-center'
+									style={{ border: '1px dashed #E4EAF2', minHeight: '220px' }}>
+									{memberDetailData?.photo ? (
+										<img
+											src={'https://files.fggroup.in/' + memberDetailData.photo}
+											className='w-100 object-fit-cover shadow-sm'
+											style={{ borderRadius: '12px', maxHeight: '220px' }}
+											alt='Profile preview'
+										/>
+									) : (
+										<div className='text-center py-6'>
+											<i className='bi bi-person text-muted fs-3x d-block mb-2'></i>
+											<span className='text-muted fs-7'>No profile photo uploaded</span>
+										</div>
+									)}
+								</div>
+								<span className='text-muted fs-8 d-block mt-3'>
+									Employee headshot shown in directory & badges
+								</span>
+							</div>
+						</div>
+
+						<div
+							className='card shadow-sm border-0'
+							style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
+							<div className='card-header border-0 pt-5 pb-2 px-6'>
+								<h3 className='card-title fw-bold fs-5 m-0' style={{ color: '#142447' }}>Identity Proof</h3>
+							</div>
+							<div className='card-body px-6 pb-6 pt-2 text-center'>
+								<div
+									className='p-3 rounded-3 bg-light-subtle d-flex align-items-center justify-content-center'
+									style={{ border: '1px dashed #E4EAF2', minHeight: '180px' }}>
+									{memberDetailData?.proof ? (
+										<img
+											src={'https://files.fggroup.in/' + memberDetailData.proof}
+											className='w-100 object-fit-cover shadow-sm'
+											style={{ borderRadius: '12px', maxHeight: '180px' }}
+											alt='Proof preview'
+										/>
+									) : (
+										<div className='text-center py-6'>
+											<i className='bi bi-file-earmark-check text-muted fs-3x d-block mb-2'></i>
+											<span className='text-muted fs-7'>No identity proof uploaded</span>
+										</div>
+									)}
+								</div>
+								<span className='text-muted fs-8 d-block mt-3'>
+									Official government ID / verification
+								</span>
+							</div>
+						</div>
+					</div>
+
+					{/* Right: Personal & Designation Form */}
+					<div className='col-lg-8 col-md-7'>
+						<div
+							className='card shadow-sm border-0'
+							style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
+							<div className='card-header border-0 pt-6 pb-3 px-6'>
+								<div>
+									<h3 className='card-title fw-bold fs-4 m-0' style={{ color: '#142447' }}>
+										Personal & Designation Details
+									</h3>
+									<span className='text-muted fs-7'>
+										Basic identity, designation and primary contact information
+									</span>
+								</div>
+							</div>
+
+							<div className='card-body px-6 py-4'>
+								<div className='row'>
 										<div className='col-md-4'>
 											<InputField
 												className='col-12 fv-row'
@@ -458,26 +742,16 @@ const EmployeeView = () => {
 											/>
 										</div>
 										<div className='col-md-4'>
-											<InputField
+											<SelectField
 												className='col-12 fv-row'
-												placeholder='Salary'
-												type='text'
-												name='salary'
-												label='Salary'
-												htmlFor='salary'
-												value={memberDetailData.salary}
+												name='blood_group'
+												label='Blood Group'
+												htmlFor='bloodGroup'
+												value={memberDetailData?.blood_group}
 												onChange={handleInputChange}
+												options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']}
 											/>
 										</div>
-										<SelectField
-											className='col-2 fv-row'
-											name='blood_group'
-											label='Blood Group'
-											htmlFor='bloodGroup'
-											value={memberDetailData?.blood_group}
-											onChange={handleInputChange}
-											options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']}
-										/>
 										<div className='col-md-6'>
 											<InputField
 												className='col-12 fv-row'
@@ -490,194 +764,364 @@ const EmployeeView = () => {
 												onChange={handleInputChange}
 											/>
 										</div>
-										<div className='col-md-4'>
+										<div className='col-md-6'>
 											<InputField
 												className='col-12 fv-row'
 												placeholder='Joining Date'
 												type='date'
 												name='joining_date'
-												label={`Joining Date (${joiningTime})`}
+												label={`Joining Date (${joiningTime || 'N/A'})`}
 												htmlFor='joining_date'
 												value={memberDetailData?.joining_date}
 												onChange={handleInputChange}
 											/>
 										</div>
+									</div>
+								</div>
 
-										{family_details && (
-											<div className='col-md-12 mt-3'>
-												<h2 className='mb-5'>Family Details:</h2>
-												<div className='row'>
-													{family_details.map((family, index) => (
-														<div
-															className='row'
-															key={index}>
-															<div className='col-md-5 fv-row'>
-																<InputField
-																	placeholder='Name'
-																	type='text'
-																	className='col-12 fv-row'
-																	name='name'
-																	label='Name'
-																	htmlFor='name'
-																	value={family.name}
-																	onChange={(e: any) => handleFamilyChange(index, e)}
-																/>
-															</div>
-															<div className='col-md-5 fv-row'>
-																<InputField
-																	placeholder='Contact Number'
-																	type='number'
-																	className='col-12 fv-row'
-																	name='mobile'
-																	label='Contact Number'
-																	htmlFor='number'
-																	value={family.mobile}
-																	onChange={(e: any) => handleFamilyChange(index, e)}
-																/>
-															</div>
-															{family_details.length > 1 && index != 0 ? (
-																<div className='col-2 d-flex  align-items-center'>
-																	<div className='d-flex mt-5 justify-content-center align-items-center'>
-																		<TableButton
-																			action='remove'
-																			backgroundDark={true}
-																			onClick={(e) => removePlan(index, e)}
-																		/>
-																	</div>
-																</div>
-															) : (
-																''
-															)}
-														</div>
-													))}
-												</div>
-											</div>
-										)}
-										{family_details && (
-											<div className='col-12 my-3 d-flex justify-content-end'>
-												<button
-													className='btn-primary btn gap-2 mx-2 btn-sm me-1'
-													onClick={(e) => addPlan(e)}>
-													<strong>
-														<big>+</big>
-													</strong>{' '}
-													Add
-												</button>
-											</div>
-										)}
+								<div className='card-footer border-0 d-flex justify-content-end px-6 py-4 bg-light-subtle rounded-bottom-4'>
+									<button
+										type='button'
+										onClick={() => handleUpdateDocument('Employee')}
+										disabled={documentLoading}
+										className='btn btn-primary px-6 d-flex align-items-center gap-2'
+										style={{ borderRadius: '8px', height: '40px' }}>
+										<i className='bi bi-check2-circle fs-5'></i>
+										<span className='fw-bold'>Save Personal Info</span>
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
+			{/* TAB 4: FAMILY & EMERGENCY CONTACTS */}
+			{activeTab === 'family' && (
+					<div
+						className='card shadow-sm border-0 mb-6'
+						style={{
+							borderRadius: '14px',
+							border: '1px solid #E4EAF2',
+							background: '#ffffff',
+							boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+						}}>
+						<div className='card-header border-0 pt-6 pb-3 px-6 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+							<div>
+								<h3
+									className='card-title fw-bold fs-4 m-0'
+									style={{ color: '#142447' }}>
+									Family Details & Emergency Contacts
+								</h3>
+								<span
+									className='fs-7'
+									style={{ color: '#71809A' }}>
+									Primary emergency contacts and family relationships on record
+								</span>
+							</div>
+							{family_details && (
+								<button
+									type='button'
+									onClick={(e) => addPlan(e)}
+									className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2 gz-gls-light-action'
+									style={{ borderRadius: '8px', height: '36px' }}>
+									<i className='bi bi-plus-lg fs-6'></i>
+									<span className='fw-semibold'>Add Family Member</span>
+								</button>
+							)}
+						</div>
 
-										<div className='col-md-12 mt-3'>
-											<h2 className='mb-5'>Account Details:</h2>
+						<div className='card-body px-6 py-4'>
+							{family_details && (
+								<div className='d-flex flex-column gap-4'>
+									{family_details.map((family, index) => (
+										<div
+											className='p-4 rounded-3 border'
+											style={{ backgroundColor: '#F8FAFD', borderColor: '#E4EAF2' }}
+											key={index}>
+											<div
+												className='d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom'
+												style={{ borderColor: '#E4EAF2' }}>
+												<span
+													className='fw-bold fs-7 text-uppercase'
+													style={{ letterSpacing: '0.5px', color: '#142447' }}>
+													Family Member #{index + 1}
+												</span>
+												{family_details.length > 1 && index != 0 ? (
+													<TableButton
+														action='remove'
+														backgroundDark={true}
+														onClick={(e) => removePlan(index, e)}
+													/>
+												) : (
+													''
+												)}
+											</div>
 											<div className='row'>
-												<div className='col-md-4 fv-row mb-md-7'>
-													<CopyableInput
-														placeholder='Bank Name'
+												<div className='col-md-6 fv-row mb-2'>
+													<InputField
+														placeholder='Full Name (e.g. Spouse, Father)'
 														type='text'
-														className='col-12 fv-row mb-7'
-														name='bank_name'
-														label='Bank Name'
-														htmlFor='bank_name'
-														value={memberDetailData.bank_name}
-														onChange={handleInputChange}
+														className='col-12 fv-row'
+														name='name'
+														label='Relation / Name'
+														htmlFor={`family-name-${index}`}
+														value={family.name}
+														onChange={(e: any) => handleFamilyChange(index, e)}
 													/>
 												</div>
-												<div className='col-md-4 fv-row mb-md-7'>
-													<CopyableInput
-														placeholder='Account No.'
-														type='text'
-														className='col-12 fv-row mb-7'
-														name='account_details'
-														label='Account No.'
-														htmlFor='account_details'
-														value={memberDetailData.account_details}
-														onChange={handleInputChange}
-													/>
-												</div>
-												<div className='col-md-4 fv-row mb-md-7'>
-													<CopyableInput
-														placeholder='IFSC Code'
-														type='text'
-														className='col-12 fv-row mb-7'
-														name='IFSC'
-														label='IFSC Code'
-														htmlFor='IFSC'
-														value={memberDetailData.IFSC}
-														onChange={handleInputChange}
+												<div className='col-md-6 fv-row mb-2'>
+													<InputField
+														placeholder='Emergency Contact Number'
+														type='number'
+														className='col-12 fv-row'
+														name='mobile'
+														label='Contact Number'
+														htmlFor={`family-mobile-${index}`}
+														value={family.mobile}
+														onChange={(e: any) => handleFamilyChange(index, e)}
 													/>
 												</div>
 											</div>
 										</div>
+									))}
+								</div>
+							)}
+						</div>
 
-										<div className='col-md-12 mt-3'>
-											<h2 className='mb-5'>Shift Time:</h2>
-											<div className='row'>
-												<div className='col-md-4 fv-row mb-md-7'>
+						<div
+							className='card-footer d-flex justify-content-end px-6 py-4 rounded-bottom-4'
+							style={{ background: '#F8FAFD', borderTop: '1px solid #E4EAF2' }}>
+							<button
+								type='button'
+								onClick={() => handleUpdateDocument('Employee')}
+								disabled={documentLoading}
+								className='btn btn-primary px-6 d-flex align-items-center gap-2'
+								style={{ borderRadius: '8px', height: '40px' }}>
+								<i className='bi bi-check2-circle fs-5'></i>
+								<span className='fw-bold'>Save Family Contacts</span>
+							</button>
+						</div>
+					</div>
+				)}
+			{/* TAB 2: PAYROLL & BANKING */}
+			{activeTab === 'banking' && (
+					<div
+						className='card shadow-sm border-0 mb-6'
+						style={{
+							borderRadius: '14px',
+							border: '1px solid #E4EAF2',
+							background: '#ffffff',
+							boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+						}}>
+						<div className='card-header border-0 pt-6 pb-3 px-6'>
+							<div>
+								<h3
+									className='card-title fw-bold fs-4 m-0'
+									style={{ color: '#142447' }}>
+									Payroll & Banking Credentials
+								</h3>
+								<span
+									className='fs-7'
+									style={{ color: '#71809A' }}>
+									Direct deposit accounts, IFSC routing code and monthly compensation
+								</span>
+							</div>
+						</div>
+
+						<div className='card-body px-6 py-4'>
+							<div
+								className='p-4 rounded-3 mb-6 d-flex align-items-center gap-3'
+								style={{ background: '#EAF1FB', border: '1px solid #DCE8F8' }}>
+								<i
+									className='bi bi-info-circle-fill fs-3 flex-shrink-0'
+									style={{ color: '#172B4D' }}></i>
+								<span
+									className='fs-7'
+									style={{ color: '#142447' }}>
+									Click the clipboard icon next to Bank Name, Account Number, or IFSC Code to
+									quickly copy credentials during payroll processing.
+								</span>
+							</div>
+							<div className='row'>
+								<div className='col-md-6 mb-4'>
+									<InputField
+										className='col-12 fv-row'
+										placeholder='Monthly Salary (₹)'
+										type='text'
+										name='salary'
+										label='Monthly Salary (₹)'
+										htmlFor='salary'
+										value={memberDetailData.salary}
+										onChange={handleInputChange}
+									/>
+								</div>
+								<div className='col-md-6 mb-4'>
+									<CopyableInput
+										placeholder='Bank Name'
+										type='text'
+										className='col-12 fv-row'
+										name='bank_name'
+										label='Bank Name'
+										htmlFor='bank_name'
+										value={memberDetailData.bank_name}
+										onChange={handleInputChange}
+									/>
+								</div>
+								<div className='col-md-6 mb-4'>
+									<CopyableInput
+										placeholder='Account No.'
+										type='text'
+										className='col-12 fv-row'
+										name='account_details'
+										label='Account No.'
+										htmlFor='account_details'
+										value={memberDetailData.account_details}
+										onChange={handleInputChange}
+									/>
+								</div>
+								<div className='col-md-6 mb-4'>
+									<CopyableInput
+										placeholder='IFSC Code'
+										type='text'
+										className='col-12 fv-row'
+										name='IFSC'
+										label='IFSC Code'
+										htmlFor='IFSC'
+										value={memberDetailData.IFSC}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+						</div>
+
+						<div
+							className='card-footer d-flex justify-content-end px-6 py-4 rounded-bottom-4'
+							style={{ background: '#F8FAFD', borderTop: '1px solid #E4EAF2' }}>
+							<button
+								type='button'
+								onClick={() => handleUpdateDocument('Employee')}
+								disabled={documentLoading}
+								className='btn btn-primary px-6 d-flex align-items-center gap-2'
+								style={{ borderRadius: '8px', height: '40px' }}>
+								<i className='bi bi-check2-circle fs-5'></i>
+								<span className='fw-bold'>Save Banking Info</span>
+							</button>
+						</div>
+					</div>
+				)}
+			{/* TAB 3: SHIFT & SCHEDULE */}
+			{activeTab === 'shift' && (
+									<div
+										className='card shadow-sm border-0 mb-6'
+										style={{
+											borderRadius: '14px',
+											border: '1px solid #E4EAF2',
+											background: '#ffffff',
+											boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+										}}>
+										<div className='card-header border-0 pt-6 pb-3 px-6'>
+											<div>
+												<h3
+													className='card-title fw-bold fs-4 m-0'
+													style={{ color: '#142447' }}>
+													Shift Timing & Work Schedule
+												</h3>
+												<span
+													className='fs-7'
+													style={{ color: '#71809A' }}>
+													Daily reporting schedule for biometric attendance and hours logging
+												</span>
+											</div>
+										</div>
+
+										<div className='card-body px-6 py-4'>
+											<div className='row g-6 align-items-center'>
+												<div className='col-md-4'>
 													<InputField
 														placeholder='In-Time'
 														type='time'
-														className='col-12 fv-row mb-7'
+														className='col-12 fv-row'
 														name='in_time'
-														label='In-Time'
+														label='Standard In-Time'
 														htmlFor='in_time'
 														value={memberDetailData.in_time}
 														onChange={handleInputChange}
 													/>
 												</div>
-												<div className='col-md-4 fv-row mb-md-7'>
+												<div className='col-md-4'>
 													<InputField
 														placeholder='Out-Time'
 														type='time'
-														className='col-12 fv-row mb-7'
+														className='col-12 fv-row'
 														name='out_time'
-														label='Out-Time'
+														label='Standard Out-Time'
 														htmlFor='out_time'
 														value={memberDetailData.out_time}
 														onChange={handleInputChange}
 													/>
 												</div>
+												<div className='col-md-4'>
+													<div
+														className='p-4 rounded-3 text-center'
+														style={{ background: '#F5F7FB', border: '1px solid #E4EAF2' }}>
+														<span
+															className='fs-8 fw-bold text-uppercase d-block mb-1'
+															style={{ color: '#71809A', letterSpacing: '0.05em' }}>
+															Configured Shift
+														</span>
+														<span
+															className='fs-5 fw-bold'
+															style={{ color: '#172B4D' }}>
+															{memberDetailData.in_time || '09:30'} — {memberDetailData.out_time || '18:30'}
+														</span>
+														<span
+															className='fs-8 d-block mt-1'
+															style={{ color: '#71809A' }}>
+															Standard Day Shift
+														</span>
+													</div>
+												</div>
 											</div>
 										</div>
-									</div>
-								</div>
 
-								<div className='col-12 d-flex justify-content-end'>
-									<TableButton
-										action='edit'
-										onClick={() => handleUpdateDocument('Employee')}
-										text='Save Changes'
-										backgroundDark={true}
-									/>
-								</div>
-							</div>
-						</div>
-					</div>
-					{documentLoading && (
-						<div className='loader-background'>
-							<div
-								className='spinner-border spinner-border-1 text-white'
-								style={{ width: '50px', height: '50px' }}
-								role='status'>
-								<span className='visually-hidden'>Loading...</span>
-							</div>
-						</div>
-					)}
-					<div className='row'>
-						<div className='col-12 mt-7'>
-							<div className='card'>
-								<div className='card-body px-10 py-10'>
-									<div
-										className='mb-10 p-8 rounded-3'
-										style={{ backgroundColor: '#f5f5f5ff', border: '1px solid #f5f3f3ff' }}>
-										<div className='mb-7'>
-											<h3 className='fw-bold text-dark fs-3'>
-												<i className='ki-duotone ki-file-up fs-1 text-primary me-2'>
-													<span className='path1'></span>
-													<span className='path2'></span>
-												</i>
-												Upload Documents
-											</h3>
+										<div
+											className='card-footer d-flex justify-content-end px-6 py-4 rounded-bottom-4'
+											style={{ background: '#F8FAFD', borderTop: '1px solid #E4EAF2' }}>
+											<button
+												type='button'
+												onClick={() => handleUpdateDocument('Employee')}
+												disabled={documentLoading}
+												className='btn btn-primary px-6 d-flex align-items-center gap-2'
+												style={{ borderRadius: '8px', height: '40px' }}>
+												<i className='bi bi-check2-circle fs-5'></i>
+												<span className='fw-bold'>Save Shift Timing</span>
+											</button>
 										</div>
-										<div className='row'>
+									</div>
+				)}
+			{/* TAB 5: DOCUMENTS & COMPLIANCE */}
+			{activeTab === 'documents' && (
+					<div className='d-flex flex-column gap-6'>
+						{/* Upload Employment Document */}
+						<div
+							className='card shadow-sm border-0'
+							style={{
+								borderRadius: '14px',
+								border: '1px solid #E4EAF2',
+								background: '#ffffff',
+								boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+							}}>
+							<div className='card-header border-0 pt-6 pb-2 px-6'>
+								<h3
+									className='card-title fw-bold fs-4 m-0 d-flex align-items-center gap-2'
+									style={{ color: '#142447' }}>
+									<i
+										className='bi bi-file-earmark-arrow-up fs-3'
+										style={{ color: '#172B4D' }}></i>
+									<span>Upload Employment Document</span>
+								</h3>
+							</div>
+							<div className='card-body px-6 py-4'>
+								<div className='row'>
 											{(() => {
 												const isDateVisible =
 													memberDetailAddData.document_type === 'Joining Letter ' ||
@@ -747,21 +1191,46 @@ const EmployeeView = () => {
 												)
 											})()}
 										</div>
-										<div className='d-flex justify-content-end'>
+										<div
+											className='card-footer d-flex justify-content-end px-6 py-4 rounded-bottom-4'
+											style={{ background: '#F8FAFD', borderTop: '1px solid #E4EAF2' }}>
 											<button
 												type='button'
 												onClick={() => handleUpdateDocument('Document')}
-												className='btn btn-primary px-10'>
-												<i className='ki-duotone ki-cloud-upload fs-2 me-2'>
-													<span className='path1'></span>
-													<span className='path2'></span>
-												</i>
-												Upload Document
+												disabled={documentLoading}
+												className='btn btn-primary px-6 d-flex align-items-center gap-2'
+												style={{ borderRadius: '8px', height: '40px' }}>
+												<i className='bi bi-cloud-arrow-up fs-5'></i>
+												<span className='fw-bold'>Upload Document</span>
 											</button>
 										</div>
 									</div>
+								</div>
 
-									<div className='table-responsive'>
+									{/* Stored Documents */}
+									<div
+										className='card shadow-sm border-0'
+										style={{
+											borderRadius: '14px',
+											border: '1px solid #E4EAF2',
+											background: '#ffffff',
+											boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+										}}>
+										<div className='card-header border-0 pt-6 pb-2 px-6 d-flex align-items-center justify-content-between'>
+											<div className='d-flex align-items-center gap-2'>
+												<h3
+													className='card-title fw-bold fs-4 m-0'
+													style={{ color: '#142447' }}>
+													Stored Documents
+												</h3>
+												<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
+													{memberData?.length || 0} Files
+												</span>
+											</div>
+										</div>
+
+										<div className='card-body px-6 py-4'>
+											<div className='table-responsive'>
 										<Table
 											data={memberData}
 											columns={sortableFields}
@@ -775,78 +1244,89 @@ const EmployeeView = () => {
 												actualIndex: number,
 												isVisible: boolean
 											) => {
-												const isPdf = member.link.endsWith('.pdf')
-												const fileUrl = 'https://files.fggroup.in/' + member.link
+												const isPdf = member?.link?.endsWith('.pdf')
+												const fileUrl = 'https://files.fggroup.in/' + member?.link
 												return (
-													<React.Fragment key={member._id}>
+													<React.Fragment key={member._id || index}>
 														<tr
 															onClick={() => handleRowClick(member._id)}
 															className='data-row'>
-															<td className='text-center'>
-																<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+															<td className='text-center ps-4'>
+																<span className='text-muted fw-bold fs-7'>
 																	{actualIndex}
 																</span>
 															</td>
 															<td>
-																<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+																<span className='badge badge-light-primary fw-semibold fs-7 px-3 py-2'>
 																	{member.document_type}
 																</span>
 															</td>
 															<td>
-																<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+																<span
+																	className='fw-semibold fs-7'
+																	style={{ color: '#142447' }}>
 																	{member.joining_date
 																		? DayJS(member.joining_date).format('DD MMM YYYY')
 																		: '-'}
 																</span>
 															</td>
 															<td>
-																<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+																<span
+																	className='fw-semibold fs-7'
+																	style={{ color: '#142447' }}>
 																	{member.expiry_date
 																		? DayJS(member.expiry_date).format('DD MMM YYYY')
 																		: '-'}
 																</span>
 															</td>
 
-															<td width={'40%'}>
-																<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-																	{isPdf ? (
-																		<>
-																			<a
-																				href={fileUrl}
-																				target='_blank'
-																				rel='noopener noreferrer'>
-																				<embed
-																					src={fileUrl}
-																					className='w-75'
-																				/>
-																			</a>
-																			<div>
-																				<button
-																					type='button'
-																					onClick={() => window.open(fileUrl)}
-																					className='btn btn-success mx-2 mt-md-7 my-4'>
-																					View PDF
-																				</button>
-																			</div>
-																		</>
-																	) : (
-																		<a
-																			href={fileUrl}
-																			target='_blank'
-																			rel='noopener noreferrer'>
-																			<img
-																				src={fileUrl}
-																				className='w-50'
-																				alt='Image preview'
-																			/>
-																		</a>
-																	)}
-																</span>
+															<td width={'35%'}>
+																{isPdf ? (
+																	<div className='d-flex align-items-center gap-3'>
+																		<div
+																			className='d-flex align-items-center gap-2 px-3 py-2 bg-light rounded-2 border'
+																			style={{ borderColor: '#E4EAF2' }}>
+																			<i className='bi bi-file-earmark-pdf-fill text-danger fs-4'></i>
+																			<span
+																				className='fw-semibold fs-7'
+																				style={{ color: '#142447' }}>
+																				PDF Document
+																			</span>
+																		</div>
+																		<button
+																			type='button'
+																			onClick={() => window.open(fileUrl)}
+																			className='btn btn-sm btn-light-primary px-3 py-1.5 gz-gls-light-action'
+																			style={{ borderRadius: '8px' }}>
+																			<i className='bi bi-box-arrow-up-right me-1'></i> View PDF
+																		</button>
+																	</div>
+																) : (
+																	<a
+																		href={fileUrl}
+																		target='_blank'
+																		rel='noopener noreferrer'
+																		className='d-inline-block'>
+																		<img
+																			src={fileUrl}
+																			style={{
+																				width: '52px',
+																				height: '52px',
+																				borderRadius: '10px',
+																				objectFit: 'cover',
+																				border: '1px solid #E4EAF2',
+																			}}
+																			alt='Document preview'
+																		/>
+																	</a>
+																)}
 															</td>
 														</tr>
 														{isVisible && (
 															<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-																<td colSpan={12}>
+																<td
+																	colSpan={12}
+																	className='bg-light-subtle p-3'>
 																	<div>
 																		<strong>{sortableFields[0].title}:</strong>{' '}
 																		{member.document_type}
@@ -863,9 +1343,18 @@ const EmployeeView = () => {
 											loading={loading}
 										/>
 									</div>
+
 									{memberData.length === 0 && !loading && (
-										<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-											<b>No records found</b>
+										<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
+											<i className='bi bi-folder2-open text-muted fs-2x mb-2'></i>
+											<span
+												className='fw-bold fs-6'
+												style={{ color: '#142447' }}>
+												No documents uploaded yet
+											</span>
+											<span className='text-muted fs-7'>
+												Uploaded agreements and certificates will appear here
+											</span>
 										</div>
 									)}
 									{memberData.length > 0 && (
@@ -873,14 +1362,27 @@ const EmployeeView = () => {
 											totalPages={Math.ceil(memberData.length / pagination.itemsPerPage)}
 											currentPage={pagination.page}
 											onPageChange={handlePageChange}
+											totalRecords={memberData.length}
+											itemsPerPage={pagination.itemsPerPage}
 										/>
 									)}
 								</div>
 							</div>
 						</div>
+				)}
+
+			{/* Document Loading Overlay — same as HR employee-view */}
+			{documentLoading && (
+				<div className='loader-background'>
+					<div
+						className='spinner-border spinner-border-1 text-white'
+						style={{ width: '50px', height: '50px' }}
+						role='status'>
+						<span className='visually-hidden'>Loading...</span>
 					</div>
-				</>
-			</>
+				</div>
+			)}
+		</>
 		)
 }
 

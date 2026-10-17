@@ -2473,6 +2473,7 @@ input.selectfield-search-input,
 	line-height: normal !important;
 	width: 100% !important;
 	-webkit-appearance: none !important;
+	appearance: none !important;
 }
 
 .selectfield-search-wrapper input::-webkit-search-decoration,
@@ -2549,6 +2550,7 @@ input[type='search'].search-filter-input {
 	width: 100% !important;
 	box-sizing: border-box !important;
 	-webkit-appearance: none !important;
+	appearance: none !important;
 }
 
 input.search-filter-input.pe-8,
@@ -2580,4 +2582,605 @@ input.search-filter-input::placeholder,
 	opacity: 1 !important;
 }
 
+/* ==========================================================================
+   HR & INVOICE HARMONIZED TABLE DESIGN SYSTEM OVERRIDES
+   Exact 1:1 match with http://localhost:3000/rag/invoice-list:
+   1. Filter Toolbar Card & Ordering
+   2. Dropdowns & Selects (38px, rounded 8px/10px, clean border & focus)
+   3. Table Headers (#F8FAFD, #71809A, font-weight 650, 16px 20px padding)
+   4. Table Rows & Hover (#F9FBFE, 1px solid #EEF2F6)
+   5. Action Buttons (34-36px, rounded 10px, transparent with soft pastel hover pills)
+   6. 3-Part Bottom Pagination (Left: x-y of z, Center: < 1 2 3 >, Right: Page 1 of 4)
+   ========================================================================== */
+
+/* 1. Filter Toolbar Card (1:1 match with http://localhost:3000/rag/invoice-list) */
+.gz-filter-card,
+.card.shadow-sm.border-0.mb-6 {
+	border-radius: 16px !important;
+	background: #ffffff !important;
+	border: 1px solid #E4EAF2 !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+	margin-bottom: 24px !important;
+}
+
+.card.shadow-sm.border-0.mb-6 > .card-body {
+	padding: 16px 20px !important;
+}
+
+.gz-filter-card {
+	padding: 16px 20px !important;
+	box-sizing: border-box !important;
+}
+
+.gz-filter-card > div,
+.gz-filter-card .card-body {
+	padding: 0 !important;
+	margin: 0 !important;
+	display: flex !important;
+	align-items: center !important;
+	flex-wrap: wrap !important;
+	gap: 12px !important;
+	width: 100% !important;
+}
+
+
+/* 2. Standardized Dropdowns across all tables */
+.gz-inv-select,
+.gz-table-select,
+select.gz-inv-select {
+	height: 38px !important;
+	padding: 7px 32px 7px 14px !important;
+	background-color: #ffffff !important;
+	border: 1px solid #E4EAF2 !important;
+	border-radius: 8px !important;
+	font-size: 13px !important;
+	font-weight: 550 !important;
+	color: #172B4D !important;
+	cursor: pointer !important;
+	outline: none !important;
+	transition: all 0.18s ease !important;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2371809A' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 10px center !important;
+	background-size: 12px 10px !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	appearance: none !important;
+}
+
+.gz-inv-select:hover,
+.gz-table-select:hover {
+	border-color: #CBD5E1 !important;
+	background-color: #F8FAFD !important;
+}
+
+.gz-inv-select:focus,
+.gz-table-select:focus {
+	border-color: #172B4D !important;
+	box-shadow: 0 0 0 3px rgba(23, 43, 77, 0.08) !important;
+}
+
+/* 3. Action Buttons (Standard & Fallback for all table action buttons) */
+.gz-inv-action-btn,
+.gz-table-action-btn,
+.table td .btn.btn-icon.btn-sm,
+.gz-inv-table td .btn.btn-icon.btn-sm {
+	width: 36px !important;
+	height: 36px !important;
+	min-width: 36px !important;
+	min-height: 36px !important;
+	border-radius: 10px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	border: 1px solid transparent !important;
+	background: transparent !important;
+	color: #172B4D !important;
+	cursor: pointer !important;
+	transition: all 0.18s ease !important;
+	text-decoration: none !important;
+	font-size: 14px !important;
+	padding: 0 !important;
+	margin: 0 2px !important;
+}
+
+/* Action button variants: View / Blue */
+.gz-inv-action-btn.view,
+.gz-table-action-btn.is-view,
+.table td .btn.btn-icon.btn-light-primary,
+.gz-inv-table td .btn.btn-icon.btn-light-primary {
+	color: #1E4F8A !important;
+	background-color: transparent !important;
+}
+.gz-inv-action-btn.view:hover,
+.gz-table-action-btn.is-view:hover,
+.table td .btn.btn-icon.btn-light-primary:hover,
+.gz-inv-table td .btn.btn-icon.btn-light-primary:hover {
+	background-color: #EAF1F8 !important;
+	color: #101F38 !important;
+	border-color: rgba(30, 79, 138, 0.15) !important;
+	transform: translateY(-1px) !important;
+}
+
+/* Action button variants: Edit / Purple */
+.gz-inv-action-btn.edit,
+.gz-table-action-btn.is-edit,
+.table td .btn.btn-icon.btn-light-info,
+.gz-inv-table td .btn.btn-icon.btn-light-info {
+	color: #4C3AB3 !important;
+	background-color: transparent !important;
+}
+.gz-inv-action-btn.edit:hover,
+.gz-table-action-btn.is-edit:hover,
+.table td .btn.btn-icon.btn-light-info:hover,
+.gz-inv-table td .btn.btn-icon.btn-light-info:hover {
+	background-color: #E8E6F8 !important;
+	color: #3B2E99 !important;
+	border-color: rgba(76, 58, 179, 0.15) !important;
+	transform: translateY(-1px) !important;
+}
+
+/* Action button variants: Delete / Red */
+.gz-inv-action-btn.delete,
+.gz-table-action-btn.is-remove,
+.table td .btn.btn-icon.btn-light-danger,
+.gz-inv-table td .btn.btn-icon.btn-light-danger {
+	color: #D94A62 !important;
+	background-color: transparent !important;
+}
+.gz-inv-action-btn.delete:hover,
+.gz-table-action-btn.is-remove:hover,
+.table td .btn.btn-icon.btn-light-danger:hover,
+.gz-inv-table td .btn.btn-icon.btn-light-danger:hover {
+	background-color: #FBECEF !important;
+	color: #B52F46 !important;
+	border-color: rgba(217, 74, 98, 0.2) !important;
+	transform: translateY(-1px) !important;
+}
+
+/* Action button variants: Warning / Amber */
+.gz-inv-action-btn.warning,
+.gz-table-action-btn.is-star,
+.gz-table-action-btn.is-assign,
+.table td .btn.btn-icon.btn-light-warning,
+.gz-inv-table td .btn.btn-icon.btn-light-warning {
+	color: #A46A13 !important;
+	background-color: transparent !important;
+}
+.gz-inv-action-btn.warning:hover,
+.gz-table-action-btn.is-star:hover,
+.gz-table-action-btn.is-assign:hover,
+.table td .btn.btn-icon.btn-light-warning:hover,
+.gz-inv-table td .btn.btn-icon.btn-light-warning:hover {
+	background-color: #FEF4E6 !important;
+	color: #7D4E05 !important;
+	border-color: rgba(164, 106, 19, 0.2) !important;
+	transform: translateY(-1px) !important;
+}
+
+/* Action button variants: Success / Mint */
+.gz-inv-action-btn.success,
+.gz-table-action-btn.is-approve,
+.gz-table-action-btn.is-send,
+.table td .btn.btn-icon.btn-light-success,
+.gz-inv-table td .btn.btn-icon.btn-light-success {
+	color: #168064 !important;
+	background-color: transparent !important;
+}
+.gz-inv-action-btn.success:hover,
+.gz-table-action-btn.is-approve:hover,
+.gz-table-action-btn.is-send:hover,
+.table td .btn.btn-icon.btn-light-success:hover,
+.gz-inv-table td .btn.btn-icon.btn-light-success:hover {
+	background-color: #ECFDF5 !important;
+	color: #0E5A45 !important;
+	border-color: rgba(22, 128, 100, 0.2) !important;
+	transform: translateY(-1px) !important;
+}
+
+/* Action button variants: Dark / QR */
+.gz-inv-action-btn.qr,
+.gz-table-action-btn.is-qr,
+.table td .btn.btn-icon.btn-light-dark,
+.gz-inv-table td .btn.btn-icon.btn-light-dark {
+	color: #475569 !important;
+	background-color: transparent !important;
+}
+.gz-inv-action-btn.qr:hover,
+.gz-table-action-btn.is-qr:hover,
+.table td .btn.btn-icon.btn-light-dark:hover,
+.gz-inv-table td .btn.btn-icon.btn-light-dark:hover {
+	background-color: #F1F5F9 !important;
+	color: #1E293B !important;
+	border-color: rgba(71, 85, 105, 0.2) !important;
+	transform: translateY(-1px) !important;
+}
+
+/* 4. Table Cards across all pages */
+.card .table-responsive > .table:not(.gz-inv-table),
+.card .table-responsive > #kt_table_users:not(.gz-inv-table) {
+	width: 100% !important;
+	border-collapse: separate !important;
+	border-spacing: 0 !important;
+	margin-bottom: 0 !important;
+}
+
+.card .table-responsive > .table thead th,
+.card .table-responsive > #kt_table_users thead th {
+	background-color: #F8FAFD !important;
+	color: #71809A !important;
+	font-size: 12px !important;
+	font-weight: 650 !important;
+	letter-spacing: 0.02em !important;
+	padding: 16px 20px !important;
+	border-bottom: 1px solid #E4EAF2 !important;
+	white-space: nowrap !important;
+	text-transform: capitalize !important;
+}
+
+.card .table-responsive > .table tbody tr,
+.card .table-responsive > #kt_table_users tbody tr {
+	transition: background-color 0.15s ease !important;
+}
+
+.card .table-responsive > .table tbody tr:hover,
+.card .table-responsive > #kt_table_users tbody tr:hover {
+	background-color: #F9FBFE !important;
+}
+
+.card .table-responsive > .table tbody td,
+.card .table-responsive > #kt_table_users tbody td {
+	padding: 16px 20px !important;
+	border-bottom: 1px solid #EEF2F6 !important;
+	font-size: 13.5px !important;
+	color: #142447 !important;
+	vertical-align: middle !important;
+}
+
+.card .table-responsive > .table tbody tr:last-child td,
+.card .table-responsive > #kt_table_users tbody tr:last-child td {
+	border-bottom: none !important;
+}
+
+/* ==========================================================================
+   GLOBAL TABLE IMAGE & AVATAR SAFEGUARDS
+   Ensures employee photos and .symbol avatars NEVER overflow table rows
+   ========================================================================== */
+.table td .symbol,
+.gz-inv-table td .symbol,
+.gz-inv-table-card table td .symbol,
+#kt_table_users td .symbol {
+	width: 42px !important;
+	height: 42px !important;
+	min-width: 42px !important;
+	min-height: 42px !important;
+	max-width: 42px !important;
+	max-height: 42px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	position: relative !important;
+	overflow: hidden !important;
+	flex-shrink: 0 !important;
+	border-radius: 50% !important;
+}
+
+.table td .symbol img,
+.gz-inv-table td .symbol img,
+.gz-inv-table-card table td .symbol img,
+#kt_table_users td .symbol img {
+	width: 100% !important;
+	height: 100% !important;
+	max-width: 100% !important;
+	max-height: 100% !important;
+	object-fit: cover !important;
+	display: block !important;
+	border-radius: 50% !important;
+}
+
+.table td .symbol.symbol-circle,
+.table td .symbol.symbol-circle img,
+.gz-inv-table td .symbol.symbol-circle,
+.gz-inv-table td .symbol.symbol-circle img,
+#kt_table_users td .symbol.symbol-circle,
+#kt_table_users td .symbol.symbol-circle img {
+	border-radius: 50% !important;
+}
+
+/* Any standalone employee photo link inside table cells */
+.table td > a > img,
+.gz-inv-table td > a > img,
+.gz-inv-table-card table td > a > img,
+#kt_table_users td > a > img {
+	max-width: 44px !important;
+	max-height: 44px !important;
+	width: 42px !important;
+	height: 42px !important;
+	object-fit: cover !important;
+	border-radius: 10px !important;
+	display: block !important;
+}
+
+/* ==========================================================================
+   12. CUSTOM SELECT DROPDOWNS & SEARCHBAR (MATCHING SCREENSHOT 3 & FIXING SCREENSHOT 2)
+   Theme: #1E3A5F, #DFE7F0 borders, 10px menu radius, clean searchbar icon clearance
+   ========================================================================== */
+.gz-custom-select-wrap {
+	position: relative !important;
+	width: 100% !important;
+}
+
+.gz-custom-select-trigger {
+	min-height: 38px !important;
+	height: 38px !important;
+	background: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	padding: 6px 12px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	cursor: pointer !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: #111827 !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+	user-select: none !important;
+	box-sizing: border-box !important;
+}
+
+.gz-custom-select-trigger:hover:not(.is-disabled) {
+	border-color: #1E3A5F !important;
+	background: #ffffff !important;
+}
+
+.gz-custom-select-trigger.is-open {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+}
+
+.gz-custom-select-trigger.is-disabled {
+	background: #f1f5f9 !important;
+	color: #94a3b8 !important;
+	cursor: not-allowed !important;
+	border-color: #DFE7F0 !important;
+}
+
+.gz-custom-select-trigger .gz-select-trigger-text {
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+	margin-right: 8px !important;
+}
+
+.gz-custom-select-trigger .gz-select-trigger-text.is-placeholder {
+	color: #94a3b8 !important;
+	font-weight: 400 !important;
+}
+
+.gz-custom-select-trigger .gz-select-chevron {
+	font-size: 11px !important;
+	color: #1E3A5F !important;
+	transition: transform 0.2s ease !important;
+	flex-shrink: 0 !important;
+}
+
+.gz-custom-select-trigger.is-open .gz-select-chevron {
+	transform: rotate(180deg) !important;
+	color: #1E3A5F !important;
+}
+
+.gz-custom-select-dropdown {
+	position: absolute !important;
+	top: calc(100% + 4px) !important;
+	left: 0 !important;
+	right: 0 !important;
+	min-width: 100% !important;
+	width: max-content !important;
+	max-width: 320px !important;
+	background: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 10px !important;
+	box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+	z-index: 1060 !important;
+	overflow: hidden !important;
+	padding: 4px !important;
+	box-sizing: border-box !important;
+}
+
+.gz-select-search-box {
+	padding: 6px !important;
+	border-bottom: 1px solid #F1F5F9 !important;
+	position: relative !important;
+	display: flex !important;
+	align-items: center !important;
+	box-sizing: border-box !important;
+}
+
+.gz-select-search-box .gz-select-search-icon,
+.gz-select-search-box svg,
+.gz-select-search-box i {
+	position: absolute !important;
+	left: 17px !important;
+	top: 50% !important;
+	transform: translateY(-50%) !important;
+	font-size: 12px !important;
+	color: #1E3A5F !important;
+	pointer-events: none !important;
+	z-index: 5 !important;
+}
+
+.gz-select-search-box input,
+.gz-select-search-box input[type='text'] {
+	width: 100% !important;
+	height: 34px !important;
+	min-height: 34px !important;
+	line-height: normal !important;
+	background-color: #F8FAFD !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 6px !important;
+	padding: 0 10px 0 36px !important; /* 36px ensures search icon and text NEVER overlap */
+	font-size: 12.5px !important;
+	font-weight: 500 !important;
+	color: #172B4D !important;
+	outline: none !important;
+	box-sizing: border-box !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
+}
+
+.gz-select-search-box input:focus,
+.gz-select-search-box input[type='text']:focus {
+	background-color: #ffffff !important;
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.15) !important;
+}
+
+.gz-select-search-box input::placeholder,
+.gz-select-search-box input[type='text']::placeholder {
+	color: #94A3B8 !important;
+	font-size: 12.5px !important;
+	font-weight: 400 !important;
+}
+
+.gz-select-options-list {
+	max-height: 220px !important;
+	overflow-y: auto !important;
+	padding: 4px 2px !important;
+}
+
+.gz-select-options-list::-webkit-scrollbar {
+	width: 5px !important;
+}
+.gz-select-options-list::-webkit-scrollbar-thumb {
+	background: #cbd5e1 !important;
+	border-radius: 4px !important;
+}
+.gz-select-options-list::-webkit-scrollbar-thumb:hover {
+	background: #94a3b8 !important;
+}
+
+.gz-select-option {
+	padding: 7px 10px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: #475569 !important;
+	border-radius: 6px !important;
+	margin-bottom: 2px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	cursor: pointer !important;
+	transition: background-color 0.12s ease, color 0.12s ease !important;
+	user-select: none !important;
+}
+
+.gz-select-option:hover {
+	background-color: rgba(30, 58, 95, 0.08) !important;
+	color: #1E3A5F !important;
+}
+
+.gz-select-option.is-selected {
+	background-color: #1E3A5F !important;
+	color: #ffffff !important;
+	font-weight: 700 !important;
+}
+
+.gz-select-option.is-selected .gz-select-check-icon,
+.gz-select-option.is-selected svg {
+	font-size: 12px !important;
+	color: #ffffff !important;
+	font-weight: bold !important;
+}
+
+.gz-select-empty {
+	padding: 14px 10px !important;
+	text-align: center !important;
+	font-size: 12px !important;
+	color: #94a3b8 !important;
+}
+
+/* Download Action Button in Table Rows (1:1 with DownloadExcelButton) */
+.gz-table-action-btn.is-download {
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	color: #1E3A5F !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.gz-table-action-btn.is-download:hover {
+	background-color: #1E3A5F !important;
+	border-color: #1E3A5F !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 10px rgba(30, 58, 95, 0.25) !important;
+	transform: translateY(-1px) !important;
+}
+
+.gz-table-action-btn.is-download:hover i,
+.gz-table-action-btn.is-download:hover svg,
+.gz-table-action-btn.is-download:hover span {
+	color: #ffffff !important;
+}
+
+/* Global Unified Back Button (Exact match with http://localhost:3000/hr/employee-view) */
+.gz-back-btn {
+	background-color: #ffffff !important;
+	border: 1px solid #e4eaf2 !important;
+	color: #172b4d !important;
+	border-radius: 8px !important;
+	height: 38px !important;
+	padding: 0 14px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+	transition: all 0.18s ease !important;
+	text-decoration: none !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+}
+
+.gz-back-btn i,
+.gz-back-btn span,
+.gz-back-btn svg {
+	color: #172b4d !important;
+	transition: color 0.18s ease !important;
+}
+
+.gz-back-btn:hover,
+.gz-back-btn:focus,
+.gz-back-btn:active {
+	background-color: #172b4d !important;
+	border-color: #172b4d !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.28) !important;
+	transform: translateY(-1px) !important;
+	text-decoration: none !important;
+}
+
+.gz-back-btn:hover i,
+.gz-back-btn:hover span,
+.gz-back-btn:hover svg {
+	color: #ffffff !important;
+}
+
+/* Compact Filter Bar Across HR Module */
+.card.gz-filter-card > .card-body,
+.gz-filter-card.card > .card-body,
+.gz-filter-card > .card-body {
+	padding: 12px 18px !important;
+}
+
+.card.gz-filter-card,
+.gz-filter-card.card {
+	padding: 0 !important;
+}
+
+/* Dropdown Menu Item Hover Effects */
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+	background-color: #e8f0f8 !important;
+	color: #1e3a5f !important;
+	font-weight: 600 !important;
+}
 

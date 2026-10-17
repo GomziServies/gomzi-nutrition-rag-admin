@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import SearchFilter from '../../../components/SearchFilter'
+import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -350,7 +351,103 @@ const ExpenseReportsList: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Expense Reports</PageTitle>
-			<KTCard>
+
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Expense Reports</h2>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Manage employee expense submissions, receipts, and disbursement approvals
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar (Order: SearchFilter -> LengthMenu -> Employee -> Status -> Spacer -> DateFilter) */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center flex-wrap gap-3'>
+					{/* 1. Searchbar */}
+					<div style={{ minWidth: '240px', maxWidth: '340px', flex: '1 1 240px' }}>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search expense reports...'
+							className='me-0'
+						/>
+					</div>
+
+					{/* 2. Page Size / Length Menu */}
+					<div>
+						<LengthMenu
+							data={expenseReports}
+							itemsPerPage={pagination.itemsPerPage}
+							handleItemsPerPageChange={(value) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: value, page: 1 }))
+							}
+							className='me-0'
+						/>
+					</div>
+
+					{/* 3. Download Excel Button */}
+					<div>
+						<DownloadExcelButton
+							data={expenseReports}
+							columns={sortableFields}
+							filename='Expense_Reports'
+						/>
+					</div>
+
+					{/* 4. Employee Select */}
+					<div style={{ minWidth: '180px' }}>
+						<select
+							className='gz-inv-select'
+							style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+							value={selectedEmployee?.name || 'Select'}
+							onChange={handleEmployeeSelect}>
+							<option value='Select'>All Employees</option>
+							{employeeDataList.map((el: any) => (
+								<option key={el.id} value={el.name}>
+									{el.name}
+								</option>
+							))}
+						</select>
+					</div>
+
+					{/* 5. Status Select */}
+					<div style={{ minWidth: '150px' }}>
+						<select
+							className='gz-inv-select'
+							style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+							value={selectedStatus || 'Select'}
+							onChange={handleStatusChange}>
+							<option value='Select'>All Statuses</option>
+							<option value='Pending'>Pending</option>
+							<option value='Approved'>Approved</option>
+							<option value='Rejected'>Rejected</option>
+						</select>
+					</div>
+
+					{/* Spacer */}
+					<div className='d-none d-md-block' style={{ flexGrow: 1 }}></div>
+
+					{/* 6. Date Filter */}
+					<div>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							storageKey='expense_report_selectedDateRange'
+						/>
+					</div>
+				</div>
+			</div>
+
+			<div className='gz-inv-table-card'>
 				{submitLoading && (
 					<div className='loader-background'>
 						<div
@@ -361,72 +458,6 @@ const ExpenseReportsList: React.FC = () => {
 						</div>
 					</div>
 				)}
-
-				<h2 className='m-6 mb-0'>Expense Reports</h2>
-				<div className='row card-header border-0 pt-0 align-items-center ms-0 mx-md-6 p-0'>
-					<div className='col-md-12'>
-						<div className='row mt-3 justify-content-between'>
-							<div className='col-md-3 fv-row ps-md-0'>
-								<SelectField
-									className='fv-row m-0'
-									label='Select Employee'
-									name='employee'
-									value={selectedEmployee?.name || 'Select'}
-									onChange={handleEmployeeSelect}
-									htmlFor='employee'
-									options={['Select', ...employeeDataList.map((el: any) => el.name)]}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-2 fv-row ps-md-2'>
-								<SelectField
-									className='fv-row m-0'
-									label='Select Status'
-									name='status'
-									value={selectedStatus}
-									onChange={handleStatusChange}
-									htmlFor='status'
-									options={['Select', 'Pending', 'Approved', 'Rejected']}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-4 mt-md-7 mb-0 d-flex justify-content-end align-items-end card-toolbar'>
-								<div className='d-md-flex'>
-									<div className='d-md-flex me-3'>
-										{expenseReports?.length > 0 && (
-											<select
-												className='form-select form-select-sm mx-3'
-												style={{ width: '80px' }}
-												value={pagination.itemsPerPage}
-												onChange={(e) =>
-													setPagination((prev) => ({
-														...prev,
-														itemsPerPage: Number(e.target.value),
-														page: 1,
-													}))
-												}>
-												<option value='10'>10</option>
-												<option value='50'>50</option>
-												<option value='100'>100</option>
-											</select>
-										)}
-									</div>
-									<DateFilter
-										onDateRangeChange={handleDateRangeChange}
-										rightValue='-60px'
-										storageKey='expense_report_selectedDateRange'
-									/>
-								</div>
-							</div>
-							<div className='col-md-3 mt-md-7 mt-2 mb-0 d-flex align-items-end justify-content-end position-relative p-0'>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-								/>
-							</div>
-						</div>
-					</div>
-				</div>
 				{expenseReports.some((report) => report.status === 'Pending') && (
 					<div className='row align-items-center ms-0 mx-md-6 p-0 my-6'>
 						<div className='col-md-6'>
@@ -468,14 +499,7 @@ const ExpenseReportsList: React.FC = () => {
 							columns={sortableFields}
 							sort={sort}
 							sortOrder={sortOrder}
-							disableSortFields={[
-								'select',
-								'employee_name',
-								'purpose',
-								'total_amount',
-								'status',
-								'createdAt',
-							]}
+							disableSortFields={['select']}
 							onSortChange={handleSortChange}
 							renderRow={(report: any, index: number, actualIndex: number, isVisible: boolean) => (
 								<React.Fragment key={report._id}>
@@ -598,15 +622,25 @@ const ExpenseReportsList: React.FC = () => {
 						</div>
 					)}
 
-					{metaData && expenseReports.length > 0 && (
+					{expenseReports.length > 0 && (
 						<UsersListPagination
-							totalPages={metaData.totalPages}
+							totalPages={
+								metaData?.totalPages ||
+								metaData?.total_pages ||
+								Math.ceil(
+									(metaData?.totalRecords || metaData?.totalDocs || metaData?.total || expenseReports.length) /
+										pagination.itemsPerPage
+								) ||
+								1
+							}
 							currentPage={pagination.page}
+							totalRecords={metaData?.totalRecords || metaData?.totalDocs || metaData?.total || expenseReports.length}
+							itemsPerPage={pagination.itemsPerPage}
 							onPageChange={handlePageChange}
 						/>
 					)}
 				</div>
-			</KTCard>
+			</div>
 		</>
 	)
 }

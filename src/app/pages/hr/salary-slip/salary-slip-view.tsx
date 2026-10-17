@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import { GetSalarySlips } from '../../../Functions/FGGroup/SalarySlip'
@@ -119,6 +120,24 @@ const SalarySlipView = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Salary Slip View</PageTitle>
+
+			{/* Top Action Bar with Back Link */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3 d-print-none'>
+				<Link
+					to='/hr/salary-slip'
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
+					<i className='bi bi-arrow-left fs-6'></i>
+					<span className='fw-semibold'>Back to Salary Slips</span>
+				</Link>
+				<button
+					type='button'
+					onClick={printSlip}
+					className='btn btn-sm btn-primary d-inline-flex align-items-center gap-2 px-4'
+					style={{ height: '38px', borderRadius: '8px' }}>
+					<i className='bi bi-printer fs-6'></i>
+					<span>Print Slip</span>
+				</button>
+			</div>
 
 			<div className='salary-slip-container'>
 				{/* Kesar Group Header */}

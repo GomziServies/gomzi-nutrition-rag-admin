@@ -1,4 +1,4 @@
-import { faEye, faPlusCircle, faQrcode, faStar } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faPlus, faPlusCircle, faQrcode, faStar, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Modal } from 'react-bootstrap'
@@ -6,10 +6,11 @@ import toast from 'react-hot-toast'
 import { useIntl } from 'react-intl'
 import { Link, useLocation } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import { KTCard, KTIcon } from '../../../../../_metronic/helpers'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import CopyableInput from '../../../../components/CopyableInput'
+import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
+import DownloadExcelButton from '../../../../components/DownloadExcelButton'
 import Table from '../../../../components/Table'
 import TableButton from '../../../../components/TableButton'
 import UsersListPagination from '../../../../components/TablePagination'
@@ -68,12 +69,12 @@ const EmployeeDetail: React.FC = () => {
 			const response: any = await GetGlsEmployees({
 				page: page || pagination.page,
 				limit: pagination.itemsPerPage,
-				sort,
+				sort: sort === 'name' ? 'full_name' : sort,
 				sortOrder,
 				search: searchTerm,
 			})
 
-			const employee = response.data
+			const employee = response?.data || []
 
 			const filteredData: any = employee.map((item: any) => ({
 				_id: item?._id,
@@ -91,33 +92,38 @@ const EmployeeDetail: React.FC = () => {
 			}))
 			setEmployeeData(filteredData)
 
-			const metaData: any = response.metadata
-			setMetaData(metaData.pagination)
+			const metaData: any = response?.metadata?.pagination || response?.metadata || {}
+			setMetaData(metaData)
 		} catch (error) {
 			console.error(error)
 		}
 		setLoading(false)
 	}
 
+	const handleSearchChange = (term: React.SetStateAction<string>) => {
+		setSearchTerm((prev) => {
+			const next = typeof term === 'function' ? term(prev) : term
+			if (next !== prev) {
+				setPagination((p) => (p.page === 1 ? p : { ...p, page: 1 }))
+			}
+			return next
+		})
+	}
+
 	useEffect(() => {
-		fetchEmployeeData()
-	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder])
-
-	const isFirstRender = useRef(true)
-
-	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false
-			return
-		}
-
 		localStorage.setItem('hr_gls_employee_searchTerm', searchTerm)
-		setPagination((prev) => ({ ...prev, page: 1 }))
 	}, [searchTerm])
 
 	useEffect(() => {
 		localStorage.setItem('hr_gls_employee_pagination', JSON.stringify(pagination))
 	}, [pagination])
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			fetchEmployeeData()
+		}, 300)
+		return () => clearTimeout(timeout)
+	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder, searchTerm])
 
 	const fetchCourseDataById = async (id: string) => {
 		setLoading(true)
@@ -235,6 +241,18 @@ const EmployeeDetail: React.FC = () => {
 		{ title: 'Image', field: 'image' },
 	]
 
+	const excelColumns = [
+		{ title: 'Employee Code', field: 'employee_code' },
+		{ title: 'Name', field: 'name' },
+		{ title: 'Position', field: 'position' },
+		{ title: 'Mobile', field: 'mobile' },
+		{ title: 'Salary', field: 'salary' },
+		{ title: 'Address', field: 'address' },
+		{ title: 'Bank Name', field: 'bank_name' },
+		{ title: 'Account Number', field: 'account_details' },
+		{ title: 'IFSC', field: 'IFSC' },
+	]
+
 	const handleSortChange = (newSort: string, newSortOrder: any) => {
 		setSort(newSort)
 		setSortOrder(newSortOrder)
@@ -248,202 +266,271 @@ const EmployeeDetail: React.FC = () => {
 
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>Team Members</PageTitle>
-			<KTCard>
-				<div className='row mx-6 my-4 align-items-center justify-content-between'>
-					<div className='col-md-8 col-12'>
-						<div className='d-md-flex'>
+			<PageTitle breadcrumbs={[]}>GLS Employees</PageTitle>
+
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<div className='d-flex align-items-center gap-2'>
+						<h2 className='text-gray-900 fw-bold fs-2 m-0'>GLS Employee Directory</h2>
+						{(metaData?.totalEmployees || metaData?.totalDocs || employeeData?.length > 0) && (
+							<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
+								{metaData?.totalEmployees || metaData?.totalDocs || employeeData.length} Total
+							</span>
+						)}
+					</div>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Manage GLS team members, designations, bank credentials & permissions
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date -> Right-side Action Button) */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+					<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+						{/* 1. Searchbar */}
+						<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
 							<SearchFilter
 								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
+								setSearchTerm={handleSearchChange}
+								placeholder='Search employee name, code, role...'
+								className='me-0'
 							/>
-							<div className='d-md-block d-none'>
-								{employeeData?.length > 0 && (
-									<select
-										className='form-select form-select-sm mx-3'
-										style={{ width: '80px' }}
-										value={pagination.itemsPerPage}
-										onChange={(e) =>
-											setPagination((prev) => ({
-												...prev,
-												itemsPerPage: Number(e.target.value),
-												page: 1,
-											}))
-										}>
-										<option value='10'>10</option>
-										<option value='50'>50</option>
-										<option value='100'>100</option>
-									</select>
-								)}
-							</div>
+						</div>
+
+						{/* 2. Page Size / Length Menu */}
+						<div>
+							<LengthMenu
+								data={employeeData}
+								itemsPerPage={pagination.itemsPerPage}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={employeeData}
+								columns={excelColumns}
+								filename='GLS_Employee_List'
+							/>
 						</div>
 					</div>
-					<div className='col-md-4 col-12 px-0 d-flex justify-content-md-end justify-content-center mb-md-0 mt-4'>
-						<div className='d-md-none d-block me-3'>
-							{employeeData?.length > 0 && (
-								<select
-									className='form-select form-select-sm'
-									style={{ width: '80px' }}
-									value={pagination.itemsPerPage}
-									onChange={(e) =>
-										setPagination((prev) => ({
-											...prev,
-											itemsPerPage: Number(e.target.value),
-											page: 1,
-										}))
-									}>
-									<option value='10'>10</option>
-									<option value='50'>50</option>
-									<option value='100'>100</option>
-								</select>
-							)}
-						</div>
+
+					{/* 4. End me right side Add Employee Button */}
+					<div className='flex-shrink-0 ms-auto'>
 						<Link to='/hr/gls-employees-add'>
-							<button className='btn btn-sm py-4 btn-primary'>
-								<KTIcon
-									iconName='plus'
-									className='fs-2'
-								/>
-								Add Employee
+							<button
+								type='button'
+								className='btn btn-primary d-flex align-items-center gap-2 px-4'
+								style={{ height: '38px', borderRadius: '8px' }}>
+								<FontAwesomeIcon icon={faUserPlus} className='fs-6 text-white' />
+								<span>Add Employee</span>
 							</button>
 						</Link>
 					</div>
 				</div>
+			</div>
 
-				<div className='py-4 card-body'>
-					<div className='table-responsive'>
-						<Table
-							data={employeeData}
-							columns={sortableFields}
-							sort={sort}
-							sortOrder={sortOrder}
-							onSortChange={handleSortChange}
-							renderRow={(
-								employee: any,
-								index: number,
-								actualIndex: number,
-								isVisible: boolean
-							) => {
-								return (
-									<React.Fragment key={employee._id}>
-										<tr
-											onClick={() => handleRowClick(employee._id)}
-											className='data-row'>
-											<td className='text-center'>
-												<div className='d-flex justify-content-center'>
-													<FontAwesomeIcon
-														icon={faPlusCircle}
-														className='mx-2 ms-5 mb-1 plus-icon'
-														style={{ color: '#607D8B', fontSize: '18px' }}
-													/>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{actualIndex}
-													</span>
-												</div>
-											</td>
-											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													{employee?.employee_code}
-												</span>
-											</td>
-											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													{employee.name}
-												</span>
-											</td>
-											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													{employee?.position}
-												</span>
-											</td>
-											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													<a
-														href={`https://files.fggroup.in/` + employee.photo}
-														target='_blank'
-														rel='noopener noreferrer'>
-														<img
-															src={`https://files.fggroup.in/` + employee.photo}
-															alt={employee.name}
-															style={{ width: '80px', height: '80px', borderRadius: '10px' }}
-														/>
-													</a>
-												</span>
-											</td>
-											<td>
-												<div className='d-flex justify-content-center align-items-center gap-1'>
-													<TableButton
-														action='view'
-														to={`/hr/gls-employees-view?employee_id=${employee._id}`}
-														title='View Employee'
-													/>
-													<TableButton
-														action='qr'
-														onClick={() => {
-															setShowModal(true)
-															fetchEditEmployeeData(employee)
-														}}
-														title='Employee QR'
-													/>
-													<TableButton
-														action='remove'
-														onClick={() => handleDeleteFeature(employee._id)}
-														title='Delete Employee'
-													/>
-													<TableButton
-														action='star'
-														text='Rating'
-														to='/hr/reports'
-														title='Employee Rating'
-													/>
-												</div>
-											</td>
-										</tr>
-										{isVisible && (
-											<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-												<td colSpan={12}>
-													<div>
-														<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-															<a
-																href={`https://files.fggroup.in/` + employee.photo}
-																target='_blank'
-																rel='noopener noreferrer'>
-																<img
-																	src={`https://files.fggroup.in/` + employee.photo}
-																	alt={employee.name}
-																	style={{ width: '80px', height: '80px', borderRadius: '10px' }}
-																/>
-															</a>
-														</span>
-														<strong>{sortableFields[0].title}:</strong> {employee.name}
-														<br />
-														<strong>{sortableFields[1].title}:</strong> {employee?.position}
-													</div>
-												</td>
-											</tr>
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
+				<Table
+					data={employeeData}
+					columns={sortableFields}
+					sort={sort}
+					sortOrder={sortOrder}
+					onSortChange={handleSortChange}
+					disableSortFields={['image']}
+					renderRow={(
+						employee: any,
+						index: number,
+						actualIndex: number,
+						isVisible: boolean
+					) => {
+						return (
+							<React.Fragment key={employee._id}>
+								<tr
+									onClick={() => handleRowClick(employee._id)}
+									className='data-row'
+									style={{ transition: 'background-color 0.15s ease' }}>
+									<td className='text-center ps-4'>
+										<span className='text-muted fw-bold fs-7'>
+											{actualIndex}
+										</span>
+									</td>
+									<td>
+										<span
+											className='badge badge-light-secondary text-dark fw-bold fs-7 px-3 py-2'
+											style={{ letterSpacing: '0.5px' }}>
+											{employee?.employee_code || '-'}
+										</span>
+									</td>
+									<td>
+										<div className='d-flex flex-column'>
+											<span className='text-gray-900 fw-bold fs-6'>
+												{employee.name}
+											</span>
+											<span className='text-muted fs-7'>
+												{employee.mobile || 'No contact specified'}
+											</span>
+										</div>
+									</td>
+									<td>
+										<span className='badge badge-light-primary fw-semibold fs-7 px-3 py-2'>
+											{employee?.position || 'Staff'}
+										</span>
+									</td>
+									<td>
+										{employee.photo ? (
+											<a
+												href={`https://files.fggroup.in/` + employee.photo}
+												target='_blank'
+												rel='noopener noreferrer'
+												className='d-inline-flex align-items-center justify-content-center'
+												style={{ width: '42px', height: '42px' }}>
+												<img
+													src={`https://files.fggroup.in/` + employee.photo}
+													alt={employee.name}
+													style={{
+														width: '42px',
+														height: '42px',
+														minWidth: '42px',
+														maxWidth: '42px',
+														minHeight: '42px',
+														maxHeight: '42px',
+														borderRadius: '10px',
+														objectFit: 'cover',
+														border: '1px solid #ded8d2',
+														display: 'block',
+														boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+													}}
+												/>
+											</a>
+										) : (
+											<div
+												style={{
+													width: '42px',
+													height: '42px',
+													minWidth: '42px',
+													maxWidth: '42px',
+													minHeight: '42px',
+													maxHeight: '42px',
+													borderRadius: '10px',
+													background: '#f8fafc',
+													color: '#64748b',
+													display: 'inline-flex',
+													alignItems: 'center',
+													justifyContent: 'center',
+													fontSize: '13px',
+													fontWeight: 600,
+													border: '1px solid #e2e8f0',
+												}}>
+												{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+											</div>
 										)}
-									</React.Fragment>
-								)
-							}}
-							visibleDetails={visibleDetails}
-							pagination={pagination}
-							setPagination={setPagination}
-							loading={loading}
-						/>
+									</td>
+									<td>
+										<div className='d-flex justify-content-center align-items-center gap-1'>
+											<TableButton
+												action='view'
+												to={`/hr/gls-employees-view?employee_id=${employee._id}`}
+												title='View Employee'
+											/>
+											<TableButton
+												action='qr'
+												onClick={(e: any) => {
+													e?.stopPropagation()
+													setShowModal(true)
+													fetchEditEmployeeData(employee)
+												}}
+												title='Employee QR'
+											/>
+											<TableButton
+												action='remove'
+												onClick={(e: any) => {
+													e?.stopPropagation()
+													handleDeleteFeature(employee._id)
+												}}
+												title='Delete Employee'
+											/>
+											<TableButton
+												action='star'
+												to={`/hr/reports?employee_id=${employee._id}`}
+												title='Employee Rating'
+											/>
+										</div>
+									</td>
+								</tr>
+								{isVisible && (
+									<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
+										<td colSpan={12} className='bg-light-subtle p-4'>
+											<div className='d-flex align-items-center gap-4'>
+												{employee.photo && (
+													<img
+														src={`https://files.fggroup.in/` + employee.photo}
+														alt={employee.name}
+														style={{
+															width: '56px',
+															height: '56px',
+															borderRadius: '10px',
+															objectFit: 'cover',
+														}}
+													/>
+												)}
+												<div>
+													<div className='fw-bold fs-6 text-gray-900'>{employee.name}</div>
+													<div className='text-muted fs-7'>{employee?.position}</div>
+													<div className='text-muted fs-7 mt-1'>
+														{employee?.employee_code} | {employee?.mobile}
+													</div>
+												</div>
+											</div>
+										</td>
+									</tr>
+								)}
+							</React.Fragment>
+						)
+					}}
+					visibleDetails={visibleDetails}
+					pagination={pagination}
+					setPagination={setPagination}
+					loading={loading}
+				/>
+
+				{employeeData.length === 0 && !loading && (
+					<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
+						<i className='bi bi-people text-muted fs-2x mb-2'></i>
+						<span className='text-gray-700 fw-bold fs-6'>No GLS employees found</span>
+						<span className='text-muted fs-7'>Try refining your search keyword</span>
 					</div>
-					{employeeData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
-					{employeeData.length > 0 && (
-						<UsersListPagination
-							totalPages={metaData?.totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					)}
-				</div>
+				)}
+
+				{employeeData.length > 0 && (
+					<UsersListPagination
+						totalPages={
+							metaData?.totalPages ||
+							metaData?.total_pages ||
+							Math.ceil(
+								(metaData?.totalEmployees || metaData?.totalDocs || employeeData.length) /
+									pagination.itemsPerPage
+							)
+						}
+						currentPage={pagination.page}
+						onPageChange={handlePageChange}
+						totalRecords={metaData?.totalEmployees || metaData?.totalDocs || employeeData.length}
+						itemsPerPage={pagination.itemsPerPage}
+					/>
+				)}
+			</div>
 
 				{/* member view modal */}
 
@@ -531,7 +618,6 @@ const EmployeeDetail: React.FC = () => {
 						</Button>
 					</Modal.Footer>
 				</Modal>
-			</KTCard>
 		</>
 	)
 }

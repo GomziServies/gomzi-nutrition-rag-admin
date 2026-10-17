@@ -1,23 +1,43 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 const SearchFilter: React.FC<{
 	searchTerm: string
 	style?: React.CSSProperties
 	placeholder?: string
-	setSearchTerm: React.Dispatch<React.SetStateAction<string>>
+	setSearchTerm: React.Dispatch<React.SetStateAction<string>> | ((term: string) => void)
 	className?: string
 }> = ({ searchTerm, setSearchTerm, style, placeholder = 'Search...', className = '' }) => {
 	const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm)
+	const setSearchTermRef = useRef(setSearchTerm)
+	const prevSearchTermProp = useRef(searchTerm)
 
 	useEffect(() => {
+		setSearchTermRef.current = setSearchTerm
+	}, [setSearchTerm])
+
+	// If parent updates searchTerm externally (e.g. clear button or reset), sync local state
+	useEffect(() => {
+		if (prevSearchTermProp.current !== searchTerm) {
+			prevSearchTermProp.current = searchTerm
+			setLocalSearchTerm(searchTerm)
+		}
+	}, [searchTerm])
+
+	// Debounce user input ONLY when localSearchTerm changes and differs from external searchTerm
+	useEffect(() => {
+		if (localSearchTerm === prevSearchTermProp.current) {
+			return
+		}
+
 		const handler = setTimeout(() => {
-			setSearchTerm(localSearchTerm)
-		}, 700)
+			prevSearchTermProp.current = localSearchTerm
+			setSearchTermRef.current(localSearchTerm)
+		}, 600)
 
 		return () => {
 			clearTimeout(handler)
 		}
-	}, [localSearchTerm, setSearchTerm])
+	}, [localSearchTerm])
 
 	return (
 		<div

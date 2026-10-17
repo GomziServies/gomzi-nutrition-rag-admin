@@ -1,4 +1,4 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -7,6 +7,8 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import SearchFilter from '../../../components/SearchFilter'
+import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
@@ -280,23 +282,22 @@ const DailyReportList: React.FC = () => {
 		}
 	}
 
-	const paginatedTaskData = (assignTaskData || []).slice(
-		(pagination.page - 1) * pagination.itemsPerPage,
-		pagination.page * pagination.itemsPerPage
-	)
+	const paginatedTaskData = assignTaskData || []
 
-	const [expandedDescription, setExpandedDescription] = useState<{ [key: number]: boolean }>({})
+	const [expandedDescription, setExpandedDescription] = useState<{ [key: string]: boolean }>({})
 
-	const toggleDescription = (index: number) => {
+	const toggleDescription = (id: string) => {
 		setExpandedDescription((prevState) => ({
 			...prevState,
-			[index]: !prevState[index],
+			[id]: !prevState[id],
 		}))
 	}
 
+	const REMARKS_TRUNCATE_LENGTH = 80
+
 	const truncateString = (str: any, num: any) => {
 		if (!str || typeof str !== 'string') {
-			return ''
+			return '-'
 		}
 		if (str.length <= num) {
 			return str
@@ -312,76 +313,96 @@ const DailyReportList: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Daily Reporting</PageTitle>
-			<KTCard>
-				<h2 className='m-6 mb-0'>Daily Reports</h2>
-				<div className='row card-header border-0 pt-0 align-items-center ms-0 mx-md-6 p-0'>
-					<div className='col-md-12'>
-						<div className='row mt-3 justify-content-between'>
-							<div className='col-md-4 fv-row ps-md-0'>
-								<SelectField
-									className='fv-row m-0'
-									label='Select Employee'
-									name='employee'
-									value={selectedEmployee?.name || 'Select'}
-									onChange={handleEmployeeSelect}
-									htmlFor='employee'
-									options={['Select', ...employeeDataList.map((el: any) => el.name)]}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-4 mt-md-7 mb-0 d-flex justify-content-end align-items-end card-toolbar'>
-								<div className='d-md-flex'>
-									<div className='d-md-flex me-3'>
-										{assignTaskData?.length > 0 && (
-											<select
-												className='form-select form-select-sm mx-3'
-												style={{ width: '80px' }}
-												value={pagination.itemsPerPage}
-												onChange={(e) =>
-													setPagination((prev) => ({
-														...prev,
-														itemsPerPage: Number(e.target.value),
-														page: 1,
-													}))
-												}>
-												<option value='10'>10</option>
-												<option value='50'>50</option>
-												<option value='100'>100</option>
-											</select>
-										)}
-									</div>
-									<DateFilter
-										onDateRangeChange={handleDateRangeChange}
-										leftValue='-270px'
-										storageKey='daily_report_selectedDateRange'
-									/>
-								</div>
-							</div>
-							<div className='col-md-3 mt-md-7 mt-2 mb-0 d-flex align-items-end position-relative ps-0 '>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-								/>
-							</div>
-						</div>
+
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Daily Reporting</h2>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Track employee work updates, tasks, and daily deliverables
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar (Order: SearchFilter -> LengthMenu -> Select Employee -> Spacer -> DateFilter) */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center flex-wrap gap-3'>
+					{/* 1. Searchbar */}
+					<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search task title, remarks...'
+							className='me-0'
+						/>
+					</div>
+
+					{/* 2. Page Size / Length Menu */}
+					<div>
+						<LengthMenu
+							data={assignTaskData}
+							itemsPerPage={pagination.itemsPerPage}
+							handleItemsPerPageChange={(value) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: value, page: 1 }))
+							}
+							className='me-0'
+						/>
+					</div>
+
+					{/* 3. Download Excel Button */}
+					<div>
+						<DownloadExcelButton
+							data={assignTaskData}
+							columns={sortableFields}
+							filename='Daily_Reports'
+						/>
+					</div>
+
+					{/* 4. Employee Select */}
+					<div style={{ minWidth: '180px' }}>
+						<select
+							className='gz-inv-select'
+							style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+							value={selectedEmployee?.name || 'Select'}
+							onChange={handleEmployeeSelect}>
+							<option value='Select'>All Employees</option>
+							{employeeDataList.map((el: any) => (
+								<option key={el.id} value={el.name}>
+									{el.name}
+								</option>
+							))}
+						</select>
+					</div>
+
+					{/* Spacer */}
+					<div className='d-none d-md-block' style={{ flexGrow: 1 }}></div>
+
+					{/* 5. Date Filter */}
+					<div>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							storageKey='daily_report_selectedDateRange'
+						/>
 					</div>
 				</div>
+			</div>
 
-				<div className='py-4 card-body'>
-					<div className='table-responsive'>
-						<Table
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
+				<Table
 							data={paginatedTaskData}
 							columns={sortableFields}
 							sort={sort}
 							sortOrder={sortOrder}
-							disableSortFields={[
-								'employee_name',
-								'task_title',
-								'remarks',
-								'file_url',
-								'createdAt',
-								'url',
-							]}
+							disableSortFields={['file_url', 'url']}
 							onSortChange={handleSortChange}
 							renderRow={(task: any, index: number, actualIndex: number, isVisible: boolean) => (
 								<React.Fragment key={task._id}>
@@ -410,9 +431,20 @@ const DailyReportList: React.FC = () => {
 												{task.task_title}
 											</span>
 										</td>
-										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-												{task.remarks}
+										<td style={{ maxWidth: '280px' }}>
+											<span
+												className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'
+												style={{
+													display: '-webkit-box',
+													WebkitLineClamp: 2,
+													WebkitBoxOrient: 'vertical',
+													overflow: 'hidden',
+													textOverflow: 'ellipsis',
+													maxWidth: '280px',
+													wordBreak: 'break-word',
+												}}
+												title={task.remarks || '-'}>
+												{task.remarks || '-'}
 											</span>
 										</td>
 										<td>
@@ -423,9 +455,11 @@ const DailyReportList: React.FC = () => {
 										<td>
 											<div className='d-flex align-items-center gap-2'>
 												<button
-													className='btn btn-info btn-sm'
+													type='button'
+													className='gz-inv-action-btn view'
+													title='View Details'
 													onClick={() => handlenavigate(task._id, task.admin_id)}>
-													<i className='fas fa-eye p-0'></i>
+													<FontAwesomeIcon icon={faEye} />
 												</button>
 											</div>
 										</td>
@@ -606,30 +640,30 @@ const DailyReportList: React.FC = () => {
 							setPagination={setPagination}
 							loading={loading}
 						/>
+				{paginatedTaskData.length === 0 && !loading && (
+					<div className='d-flex text-center w-100 align-content-center justify-content-center py-12'>
+						<b>No records found</b>
 					</div>
-					{paginatedTaskData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
+				)}
 
-					{paginatedTaskData.length > 0 && (
-						<UsersListPagination
-							totalPages={
-								metaData?.totalPages ||
-								metaData?.total_pages ||
-								Math.ceil(
-									(metaData?.totalItems || metaData?.total || metaData?.count || 0) /
-										pagination.itemsPerPage
-								) ||
-								1
-							}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					)}
-				</div>
-			</KTCard>
+				{paginatedTaskData.length > 0 && (
+					<UsersListPagination
+						totalPages={
+							metaData?.totalPages ||
+							metaData?.total_pages ||
+							Math.ceil(
+								(metaData?.totalItems || metaData?.total || metaData?.count || 0) /
+									pagination.itemsPerPage
+							) ||
+							1
+						}
+						currentPage={pagination.page}
+						totalRecords={metaData?.totalItems || metaData?.total || metaData?.count || assignTaskData.length}
+						itemsPerPage={pagination.itemsPerPage}
+						onPageChange={handlePageChange}
+					/>
+				)}
+			</div>
 		</>
 	)
 }

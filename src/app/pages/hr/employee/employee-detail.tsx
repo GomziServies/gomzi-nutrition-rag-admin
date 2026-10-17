@@ -1,4 +1,4 @@
-import { faEye, faPlusCircle, faQrcode, faStar } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faPlusCircle, faQrcode, faStar, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Modal } from 'react-bootstrap'
@@ -10,6 +10,8 @@ import { KTCard, KTIcon } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import CopyableInput from '../../../components/CopyableInput'
 import SearchFilter from '../../../components/SearchFilter'
+import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -70,11 +72,12 @@ const HREmployeeDetail: React.FC = () => {
 			const response: any = await GetEmployees({
 				page: page || pagination.page,
 				limit: pagination.itemsPerPage,
-				sort,
+				sort: sort === 'name' ? 'full_name' : sort,
 				sortOrder,
+				search: searchTerm,
 			})
 
-			const employee = response.data
+			const employee = response?.data || []
 
 			const filteredData: any = employee.map((item: any) => ({
 				_id: item?._id,
@@ -93,8 +96,8 @@ const HREmployeeDetail: React.FC = () => {
 			}))
 			setEmployeeData(filteredData)
 
-			const metaData: any = response.metadata
-			setMetaData(metaData.pagination)
+			const metaData: any = response?.metadata?.pagination || response?.metadata || {}
+			setMetaData(metaData)
 		} catch (error) {
 			console.error(error)
 		}
@@ -102,8 +105,11 @@ const HREmployeeDetail: React.FC = () => {
 	}
 
 	useEffect(() => {
-		fetchEmployeeData()
-	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder])
+		const timeout = setTimeout(() => {
+			fetchEmployeeData()
+		}, 300)
+		return () => clearTimeout(timeout)
+	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder, searchTerm])
 
 	const isFirstRender = useRef(true)
 
@@ -209,13 +215,15 @@ const HREmployeeDetail: React.FC = () => {
 	const handleItemsPerPageChange = (value: number) => {
 		setPagination((prev) => ({ ...prev, itemsPerPage: value, page: 1 }))
 	}
-	const filteredemployeeData = employeeData.filter((book: any) =>
-		book.name.toLowerCase().includes(searchTerm.toLowerCase())
-	)
-	const paginatedemployeeData = filteredemployeeData.slice(
-		(pagination.page - 1) * pagination.itemsPerPage,
-		pagination.page * pagination.itemsPerPage
-	)
+	const handleSearchChange = (term: React.SetStateAction<string>) => {
+		setSearchTerm((prev) => {
+			const next = typeof term === 'function' ? term(prev) : term
+			if (next !== prev) {
+				setPagination((p) => (p.page === 1 ? p : { ...p, page: 1 }))
+			}
+			return next
+		})
+	}
 
 	const handleDeleteFeature = async (_id: string) => {
 		Swal.fire({
@@ -262,72 +270,86 @@ const HREmployeeDetail: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Team Members</PageTitle>
-			<div className='card shadow-sm border-0' style={{ borderRadius: '14px' }}>
-				{/* Header Toolbar */}
-				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
-					<div className='d-flex flex-column'>
-						<div className='d-flex align-items-center gap-2'>
-							<h3 className='card-title fw-bold text-gray-900 fs-3 m-0'>Employee Directory</h3>
-							{employeeData?.length > 0 && (
-								<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
-									{employeeData.length} Total
-								</span>
-							)}
-						</div>
-						<span className='text-muted fs-7 fw-semibold mt-1'>
-							Manage active team members, designations, bank credentials & permissions
-						</span>
-					</div>
 
-					<div className='d-flex align-items-center flex-wrap gap-3'>
-						<div style={{ minWidth: '240px' }}>
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<div className='d-flex align-items-center gap-2'>
+						<h2 className='text-gray-900 fw-bold fs-2 m-0'>Employee Directory</h2>
+						{employeeData?.length > 0 && (
+							<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
+								{employeeData.length} Total
+							</span>
+						)}
+					</div>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Manage active team members, designations, bank credentials & permissions
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date -> Right-side Action Button) */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+					<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+						{/* 1. Searchbar */}
+						<div>
 							<SearchFilter
 								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
+								setSearchTerm={handleSearchChange}
 								placeholder='Search employee name, role...'
+								className='me-0'
 							/>
 						</div>
 
-						{employeeData?.length > 0 && (
-							<div className='d-flex align-items-center gap-2'>
-								<span className='fs-8 text-muted fw-semibold d-none d-sm-inline'>Show:</span>
-								<select
-									className='form-select form-select-sm gz-pagination-select'
-									style={{ width: '82px' }}
-									value={pagination.itemsPerPage}
-									onChange={(e) =>
-										setPagination((prev) => ({
-											...prev,
-											itemsPerPage: Number(e.target.value),
-											page: 1,
-										}))
-									}>
-									<option value='10'>10</option>
-									<option value='50'>50</option>
-									<option value='100'>100</option>
-								</select>
-							</div>
-						)}
+						{/* 2. Page Size / Length Menu */}
+						<div>
+							<LengthMenu
+								data={employeeData}
+								itemsPerPage={pagination.itemsPerPage}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
 
+						{/* 3. Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={employeeData}
+								columns={sortableFields}
+								filename='Employee_List'
+							/>
+						</div>
+					</div>
+
+					{/* 6. End me right side Add Employee Button */}
+					<div className='flex-shrink-0 ms-auto'>
 						<Link to='/hr/employee-add'>
 							<button
 								type='button'
-								className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
-								style={{ height: '38px', borderRadius: '10px' }}>
-								<i className='bi bi-person-plus-fill fs-5'></i>
+								className='btn btn-primary d-flex align-items-center gap-2 px-4'
+								style={{ height: '38px', borderRadius: '8px' }}>
+								<FontAwesomeIcon icon={faUserPlus} className='fs-6 text-white' />
 								<span>Add Employee</span>
 							</button>
 						</Link>
 					</div>
 				</div>
+			</div>
 
-				{/* Table Body */}
-				<div className='card-body py-2 px-6'>
-					<div className='table-responsive'>
-						<Table
-							data={paginatedemployeeData}
-							columns={sortableFields}
-							sort={sort}
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
+				<Table
+					data={employeeData}
+					columns={sortableFields}
+					sort={sort}
 							sortOrder={sortOrder}
 							onSortChange={handleSortChange}
 							renderRow={(
@@ -421,40 +443,36 @@ const HREmployeeDetail: React.FC = () => {
 												<div className='d-flex justify-content-center align-items-center gap-2'>
 													<Link
 														to={`/hr/employee-view?employee_id=${employee._id}`}
-														className='btn btn-icon btn-sm btn-light-primary'
-														title='View Profile'
-														style={{ width: '32px', height: '32px', borderRadius: '8px' }}>
-														<i className='bi bi-eye fs-6'></i>
+														className='gz-inv-action-btn view'
+														title='View Profile'>
+														<FontAwesomeIcon icon={faEye} />
 													</Link>
 													<button
 														type='button'
-														className='btn btn-icon btn-sm btn-light-info'
-														style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+														className='gz-inv-action-btn edit'
 														onClick={(e) => {
 															e.stopPropagation()
 															setShowModal(true)
 															fetchEditEmployeeData(employee)
 														}}
 														title='Bank & QR Details'>
-														<i className='bi bi-qr-code fs-6'></i>
+														<FontAwesomeIcon icon={faQrcode} />
 													</button>
 													<Link
-														to={`/hr/reports`}
-														className='btn btn-icon btn-sm btn-light-warning'
-														style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+														to={`/hr/reports?employee_id=${employee._id}`}
+														className='gz-inv-action-btn warning'
 														title='Performance Rating'>
-														<i className='bi bi-star-fill fs-6'></i>
+														<FontAwesomeIcon icon={faStar} />
 													</Link>
 													<button
 														type='button'
-														className='btn btn-icon btn-sm btn-light-danger'
-														style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+														className='gz-inv-action-btn delete'
 														onClick={(e) => {
 															e.stopPropagation()
 															handleDeleteFeature(employee._id)
 														}}
 														title='Delete Employee'>
-														<i className='bi bi-trash fs-6'></i>
+														<FontAwesomeIcon icon={faTrash} />
 													</button>
 												</div>
 											</td>
@@ -487,26 +505,29 @@ const HREmployeeDetail: React.FC = () => {
 							setPagination={setPagination}
 							loading={loading}
 						/>
-					</div>
-					{paginatedemployeeData.length === 0 && !loading && (
+
+					{employeeData.length === 0 && !loading && (
 						<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
 							<i className='bi bi-people text-muted fs-2x mb-2'></i>
 							<span className='text-gray-700 fw-bold fs-6'>No employees found</span>
 							<span className='text-muted fs-7'>Try refining your search keyword</span>
 						</div>
 					)}
-					{paginatedemployeeData.length > 0 && (
-						<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
-							<div className='text-muted fs-7 fw-semibold'>
-								Showing {Math.min((pagination.page - 1) * pagination.itemsPerPage + 1, filteredemployeeData.length)} to{' '}
-								{Math.min(pagination.page * pagination.itemsPerPage, filteredemployeeData.length)} of {filteredemployeeData.length} team members
-							</div>
-							<UsersListPagination
-								totalPages={Math.ceil(filteredemployeeData.length / pagination.itemsPerPage)}
-								currentPage={pagination.page}
-								onPageChange={handlePageChange}
-							/>
-						</div>
+					{employeeData.length > 0 && (
+						<UsersListPagination
+							totalPages={
+								metaData?.totalPages ||
+								metaData?.total_pages ||
+								Math.ceil(
+									(metaData?.totalEmployees || metaData?.totalDocs || employeeData.length) /
+										pagination.itemsPerPage
+								)
+							}
+							currentPage={pagination.page}
+							totalRecords={metaData?.totalEmployees || metaData?.totalDocs || employeeData.length}
+							itemsPerPage={pagination.itemsPerPage}
+							onPageChange={handlePageChange}
+						/>
 					)}
 				</div>
 
@@ -596,7 +617,6 @@ const HREmployeeDetail: React.FC = () => {
 						</Button>
 					</Modal.Footer>
 				</Modal>
-			</div>
 		</>
 	)
 }

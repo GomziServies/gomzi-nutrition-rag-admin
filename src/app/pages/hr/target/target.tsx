@@ -1,14 +1,14 @@
-import { faPlusCircle, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faPlusCircle, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useIntl } from 'react-intl'
-import { KTCard, KTIcon } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -47,7 +47,10 @@ const HRTarget: React.FC = () => {
 	const fetchAssignTaskData = async () => {
 		try {
 			const response = await GetTarget()
-			const filteredData: any = response.data
+			const filteredData: any = (response?.data || []).map((item: any) => ({
+				...item,
+				days: item.createdAt && item.updatedAt ? DayJS(item.updatedAt).diff(DayJS(item.createdAt), 'day') : 0,
+			}))
 			setTargetData(filteredData)
 		} catch (error) {
 			console.error(error)
@@ -124,6 +127,16 @@ const HRTarget: React.FC = () => {
 		setPagination({ ...pagination, itemsPerPage, page: 1 })
 	}
 
+	const handleSearchChange = (term: React.SetStateAction<string>) => {
+		setSearchTerm((prev) => {
+			const next = typeof term === 'function' ? term(prev) : term
+			if (next !== prev) {
+				setPagination((p) => (p.page === 1 ? p : { ...p, page: 1 }))
+			}
+			return next
+		})
+	}
+
 	const filteredtargetData = targetData.filter((sale) =>
 		sale.target_title.toLowerCase().includes(searchTerm.toLowerCase())
 	)
@@ -154,45 +167,79 @@ const HRTarget: React.FC = () => {
 
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>Services</PageTitle>
+			<PageTitle breadcrumbs={[]}>Employee Targets</PageTitle>
+
+			{/* Page Header */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex flex-column'>
+					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Employee Targets</h2>
+					<span className='text-muted fs-7 fw-semibold mt-1'>
+						Manage, assign, and track role-based milestones and operational performance targets
+					</span>
+				</div>
+			</div>
+
+			{/* Filter Toolbar Card */}
 			<div
-				className='accordion card'
-				id='kt_accordion_1'>
-				<KTCard className='accordion-item mt-5'>
-					<div
-						id='kt_accordion_1_body_1'
-						className='accordion-collapse collapse show'>
-						<div className='row mx-6 my-4 align-items-center justify-content-between'>
-							<div className='col-md-4 col-12'>
-								<div className='d-flex'>
-									<SearchFilter
-										searchTerm={searchTerm}
-										setSearchTerm={setSearchTerm}
-									/>
-									<div className=''>
-										<LengthMenu
-											expenseData={targetData}
-											handleItemsPerPageChange={handleItemsPerPageChange}
-										/>
-									</div>
-								</div>
-							</div>
-							<div className='col-md-8 col-12 mt-md-0 mt-4'>
-								<div className='modal-footer justify-content-end'>
-									<button
-										className='btn btn-primary'
-										data-bs-toggle='modal'
-										data-bs-target='#kt_modal_target_add'>
-										<KTIcon
-											iconName='plus'
-											className='fs-2'
-										/>
-										Add Target
-									</button>
-								</div>
-							</div>
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div
+					className='card-body d-flex align-items-center justify-content-between flex-wrap gap-3'
+					style={{ padding: '12px 18px' }}>
+					<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3'>
+						{/* 1. Searchbar */}
+						<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
+							<SearchFilter
+								searchTerm={searchTerm}
+								setSearchTerm={handleSearchChange}
+								placeholder='Search target title, description...'
+								className='me-0'
+							/>
 						</div>
-						<div className='py-4 card-body'>
+
+						{/* 2. Page Size / Length Menu */}
+						<div>
+							<LengthMenu
+								data={targetData}
+								itemsPerPage={pagination.itemsPerPage}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								className='me-0'
+							/>
+						</div>
+
+						{/* 3. Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={targetData}
+								columns={sortableFields}
+								filename='Employee_Targets'
+							/>
+						</div>
+					</div>
+
+					{/* 6. End me right side Add Target Button */}
+					<div className='flex-shrink-0 ms-auto'>
+						<button
+							type='button'
+							className='btn btn-primary d-flex align-items-center gap-2 px-4'
+							style={{ height: '38px', borderRadius: '8px' }}
+							data-bs-toggle='modal'
+							data-bs-target='#kt_modal_target_add'>
+							<FontAwesomeIcon icon={faPlus} className='fs-6 text-white' />
+							<span>Add Target</span>
+						</button>
+					</div>
+				</div>
+			</div>
+
+			{/* Main Table Card */}
+			<div className='gz-inv-table-card'>
+				<div className='py-4 card-body'>
 							<div className='table-responsive'>
 								<Table
 									data={paginatedtargetData}
@@ -344,10 +391,12 @@ const HRTarget: React.FC = () => {
 									<b>No records found</b>
 								</div>
 							)}
-							{targetData.length > 0 && (
+							{filteredtargetData.length > 0 && (
 								<UsersListPagination
-									totalPages={Math.ceil(targetData.length / pagination.itemsPerPage)}
+									totalPages={Math.ceil(filteredtargetData.length / pagination.itemsPerPage)}
 									currentPage={pagination.page}
+									totalRecords={filteredtargetData.length}
+									itemsPerPage={pagination.itemsPerPage}
 									onPageChange={handlePageChange}
 								/>
 							)}
@@ -577,8 +626,6 @@ const HRTarget: React.FC = () => {
 							</div>
 						</div>
 					</div>
-				</KTCard>
-			</div>
 		</>
 	)
 }

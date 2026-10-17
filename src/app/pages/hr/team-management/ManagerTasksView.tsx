@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap'
 import toast from 'react-hot-toast'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -14,6 +14,7 @@ import SearchFilter from '../../../components/SearchFilter'
 import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { ActionTask, GetTask } from '../../../Functions/FGGroup/TaskManagement'
@@ -160,49 +161,80 @@ const ManagerTasksView: React.FC = () => {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>{`Tasks: ${managerName}`}</PageTitle>
-			<KTCard>
-				<h2 className='m-6 mb-0'>Currently Running Tasks</h2>
-				<div className='row card-header border-0 pt-0 align-items-end ms-0 mx-md-6 p-0'>
-					<div className='col-md-9'>
-						<div className='row justify-content-between align-items-end'>
-							<div className='col-md-3 fv-row ps-md-0'>
-								<SelectField
-									className='fv-row m-0'
-									label='Status'
-									name='statusFilter'
-									value={statusFilter}
-									onChange={(e: any) => setStatusFilter(e.target.value)}
-									htmlFor='statusFilter'
-									options={['Select', 'Pending', 'Employee Done']}
-									marginRemove={true}
-								/>
-							</div>
-							<div className='col-md-9 d-flex justify-content-end align-items-end card-toolbar mb-3 mb-lg-0'>
-								<div className='d-md-flex'>
-									<div className='d-md-flex me-3 d-none'>
-										<LengthMenu
-											expenseData={assignTaskData}
-											handleItemsPerPageChange={(pageSize) =>
-												setPagination((prev) => ({ ...prev, page: 1, itemsPerPage: pageSize }))
-											}
-										/>
-									</div>
-									<DateFilter
-										onDateRangeChange={setSelectedDateRange}
-										leftValue='-480px'
-									/>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div className='col-md-3 mt-md-0 mt-2 d-flex align-items-end position-relative ps-0 mb-3 mb-lg-0'>
+
+			{/* Top Bar with Back Link */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<Link
+					to='/hr/team-management'
+					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
+					<i className='bi bi-arrow-left fs-6'></i>
+					<span className='fw-semibold'>Back to Team Management</span>
+				</Link>
+				<h3 className='fw-bold m-0 fs-4' style={{ color: '#142447' }}>
+					Manager Tasks: {managerName}
+				</h3>
+			</div>
+
+			{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date) */}
+			<div className='gz-filter-card mb-5'>
+				<div className='d-flex align-items-center flex-wrap gap-3 w-100'>
+					{/* 1. Search */}
+					<div style={{ flex: '1 1 240px', maxWidth: '360px' }}>
 						<SearchFilter
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
+							placeholder='Search task...'
+						/>
+					</div>
+
+					{/* 2. Page Size */}
+					<div>
+						<LengthMenu
+							expenseData={assignTaskData}
+							handleItemsPerPageChange={(pageSize) =>
+								setPagination((prev) => ({ ...prev, page: 1, itemsPerPage: pageSize }))
+							}
+						/>
+					</div>
+
+					{/* 3. Export to Excel */}
+					<div>
+						<DownloadExcelButton
+							data={assignTaskData}
+							columns={[
+								{ title: 'Task', field: 'task_title' },
+								{ title: 'Start Date', field: 'start_date' },
+								{ title: 'End Date', field: 'end_date' },
+								{ title: 'Employee Status', field: 'status' },
+							]}
+							filename={`manager_tasks_${managerName}`}
+						/>
+					</div>
+
+					{/* 4. Status Filter */}
+					<div style={{ minWidth: '160px' }}>
+						<select
+							className='form-select form-select-sm gz-inv-select'
+							value={statusFilter}
+							onChange={(e: any) => setStatusFilter(e.target.value)}>
+							<option value='Select'>All Statuses</option>
+							<option value='Pending'>Pending</option>
+							<option value='Employee Done'>Employee Done</option>
+						</select>
+					</div>
+
+					{/* 5. Date Filter */}
+					<div>
+						<DateFilter
+							onDateRangeChange={setSelectedDateRange}
+							rightValue='0'
 						/>
 					</div>
 				</div>
+			</div>
 
+			{/* Table Card */}
+			<div className='gz-inv-table-card'>
 				<div className='card-body py-4'>
 					<div className='table-responsive'>
 						<Table
@@ -336,10 +368,12 @@ const ManagerTasksView: React.FC = () => {
 							totalPages={totalPages}
 							currentPage={pagination.page}
 							onPageChange={(p) => setPagination((prev) => ({ ...prev, page: p }))}
+							totalRecords={assignTaskData.length}
+							itemsPerPage={pagination.itemsPerPage}
 						/>
 					)}
 				</div>
-			</KTCard>
+			</div>
 		</>
 	)
 }

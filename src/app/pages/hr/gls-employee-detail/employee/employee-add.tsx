@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/img-redundant-alt */
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import InputField from '../../../../components/InputField'
 import SelectField from '../../../../components/SelectField'
@@ -361,7 +361,7 @@ const EmployeeAdd = () => {
 			toast.success('Employee added successfully')
 			setIsSubmitting(false)
 
-			navigate('/hr/gls-employees-add')
+			navigate('/hr/gls-employees')
 		} catch (error: any) {
 			toast.error(error.message)
 			setIsSubmitting(false)
@@ -371,14 +371,69 @@ const EmployeeAdd = () => {
 
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>Add Employee</PageTitle>
+			<PageTitle breadcrumbs={[]}>Add GLS Employee</PageTitle>
+
+			{/* Page Header Card */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+				}}>
+				<div className='card-body p-6 d-flex flex-wrap align-items-center justify-content-between gap-4'>
+					<div className='d-flex align-items-center gap-4'>
+						<div
+							className='d-flex align-items-center justify-content-center flex-shrink-0'
+							style={{
+								width: '52px',
+								height: '52px',
+								borderRadius: '12px',
+								background: '#EAF1FB',
+								border: '1px solid #DCE8F8',
+							}}>
+							<i
+								className='bi bi-person-plus-fill fs-3'
+								style={{ color: '#172B4D' }}></i>
+						</div>
+						<div>
+							<h2
+								className='fw-bold fs-3 m-0'
+								style={{ color: '#142447' }}>
+								New GLS Employee
+							</h2>
+							<span
+								className='fs-7'
+								style={{ color: '#71809A' }}>
+								Create the directory profile, bank credentials and shift timings
+							</span>
+						</div>
+					</div>
+					<div>
+						<Link
+							to='/hr/gls-employees'
+							className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
+							<i className='bi bi-arrow-left fs-6'></i>
+							<span className='fw-semibold'>Back to Directory</span>
+						</Link>
+					</div>
+				</div>
+			</div>
+
 			<div className='row'>
-				<div className='col-12 mt-3'>
-					<div className='card py-10'>
-						<div className='card-body'>
+				<div className='col-12 mt-1'>
+					<div
+						className='card shadow-sm border-0 mb-6'
+						style={{
+							borderRadius: '16px',
+							border: '1px solid #E4EAF2',
+							background: '#ffffff',
+						}}>
+						<div className='card-body p-6 p-md-8'>
 							<div className='row'>
 								<div className='col-md-12'>
-									<h2 className='mb-5'>Personal Details:</h2>
+									<h3 className='fw-bold text-gray-900 fs-4 mb-5 pb-3 border-bottom'>Personal Details</h3>
 									<div className='row'>
 										<div className='col-md-4 fv-row mb-7'>
 											<InputField
@@ -704,17 +759,45 @@ const EmployeeAdd = () => {
 											</div>
 										</div>
 
-										<div className='col-md-12 fv-row mt-4 mb-2 d-flex justify-content-end'>
-											<button
-												type='button'
-												className='btn btn-success mx-2 mb-4'
-												onClick={handleAddButtonClick}
-												disabled={isSubmitting}>
-												{isSubmitting ? 'Submitting...' : 'Submit'}
-											</button>
-										</div>
 									</div>
 								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Bottom Action Card */}
+					<div
+						className='card shadow-sm border-0 mb-6'
+						style={{
+							borderRadius: '14px',
+							border: '1px solid #E4EAF2',
+							background: '#ffffff',
+							boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+						}}>
+						<div className='card-body p-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+							<span
+								className='fs-7'
+								style={{ color: '#71809A' }}>
+								Review personal, address and banking details before creating the GLS profile.
+							</span>
+							<div className='d-flex align-items-center gap-2'>
+								<Link
+									to='/hr/gls-employees'
+									className='btn btn-sm btn-light d-inline-flex align-items-center gap-2 px-5'
+									style={{ borderRadius: '8px', height: '42px' }}>
+									<span className='fw-semibold'>Cancel</span>
+								</Link>
+								<button
+									type='button'
+									className='btn btn-sm btn-primary d-inline-flex align-items-center gap-2 px-6'
+									style={{ borderRadius: '8px', height: '42px' }}
+									onClick={handleAddButtonClick}
+									disabled={isSubmitting}>
+									<i className='bi bi-check2-circle fs-5'></i>
+									<span className='fw-bold'>
+										{isSubmitting ? 'Submitting...' : 'Create Employee'}
+									</span>
+								</button>
 							</div>
 						</div>
 					</div>

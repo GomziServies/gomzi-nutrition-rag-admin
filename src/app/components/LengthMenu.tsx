@@ -194,14 +194,16 @@ const LengthMenu: React.FC<LengthMenuProps> = ({
 									}}
 									onMouseEnter={(e) => {
 										if (!isSelected) {
-											e.currentTarget.style.backgroundColor = 'rgba(30, 58, 95, 0.1)'
+											e.currentTarget.style.backgroundColor = '#E8F0F8'
 											e.currentTarget.style.color = '#1E3A5F'
+											e.currentTarget.style.fontWeight = '600'
 										}
 									}}
 									onMouseLeave={(e) => {
 										if (!isSelected) {
 											e.currentTarget.style.backgroundColor = 'transparent'
 											e.currentTarget.style.color = '#475569'
+											e.currentTarget.style.fontWeight = '500'
 										}
 									}}>
 									{opt}
