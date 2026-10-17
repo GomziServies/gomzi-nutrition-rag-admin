@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import { GetCompaniesAdmin } from '../../../Functions/FGGroup/Company'
 import {
 	PromoBannerItem,
 	GetPromoBannersAdmin,
@@ -50,16 +51,32 @@ export default function PromoBannerManage() {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
 	const [editingBanner, setEditingBanner] = useState<PromoBannerItem | null>(null)
 	const [localPreview, setLocalPreview] = useState<string>('')
+	const [availableCompanies, setAvailableCompanies] = useState<string[]>([
+		'MuscleBlaze',
+		'Optimum Nutrition',
+		'GNC Live Well',
+		'Wellcore',
+		'The Whole Truth',
+		'Fast&Up',
+		'Myprotein',
+		'Gomzi Nutrition',
+		'Isopure',
+		'Avvatar',
+		'Dymatize',
+		'Labrada',
+	])
 	const [isDragging, setIsDragging] = useState<boolean>(false)
 
 	const fileInputRef = useRef<HTMLInputElement | null>(null)
 
 	const [formData, setFormData] = useState<{
+		brand: string
 		title: string
 		image: string
 		url: string
 		status: boolean
 	}>({
+		brand: 'MuscleBlaze',
 		title: '',
 		image: '',
 		url: '/gomzi-supplement',
@@ -67,6 +84,15 @@ export default function PromoBannerManage() {
 	})
 
 	const fetchBanners = async () => {
+		try {
+			const compRes: any = await GetCompaniesAdmin()
+			if (compRes?.data?.companies && Array.isArray(compRes.data.companies)) {
+				const names = compRes.data.companies.map((c: any) => c.name).filter(Boolean)
+				if (names.length > 0) {
+					setAvailableCompanies((prev) => Array.from(new Set([...names, ...prev])))
+				}
+			}
+		} catch (e) {}
 		try {
 			setLoading(true)
 			const res = await GetPromoBannersAdmin()
@@ -89,6 +115,7 @@ export default function PromoBannerManage() {
 		if (banner) {
 			setEditingBanner(banner)
 			setFormData({
+				brand: banner.brand || 'MuscleBlaze',
 				title: banner.title || '',
 				image: banner.image || '',
 				url: banner.url || '/gomzi-supplement',
@@ -97,6 +124,7 @@ export default function PromoBannerManage() {
 		} else {
 			setEditingBanner(null)
 			setFormData({
+				brand: 'MuscleBlaze',
 				title: '',
 				image: '',
 				url: '/gomzi-supplement',
@@ -222,7 +250,7 @@ export default function PromoBannerManage() {
 			setSaving(true)
 			const payload = {
 				...formData,
-				brand: 'GOMZI GEAR',
+				brand: formData.brand.trim() || 'MuscleBlaze',
 				bgGradient: 'linear-gradient(135deg, #e4e7ec 0%, #f4f5f8 50%, #e2e5ea 100%)',
 				url: formData.url.trim() || '/gomzi-supplement',
 			}
@@ -510,6 +538,27 @@ export default function PromoBannerManage() {
 
 							<form onSubmit={handleSubmit}>
 								<div className='modal-body p-6'>
+									{/* Select Company / Brand */}
+									<div className='mb-6'>
+										<label className='form-label fw-bold text-gray-800 required'>
+											Select Company / Brand
+										</label>
+										<select
+											className='form-select form-select-solid'
+											value={formData.brand}
+											onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+										>
+											{availableCompanies.map((cName) => (
+												<option key={cName} value={cName}>
+													{cName}
+												</option>
+											))}
+										</select>
+										<div className='form-text text-muted'>
+											Select which nutrition company this advertisement banner will represent on the homepage showcase.
+										</div>
+									</div>
+
 									{/* Offer Banner Title */}
 									<div className='mb-6'>
 										<label className='form-label fw-bold text-gray-800 required'>

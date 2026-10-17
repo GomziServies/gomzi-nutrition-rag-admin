@@ -10,10 +10,11 @@ import {
 	faArrowLeft,
 	faCircleNotch,
 	faPlus,
+	faBuilding,
 } from '@fortawesome/free-solid-svg-icons'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import { FileUploadToFGGroup, GetProduct, UpdateProduct, GetCategoriesAdmin } from '../../../Functions/FGGroup'
+import { FileUploadToFGGroup, GetProduct, UpdateProduct, GetCategoriesAdmin, GetCompaniesAdmin, CompanyItem } from '../../../Functions/FGGroup'
 import '../products-theme.css'
 
 export const EditGomziNutritionProduct: React.FC = () => {
@@ -26,6 +27,27 @@ export const EditGomziNutritionProduct: React.FC = () => {
 	const [activeSection, setActiveSection] = useState<string>('basic')
 	const [loading, setLoading] = useState<boolean>(true)
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+	const [companiesList, setCompaniesList] = useState<CompanyItem[]>([])
+	const [companyOptions, setCompanyOptions] = useState<string[]>([
+		'Gomzi Nutrition',
+		'MuscleBlaze',
+		'Optimum Nutrition',
+		'Wellcore',
+		'GNC',
+		'Isopure',
+		'Dynamite',
+		'MyProtein',
+		'Dymatize',
+		'Labrada',
+		'MuscleTech',
+		'Fast&Up',
+		'Avvatar',
+		'Ultimate Nutrition',
+		'Pure Go',
+		'Refuel 2.0',
+		'FGIIT',
+		'FWG',
+	])
 	const [categoryOptions, setCategoryOptions] = useState<{ label: string; value: string }[]>([
 		{ label: 'Whey Protein', value: 'Whey Protein' },
 		{ label: 'Mass Gainer', value: 'Mass Gainer' },
@@ -52,7 +74,35 @@ export const EditGomziNutritionProduct: React.FC = () => {
 			}
 		}
 		loadCategories()
+
+		const loadCompanies = async () => {
+			try {
+				const res: any = await GetCompaniesAdmin()
+				if (res?.data?.companies && Array.isArray(res.data.companies) && res.data.companies.length > 0) {
+					const active = res.data.companies.filter((c: any) => c.status !== false)
+					setCompaniesList(active)
+					const names = active.map((c: any) => c.name)
+					if (names.length > 0) setCompanyOptions(names)
+				}
+			} catch (error) {
+				console.error('Error fetching companies for dropdown:', error)
+			}
+		}
+		loadCompanies()
 	}, [])
+
+	const handleCompanyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const val = e.target.value
+		const matchedComp = companiesList.find((c) => c.name === val)
+		setFormData((prev: any) => ({
+			...prev,
+			company: val,
+			manufacturer: matchedComp?.manufacturer || (val === prev.company ? prev.manufacturer : ''),
+			countryOfOrigin: matchedComp?.countryOfOrigin || (val === prev.company ? prev.countryOfOrigin : 'India'),
+			fssaiLicense: matchedComp?.fssaiLicense || (val === prev.company ? prev.fssaiLicense : ''),
+			brandWebsite: matchedComp?.website || (val === prev.company ? prev.brandWebsite : ''),
+		}))
+	}
 
 	const handleCategorySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const val = e.target.value
@@ -78,6 +128,11 @@ export const EditGomziNutritionProduct: React.FC = () => {
 	const [formData, setFormData] = useState({
 		_id: '',
 		name: '',
+		company: 'Gomzi Nutrition',
+		manufacturer: '',
+		countryOfOrigin: 'India',
+		fssaiLicense: '',
+		brandWebsite: '',
 		shortDescription: '',
 		description: '',
 		price: '',
@@ -139,6 +194,11 @@ export const EditGomziNutritionProduct: React.FC = () => {
 					categories: Array.isArray(product.categories) ? product.categories.join(', ') : product.categories || '',
 					tags: Array.isArray(product.tags) ? product.tags.join(', ') : product.tags || '',
 					flavour: product.flavour || '',
+					company: product.company || 'Gomzi Nutrition',
+					manufacturer: product.manufacturer || '',
+					countryOfOrigin: product.countryOfOrigin || 'India',
+					fssaiLicense: product.fssaiLicense || '',
+					brandWebsite: product.brandWebsite || '',
 					price: String(product.price ?? ''),
 					discountPrice: String(product.discountPrice ?? ''),
 					stock: String(product.stock ?? ''),
@@ -185,7 +245,7 @@ export const EditGomziNutritionProduct: React.FC = () => {
 
 	// Section intersection observer to update active nav item on scroll
 	useEffect(() => {
-		const sections = ['basic', 'images', 'highlights', 'usage', 'benefits', 'ingredients', 'nutrition']
+		const sections = ['basic', 'company', 'images', 'highlights', 'usage', 'benefits', 'ingredients', 'nutrition']
 		const handleScroll = () => {
 			const scrollPos = window.scrollY + 160
 			for (const sec of sections) {
@@ -403,6 +463,11 @@ export const EditGomziNutritionProduct: React.FC = () => {
 			const payload: any = {
 				id: String(formData._id || product_id || ''),
 				name: formData.name.trim(),
+				company: formData.company ? formData.company.trim() : 'Gomzi Nutrition',
+				manufacturer: formData.manufacturer ? formData.manufacturer.trim() : undefined,
+				countryOfOrigin: formData.countryOfOrigin ? formData.countryOfOrigin.trim() : undefined,
+				fssaiLicense: formData.fssaiLicense ? formData.fssaiLicense.trim() : undefined,
+				brandWebsite: formData.brandWebsite ? formData.brandWebsite.trim() : undefined,
 				price: Number(formData.price),
 				discountPrice: formData.discountPrice ? Number(formData.discountPrice) : undefined,
 				stock: formData.stock ? Number(formData.stock) : 0,
@@ -559,12 +624,13 @@ export const EditGomziNutritionProduct: React.FC = () => {
 				<div className='gz-prod-sticky-nav'>
 					{[
 						{ id: 'basic', num: 1, label: 'Basic Information' },
-						{ id: 'images', num: 2, label: 'Images' },
-						{ id: 'highlights', num: 3, label: 'Highlights' },
-						{ id: 'usage', num: 4, label: 'How to make it' },
-						{ id: 'benefits', num: 5, label: 'Benefits' },
-						{ id: 'ingredients', num: 6, label: 'Ingredients' },
-						{ id: 'nutrition', num: 7, label: 'Nutrition Facts' },
+						{ id: 'company', num: 2, label: 'Company & Brand' },
+						{ id: 'images', num: 3, label: 'Images' },
+						{ id: 'highlights', num: 4, label: 'Highlights' },
+						{ id: 'usage', num: 5, label: 'How to make it' },
+						{ id: 'benefits', num: 6, label: 'Benefits' },
+						{ id: 'ingredients', num: 7, label: 'Ingredients' },
+						{ id: 'nutrition', num: 8, label: 'Nutrition Facts' },
 					].map((item) => (
 						<button
 							key={item.id}
@@ -789,7 +855,80 @@ export const EditGomziNutritionProduct: React.FC = () => {
 						</div>
 					</div>
 
-					{/* Section 2: Product Images */}
+					{/* Section 2: Company & Brand */}
+					<div className='gz-prod-form-section' id='section-company'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>Company & Brand</h3>
+								<div className='gz-prod-form-section-sub'>Select the registered company or brand for this product</div>
+							</div>
+							<Link
+								to='/rag/companies'
+								target='_blank'
+								rel='noopener noreferrer'
+								className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-1 fs-8 py-1 px-3'
+								title='Add or manage companies in catalog'>
+								<FontAwesomeIcon icon={faBuilding} />
+								<span>Manage Companies</span>
+							</Link>
+						</div>
+
+						<div className='row g-4 align-items-center'>
+							<div className='col-12 col-md-6'>
+								<div className='gz-prod-field-group mb-0'>
+									<label className='gz-prod-label'>
+										Select Company / Brand <span className='req'>*</span>
+									</label>
+									<select
+										name='company'
+										className='gz-prod-select'
+										value={formData.company}
+										onChange={handleCompanyChange}>
+										<option value=''>-- Select Company / Brand --</option>
+										{Array.from(
+											new Set([
+												...companyOptions,
+												...(formData.company ? [formData.company] : []),
+											])
+										)
+											.filter(Boolean)
+											.map((comp, idx) => (
+												<option key={idx} value={comp}>
+													{comp}
+												</option>
+											))}
+									</select>
+								</div>
+							</div>
+
+							{(() => {
+								const activeComp = companiesList.find((c) => c.name === formData.company)
+								if (!formData.company) return null
+								const origin = activeComp?.countryOfOrigin || formData.countryOfOrigin
+								const fssai = activeComp?.fssaiLicense || formData.fssaiLicense
+								const manufacturer = activeComp?.manufacturer || formData.manufacturer
+								return (
+									<div className='col-12 col-md-6'>
+										<div className='p-3 rounded bg-light border d-flex align-items-center gap-3'>
+											<div
+												className='rounded bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0'
+												style={{ width: 40, height: 40 }}>
+												<FontAwesomeIcon icon={faBuilding} />
+											</div>
+											<div className='flex-grow-1 min-w-0'>
+												<div className='fw-bold text-dark fs-7'>{formData.company}</div>
+												<div className='text-muted fs-8 text-truncate'>
+													{[manufacturer, origin, fssai ? `FSSAI: ${fssai}` : ''].filter(Boolean).join(' • ') || 'Configured in Companies Master'}
+												</div>
+											</div>
+										</div>
+									</div>
+								)
+							})()}
+						</div>
+					</div>
+
+					{/* Section 3: Product Images */}
 					<div className='gz-prod-form-section' id='section-images'>
 						<div className='gz-prod-form-section-header'>
 							<div>

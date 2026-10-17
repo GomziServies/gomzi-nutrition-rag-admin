@@ -100,6 +100,8 @@ import { GomziNutritionAddTrainer } from '../pages/gomzi-nutrition/trainers/add-
 import GomziNutritionTrainerDetail from '../pages/gomzi-nutrition/trainers/trainer-list'
 import HeroBannerManage from '../pages/gomzi-nutrition/hero-banner/hero-banner-manage'
 import CategoryManage from '../pages/gomzi-nutrition/categories/category-manage'
+import CompanyManage from '../pages/gomzi-nutrition/companies/company-manage'
+import CompanyAdManage from '../pages/gomzi-nutrition/company-ads/company-ad-manage'
 import BlogManage from '../pages/gomzi-nutrition/blogs/blog-manage'
 import DealManage from '../pages/gomzi-nutrition/deals/deal-manage'
 import PromoBannerManage from '../pages/gomzi-nutrition/promo-banners/promo-banner-manage'
@@ -121,6 +123,14 @@ const GomziNutritionPrivateRoutes = () => {
 				<Route
 					path='/categories'
 					element={<CategoryManage />}
+				/>
+				<Route
+					path='/companies'
+					element={<CompanyManage />}
+				/>
+				<Route
+					path='/company-ads'
+					element={<CompanyAdManage />}
 				/>
 				<Route
 					path='/blogs'

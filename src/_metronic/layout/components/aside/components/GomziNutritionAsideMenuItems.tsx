@@ -76,6 +76,12 @@ export function GomziNutritionAsideMenuItems() {
 				title='Bank Offers Banner'
 			/>
 
+			<AsideMenuItem
+				to='/rag/company-ads'
+				Icon={faBullhorn}
+				title='Company Advertisements'
+			/>
+
 			{isMasterAdmin && (
 				<AsideMenuItem
 					to='/rag/admin'
@@ -97,6 +103,11 @@ export function GomziNutritionAsideMenuItems() {
 				<AsideMenuItem
 					to='/rag/categories'
 					title='Product Categories'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/companies'
+					title='Companies & Brands'
 					hasBullet={true}
 				/>
 				<AsideMenuItem

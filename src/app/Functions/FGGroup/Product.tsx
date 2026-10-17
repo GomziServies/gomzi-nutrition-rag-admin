@@ -4,6 +4,11 @@ import * as FGGroupEndpoints from '../../constants/fg_group_endpoints'
 
 export interface ProductPayload {
 	name: string
+	company?: string
+	manufacturer?: string
+	countryOfOrigin?: string
+	fssaiLicense?: string
+	brandWebsite?: string
 	displayImages: string[]
 	price: number
 	discountPrice?: number | null
@@ -31,9 +36,7 @@ export function AddProduct(body: ProductPayload): Promise<FGGroupAPIResponse> {
 
 export function UpdateProduct(body: {
 	id: string
-	name?: string
-	display_image?: string
-	price?: number
+	[key: string]: any
 }): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.UpdateProduct, getAPIHeaders('fg_group'), undefined, body)
 }

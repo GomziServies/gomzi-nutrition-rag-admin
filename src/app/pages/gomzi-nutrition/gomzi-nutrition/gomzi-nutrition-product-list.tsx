@@ -177,6 +177,7 @@ const GomziNutritionProductList: React.FC = () => {
 			return {
 				'No.': idx + 1,
 				'Product Name': product?.name || 'N/A',
+				Company: product?.company || 'Gomzi Nutrition',
 				Flavour: product?.flavour || 'N/A',
 				Category: catDisplay,
 				Stock: stockVal,
@@ -484,9 +485,18 @@ const GomziNutritionProductList: React.FC = () => {
 													)}
 													<div className='gz-prod-identity-info'>
 														<span className='gz-prod-name'>{product.name}</span>
-														{product.flavour && (
-															<span className='gz-prod-subtext'>{product.flavour}</span>
-														)}
+														<div className='d-flex align-items-center gap-1 flex-wrap mt-1'>
+															{product.company && (
+																<span
+																	className='badge badge-light-primary fw-semibold'
+																	style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px' }}>
+																	{product.company}
+																</span>
+															)}
+															{product.flavour && (
+																<span className='gz-prod-subtext'>{product.flavour}</span>
+															)}
+														</div>
 													</div>
 												</div>
 											</td>

@@ -71,4 +71,6 @@ export * from './NutritionPromoBanner'
 
 
 export * from './BankOffer'
+export * from './Company'
+export * from './CompanyAd'
 
