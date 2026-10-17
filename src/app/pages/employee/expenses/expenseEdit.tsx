@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Button, Form, Row, Col } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
 import { GetExpenseReports, UpdateExpenseReport } from '../../../Functions/FGGroup/ExpenseReport'
@@ -266,9 +268,46 @@ const EmployeeExpenseEdit: React.FC = () => {
 
     if (loadingData) {
         return (
-            <div className='d-flex align-items-center justify-content-center py-20'>
-                <div className='spinner-border text-primary' role='status'>
-                    <span className='visually-hidden'>Loading...</span>
+            <div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+                <div className='card-header border-0 pt-6 pb-4 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+                    <div className='d-flex align-items-center gap-3'>
+                        <div className='gz-skeleton rounded' style={{ width: '75px', height: '32px' }} />
+                        <div className='d-flex flex-column gap-1.5'>
+                            <div className='gz-skeleton rounded' style={{ width: '180px', height: '22px' }} />
+                            <div className='gz-skeleton rounded' style={{ width: '240px', height: '14px' }} />
+                        </div>
+                    </div>
+                    <div className='gz-skeleton rounded' style={{ width: '140px', height: '32px' }} />
+                </div>
+                <div className='card-body pt-4'>
+                    <div className='row mb-6'>
+                        <div className='col-md-6 mb-4'>
+                            <div className='gz-skeleton rounded mb-2' style={{ width: '100px', height: '14px' }} />
+                            <div className='gz-skeleton rounded w-100' style={{ height: '42px' }} />
+                        </div>
+                        <div className='col-md-6 mb-4'>
+                            <div className='gz-skeleton rounded mb-2' style={{ width: '80px', height: '14px' }} />
+                            <div className='gz-skeleton rounded w-100' style={{ height: '42px' }} />
+                        </div>
+                    </div>
+                    <div className='mb-6'>
+                        <div className='gz-skeleton rounded mb-3' style={{ width: '140px', height: '16px' }} />
+                        {[...Array(2)].map((_, idx) => (
+                            <div key={idx} className='p-4 border rounded mb-3'>
+                                <div className='row'>
+                                    <div className='col-md-4 mb-3'>
+                                        <div className='gz-skeleton rounded w-100' style={{ height: '40px' }} />
+                                    </div>
+                                    <div className='col-md-5 mb-3'>
+                                        <div className='gz-skeleton rounded w-100' style={{ height: '40px' }} />
+                                    </div>
+                                    <div className='col-md-3 mb-3'>
+                                        <div className='gz-skeleton rounded w-100' style={{ height: '40px' }} />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         )
@@ -288,7 +327,7 @@ const EmployeeExpenseEdit: React.FC = () => {
                             style={{ borderRadius: '8px' }}
                             onClick={() => navigate(`/employee/expense-view?id=${reportId}`)}
                             disabled={loading}>
-                            <i className='bi bi-arrow-left fs-6'></i>
+                            <FontAwesomeIcon icon={faArrowLeft} className='fs-6' />
                             <span>Back</span>
                         </button>
                         <div>

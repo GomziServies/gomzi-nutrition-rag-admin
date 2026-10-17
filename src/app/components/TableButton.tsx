@@ -154,6 +154,8 @@ const TableButton: FC<Props> = ({
 				return 'View'
 			case 'assign':
 				return 'Assign'
+			case 'download':
+				return 'Download'
 			case 'approve':
 				return 'Approve'
 			case 'send':

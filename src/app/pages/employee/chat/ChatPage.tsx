@@ -1,14 +1,23 @@
-import { faChevronLeft, faFile, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import {
+	faChevronLeft,
+	faEllipsisVertical,
+	faFile,
+	faMagnifyingGlass,
+	faPhone,
+	faRightFromBracket,
+	faThumbtack,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useEffect, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import { Link, useNavigate } from 'react-router-dom'
-import { KTIcon, toAbsoluteUrl } from '../../../../_metronic/helpers'
+import { toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle, useLayout } from '../../../../_metronic/layout/core'
 import { GetAdminUsers } from '../../../Functions/FGGroup'
 import { GetEmployeeChatHistory } from '../../../Functions/FGGroup/EmployeeChat'
 import { EmployeeChatInner } from './ChatInner'
+import './employee-chat.css'
 
 const EmployeeChatPage = () => {
 	const navigate = useNavigate()
@@ -30,52 +39,60 @@ const EmployeeChatPage = () => {
 		async (page = 1, reset = false) => {
 			setLoading(true)
 			try {
-				let response: any
-
-				response = await GetAdminUsers()
-
-				let { data } = response
+				const response: any = await GetAdminUsers()
+				const { data } = response
 				let filteredData = data
 
-				filteredData = filteredData.find((employee: any) => employee.type == 'MASTER')
+				let masterUser: any = null
+				if (Array.isArray(filteredData)) {
+					masterUser = filteredData.find((employee: any) => employee.type === 'MASTER') || filteredData[0]
+					setUserData(masterUser ? [masterUser] : filteredData)
+				} else if (filteredData) {
+					masterUser = filteredData
+					setUserData([filteredData])
+				}
 
-				setUserData([filteredData])
-
-				fetchChatData(filteredData._id)
+				if (masterUser?._id) {
+					fetchChatData(masterUser._id)
+					if (!userId) {
+						userHandle(
+							masterUser?.full_name || 'System @ FG Group',
+							masterUser._id,
+							masterUser?.photo ? `https://files.fggroup.in/` + masterUser.photo : ''
+						)
+					}
+				}
 
 				setPagination((prev) => ({
 					...prev,
-					totalPages: response?.metadata?.pagination?.totalPages,
-					// || chat_response?.metadata?.pagination?.totalPages,
+					totalPages: response?.metadata?.pagination?.totalPages || 1,
 					page,
 				}))
 			} catch (error) {
-				console.error(error)
+				console.error('Error fetching admin users for employee chat:', error)
 			}
 			setLoading(false)
 		},
-		[pagination.itemsPerPage, searchTerm]
+		[pagination.itemsPerPage, userId]
 	)
 
 	const fetchChatData = async (id?: any) => {
+		if (!id) return
 		try {
 			const response = await GetEmployeeChatHistory({ participant: id })
-			const filteredResponse = response?.data[response?.data?.length - 1]
-
-			let messageFromAdmin = false
-			if (filteredResponse.from == id) {
-				messageFromAdmin = true
+			if (response?.data && response.data.length > 0) {
+				const filteredResponse = response.data[response.data.length - 1]
+				const messageFromAdmin = filteredResponse?.from === id
+				setMessages({ ...filteredResponse, messageFromAdmin })
 			}
 
-			setMessages({ ...filteredResponse, messageFromAdmin })
-
-			// Scroll to the latest message
+			// Scroll to latest message
 			const messagesDiv = document.querySelector('[data-kt-element="messages"]')
 			if (messagesDiv) {
 				messagesDiv.scrollTop = messagesDiv.scrollHeight
 			}
 		} catch (error) {
-			console.error(error)
+			console.error('Error fetching employee chat history:', error)
 		}
 	}
 
@@ -91,12 +108,12 @@ const EmployeeChatPage = () => {
 	}, [fetchUserData])
 
 	const userHandle = (full_name: any, id: any, profile: any) => {
-		const profileImg = profile
-		const name = `${full_name}`
+		const profileImg = profile || ''
+		const name = full_name ? `${full_name}` : 'System @ FG Group'
 		setCurrentUser({ name, profileImg })
 		setUserId(id)
 	}
-	const displayedIds = new Set()
+
 	const truncateText = (text: string | null | undefined, length: number) => {
 		if (!text) {
 			return (
@@ -111,326 +128,336 @@ const EmployeeChatPage = () => {
 		return text.substring(0, length) + '...'
 	}
 
-	const backPage = () => {
-		navigate('/employee/dashboard')
-	}
-
 	const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm)
 
 	useEffect(() => {
 		const handler = setTimeout(() => {
 			setSearchTerm(localSearchTerm)
-		}, 700)
+		}, 300)
 
 		return () => {
 			clearTimeout(handler)
 		}
-	}, [localSearchTerm, setSearchTerm])
+	}, [localSearchTerm])
+
+	const displayedUsers = userData.filter((user: any) => {
+		if (!searchTerm.trim()) return true
+		return user?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+	})
 
 	return (
 		<>
-			<div className='d-flex flex-column flex-lg-row p-0'>
-				<PageTitle breadcrumbs={[]}>Chat</PageTitle>
-				<div
-					className={`flex-column flex-lg-row-auto w-100 w-lg-350px w-xl-350px mb-0  ${
-						userId ? 'd-md-block d-none' : 'd-md-block d-block'
-					} `}>
-					<div
-						className='card card-flush whatsapp-msg-box'
-						id='style-4'
-						style={{ zIndex: '10' }}>
-						{/* Header */}
-						<div
-							className='card-header px-4 py-3'
-							id='kt_chat_contacts_header'
-							style={{ backgroundColor: '#0F172A', borderRadius: '0px' }}>
-							<div className='w-100 d-flex align-items-center justify-content-between'>
-								<div className='d-flex align-items-center'>
-									<div className='me-3'>
-										<img
-											alt='Logo'
-											src={toAbsoluteUrl('/media/logos/rag-favicon-logo.png')}
-											className='h-30px'
-										/>
-									</div>
-									<div>
-										<h2 className='text-white mb-0 fs-3 fw-bolder'>Chats</h2>
-									</div>
-								</div>
-								<Link
-									to='/employee/dashboard'
-									className='btn btn-sm btn-white d-flex align-items-center gap-2 px-3 py-1 shadow-sm'
-									style={{ backgroundColor: '#ffffff', borderRadius: '6px' }}
-									title='Exit to Dashboard'>
-									<FontAwesomeIcon
-										icon={faRightFromBracket}
-										className='fs-6'
-										style={{ color: '#0F172A' }}
-									/>
-									<span className='fs-7 fw-bold' style={{ color: '#0F172A' }}>
-										Exit
-									</span>
-								</Link>
-							</div>
-						</div>
+			<PageTitle breadcrumbs={[]}>Chat</PageTitle>
 
-						{/* Chat List */}
-						<div>
-							<div
-								className='pt-3 px-4 chat-text-color'
-								id='kt_chat_contacts_body'>
-								<div
-									className='pb-3'
-									style={{ borderBottom: '1px solid #ccc' }}>
-									<div className='d-flex align-items-center position-relative'>
-										<KTIcon
-											iconName='magnifier'
-											className='fs-1 position-absolute ms-6'
+			<div
+				className='gz-emp-chat-container'>
+				{/* --------------------------------------------------------
+				   Left Panel: Conversations Inbox
+				   -------------------------------------------------------- */}
+				<div
+					className={`gz-emp-sidebar ${userId ? 'd-none d-lg-flex' : 'd-flex'}`}
+					id='kt_chat_contacts_sidebar'>
+					{/* Top Header: GOMZI Logo & Exit Action */}
+					<div className='gz-emp-sidebar-header' id='kt_chat_contacts_header'>
+						<div className='gz-emp-logo-lockup'>
+							<img
+								alt='GOMZI'
+								src={toAbsoluteUrl('/media/logos/rag-favicon-logo.png')}
+								className='gz-emp-logo-mark'
+							/>
+							<span className='gz-emp-logo-text'>GOMZI</span>
+						</div>
+						<Link
+							to='/employee/dashboard'
+							className='gz-emp-exit-icon-btn'
+							title='Exit to Dashboard'>
+							<FontAwesomeIcon icon={faRightFromBracket} />
+						</Link>
+					</div>
+
+					{/* Messages Heading with Lavender Badge */}
+					<div className='gz-emp-heading-row'>
+						<h1 className='gz-emp-heading-title'>Messages</h1>
+						<span className='gz-emp-badge-pill'>{displayedUsers.length || 1}</span>
+					</div>
+
+					{/* WhatsApp-Style Rounded Search Bar */}
+					<div className='gz-emp-search-wrap'>
+						<div className='gz-emp-search-box'>
+							<FontAwesomeIcon icon={faMagnifyingGlass} className='gz-emp-search-icon' />
+							<input
+								type='text'
+								data-kt-user-table-filter='search'
+								className='gz-emp-search-input'
+								placeholder='Search conversations...'
+								value={localSearchTerm}
+								onChange={(e) => setLocalSearchTerm(e.target.value)}
+							/>
+						</div>
+					</div>
+
+					{/* Conversation List */}
+					<div className='gz-emp-contacts-scroll' id='scrollableDiv'>
+						{loading && (!userData || userData.length === 0) ? (
+							<div className='p-3 d-flex flex-column gap-3'>
+								{[...Array(5)].map((_, idx) => (
+									<div key={idx} className='d-flex align-items-center gap-3 py-2'>
+										<div
+											className='gz-skeleton rounded-circle'
+											style={{ width: '46px', height: '46px', flexShrink: 0 }}
 										/>
-										<input
-											type='text'
-											data-kt-user-table-filter='search'
-											className='form-control form-control-solid bg-secondary ps-14'
-											placeholder='Search...'
-											value={localSearchTerm}
-											onChange={(e) => setLocalSearchTerm(e.target.value)}
-										/>
+										<div className='d-flex flex-column gap-2 flex-grow-1'>
+											<div
+												className='gz-skeleton rounded'
+												style={{ width: '60%', height: '14px' }}
+											/>
+											<div
+												className='gz-skeleton rounded'
+												style={{ width: '40%', height: '11px' }}
+											/>
+										</div>
 									</div>
-								</div>
-								<div
-									className='scroll-y me-n5 pe-5 smooth-scroll'
-									data-kt-scroll='true'
-									id='scrollableDiv'
-									data-kt-scroll-activate='{default: false, lg: true}'
-									data-kt-scroll-dependencies='#kt_header, #kt_toolbar, #kt_footer, #kt_chat_contacts_header'
-									data-kt-scroll-wrappers='#kt_content, #kt_chat_contacts_body'
-									data-kt-scroll-offset='0px'
-									style={{ height: 'calc(100vh - 153px)', overflow: 'auto' }}>
-									{userData?.length === 0 ? (
-										<div className='text-muted fs-4 fw-bold text-center'>No chat found.</div>
-									) : (
-										<InfiniteScroll
-											dataLength={userData?.length}
-											next={loadMore}
-											hasMore={pagination.page < pagination.totalPages}
-											loader={
-												<div className='d-flex justify-content-center align-items-center mb-4 my-7'>
-													<div
-														className='spinner-border text-primary'
-														role='status'>
-														<span className='visually-hidden'>Loading...</span>
+								))}
+							</div>
+						) : displayedUsers.length === 0 ? (
+							<div className='text-muted fs-6 fw-bold text-center py-10'>No chat found.</div>
+						) : (
+							<InfiniteScroll
+								dataLength={displayedUsers.length}
+								next={loadMore}
+								hasMore={pagination.page < pagination.totalPages}
+								loader={
+									<div className='d-flex justify-content-center align-items-center my-4'>
+										<div className='spinner-border text-primary' role='status'>
+											<span className='visually-hidden'>Loading...</span>
+										</div>
+									</div>
+								}
+								endMessage={null}
+								scrollableTarget='scrollableDiv'
+								pullDownToRefresh
+								pullDownToRefreshThreshold={50}
+								pullDownToRefreshContent={
+									<h3 style={{ textAlign: 'center' }}>&#8595; Pull down to refresh</h3>
+								}
+								releaseToRefreshContent={
+									<h3 style={{ textAlign: 'center' }}>&#8593; Release to refresh</h3>
+								}
+								refreshFunction={() => fetchUserData(1, true)}>
+								{displayedUsers.map((user: any) => {
+									const isSelected = user._id === userId
+									const photoUrl = user?.employee?.photo || user?.photo
+									const lastTimeStr = messages?.createdAt
+										? DayJS().isSame(DayJS(messages?.createdAt), 'day')
+											? DayJS(messages?.createdAt).format('h:mm A')
+											: DayJS().subtract(1, 'day').isSame(DayJS(messages?.createdAt), 'day')
+											? 'Yesterday'
+											: DayJS(messages?.createdAt).format('MMM D, YYYY')
+										: 'Sep 21, 2026'
+
+									return (
+										<button
+											key={user._id}
+											className={`gz-emp-contact-card ${isSelected ? 'is-active' : ''}`}
+											onClick={() =>
+												userHandle(
+													user?.full_name,
+													user._id,
+													photoUrl ? `https://files.fggroup.in/` + photoUrl : ''
+												)
+											}>
+											<div className='d-flex align-items-center justify-content-between'>
+												<div className='d-flex align-items-center' style={{ minWidth: 0 }}>
+													<div className='gz-emp-avatar me-3'>
+														{photoUrl ? (
+															<img
+																alt='Avatar'
+																src={`https://files.fggroup.in/` + photoUrl}
+															/>
+														) : (
+															<span>{user?.full_name?.charAt(0).toUpperCase() || 'S'}</span>
+														)}
 													</div>
-												</div>
-											}
-											endMessage={
-												<p
-													style={{ textAlign: 'center' }}
-													className='p-3'>
-													<b>Yay! You have seen it all</b>
-												</p>
-											}
-											scrollableTarget='scrollableDiv'
-											pullDownToRefresh
-											pullDownToRefreshThreshold={50}
-											pullDownToRefreshContent={
-												<h3 style={{ textAlign: 'center' }}>&#8595; Pull down to refresh</h3>
-											}
-											releaseToRefreshContent={
-												<h3 style={{ textAlign: 'center' }}>&#8593; Release to refresh</h3>
-											}
-											refreshFunction={() => fetchUserData(1, true)}>
-											{userData?.map((user) => (
-												<button
-													key={user._id}
-													className='btn p-0 w-100'
-													style={{ borderBottom: '1px solid #ccc' }}
-													onClick={() =>
-														userHandle(
-															user?.full_name,
-															user._id,
-															`https://files.fggroup.in/` + user?.employee?.photo
-														)
-													}>
-													<div className='d-flex flex-stack py-4'>
-														<div className='d-flex align-items-center'>
-															{user?.employee?.photo ? (
-																<div className='symbol symbol-45px symbol-circle'>
-																	<img
-																		alt='Pic'
-																		src={`https://files.fggroup.in/` + user?.employee?.photo}
-																	/>
-																</div>
-															) : (
-																<div className='symbol symbol-45px symbol-circle'>
-																	<span
-																		className='symbol-label text-white fs-6 fw-bolder'
-																		style={{ backgroundColor: '#2d2d43' }}>
-																		{user?.full_name?.charAt(0).toUpperCase()}
-																	</span>
-																</div>
-															)}
-															<div className='ms-5'>
-																<p className='text-start fs-6 fw-bolder text-gray-900 text-hover-primary mb-0'>
-																	{user?.full_name}
-																</p>
-																<div
-																	className={`fw-bold ${
-																		messages.messageFromAdmin ? 'text-primary' : 'text-gray-400'
-																	}  fs-7`}>
-																	{messages?.message ? (
-																		<b title={messages?.message}>
-																			{truncateText(messages?.message, 20)}
-																		</b>
-																	) : (
-																		''
-																	)}
-																</div>
-															</div>
+													<div className='text-truncate' style={{ minWidth: 0 }}>
+														<p
+															className='text-start fw-bold mb-0 text-truncate'
+															style={{ color: '#0F172A', fontSize: '15px' }}>
+															{user?.full_name || 'System @ FG Group'}
+														</p>
+														<div
+															className='text-start text-truncate'
+															style={{ fontSize: '13px', color: '#64748B' }}>
+															{user?.type ? user.type.toLowerCase() : 'demo'}
 														</div>
-														<div className='d-flex flex-column align-items-end ms-2'>
-															<span className='text-muted fs-7 mb-1'>
-																{DayJS().isSame(DayJS(messages?.createdAt), 'day')
-																	? DayJS(messages?.createdAt).format('h:mm A')
-																	: DayJS()
-																			.subtract(1, 'day')
-																			.isSame(DayJS(messages?.createdAt), 'day')
-																	? 'Yesterday'
-																	: DayJS(messages?.createdAt).format('MMM D, YYYY')}
+														<div
+															className='text-start text-truncate'
+															style={{
+																fontSize: '12.5px',
+																color: '#64748B',
+																marginTop: '1px',
+															}}>
+															<span title={messages?.message}>
+																{messages?.message
+																	? truncateText(messages.message, 24)
+																	: 'Yay! You have seen it all'}
 															</span>
 														</div>
 													</div>
-													<div className='separator separator-dashed d-none'></div>
-												</button>
-											))}
-										</InfiniteScroll>
-									)}
-								</div>
-							</div>
-							<div
-								className='whatsapp-footer'
-								style={{
-									backgroundColor: '#2d2d43',
-									width: '100%',
-									height: '20px',
-									borderRadius: '0px',
-								}}></div>
-						</div>
+												</div>
+												<div
+													className='d-flex flex-column align-items-end justify-content-between flex-shrink-0 ms-2'
+													style={{ height: '52px' }}>
+													<span style={{ fontSize: '11px', color: '#94A3B8' }}>
+														{lastTimeStr}
+													</span>
+													{isSelected ? (
+														<span
+															style={{
+																color: '#7C3AED',
+																fontSize: '13px',
+																marginBottom: '2px',
+															}}
+															title='Pinned'>
+															<FontAwesomeIcon icon={faThumbtack} />
+														</span>
+													) : (
+														<span style={{ height: '14px' }}></span>
+													)}
+												</div>
+											</div>
+										</button>
+									)
+								})}
+							</InfiniteScroll>
+						)}
 					</div>
 				</div>
 
-				{/* chat section */}
+				{/* --------------------------------------------------------
+				   Right Panel: Chat Workspace
+				   -------------------------------------------------------- */}
 				{userId ? (
 					<div
-						className={`flex-lg-row-fluid  ${userId ? 'd-md-block d-block' : 'd-md-block d-none'}`}>
-						<div
-							className='card'
-							id='kt_chat_messenger'>
-							<div
-								className='card-header-1 d-flex flex-nowrap align-items-center justify-content-between px-4 py-3'
-								id='kt_chat_messenger_header'
-								style={{ backgroundColor: '#0F172A', borderRadius: '0px' }}>
-								<div className='card-title mb-0'>
-									<div className='symbol-group symbol-hover'></div>
-									<div className='d-flex justify-content-center flex-column me-3'>
-										<div className='fs-4 fw-bolder d-flex align-items-center text-white mb-0 me-1'>
-											<div
-												role='button'
-												onClick={() => setUserId('')}
-												title='Back to contacts'>
-												<FontAwesomeIcon
-													icon={faChevronLeft}
-													className='me-4 text-white fs-4'
-												/>
-											</div>
-											{currentUser?.profileImg !== 'https://files.fggroup.in/undefined' ? (
-												<div className='symbol symbol-40px symbol-circle me-3'>
-													<img
-														alt='Pic'
-														src={toAbsoluteUrl(currentUser.profileImg)}
-													/>
-												</div>
-											) : currentUser.name ? (
-												<div className='symbol symbol-40px symbol-circle me-3'>
-													<span className='symbol-label bg-white text-dark fs-6 fw-bolder'>
-														{currentUser.name[0]}
-													</span>
-												</div>
-											) : (
-												''
-											)}
-											<span>{currentUser.name.includes('undefined') ? 'FG User' : currentUser.name}</span>
-										</div>
-									</div>
+						className={`gz-emp-workspace ${userId ? 'd-flex' : 'd-none d-lg-flex'}`}
+						id='kt_chat_messenger'>
+						{/* Clean Workspace Header matching Mockup */}
+						<div className='gz-emp-workspace-header' id='kt_chat_messenger_header'>
+							<div className='d-flex align-items-center gap-3'>
+								<button
+									type='button'
+									title='Back to list'
+									onClick={() => setUserId('')}
+									className='gz-emp-header-action-btn d-lg-none d-flex'>
+									<FontAwesomeIcon icon={faChevronLeft} />
+								</button>
+								<div className='gz-emp-avatar' style={{ width: '42px', height: '42px', fontSize: '16px' }}>
+									{currentUser?.profileImg &&
+									currentUser.profileImg !== 'https://files.fggroup.in/undefined' ? (
+										<img alt='Avatar' src={toAbsoluteUrl(currentUser.profileImg)} />
+									) : (
+										<span>{currentUser.name ? currentUser.name[0] : 'S'}</span>
+									)}
 								</div>
-
-								<div className='card-toolbar d-flex align-items-center gap-2'>
-									<Link
-										to='/employee/dashboard'
-										className='btn btn-sm btn-white d-flex align-items-center gap-2 px-3 py-1 shadow-sm me-2'
-										style={{ backgroundColor: '#ffffff', borderRadius: '6px' }}
-										title='Exit to Dashboard'>
-										<FontAwesomeIcon
-											icon={faRightFromBracket}
-											className='fs-6'
-											style={{ color: '#0F172A' }}
-										/>
-										<span className='fs-7 fw-bold' style={{ color: '#0F172A' }}>
-											Exit
-										</span>
-									</Link>
-
-									<div className='dropdown'>
-										<button
-											className='btn btn-sm btn-icon btn-color-white btn-active-white'
-											style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-											type='button'
-											id='dropdownMenuButton'
-											data-bs-toggle='dropdown'
-											aria-expanded='false'>
-											<i className='bi bi-three-dots fs-2 text-white'></i>
-										</button>
-										<ul
-											className='dropdown-menu dropdown-menu-end'
-											aria-labelledby='dropdownMenuButton'>
-											<li>
-												<Link
-													to={'/fwg/users/user-view-details?user_id=' + userId}
-													className='dropdown-item'>
-													View User
-												</Link>
-											</li>
-										</ul>
+								<div>
+									<div
+										style={{
+											fontSize: '16px',
+											fontWeight: 700,
+											color: '#0F172A',
+											lineHeight: 1.2,
+										}}>
+										{currentUser.name && !currentUser.name.includes('undefined')
+											? currentUser.name
+											: 'System @ FG Group'}
+									</div>
+									<div style={{ fontSize: '12.5px', color: '#64748B', marginTop: '2px' }}>
+										demo
 									</div>
 								</div>
 							</div>
-							<div>
-								<EmployeeChatInner id={userId} />
+
+							<div className='d-flex align-items-center gap-2'>
+								<button
+									type='button'
+									className='gz-emp-header-action-btn'
+									title='Search conversation'>
+									<FontAwesomeIcon icon={faMagnifyingGlass} style={{ fontSize: '13px' }} />
+								</button>
+								<button
+									type='button'
+									className='gz-emp-header-action-btn'
+									title='Call Support'>
+									<FontAwesomeIcon icon={faPhone} style={{ fontSize: '13px' }} />
+								</button>
+								<div
+									style={{
+										width: '1px',
+										height: '20px',
+										background: '#E2E8F0',
+										margin: '0 4px',
+									}}
+								/>
+								<div className='dropdown'>
+									<button
+										className='gz-emp-header-action-btn'
+										type='button'
+										id='chatMoreMenu'
+										data-bs-toggle='dropdown'
+										aria-expanded='false'
+										title='More options'>
+										<FontAwesomeIcon icon={faEllipsisVertical} style={{ fontSize: '14px' }} />
+									</button>
+									<ul
+										className='dropdown-menu dropdown-menu-end shadow-sm'
+										aria-labelledby='chatMoreMenu'>
+										<li>
+											<Link
+												to={'/fwg/users/user-view-details?user_id=' + userId}
+												className='dropdown-item'>
+												View Profile
+											</Link>
+										</li>
+										<li>
+											<Link to='/employee/dashboard' className='dropdown-item text-danger'>
+												Exit to Dashboard
+											</Link>
+										</li>
+									</ul>
+								</div>
 							</div>
+						</div>
+
+						{/* Messages and Input Bar */}
+						<div className='flex-grow-1' style={{ position: 'relative', overflow: 'hidden' }}>
+							<EmployeeChatInner id={userId} />
 						</div>
 					</div>
 				) : (
-					<div className='flex-lg-row-fluid d-md-block d-none'>
-						<div
-							className='card h-100 w-100 d-flex flex-column justify-content-center align-items-center p-8'
-							id='kt_chat_messenger'
-							style={{ minHeight: 'calc(100vh - 80px)' }}>
+					<div
+						className='gz-emp-workspace d-none d-lg-flex justify-content-center align-items-center'
+						style={{ background: '#F8FAFD' }}>
+						<div className='text-center p-8' style={{ maxWidth: '420px' }}>
 							<div
-								className='rounded-circle d-flex align-items-center justify-content-center mb-4'
+								className='d-inline-flex align-items-center justify-content-center mb-4'
 								style={{
-									width: '80px',
-									height: '80px',
-									background: 'var(--gz-brand-soft)',
-									color: 'var(--gz-brand)',
+									width: '72px',
+									height: '72px',
+									borderRadius: '50%',
+									background: '#EDE9FE',
+									color: '#7C3AED',
 								}}>
-								<i className='bi bi-chat-dots-fill fs-2tx' style={{ color: 'var(--gz-brand)' }}></i>
+								<i className='bi bi-chat-dots-fill fs-2x' style={{ color: '#7C3AED' }}></i>
 							</div>
-							<h2 className='fw-bold text-gray-800 mb-2'>Select User to see chat</h2>
-							<p className='text-muted fs-6 mb-5' style={{ maxWidth: '340px', textAlign: 'center' }}>
-								Pick a conversation from the left to start messaging, or return to your employee workspace.
+							<h3 className='fw-bold mb-2' style={{ color: '#0F172A' }}>
+								Select a conversation
+							</h3>
+							<p className='fs-6 mb-4' style={{ color: '#64748B' }}>
+								Choose a conversation from the left inbox to view message history, send documents, and communicate with support.
 							</p>
 							<Link
 								to='/employee/dashboard'
-								className='btn btn-sm btn-primary px-4 py-2 d-flex align-items-center gap-2'>
+								className='btn btn-sm px-4 py-2 d-inline-flex align-items-center gap-2'
+								style={{ background: '#172B4D', color: '#FFFFFF', borderRadius: '12px' }}>
 								<FontAwesomeIcon icon={faChevronLeft} />
 								<span>Back to Dashboard</span>
 							</Link>

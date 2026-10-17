@@ -96,15 +96,39 @@ const EmployeeRatingManager: React.FC = () => {
 
 				<div className='card-body py-4 px-6'>
 					{loading ? (
-						<div className='d-flex justify-content-center align-items-center py-12'>
-							<div className='spinner-border text-primary' role='status'>
-								<span className='visually-hidden'>Loading...</span>
+						<div>
+							{/* Top Rating Banner Skeleton */}
+							<div className='p-5 mb-6 rounded-3' style={{ background: '#F8FAFD', border: '1px solid #E2E8F0' }}>
+								<div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
+									<div className='d-flex align-items-center gap-4'>
+										<div className='gz-skeleton rounded-3' style={{ width: '64px', height: '64px' }} />
+										<div className='d-flex flex-column gap-2'>
+											<div className='gz-skeleton rounded' style={{ width: '120px', height: '14px' }} />
+											<div className='gz-skeleton rounded' style={{ width: '180px', height: '28px' }} />
+										</div>
+									</div>
+									<div className='gz-skeleton rounded' style={{ width: '140px', height: '36px' }} />
+								</div>
+							</div>
+
+							{/* 3 Metrics Cards Skeleton */}
+							<div className='row g-4 mb-6'>
+								{[...Array(3)].map((_, idx) => (
+									<div key={idx} className='col-md-4'>
+										<div className='p-5 rounded-3 border bg-light'>
+											<div className='gz-skeleton rounded mb-2' style={{ width: '90px', height: '14px' }} />
+											<div className='gz-skeleton rounded' style={{ width: '60px', height: '24px' }} />
+										</div>
+									</div>
+								))}
 							</div>
 						</div>
 					) : Object.keys(rattingData || {}).length === 0 ? (
 						<div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
 							<div className='symbol symbol-60px mb-4'>
-								<span className='symbol-label bg-light-warning text-warning fs-2'>⭐</span>
+								<span className='symbol-label bg-light-warning text-warning fs-2'>
+									<FontAwesomeIcon icon={faStar} />
+								</span>
 							</div>
 							<h5 className='fw-bold text-gray-800 mb-1'>No Rating Records Found</h5>
 							<p className='text-muted fs-7 mb-0'>Try selecting a different date range to view your rating report.</p>

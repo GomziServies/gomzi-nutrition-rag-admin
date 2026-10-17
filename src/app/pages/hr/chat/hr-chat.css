@@ -111,19 +111,19 @@
 
 /* Message Bubbles */
 .gz-chat-bubble-sender {
-	background: #1e3a5f !important;
+	background: linear-gradient(135deg, #1e3a5f 0%, #254976 100%) !important;
 	color: #ffffff !important;
 	border-radius: 14px 14px 3px 14px !important;
 	padding: 10px 16px !important;
 	max-width: 75% !important;
-	box-shadow: 0 2px 6px rgba(30, 58, 95, 0.15) !important;
+	box-shadow: 0 2px 8px rgba(30, 58, 95, 0.18) !important;
 	word-break: break-word !important;
 }
 
 .gz-chat-bubble-sender .text-muted,
 .gz-chat-bubble-sender span,
 .gz-chat-bubble-sender p {
-	color: rgba(255, 255, 255, 0.85) !important;
+	color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .gz-chat-bubble-receiver {
@@ -133,8 +133,53 @@
 	border-radius: 14px 14px 14px 3px !important;
 	padding: 10px 16px !important;
 	max-width: 75% !important;
-	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+	box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05) !important;
 	word-break: break-word !important;
+}
+
+/* Status Pill */
+.gz-chat-status-pill {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	font-size: 11.5px !important;
+	font-weight: 600 !important;
+	color: #10b981 !important;
+	background: #ecfdf5 !important;
+	padding: 2px 9px !important;
+	border-radius: 12px !important;
+	border: 1px solid #d1fae5 !important;
+}
+
+.gz-chat-status-dot {
+	width: 7px !important;
+	height: 7px !important;
+	border-radius: 50% !important;
+	background-color: #10b981 !important;
+	box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Exit Outline Button */
+.gz-chat-exit-outline-btn {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	background: #ffffff !important;
+	color: #1e3a5f !important;
+	border: 1px solid #dfe7f0 !important;
+	border-radius: 8px !important;
+	padding: 6px 12px !important;
+	font-size: 12.5px !important;
+	font-weight: 600 !important;
+	text-decoration: none !important;
+	transition: all 0.18s ease !important;
+}
+
+.gz-chat-exit-outline-btn:hover {
+	background: #f1f5f9 !important;
+	border-color: #1e3a5f !important;
+	color: #1e3a5f !important;
+	transform: translateY(-1px) !important;
 }
 
 /* Date Pill */
@@ -147,7 +192,7 @@
 	font-weight: 600 !important;
 	padding: 4px 14px !important;
 	border-radius: 20px !important;
-	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
 	margin-bottom: 14px !important;
 }
 
@@ -220,4 +265,26 @@
 	border-color: #152d4a !important;
 	box-shadow: 0 4px 10px rgba(30, 58, 95, 0.25) !important;
 	transform: translateY(-1px) !important;
+}
+
+/* Custom Scrollbars */
+.gz-chat-messages-area::-webkit-scrollbar,
+.smooth-scroll::-webkit-scrollbar {
+	width: 5px !important;
+}
+
+.gz-chat-messages-area::-webkit-scrollbar-track,
+.smooth-scroll::-webkit-scrollbar-track {
+	background: transparent !important;
+}
+
+.gz-chat-messages-area::-webkit-scrollbar-thumb,
+.smooth-scroll::-webkit-scrollbar-thumb {
+	background: #d8e0eb !important;
+	border-radius: 10px !important;
+}
+
+.gz-chat-messages-area::-webkit-scrollbar-thumb:hover,
+.smooth-scroll::-webkit-scrollbar-thumb:hover {
+	background: #b5c2d4 !important;
 }

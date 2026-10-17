@@ -59,11 +59,6 @@ export function EmployeeAsideMenuItems() {
 
 	return (
 		<>
-			<div className='menu-item'>
-				<div className='menu-content pt-2 pb-1 px-4'>
-					<span className='menu-section text-muted text-uppercase fs-9 fw-bolder ls-1'>MAIN</span>
-				</div>
-			</div>
 			<AsideMenuItem
 				to='/employee/dashboard'
 				Icon={faHome}
@@ -86,11 +81,6 @@ export function EmployeeAsideMenuItems() {
 				title='Daily Report'
 			/>
 
-			<div className='menu-item'>
-				<div className='menu-content pt-4 pb-1 px-4'>
-					<span className='menu-section text-muted text-uppercase fs-9 fw-bolder ls-1'>OPERATIONS</span>
-				</div>
-			</div>
 			<AsideMenuItem
 				to='/employee/expenses-list'
 				Icon={faMoneyBills}
@@ -144,11 +134,6 @@ export function EmployeeAsideMenuItems() {
 				title='SOP'
 			/>
 
-			<div className='menu-item'>
-				<div className='menu-content pt-4 pb-1 px-4'>
-					<span className='menu-section text-muted text-uppercase fs-9 fw-bolder ls-1'>BUSINESS</span>
-				</div>
-			</div>
 			<AsideMenuItem
 				to='/employee/target'
 				Icon={faCalendarCheck}

@@ -1,4 +1,11 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import {
+	faArrowRotateRight,
+	faCalendarCheck,
+	faClipboard,
+	faIdCard,
+	faLink,
+	faPlusCircle,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -522,7 +529,7 @@ const Report: React.FC = () => {
                                                 fetchAssignTaskData()
                                                 toast.success('Report data refreshed successfully!')
                                             }}>
-                                            <i className='bi bi-arrow-clockwise text-primary fs-6'></i>
+                                            <FontAwesomeIcon icon={faArrowRotateRight} className='text-primary fs-6 me-2' />
                                             <span>Refresh Report Data</span>
                                         </button>
 
@@ -533,7 +540,7 @@ const Report: React.FC = () => {
                                                 setShowOptionsDropdown(false)
                                                 copyToClipboard(employeeCode, 'code')
                                             }}>
-                                            <i className='bi bi-clipboard text-gray-600 fs-6'></i>
+                                            <FontAwesomeIcon icon={faClipboard} className='text-gray-600 fs-6 me-2' />
                                             <span>Copy Employee Code</span>
                                         </button>
 
@@ -547,7 +554,7 @@ const Report: React.FC = () => {
                                                     toast.success('Report URL copied to clipboard!')
                                                 }
                                             }}>
-                                            <i className='bi bi-link-45deg text-gray-600 fs-6'></i>
+                                            <FontAwesomeIcon icon={faLink} className='text-gray-600 fs-6 me-2' />
                                             <span>Copy Report Link</span>
                                         </button>
 
@@ -560,7 +567,7 @@ const Report: React.FC = () => {
                                                 setShowOptionsDropdown(false)
                                                 setActiveTab('attendance')
                                             }}>
-                                            <i className='bi bi-calendar-check text-success fs-6'></i>
+                                            <FontAwesomeIcon icon={faCalendarCheck} className='text-success fs-6 me-2' />
                                             <span>View Attendance Logs</span>
                                         </button>
 
@@ -571,7 +578,7 @@ const Report: React.FC = () => {
                                                 setShowOptionsDropdown(false)
                                                 setActiveTab('details')
                                             }}>
-                                            <i className='bi bi-person-vcard text-info fs-6'></i>
+                                            <FontAwesomeIcon icon={faIdCard} className='text-info fs-6 me-2' />
                                             <span>View Personnel Details</span>
                                         </button>
                                     </div>

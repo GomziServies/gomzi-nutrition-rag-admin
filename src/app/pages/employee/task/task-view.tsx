@@ -1,4 +1,5 @@
 import {
+	faArrowLeft,
 	faFile,
 	faFileAudio,
 	faFileExcel,
@@ -65,7 +66,47 @@ export function TaskView() {
 	}, [taskId])
 
 	if (loading) {
-		return <div>Loading...</div>
+		return (
+			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
+				<div className='card-header border-0 pt-6 pb-4 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div className='d-flex align-items-center gap-3'>
+						<div className='gz-skeleton rounded' style={{ width: '75px', height: '32px' }} />
+						<div className='d-flex flex-column gap-1.5'>
+							<div className='gz-skeleton rounded' style={{ width: '220px', height: '22px' }} />
+							<div className='gz-skeleton rounded' style={{ width: '160px', height: '14px' }} />
+						</div>
+					</div>
+					<div className='d-flex align-items-center gap-2'>
+						<div className='gz-skeleton rounded' style={{ width: '90px', height: '32px' }} />
+						<div className='gz-skeleton rounded' style={{ width: '70px', height: '32px' }} />
+					</div>
+				</div>
+				<div className='card-body pt-4'>
+					<div className='row mb-6'>
+						<div className='col-md-6 mb-4'>
+							<div className='gz-skeleton rounded mb-2' style={{ width: '90px', height: '14px' }} />
+							<div className='gz-skeleton rounded w-100' style={{ height: '42px' }} />
+						</div>
+						<div className='col-md-6 mb-4'>
+							<div className='gz-skeleton rounded mb-2' style={{ width: '120px', height: '14px' }} />
+							<div className='gz-skeleton rounded w-100' style={{ height: '42px' }} />
+						</div>
+						<div className='col-md-6 mb-4'>
+							<div className='gz-skeleton rounded mb-2' style={{ width: '100px', height: '14px' }} />
+							<div className='gz-skeleton rounded w-100' style={{ height: '42px' }} />
+						</div>
+						<div className='col-md-6 mb-4'>
+							<div className='gz-skeleton rounded mb-2' style={{ width: '110px', height: '14px' }} />
+							<div className='gz-skeleton rounded w-100' style={{ height: '42px' }} />
+						</div>
+					</div>
+					<div className='mb-6'>
+						<div className='gz-skeleton rounded mb-2' style={{ width: '120px', height: '14px' }} />
+						<div className='gz-skeleton rounded w-100' style={{ height: '100px' }} />
+					</div>
+				</div>
+			</div>
+		)
 	}
 
 	if (!task) {
@@ -358,7 +399,7 @@ export function TaskView() {
 							className='btn btn-sm btn-light d-flex align-items-center gap-2'
 							style={{ borderRadius: '8px' }}
 							onClick={() => window.history.back()}>
-							<i className='bi bi-arrow-left fs-6'></i>
+							<FontAwesomeIcon icon={faArrowLeft} className='fs-6' />
 							<span>Back</span>
 						</button>
 						<div>

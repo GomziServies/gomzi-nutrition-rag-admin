@@ -14,7 +14,7 @@ import { CompleteSOP, GetSOP } from '../../../Functions/FGGroup/SOP'
 
 const EmployeeSOP: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
-	const [loading, setLoading] = useState(false)
+	const [loading, setLoading] = useState(true)
 	const [sort, setSort] = useState('createdAt')
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)

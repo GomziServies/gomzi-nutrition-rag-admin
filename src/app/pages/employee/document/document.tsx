@@ -10,7 +10,7 @@ import UsersListPagination from '../../../components/TablePagination'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 
 const EmployeeDocument: React.FC = () => {
-	const [loading, setLoading] = useState(false)
+	const [loading, setLoading] = useState(true)
 	const [searchTerm, setSearchTerm] = useState('')
 	const [sort, setSort] = useState('name')
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('asc')

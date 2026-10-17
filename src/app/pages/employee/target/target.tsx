@@ -14,7 +14,7 @@ import { CreateTarget, GetTarget, UpdateTarget } from '../../../Functions/FGGrou
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 
 const EmployeeTarget: React.FC = () => {
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [sort, setSort] = useState('createdAt')
     const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
     const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
