@@ -2,9 +2,10 @@ import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import * as XLSX from 'xlsx'
-import { KTCard, toAbsoluteUrl } from '../../../../../_metronic/helpers'
+import { toAbsoluteUrl } from '../../../../../_metronic/helpers'
 import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import DateFilter from '../../../../components/DateRangePicker'
@@ -14,6 +15,7 @@ import Table from '../../../../components/Table'
 import TableButton from '../../../../components/TableButton'
 import UsersListPagination from '../../../../components/TablePagination'
 import { GetUsers, LockUnlockUser } from '../../../../Functions/FGGroup'
+import '../../../gomzi-nutrition/common-management.css'
 
 const Users: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -217,102 +219,78 @@ const Users: React.FC = () => {
 	}
 
 	return (
-		<>
-			<PageTitle breadcrumbs={[]}>User</PageTitle>
-			<KTCard>
-				<div className='card-header border-0 pt-6 px-6'>
-					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
-						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
-							{/* 1. Searchbar */}
-							<div>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-									className='me-0'
-								/>
-							</div>
+		<div className='gz-mgmt-container'>
+			<PageTitle breadcrumbs={[]}>User Directory</PageTitle>
 
-							{/* 2. Dropdown (show entries per page) */}
-							<div>
-								<LengthMenu
-									expenseData={userData}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-									value={pagination.itemsPerPage}
-									className='me-0'
-								/>
-							</div>
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<span>Users</span>
+				<span className='sep'>/</span>
+				<span className='current'>Directory</span>
+			</div>
 
-							{/* 3. Download Excel Button */}
-							<div>
-								<button
-									type='button'
-									className='btn btn-icon d-flex align-items-center justify-content-center'
-									onClick={downloadExcel}
-									disabled={exporting}
-									style={{
-										width: '38px',
-										height: '38px',
-										minWidth: '38px',
-										padding: 0,
-										borderRadius: '8px',
-										fontSize: '14px',
-										backgroundColor: '#ffffff',
-										border: '1px solid #DFE7F0',
-										color: '#1E3A5F',
-										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-										cursor: exporting ? 'not-allowed' : 'pointer',
-									}}
-									onMouseEnter={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#1E3A5F'
-											e.currentTarget.style.borderColor = '#1E3A5F'
-											e.currentTarget.style.color = '#ffffff'
-											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
-											e.currentTarget.style.transform = 'translateY(-1px)'
-										}
-									}}
-									onMouseLeave={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#ffffff'
-											e.currentTarget.style.borderColor = '#DFE7F0'
-											e.currentTarget.style.color = '#1E3A5F'
-											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
-											e.currentTarget.style.transform = 'translateY(0)'
-										}
-									}}
-									title='Download Excel'>
-									{exporting ? (
-										<span
-											className='spinner-border spinner-border-sm'
-											role='status'
-											aria-hidden='true'></span>
-									) : (
-										<FontAwesomeIcon icon={faDownload} />
-									)}
-								</button>
-							</div>
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>User Directory</h1>
+					<p className='gz-mgmt-subtitle'>Manage registered customers, authentication providers, contacts and account profiles</p>
+				</div>
+				<TableButton
+					action='add'
+					to='/rag/users/add-user'
+					text='Add User'
+				/>
+			</div>
 
-							{/* 4. Datefilter */}
-							<div className='d-flex align-items-center flex-shrink-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-								/>
-							</div>
-						</div>
+			<div className='gz-mgmt-card'>
+				<div className='gz-mgmt-toolbar'>
+					<div className='gz-mgmt-toolbar-left'>
+						{/* 1. Searchbar */}
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
 
-						{/* 5. Right side Add Button */}
-						<div className='flex-shrink-0 ms-auto'>
-							<TableButton
-								action='add'
-								to='/rag/users/add-user'
-								text='Add'
+						{/* 2. Dropdown (show entries per page) */}
+						<LengthMenu
+							expenseData={userData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
+
+						{/* 3. Datefilter */}
+						<div className='d-flex align-items-center flex-shrink-0'>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
 							/>
 						</div>
 					</div>
+
+					{/* 4. Right side: Excel Download */}
+					<div className='gz-mgmt-toolbar-right'>
+						<button
+							type='button'
+							className='gz-mgmt-export-btn'
+							onClick={downloadExcel}
+							disabled={exporting}
+							title='Download Excel'>
+							{exporting ? (
+								<span
+									className='spinner-border spinner-border-sm'
+									role='status'
+									aria-hidden='true'></span>
+							) : (
+								<FontAwesomeIcon icon={faDownload} />
+							)}
+							<span>Export Excel</span>
+						</button>
+					</div>
 				</div>
-				<div className='py-4 card-body'>
+
+				<div className='card-body p-0'>
 					<div className='table-responsive'>
 						<Table
 							data={userData}
@@ -326,96 +304,73 @@ const Users: React.FC = () => {
 										onClick={() => handleRowClick(data._id)}
 										className='data-row'>
 										<td className='text-center'>
-											<div className='d-flex'>
+											<div className='d-flex align-items-center justify-content-center'>
 												<FontAwesomeIcon
 													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
+													className='mx-1 mb-1 plus-icon'
 													style={{ color: '#607D8B', fontSize: '18px' }}
 												/>
-												<span className='text-dark ms-6 fw-bold  d-block mb-1 fs-6'>
+												<span className='fw-bold d-block mb-1 fs-6' style={{ color: '#172B4D' }}>
 													{actualIndex}
 												</span>
 											</div>
 										</td>
 										<td>
-											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
-													<img
-														src={
-															data.profile_image
-																? data.provider === 'google'
-																	? data.profile_image // Google image URL
-																	: `https://files.fggroup.in/${data.profile_image}` // Local uploaded image
-																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-														}
-														alt='User'
-														style={{ width: '50px', height: '50px' }}
-													/>
-												</div>
-												<div className='d-flex justify-content-start flex-column'>
-													<span className='text-dark fw-bold  fs-6'>
-														{data.first_name + ' ' + data.last_name}
+											<div className='gz-mgmt-identity-cell'>
+												<img
+													src={
+														data.profile_image
+															? data.provider === 'google'
+																? data.profile_image
+																: `https://files.fggroup.in/${data.profile_image}`
+															: toAbsoluteUrl('/media/logos/fgiit-logo.png')
+													}
+													alt='User'
+													className='gz-mgmt-avatar'
+												/>
+												<div className='gz-mgmt-identity-info'>
+													<span className='name'>
+														{`${data.first_name || ''} ${data.last_name || ''}`.trim() || 'User'}
 													</span>
-													<span className='text-muted fw-semibold text-muted d-block fs-7'>
-														{data._id}
-													</span>
+													<span className='sub'>ID: {data._id}</span>
 												</div>
 											</div>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span style={{ color: '#172B4D', fontWeight: 500, fontSize: '13.5px' }}>
 												{data.provider === 'google'
 													? '-'
-													: `${data.country_code || '-'} ${data.mobile || ''}`}
+													: `${data.country_code || ''} ${data.mobile || '-'}`}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span style={{ color: '#475569', fontSize: '13px' }}>
 												{data.email || '-'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{data.provider || '-'}
+											<span className={`gz-mgmt-pill ${data.provider === 'google' ? 'info' : ''}`} style={data.provider !== 'google' ? { background: '#F1F5F9', color: '#475569' } : {}}>
+												{data.provider || 'local'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{DayJS(data.createdAt).format('DD/MM/YYYY hh:mm:ss A')}
+											<span style={{ color: '#64748B', fontSize: '13px' }}>
+												{data.createdAt ? DayJS(data.createdAt).format('DD MMM YYYY hh:mm A') : '-'}
 											</span>
 										</td>
 										<td>
-											<div className='d-flex'>
+											<div className='d-flex align-items-center'>
 												<TableButton
 													action='view'
 													to={`/rag/users/view-user?user_id=` + data._id}
 												/>
-												{/* {data.lock ? (
-													<button
-														className={`btn gap-2 btn-light-danger mx-2 btn-sm me-1`}
-														onClick={() => handleLockUnlock(data._id, data.lock)}>
-														<FontAwesomeIcon
-															icon={faLock}
-															className='fs-3'
-														/>
-													</button>
-												) : (
-													<button
-														className={`btn gap-2 btn-light-success mx-2 btn-sm me-1`}
-														onClick={() => handleLockUnlock(data._id, data.lock)}>
-														<FontAwesomeIcon
-															icon={faLockOpen}
-															className='fs-3'
-														/>
-													</button>
-												)} */}
 											</div>
 										</td>
 									</tr>
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12}>
-												<div>
+												<div className='p-3' style={{ background: '#F8FAFC', borderRadius: '8px' }}>
 													<img
 														src={
 															data.profile_image
@@ -425,7 +380,7 @@ const Users: React.FC = () => {
 																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
 														}
 														alt='User'
-														style={{ width: '50px', height: '50px', borderRadius: '7px' }}
+														style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }}
 													/>
 													<br />
 													<strong>User Name: </strong> {data.first_name + ' ' + data.last_name}
@@ -451,8 +406,8 @@ const Users: React.FC = () => {
 						/>
 					</div>
 					{userData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10 text-muted'>
+							<b>No users found</b>
 						</div>
 					)}
 					{userData.length > 0 && (
@@ -463,8 +418,8 @@ const Users: React.FC = () => {
 						/>
 					)}
 				</div>
-			</KTCard>
-		</>
+			</div>
+		</div>
 	)
 }
 

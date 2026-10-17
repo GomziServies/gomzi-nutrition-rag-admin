@@ -34,9 +34,10 @@ export function ScrollTop() {
 		document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
 		document.body.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
 		const containers = document.querySelectorAll(
-			'.post, #kt_post, #kt_content, #kt_wrapper, #root, [data-kt-scroll="true"]'
+			'.post, #kt_post, #kt_content, #kt_wrapper, #root'
 		)
 		containers.forEach((el) => {
+			if (el.id === 'kt_aside_menu_wrapper' || el.closest('#kt_aside')) return
 			try {
 				el.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
 			} catch (_) {
@@ -75,9 +76,10 @@ export function ScrollTop() {
 				0
 			let containerMax = 0
 			const containers = document.querySelectorAll(
-				'.post, #kt_post, #kt_content, #kt_wrapper, #root, [data-kt-scroll="true"]'
+				'.post, #kt_post, #kt_content, #kt_wrapper, #root'
 			)
 			containers.forEach((el) => {
+				if (el.id === 'kt_aside_menu_wrapper' || el.closest('#kt_aside')) return
 				if (el.scrollTop > containerMax) {
 					containerMax = el.scrollTop
 				}

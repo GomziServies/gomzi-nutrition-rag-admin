@@ -1,0 +1,862 @@
+/* ==========================================================================
+   GOMZI NUTRITION — INVENTORY & STOCK DESIGN SYSTEM
+   Matches approved GOMZI Nutrition premium dashboard aesthetic:
+   - Primary navy: #172B4D, Dark navy: #101F38
+   - Clean surfaces: #FFFFFF and #F4F6FA
+   - Subtle borders: #E4EAF2 and #E2E8F0
+   - Muted slate-blue text: #71809A and #64748B
+   - Restrained badges: green (in stock), amber (low stock), red (out of stock)
+   - Stock movement ledger (+ green / - red) with subtle 400ms reveal
+   - Blue action icons matching classic dashboard design
+   ========================================================================== */
+
+:root {
+	--gz-inv-navy: #172B4D;
+	--gz-inv-navy-hover: #24446B;
+	--gz-inv-dark-navy: #101F38;
+	--gz-inv-text-primary: #142447;
+	--gz-inv-text-muted: #71809A;
+	--gz-inv-bg: #F4F6FA;
+	--gz-inv-surface: #FFFFFF;
+	--gz-inv-border: #E4EAF2;
+	--gz-inv-border-light: #EEF2F7;
+	--gz-inv-green-bg: #ECFDF5;
+	--gz-inv-green-text: #059669;
+	--gz-inv-green-border: #A7F3D0;
+	--gz-inv-amber-bg: #FEF3C7;
+	--gz-inv-amber-text: #B45309;
+	--gz-inv-amber-border: #FDE68A;
+	--gz-inv-red-bg: #FEF2F2;
+	--gz-inv-red-text: #DC2626;
+	--gz-inv-red-border: #FECACA;
+	--gz-inv-blue-bg: #EFF6FF;
+	--gz-inv-blue-text: #2563EB;
+	--gz-inv-blue-border: #DBEAFE;
+}
+
+/* Page Container with subtle entrance animation */
+.gz-inv-container {
+	background-color: var(--gz-inv-bg);
+	min-height: calc(100vh - 80px);
+	padding: 24px 28px 48px;
+	color: var(--gz-inv-text-primary);
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	animation: gzInvPageFadeIn 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes gzInvPageFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.gz-inv-container {
+		animation: none !important;
+		transform: none !important;
+	}
+}
+
+/* Breadcrumb */
+.gz-inv-breadcrumb {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	color: var(--gz-inv-text-muted);
+	margin-bottom: 8px;
+	font-weight: 500;
+}
+
+.gz-inv-breadcrumb a {
+	color: var(--gz-inv-text-muted);
+	text-decoration: none;
+	transition: color 0.15s ease;
+}
+
+.gz-inv-breadcrumb a:hover {
+	color: var(--gz-inv-navy);
+}
+
+.gz-inv-breadcrumb span.sep {
+	color: #94A3B8;
+	font-size: 11px;
+}
+
+.gz-inv-breadcrumb span.current {
+	color: var(--gz-inv-text-primary);
+	font-weight: 600;
+}
+
+/* Page Header */
+.gz-inv-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 24px;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.gz-inv-title-wrap {
+	display: flex;
+	flex-direction: column;
+}
+
+.gz-inv-title {
+	font-size: 28px;
+	font-weight: 700;
+	color: var(--gz-inv-text-primary);
+	letter-spacing: -0.02em;
+	margin: 0 0 4px 0;
+	line-height: 1.2;
+}
+
+.gz-inv-subtitle {
+	font-size: 13.5px;
+	color: var(--gz-inv-text-muted);
+	margin: 0;
+	font-weight: 450;
+}
+
+/* Main Card Wrapper */
+.gz-inv-card {
+	background: var(--gz-inv-surface);
+	border: 1px solid var(--gz-inv-border);
+	border-radius: 18px;
+	box-shadow: 0 2px 12px rgba(16, 31, 56, 0.03);
+	overflow: hidden;
+	margin-bottom: 24px;
+	transition: box-shadow 0.2s ease;
+}
+
+/* Toolbar */
+.gz-inv-toolbar {
+	padding: 14px 18px;
+	border-bottom: 1px solid var(--gz-inv-border-light);
+	background: #FFFFFF;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.gz-inv-toolbar-left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	flex: 1;
+	min-width: 0;
+}
+
+.gz-inv-toolbar-right {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+/* Search Box override inside inventory toolbar */
+.gz-inv-toolbar .gz-search-filter-box,
+.gz-inv-toolbar .gz-top-search-bar {
+	width: 270px !important;
+	min-width: 200px !important;
+	max-width: 320px !important;
+	flex: 0 1 270px !important;
+	height: 38px !important;
+	min-height: 38px !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 10px !important;
+	background: #FFFFFF !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+	transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.gz-inv-toolbar .gz-search-filter-box:focus-within,
+.gz-inv-toolbar .gz-top-search-bar:focus-within {
+	border-color: var(--gz-inv-navy) !important;
+	box-shadow: 0 0 0 3px rgba(23, 43, 77, 0.1) !important;
+}
+
+/* LengthMenu wrapper: Guarantee no double background or wrapper border */
+.gz-inv-toolbar .d-inline-block,
+.gz-inv-length-menu {
+	background: transparent !important;
+	background-color: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+}
+
+/* Clean Native Filter Dropdowns matching the established dashboard UI */
+.gz-inv-toolbar select.gz-prod-select,
+.gz-inv-toolbar select.form-select,
+select.gz-prod-select {
+	height: 38px !important;
+	min-height: 38px !important;
+	width: auto !important;
+	max-width: 220px !important;
+	flex: 0 0 auto !important;
+	padding: 0 32px 0 12px !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 10px !important;
+	background-color: #FFFFFF !important;
+	color: #111827 !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	outline: none !important;
+	cursor: pointer !important;
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231E3A5F' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 10px center !important;
+	transition: all 0.18s ease !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.gz-inv-toolbar select.gz-prod-select:hover,
+select.gz-prod-select:hover {
+	border-color: #CBD5E1 !important;
+	background-color: #F8FAFC !important;
+}
+
+.gz-inv-toolbar select.gz-prod-select:focus,
+.gz-inv-toolbar select.form-select:focus,
+select.gz-prod-select:focus {
+	border-color: #1E3A5F !important;
+	background-color: #FFFFFF !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+}
+
+/* Export Button */
+.gz-inv-export-btn {
+	width: 38px;
+	height: 38px;
+	min-width: 38px;
+	border-radius: 10px;
+	background-color: #FFFFFF;
+	border: 1px solid #DFE7F0;
+	color: var(--gz-inv-navy);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.18s ease;
+	font-size: 13.5px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.gz-inv-export-btn:hover:not(:disabled) {
+	background-color: #F8FAFC;
+	border-color: #CBD5E1;
+	color: var(--gz-inv-navy-hover);
+	box-shadow: 0 3px 8px rgba(23, 43, 77, 0.08);
+}
+
+.gz-inv-export-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Primary Navy Action Button */
+.gz-inv-primary-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	background-color: var(--gz-inv-navy);
+	color: #FFFFFF !important;
+	border: 1px solid var(--gz-inv-navy);
+	border-radius: 10px;
+	padding: 0 18px;
+	font-size: 13.5px;
+	font-weight: 600;
+	height: 38px;
+	cursor: pointer;
+	text-decoration: none;
+	transition: all 0.18s ease;
+	box-shadow: 0 2px 6px rgba(23, 43, 77, 0.12);
+}
+
+.gz-inv-primary-btn:hover {
+	background-color: var(--gz-inv-navy-hover);
+	border-color: var(--gz-inv-navy-hover);
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.18);
+}
+
+.gz-inv-primary-btn:active {
+	transform: scale(0.98);
+}
+
+/* Table Card Area */
+.gz-inv-table-wrap {
+	width: 100%;
+	overflow-x: auto;
+}
+
+/* Table Head and Row overrides */
+.gz-inv-table-wrap table thead tr {
+	background: #FAFCFE !important;
+	height: 44px;
+	border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.gz-inv-table-wrap table thead th {
+	color: #64748B !important;
+	font-size: 11.5px !important;
+	font-weight: 600 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.04em !important;
+	padding: 12px 16px !important;
+	vertical-align: middle !important;
+	white-space: nowrap !important;
+	border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.gz-inv-table-wrap table tbody tr {
+	border-bottom: 1px solid #EEF2F7 !important;
+	transition: background-color 0.15s ease !important;
+}
+
+.gz-inv-table-wrap table tbody tr:hover {
+	background-color: #F8FAFD !important;
+}
+
+.gz-inv-table-wrap table tbody td {
+	padding: 14px 16px !important;
+	color: #1E293B !important;
+	font-size: 13.5px !important;
+	vertical-align: middle !important;
+}
+
+/* Product Identity & Stock presentation */
+.gz-inv-product-name {
+	font-weight: 600;
+	color: #172B4D;
+	font-size: 13.5px;
+	line-height: 1.35;
+	display: block;
+}
+
+.gz-inv-variant-text {
+	font-size: 12.5px;
+	color: #64748B;
+	font-weight: 500;
+}
+
+.gz-inv-stock-value {
+	font-weight: 700;
+	color: #172B4D;
+	font-size: 13.5px;
+	font-variant-numeric: tabular-nums;
+}
+
+.gz-inv-price-value {
+	font-weight: 600;
+	color: #334155;
+	font-size: 13.5px;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Status Pills */
+.gz-inv-status-pill {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	padding: 3px 10px;
+	border-radius: 999px;
+	font-size: 11.5px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.gz-inv-status-pill.in-stock {
+	background: var(--gz-inv-green-bg);
+	color: var(--gz-inv-green-text);
+	border: 1px solid var(--gz-inv-green-border);
+}
+
+.gz-inv-status-pill.low-stock {
+	background: var(--gz-inv-amber-bg);
+	color: var(--gz-inv-amber-text);
+	border: 1px solid var(--gz-inv-amber-border);
+}
+
+.gz-inv-status-pill.out-of-stock {
+	background: var(--gz-inv-red-bg);
+	color: var(--gz-inv-red-text);
+	border: 1px solid var(--gz-inv-red-border);
+}
+
+/* Product Thumbnail (Stock List) */
+.gz-inv-thumb {
+	width: 48px;
+	height: 48px;
+	border-radius: 10px;
+	object-fit: contain;
+	background-color: #FFFFFF;
+	border: 1px solid #E2E8F0;
+	padding: 2px;
+	display: block;
+	transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.gz-inv-thumb:hover {
+	transform: scale(1.06);
+	box-shadow: 0 4px 10px rgba(23, 43, 77, 0.1);
+}
+
+.gz-inv-thumb-fallback {
+	width: 48px;
+	height: 48px;
+	border-radius: 10px;
+	background-color: #F1F5F9;
+	border: 1px solid #E2E8F0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #94A3B8;
+	font-size: 16px;
+}
+
+/* Action Buttons Container */
+.gz-inv-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* ==========================================================================
+   UNIFIED BLUE ACTION ICON BUTTONS (Matches classic dashboard action icons)
+   All action icons (View, Edit, Delete) use the light-blue background
+   with blue icon, turning into theme navy (#1E3A5F) with white icon on hover
+   ========================================================================== */
+.gz-inv-actions .gz-table-action-btn,
+.gz-inv-actions .table-action-btn-square,
+.gz-inv-actions button.gz-table-action-btn,
+.gz-inv-actions a.gz-table-action-btn,
+.gz-inv-action-btn {
+	width: 35px !important;
+	height: 35px !important;
+	min-width: 35px !important;
+	min-height: 35px !important;
+	border-radius: 8px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 0 !important;
+	border: 1px solid #DBEAFE !important;
+	background-color: #EFF6FF !important;
+	color: #2563EB !important;
+	transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	text-decoration: none !important;
+	cursor: pointer !important;
+	box-shadow: none !important;
+}
+
+.gz-inv-actions .gz-table-action-btn:hover,
+.gz-inv-actions .table-action-btn-square:hover,
+.gz-inv-actions button.gz-table-action-btn:hover,
+.gz-inv-actions a.gz-table-action-btn:hover,
+.gz-inv-action-btn:hover {
+	background-color: #1E3A5F !important;
+	color: #FFFFFF !important;
+	border-color: #1E3A5F !important;
+	transform: translateY(-1px) !important;
+	box-shadow: 0 3px 8px rgba(30, 58, 95, 0.2) !important;
+}
+
+.gz-inv-actions .gz-table-action-btn svg,
+.gz-inv-actions .table-action-btn-square svg,
+.gz-inv-action-btn svg {
+	font-size: 13px !important;
+	color: inherit !important;
+	fill: currentColor !important;
+}
+
+/* ==========================================================================
+   STOCK MOVEMENT LEDGER (Inventory History Page)
+   ========================================================================== */
+.gz-movement-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	padding: 3px 10px;
+	border-radius: 8px;
+	min-width: 58px;
+	text-align: center;
+	transition: transform 0.15s ease;
+}
+
+.gz-movement-badge.positive {
+	background: var(--gz-inv-green-bg);
+	color: var(--gz-inv-green-text);
+	border: 1px solid var(--gz-inv-green-border);
+}
+
+.gz-movement-badge.negative {
+	background: var(--gz-inv-red-bg);
+	color: var(--gz-inv-red-text);
+	border: 1px solid var(--gz-inv-red-border);
+}
+
+.gz-movement-badge.neutral {
+	background: #F1F5F9;
+	color: #64748B;
+	border: 1px solid #E2E8F0;
+}
+
+/* Subtle, one-time reveal animation for stock movement quantities */
+.gz-stock-movement-reveal {
+	display: inline-block;
+	animation: gzMovementReveal 420ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	will-change: opacity, transform;
+}
+
+@keyframes gzMovementReveal {
+	0% {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.gz-stock-movement-reveal {
+		animation: none !important;
+		transform: none !important;
+		opacity: 1 !important;
+	}
+}
+
+/* Transaction Type pills */
+.gz-trans-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2px 8px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+}
+
+.gz-trans-badge.in {
+	background: var(--gz-inv-green-bg);
+	color: var(--gz-inv-green-text);
+	border: 1px solid var(--gz-inv-green-border);
+}
+
+.gz-trans-badge.out {
+	background: var(--gz-inv-red-bg);
+	color: var(--gz-inv-red-text);
+	border: 1px solid var(--gz-inv-red-border);
+}
+
+/* Source pill */
+.gz-source-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	border-radius: 6px;
+	background: #F1F5F9;
+	color: #475569;
+	font-size: 11.5px;
+	font-weight: 600;
+	border: 1px solid #E2E8F0;
+}
+
+/* Remarks cell */
+.gz-remarks-cell {
+	color: #64748B;
+	font-size: 12.5px;
+	max-width: 240px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: normal;
+	line-height: 1.4;
+}
+
+/* ==========================================================================
+   MODAL DIALOGS (Update Stock & Delete Confirmation)
+   ========================================================================== */
+.gz-inv-modal .modal-content {
+	border: 1px solid var(--gz-inv-border) !important;
+	border-radius: 16px !important;
+	box-shadow: 0 20px 48px rgba(15, 23, 42, 0.16) !important;
+	background: #FFFFFF !important;
+	overflow: hidden;
+}
+
+.gz-inv-modal-header {
+	padding: 18px 24px;
+	border-bottom: 1px solid var(--gz-inv-border-light);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.gz-inv-modal-title {
+	font-size: 17px;
+	font-weight: 700;
+	color: var(--gz-inv-text-primary);
+	margin: 0;
+}
+
+.gz-inv-modal-close {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	border: 1px solid transparent;
+	background: transparent;
+	color: #64748B;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.gz-inv-modal-close:hover {
+	background: #F1F5F9;
+	color: #0F172A;
+}
+
+.gz-inv-modal-body {
+	padding: 22px 24px;
+}
+
+.gz-inv-modal-footer {
+	padding: 16px 24px;
+	border-top: 1px solid var(--gz-inv-border-light);
+	background: #FAFCFE;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+/* Modal Form Inputs */
+.gz-inv-form-label {
+	font-size: 13px;
+	font-weight: 600;
+	color: #334155;
+	margin-bottom: 6px;
+	display: block;
+}
+
+.gz-inv-form-label.required::after {
+	content: ' *';
+	color: #DC2626;
+}
+
+.gz-inv-form-control {
+	height: 40px;
+	border: 1px solid #DFE7F0;
+	border-radius: 10px;
+	padding: 0 14px;
+	font-size: 13.5px;
+	font-weight: 500;
+	color: #1E293B;
+	width: 100%;
+	background: #FFFFFF;
+	transition: all 0.18s ease;
+}
+
+.gz-inv-form-control:focus {
+	outline: none;
+	border-color: var(--gz-inv-navy);
+	box-shadow: 0 0 0 3px rgba(23, 43, 77, 0.1);
+}
+
+.gz-inv-form-control[readonly] {
+	background-color: #F8FAFC;
+	border-color: #E2E8F0;
+	color: #475569;
+	cursor: default;
+}
+
+/* Segmented Availability Radios */
+.gz-inv-segmented-group {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+.gz-inv-segmented-option {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 10px 16px;
+	border-radius: 10px;
+	border: 1px solid #E2E8F0;
+	background: #FFFFFF;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 600;
+	color: #64748B;
+	transition: all 0.15s ease;
+	user-select: none;
+}
+
+.gz-inv-segmented-option:hover {
+	background: #F8FAFC;
+	border-color: #CBD5E1;
+}
+
+.gz-inv-segmented-option.active-available {
+	background: var(--gz-inv-green-bg);
+	border-color: var(--gz-inv-green-text);
+	color: var(--gz-inv-green-text);
+	box-shadow: 0 1px 3px rgba(5, 150, 105, 0.12);
+}
+
+.gz-inv-segmented-option.active-out {
+	background: var(--gz-inv-red-bg);
+	border-color: var(--gz-inv-red-text);
+	color: var(--gz-inv-red-text);
+	box-shadow: 0 1px 3px rgba(220, 38, 38, 0.12);
+}
+
+.gz-inv-segmented-option input[type='radio'] {
+	display: none;
+}
+
+/* Modal Button Controls */
+.gz-inv-btn-cancel {
+	height: 38px;
+	padding: 0 18px;
+	border-radius: 9px;
+	font-size: 13px;
+	font-weight: 600;
+	background: #FFFFFF;
+	border: 1px solid #DFE7F0;
+	color: #64748B;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.gz-inv-btn-cancel:hover {
+	background: #F1F5F9;
+	color: #1E293B;
+	border-color: #CBD5E1;
+}
+
+.gz-inv-btn-submit {
+	height: 38px;
+	padding: 0 20px;
+	border-radius: 9px;
+	font-size: 13px;
+	font-weight: 600;
+	background: var(--gz-inv-navy);
+	border: 1px solid var(--gz-inv-navy);
+	color: #FFFFFF;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	box-shadow: 0 2px 6px rgba(23, 43, 77, 0.12);
+}
+
+.gz-inv-btn-submit:hover {
+	background: var(--gz-inv-navy-hover);
+	border-color: var(--gz-inv-navy-hover);
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.18);
+}
+
+/* Delete Confirmation Modal Specifics */
+.gz-inv-delete-icon-box {
+	width: 52px;
+	height: 52px;
+	border-radius: 50%;
+	background: #FEF2F2;
+	border: 1px solid #FEE2E2;
+	color: #DC2626;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	margin: 0 auto 16px;
+}
+
+.gz-inv-btn-delete-confirm {
+	height: 38px;
+	padding: 0 20px;
+	border-radius: 9px;
+	font-size: 13px;
+	font-weight: 600;
+	background: #DC2626;
+	border: 1px solid #DC2626;
+	color: #FFFFFF;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	box-shadow: 0 2px 6px rgba(220, 38, 38, 0.15);
+}
+
+.gz-inv-btn-delete-confirm:hover {
+	background: #B91C1C;
+	border-color: #B91C1C;
+	box-shadow: 0 4px 12px rgba(220, 38, 38, 0.22);
+}
+
+/* Empty State */
+.gz-inv-empty-state {
+	padding: 48px 24px;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.gz-inv-empty-icon {
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+	background: #F1F5F9;
+	color: #94A3B8;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24px;
+	margin-bottom: 14px;
+}
+
+.gz-inv-empty-title {
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--gz-inv-text-primary);
+	margin-bottom: 4px;
+}
+
+.gz-inv-empty-desc {
+	font-size: 13.5px;
+	color: var(--gz-inv-text-muted);
+	max-width: 380px;
+	line-height: 1.45;
+}

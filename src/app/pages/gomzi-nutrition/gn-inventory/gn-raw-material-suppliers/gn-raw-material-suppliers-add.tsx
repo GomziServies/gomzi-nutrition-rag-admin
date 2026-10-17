@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowLeft,
@@ -9,11 +9,12 @@ import {
 	faLocationDot,
 	faUpload,
 } from '@fortawesome/free-solid-svg-icons'
-import { KTCard } from '../../../../../_metronic/helpers'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import InputField from '../../../../components/InputField'
 import SelectField from '../../../../components/SelectField'
 import { CreateGnRawMaterialSupplier, FileUploadToFGGroup } from '../../../../Functions/FGGroup'
+import '../../products-theme.css'
+import '../../orders-theme.css'
 
 interface Country {
 	id: number | string
@@ -283,39 +284,53 @@ const GomziNutritionMaterialSuppliersAdd = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Add Supplier</PageTitle>
 
-			<KTCard className='border-0 shadow-sm' style={{ borderRadius: '12px' }}>
-				{/* 1. Header with Title & Back Button */}
-				<div className='card-header border-bottom py-5 px-6 px-lg-8 d-flex align-items-center justify-content-between flex-wrap gap-3'>
-					<div className='d-flex align-items-center gap-3'>
-						<span
-							className='d-inline-flex align-items-center justify-content-center rounded-3'
-							style={{
-								width: '42px',
-								height: '42px',
-								backgroundColor: '#EEF2F6',
-								color: '#1E3A5F',
-							}}>
-							<FontAwesomeIcon icon={faBuilding} className='fs-3' />
-						</span>
-						<div>
-							<h3 className='card-title fw-bolder text-gray-900 fs-3 m-0'>Add Supplier</h3>
-							<span className='text-muted fs-7 mt-1 d-block'>
-								Register a new raw material vendor and address details
+			<div className='gz-prod-container'>
+				{/* BREADCRUMB */}
+				<div className='gz-prod-breadcrumb'>
+					<Link to='/rag/dashboard'>Dashboard</Link>
+					<span className='sep'>/</span>
+					<span>Manufacturing & Inventory</span>
+					<span className='sep'>/</span>
+					<Link to='/rag/inventory/suppliers/list'>Raw Material Suppliers</Link>
+					<span className='sep'>/</span>
+					<span className='current'>Add Supplier</span>
+				</div>
+
+				<div className='card border-0 shadow-sm' style={{ borderRadius: '12px', backgroundColor: '#FFFFFF' }}>
+					{/* 1. Header with Title & Back Button */}
+					<div
+						className='border-bottom py-5 px-6 px-lg-8 d-flex align-items-center justify-content-between flex-wrap gap-3'
+						style={{ borderColor: '#E2E8F0' }}>
+						<div className='d-flex align-items-center gap-3'>
+							<span
+								className='d-inline-flex align-items-center justify-content-center rounded-3'
+								style={{
+									width: '42px',
+									height: '42px',
+									backgroundColor: '#EEF2F6',
+									color: '#172B4D',
+								}}>
+								<FontAwesomeIcon icon={faBuilding} className='fs-4' />
 							</span>
+							<div>
+								<h3 className='fw-bolder fs-3 m-0' style={{ color: '#172B4D' }}>Add Supplier</h3>
+								<span className='text-muted fs-7 mt-1 d-block'>
+									Register a new raw material vendor and address details
+								</span>
+							</div>
+						</div>
+
+						<div>
+							<button
+								type='button'
+								className='btn btn-light fw-semibold d-flex align-items-center gap-2'
+								onClick={handleGoBack}
+								style={{ height: '38px', borderRadius: '8px', fontSize: '13px', border: '1px solid #E2E8F0' }}>
+								<FontAwesomeIcon icon={faArrowLeft} />
+								Back to Suppliers
+							</button>
 						</div>
 					</div>
-
-					<div>
-						<button
-							type='button'
-							className='btn btn-light btn-active-light-primary fw-semibold d-flex align-items-center gap-2'
-							onClick={handleGoBack}
-							style={{ height: '38px', borderRadius: '8px', fontSize: '13px' }}>
-							<FontAwesomeIcon icon={faArrowLeft} />
-							Back to Suppliers
-						</button>
-					</div>
-				</div>
 
 				{/* 2. Body */}
 				<div className='card-body px-6 px-lg-8 py-7'>
@@ -563,11 +578,12 @@ const GomziNutritionMaterialSuppliersAdd = () => {
 									onClick={handleAddButtonClick}
 									disabled={isSubmitting}
 									style={{
-										backgroundColor: '#0F172A',
+										backgroundColor: '#172B4D',
 										color: '#ffffff',
 										height: '40px',
 										borderRadius: '8px',
 										fontSize: '13px',
+										border: 'none',
 									}}>
 									<FontAwesomeIcon icon={faCheck} />
 									{isSubmitting ? 'Adding Supplier...' : 'Add Supplier'}
@@ -576,7 +592,8 @@ const GomziNutritionMaterialSuppliersAdd = () => {
 						</div>
 					</div>
 				</div>
-			</KTCard>
+				</div>
+			</div>
 		</>
 	)
 }

@@ -12,6 +12,7 @@ import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetGlsSalaryData } from '../../../Functions/FGGroup/GlsSalary'
+import '../common-management.css'
 
 const EmployeeSalary = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -333,103 +334,66 @@ const EmployeeSalary = () => {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Employee Salary</PageTitle>
-			<div className='card'>
-				<div className='row justify-content-between mt-7 mx-6'>
-					<div className='col-md-9'>
-						<h3 className='card-title align-items-start flex-column'>
-							<span className='card-label fw-bold fs-3 mb-1'>Employee Salary Sheet</span>
-						</h3>
+
+			<nav className='gz-mgmt-breadcrumb'>
+				<a href='/rag/dashboard'>Dashboard</a>
+				<span>/</span>
+				<a href='/rag/employees'>Staff Management</a>
+				<span>/</span>
+				<span>Salary Data</span>
+			</nav>
+
+			<div className='gz-mgmt-header mb-6'>
+				<div>
+					<h1 className='gz-mgmt-title'>Staff Salary Master Registry</h1>
+					<p className='gz-mgmt-subtitle'>
+						Disbursement records, net payables, attendance days, and corporate banking export files
+					</p>
+				</div>
+			</div>
+
+			{/* Main Salary Table Card */}
+			<div className='gz-mgmt-card mb-6'>
+				<div className='gz-mgmt-toolbar flex-wrap gap-3'>
+					<div className='gz-mgmt-toolbar-left flex-wrap gap-3'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
+						<LengthMenu
+							expenseData={salaryData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							lastMonth={true}
+						/>
+					</div>
+
+					<div className='gz-mgmt-toolbar-right'>
+						<button
+							type='button'
+							className='gz-mgmt-export-btn'
+							onClick={downloadExcel}
+							disabled={exporting}
+						>
+							{exporting ? (
+								<span className='spinner-border spinner-border-sm me-2' role='status' />
+							) : (
+								<FontAwesomeIcon icon={faDownload} />
+							)}
+							Export Excel
+						</button>
 					</div>
 				</div>
 
-				<div className='card-header border-0 pt-6 px-6'>
-					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
-						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
-							{/* 1. Searchbar */}
-							<div>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-									className='me-0'
-								/>
-							</div>
-
-							{/* 2. Dropdown (show entries per page) */}
-							<div>
-								<LengthMenu
-									expenseData={salaryData}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-									value={pagination.itemsPerPage}
-									className='me-0'
-								/>
-							</div>
-
-							{/* 3. Download Excel Button */}
-							<div>
-								<button
-									type='button'
-									className='btn btn-icon d-flex align-items-center justify-content-center'
-									onClick={downloadExcel}
-									disabled={exporting}
-									style={{
-										width: '38px',
-										height: '38px',
-										minWidth: '38px',
-										padding: 0,
-										borderRadius: '8px',
-										fontSize: '14px',
-										backgroundColor: '#ffffff',
-										border: '1px solid #DFE7F0',
-										color: '#1E3A5F',
-										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-										cursor: exporting ? 'not-allowed' : 'pointer',
-									}}
-									onMouseEnter={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#1E3A5F'
-											e.currentTarget.style.borderColor = '#1E3A5F'
-											e.currentTarget.style.color = '#ffffff'
-											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
-											e.currentTarget.style.transform = 'translateY(-1px)'
-										}
-									}}
-									onMouseLeave={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#ffffff'
-											e.currentTarget.style.borderColor = '#DFE7F0'
-											e.currentTarget.style.color = '#1E3A5F'
-											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
-											e.currentTarget.style.transform = 'translateY(0)'
-										}
-									}}
-									title='Download Excel'>
-									{exporting ? (
-										<span
-											className='spinner-border spinner-border-sm'
-											role='status'
-											aria-hidden='true'></span>
-									) : (
-										<FontAwesomeIcon icon={faDownload} />
-									)}
-								</button>
-							</div>
-
-							{/* 4. Datefilter */}
-							<div className='d-flex align-items-center flex-shrink-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-									lastMonth={true}
-								/>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div className='card-body py-3'>
+				<div className='card-body p-0'>
 					<div className='table-responsive'>
 						<Table
 							data={paginatedAdminData}
@@ -441,68 +405,82 @@ const EmployeeSalary = () => {
 								<React.Fragment key={salary?._id}>
 									<tr
 										onClick={() => handleRowClick(salary?._id)}
-										className='data-row'>
+										className='data-row'
+									>
 										<td className='text-center'>
-											<div className='d-flex'>
+											<div className='d-flex justify-content-center align-items-center'>
 												<FontAwesomeIcon
 													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
+													className='me-2 d-md-none'
+													style={{ color: '#607D8B', fontSize: '14px' }}
 												/>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>{actualIndex}</span>
+												<span className='fw-bold text-muted fs-7'>{actualIndex}</span>
 											</div>
 										</td>
 										<td>
-											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
-													<img
-														src={
-															salary?.employee_photo
-																? `https://files.fggroup.in/${salary?.employee_photo}`
-																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
+											<div className='gz-mgmt-identity-cell'>
+												<img
+													src={
+														salary?.employee_photo || salary?.photo || salary?.employee_id?.photo
+															? `https://files.fggroup.in/${salary?.employee_photo || salary?.photo || salary?.employee_id?.photo}`
+															: toAbsoluteUrl('/media/logos/fgiit-logo.png')
+													}
+													alt={salary?.employee_name || salary?.employee_id?.full_name}
+													className='gz-mgmt-avatar'
+													onError={(e) => {
+														const target = e.currentTarget
+														target.style.display = 'none'
+														if (target.nextElementSibling) {
+															(target.nextElementSibling as HTMLElement).style.display = 'flex'
 														}
-														alt={salary?.employee_name}
-														style={{ width: '50px', height: '50px' }}
-													/>
+													}}
+												/>
+												<div
+													className='gz-mgmt-avatar-fallback'
+													style={{ display: 'none' }}
+												>
+													{(salary?.employee_name || salary?.employee_id?.full_name || 'E').charAt(0).toUpperCase()}
 												</div>
-												<div className='d-flex justify-content-start flex-column'>
-													<span className='text-dark fw-bold  fs-6'>{salary?.employee_name}</span>
-													<span className='text-muted fw-semibold text-muted d-block fs-7'>
-														{salary?.employee_email}
+												<div className='gz-mgmt-identity-info'>
+													<span className='gz-mgmt-identity-name'>
+														{salary?.employee_name || salary?.employee_id?.full_name || 'Unnamed Employee'}
+													</span>
+													<span className='gz-mgmt-identity-sub'>
+														{salary?.employee_code || salary?.employee_id?.employee_code || salary?.employee_email || 'No code'}
 													</span>
 												</div>
 											</div>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{salary?.total_salary ? salary?.total_salary : '-'}
+											<span className='fw-bold' style={{ color: '#0F172A' }}>
+												{salary?.total_salary ? `₹${Number(salary.total_salary).toLocaleString('en-IN')}` : '-'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{salary?.final_salary ? salary?.final_salary : '-'}
+											<span className='fw-bold' style={{ color: '#16A34A' }}>
+												{salary?.final_salary !== undefined ? `₹${Number(salary.final_salary).toLocaleString('en-IN')}` : '-'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{salary?.total_present ? salary?.total_present : '-'}
+											<span className='gz-mgmt-pill success'>
+												{salary?.total_present !== undefined ? `${salary.total_present} Days` : '-'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{salary?.total_absent ? salary?.total_absent : '-'}
+											<span className='gz-mgmt-pill danger'>
+												{salary?.total_absent !== undefined ? `${salary.total_absent} Days` : '0 Days'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{salary?.month && salary?.year ? `${salary?.month} ${salary?.year}` : '-'}
+											<span className='gz-mgmt-pill info'>
+												{salary?.month && salary?.year ? `${salary?.month} ${salary?.year}` : salary?.period || '-'}
 											</span>
 										</td>
 										<td>
 											<TableButton
 												action='view'
 												onClick={() => {
-													window.location.href = `/rag/salary-data-view?employee_id=${salary?.employee_id?._id}`
+													window.location.href = `/rag/salary-data-view?employee_id=${salary?.employee_id?._id || salary?.employee_id}&period=${salary?.period}`
 												}}
 											/>
 										</td>
@@ -510,42 +488,13 @@ const EmployeeSalary = () => {
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12}>
-												<div>
-													<div className='d-flex align-items-center'>
-														<div className='symbol symbol-45px me-5'>
-															<img
-																src={
-																	salary?.employee_photo
-																		? `https://files.fggroup.in/${salary?.employee_photo}`
-																		: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-																}
-																alt={salary?.employee_name}
-																style={{ width: '50px', height: '50px' }}
-															/>
-														</div>
-														<div className='d-flex justify-content-start flex-column'>
-															<span className='text-dark fw-bold  fs-6'>
-																{salary?.employee_name}
-															</span>
-															<span className='text-muted fw-semibold text-muted d-block fs-7'>
-																{salary?.employee_email}
-															</span>
-														</div>
-													</div>
-													<strong>{sortableFields[1].title}:</strong>{' '}
-													{salary?.total_salary ? salary?.total_salary : '-'}
-													<br />
-													<strong>{sortableFields[2].title}:</strong>{' '}
-													{salary?.final_salary ? salary?.final_salary : '-'}
-													<br />
-													<strong>{sortableFields[3].title}:</strong>{' '}
-													{salary?.total_present ? salary?.total_present : '-'}
-													<br />
-													<strong>{sortableFields[4].title}:</strong>{' '}
-													{salary?.total_absent ? salary?.total_absent : '-'}
-													<br />
-													<strong>{sortableFields[5].title}:</strong>{' '}
-													{salary?.month && salary?.year ? `${salary?.month} ${salary?.year}` : '-'}
+												<div className='p-4' style={{ background: '#F8FAFC', borderRadius: '8px' }}>
+													<strong>Employee:</strong> {salary?.employee_name || salary?.employee_id?.full_name} ({salary?.employee_id?.employee_code})<br />
+													<strong>Base Salary:</strong> ₹{salary?.total_salary || 0}<br />
+													<strong>Final Salary:</strong> ₹{salary?.final_salary || 0}<br />
+													<strong>Present Days:</strong> {salary?.total_present || 0}<br />
+													<strong>Absent Days:</strong> {salary?.total_absent || 0}<br />
+													<strong>Period:</strong> {salary?.month && salary?.year ? `${salary?.month} ${salary?.year}` : salary?.period || '-'}
 												</div>
 											</td>
 										</tr>
@@ -559,118 +508,124 @@ const EmployeeSalary = () => {
 						/>
 					</div>
 					{paginatedAdminData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10 text-muted'>
+							<b>No salary records found</b>
 						</div>
 					)}
 					{paginatedAdminData.length > 0 && (
 						<UsersListPagination
-							totalPages={Math.ceil(filteredAdminData.length / pagination.itemsPerPage)}
+							totalPages={Math.ceil(filteredAdminData.length / pagination.itemsPerPage) || 1}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
 						/>
 					)}
 				</div>
 			</div>
-			{/* XL Sheet Card */}
-			<div className='card mt-6'>
-				<div className='card-header'>
-					<h3 className='card-title'>XL Sheet</h3>
+
+			{/* Banking Batch Disbursement XL Generator Card */}
+			<div className='gz-mgmt-form-card'>
+				<div className='gz-mgmt-section-header mb-6'>
+					<div className='gz-mgmt-section-badge'>
+						<i className='bi bi-bank fs-5'></i>
+					</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>Corporate Bank Batch Sheet (XL)</h3>
+						<p className='gz-mgmt-section-subtitle'>
+							Generate standardized IMPS / NEFT / RTGS salary disbursement template for bank upload
+						</p>
+					</div>
 				</div>
-				<div className='card-body'>
-					<div className='row'>
-						<div className='col-md-6 mb-4'>
-							<label className='form-label'>Account Number</label>
-							<input
-								type='text'
-								className='form-control'
-								value='923020001798197'
-								readOnly
-							/>
-						</div>
-						<div className='col-md-3 mb-4'>
-							<SelectField
-								label='Month'
-								name='month'
-								value={selectedMonth}
-								onChange={(e) => setSelectedMonth(e.target.value)}
-								options={[
-									{ label: 'Select Month', value: '' },
-									{ label: 'January', value: '01' },
-									{ label: 'February', value: '02' },
-									{ label: 'March', value: '03' },
-									{ label: 'April', value: '04' },
-									{ label: 'May', value: '05' },
-									{ label: 'June', value: '06' },
-									{ label: 'July', value: '07' },
-									{ label: 'August', value: '08' },
-									{ label: 'September', value: '09' },
-									{ label: 'October', value: '10' },
-									{ label: 'November', value: '11' },
-									{ label: 'December', value: '12' },
-								]}
-								hideDefaultOption={true}
-								marginRemove={true}
-							/>
-						</div>
-						<div className='col-md-3 mb-4'>
-							<SelectField
-								label='Year'
-								name='year'
-								value={selectedYear}
-								onChange={(e) => setSelectedYear(e.target.value)}
-								options={[
-									{ label: 'Select Year', value: '' },
-									{ label: '2023', value: '2023' },
-									{ label: '2024', value: '2024' },
-									{ label: '2025', value: '2025' },
-									{ label: '2026', value: '2026' },
-								]}
-								hideDefaultOption={true}
-								marginRemove={true}
-							/>
-						</div>
+
+				<div className='row g-4'>
+					<div className='col-md-6'>
+						<label className='gz-mgmt-form-label'>Debit Account Number</label>
+						<input
+							type='text'
+							className='form-control form-control-solid'
+							value='923020001798197'
+							readOnly
+							style={{ background: '#F1F5F9', fontWeight: 600 }}
+						/>
 					</div>
-					<div className='row'>
-						<div className='col-md-6 mb-4'>
-							<label className='form-label'>Transaction Date</label>
-							<input
-								type='date'
-								className='form-control'
-								value={selectedDate}
-								onChange={(e) => setSelectedDate(e.target.value)}
-							/>
-						</div>
-						<div className='col-md-6 mb-4'>
-							<SelectField
-								label='Transaction Type'
-								name='transactionType'
-								value={transactionType}
-								onChange={(e) => setTransactionType(e.target.value)}
-								options={[
-									{ label: 'IMPS', value: 'IMPS' },
-									{ label: 'RTGS', value: 'RTGS' },
-									{ label: 'NEFT', value: 'NEFT' },
-								]}
-								hideDefaultOption={true}
-								marginRemove={true}
-							/>
-						</div>
+					<div className='col-md-3'>
+						<SelectField
+							label='Disbursement Month'
+							name='month'
+							value={selectedMonth}
+							onChange={(e) => setSelectedMonth(e.target.value)}
+							options={[
+								{ label: 'Select Month', value: '' },
+								{ label: 'January', value: '01' },
+								{ label: 'February', value: '02' },
+								{ label: 'March', value: '03' },
+								{ label: 'April', value: '04' },
+								{ label: 'May', value: '05' },
+								{ label: 'June', value: '06' },
+								{ label: 'July', value: '07' },
+								{ label: 'August', value: '08' },
+								{ label: 'September', value: '09' },
+								{ label: 'October', value: '10' },
+								{ label: 'November', value: '11' },
+								{ label: 'December', value: '12' },
+							]}
+							hideDefaultOption={true}
+							marginRemove={true}
+						/>
 					</div>
-					<div className='col-12'>
-						<div className='d-flex justify-content-end flex-direction-column'>
-							<div>
-								<button
-									className='btn btn-primary d-block'
-									onClick={downloadXL}>
-									Download XL
-								</button>
-							</div>
-						</div>
+					<div className='col-md-3'>
+						<SelectField
+							label='Disbursement Year'
+							name='year'
+							value={selectedYear}
+							onChange={(e) => setSelectedYear(e.target.value)}
+							options={[
+								{ label: 'Select Year', value: '' },
+								{ label: '2023', value: '2023' },
+								{ label: '2024', value: '2024' },
+								{ label: '2025', value: '2025' },
+								{ label: '2026', value: '2026' },
+							]}
+							hideDefaultOption={true}
+							marginRemove={true}
+						/>
+					</div>
+					<div className='col-md-6'>
+						<label className='gz-mgmt-form-label'>Transaction Execution Date</label>
+						<input
+							type='date'
+							className='form-control form-control-solid'
+							value={selectedDate}
+							onChange={(e) => setSelectedDate(e.target.value)}
+						/>
+					</div>
+					<div className='col-md-6'>
+						<SelectField
+							label='Transaction Transfer Mode'
+							name='transactionType'
+							value={transactionType}
+							onChange={(e) => setTransactionType(e.target.value)}
+							options={[
+								{ label: 'IMPS (Immediate Payment)', value: 'IMPS' },
+								{ label: 'RTGS (Real Time Gross)', value: 'RTGS' },
+								{ label: 'NEFT (National Electronic Fund Transfer)', value: 'NEFT' },
+							]}
+							hideDefaultOption={true}
+							marginRemove={true}
+						/>
+					</div>
+					<div className='col-12 mt-6 d-flex justify-content-end'>
+						<button
+							type='button'
+							className='gz-mgmt-btn-primary'
+							onClick={downloadXL}
+						>
+							<i className='bi bi-file-earmark-excel me-2'></i>
+							Generate & Download Banking XL
+						</button>
 					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 

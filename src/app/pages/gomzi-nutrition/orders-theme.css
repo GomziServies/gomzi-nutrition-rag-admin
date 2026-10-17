@@ -1,0 +1,381 @@
+/* ==========================================================================
+   GOMZI NUTRITION — ORDER MANAGEMENT PREMIUM DESIGN SYSTEM
+   Used by:
+   - Product Order Details (/rag/product-order-view)
+   - All Customer Orders (/rag/all-order)
+   - All Order Details (/rag/all-order/view-order)
+   ========================================================================== */
+
+/* Layout & Cards */
+.gz-order-grid-layout {
+	display: grid;
+	grid-template-columns: 1fr 360px;
+	gap: 24px;
+	align-items: start;
+}
+
+@media (max-width: 992px) {
+	.gz-order-grid-layout {
+		grid-template-columns: 1fr;
+	}
+}
+
+.gz-order-card {
+	background: #FFFFFF;
+	border: 1px solid #E4EAF2;
+	border-radius: 16px;
+	box-shadow: 0 2px 8px rgba(23, 43, 77, 0.04);
+	margin-bottom: 24px;
+	overflow: hidden;
+	transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.gz-order-card:hover {
+	border-color: #D1D9E6;
+	box-shadow: 0 4px 14px rgba(23, 43, 77, 0.06);
+}
+
+.gz-order-card-header {
+	padding: 18px 24px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-bottom: 1px solid #EEF2F7;
+	background: #FFFFFF;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.gz-order-card-title {
+	font-size: 16px;
+	font-weight: 700;
+	color: #172B4D;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.gz-order-card-title .icon {
+	color: #3B82F6;
+	font-size: 15px;
+}
+
+.gz-order-card-body {
+	padding: 24px;
+}
+
+/* Key Value Info Grid */
+.gz-order-info-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 20px;
+}
+
+.gz-order-info-item {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.gz-order-info-label {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: #71809A;
+}
+
+.gz-order-info-value {
+	font-size: 14.5px;
+	font-weight: 600;
+	color: #172B4D;
+	word-break: break-word;
+}
+
+/* User Identity Cell in Details */
+.gz-order-user-card {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding-bottom: 20px;
+	margin-bottom: 20px;
+	border-bottom: 1px solid #EEF2F7;
+}
+
+.gz-order-user-avatar {
+	width: 56px;
+	height: 56px;
+	border-radius: 14px;
+	background: #EAF1F8;
+	color: #172B4D;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	font-weight: 700;
+	flex-shrink: 0;
+	border: 2px solid #FFFFFF;
+	box-shadow: 0 2px 6px rgba(23, 43, 77, 0.1);
+	overflow: hidden;
+}
+
+.gz-order-user-avatar img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.gz-order-user-details {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.gz-order-user-name {
+	font-size: 16px;
+	font-weight: 700;
+	color: #172B4D;
+}
+
+.gz-order-user-meta {
+	font-size: 13px;
+	color: #71809A;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* Modern Tracking Stepper */
+.gz-order-tracker {
+	display: flex;
+	justify-content: space-between;
+	position: relative;
+	margin: 20px 0 10px;
+	padding: 0 10px;
+}
+
+.gz-order-tracker::before {
+	content: '';
+	position: absolute;
+	top: 24px;
+	left: 40px;
+	right: 40px;
+	height: 3px;
+	background: #E2E8F0;
+	z-index: 1;
+}
+
+.gz-order-step {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	flex: 1;
+}
+
+.gz-order-step-btn {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: #FFFFFF;
+	border: 3px solid #E2E8F0;
+	color: #94A3B8;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	cursor: pointer;
+	transition: all 0.25s ease;
+	outline: none;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.gz-order-step-btn:hover {
+	transform: scale(1.06);
+	border-color: #CBD5E1;
+}
+
+.gz-order-step.active .gz-order-step-btn {
+	background: #172B4D;
+	border-color: #172B4D;
+	color: #FFFFFF;
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.25);
+}
+
+.gz-order-step-label {
+	font-size: 13px;
+	font-weight: 700;
+	color: #64748B;
+	margin-top: 10px;
+	text-transform: capitalize;
+}
+
+.gz-order-step.active .gz-order-step-label {
+	color: #172B4D;
+}
+
+.gz-order-step-time {
+	font-size: 11.5px;
+	color: #94A3B8;
+	margin-top: 3px;
+	max-width: 140px;
+}
+
+/* Status Badges */
+.gz-status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 12px;
+	border-radius: 999px;
+	font-size: 12.5px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: capitalize;
+}
+
+.gz-status-pill.success {
+	background: #ECFDF5;
+	color: #065F46;
+	border: 1px solid #A7F3D0;
+}
+
+.gz-status-pill.pending,
+.gz-status-pill.warning {
+	background: #FFFBEB;
+	color: #92400E;
+	border: 1px solid #FDE68A;
+}
+
+.gz-status-pill.failed,
+.gz-status-pill.danger {
+	background: #FEF2F2;
+	color: #991B1B;
+	border: 1px solid #FECACA;
+}
+
+.gz-status-pill.cancelled,
+.gz-status-pill.secondary {
+	background: #F1F5F9;
+	color: #475569;
+	border: 1px solid #CBD5E1;
+}
+
+.gz-status-pill.refunded,
+.gz-status-pill.primary {
+	background: #EFF6FF;
+	color: #1E40AF;
+	border: 1px solid #BFDBFE;
+}
+
+.gz-status-pill.dispatched {
+	background: #F5F3FF;
+	color: #5B21B6;
+	border: 1px solid #DDD6FE;
+}
+
+.gz-status-pill.delivered {
+	background: #ECFDF5;
+	color: #065F46;
+	border: 1px solid #A7F3D0;
+}
+
+/* Item details row list */
+.gz-order-item-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 0;
+	border-bottom: 1px solid #EEF2F7;
+	gap: 16px;
+}
+
+.gz-order-item-row:last-child {
+	border-bottom: none;
+}
+
+.gz-order-item-info {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	flex: 1;
+}
+
+.gz-order-item-thumb {
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	background: #F1F5F9;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #64748B;
+	font-size: 16px;
+	flex-shrink: 0;
+	overflow: hidden;
+}
+
+.gz-order-item-thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.gz-order-item-name {
+	font-size: 14px;
+	font-weight: 600;
+	color: #172B4D;
+}
+
+.gz-order-item-type {
+	font-size: 12px;
+	color: #71809A;
+}
+
+.gz-order-item-qty {
+	font-size: 13px;
+	font-weight: 600;
+	color: #475569;
+	background: #F1F5F9;
+	padding: 3px 8px;
+	border-radius: 6px;
+}
+
+.gz-order-item-price {
+	font-size: 15px;
+	font-weight: 700;
+	color: #172B4D;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* Totals Summary Card */
+.gz-order-summary-box {
+	background: #F8FAFD;
+	border: 1px solid #E4EAF2;
+	border-radius: 12px;
+	padding: 18px 20px;
+	margin-top: 16px;
+}
+
+.gz-order-summary-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 13.5px;
+	color: #64748B;
+	margin-bottom: 8px;
+}
+
+.gz-order-summary-row.total {
+	font-size: 17px;
+	font-weight: 700;
+	color: #172B4D;
+	padding-top: 10px;
+	margin-top: 10px;
+	border-top: 1px dashed #CBD5E1;
+	margin-bottom: 0;
+}

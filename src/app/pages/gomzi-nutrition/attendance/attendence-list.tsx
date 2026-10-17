@@ -1,8 +1,8 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -14,6 +14,7 @@ import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetGlsAttendance, GetGlsEmployees, SyncGlsAttendance } from '../../../Functions/FGGroup'
+import '../common-management.css'
 
 const AttendenceList = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -257,102 +258,81 @@ const AttendenceList = () => {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Employee Attendance</PageTitle>
-			<div className='card'>
-				<div className='row justify-content-between mt-7 mx-6'>
-					<div className='col-md-9'>
-						<h3 className='card-title align-items-start flex-column'>
-							<span className='card-label fw-bold fs-3 mb-1'>Employee Sheet</span>
-						</h3>
-					</div>
+
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<span>Staff Management</span>
+				<span className='sep'>/</span>
+				<span className='current'>Attendance</span>
+			</div>
+
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Staff Attendance</h1>
+					<p className='gz-mgmt-subtitle'>Monthly punch records, presence tallies, half-days, and biometric synchronization</p>
 				</div>
+				<button
+					type='button'
+					className='gz-mgmt-btn-secondary d-inline-flex align-items-center'
+					onClick={handleSyncButton}
+					disabled={isRotating}>
+					<i className={`bi bi-arrow-repeat me-2 ${isRotating ? 'spinner-border spinner-border-sm' : ''}`}></i>
+					{isRotating ? 'Syncing...' : 'Sync Biometric Data'}
+				</button>
+			</div>
 
-				<div className='card-header border-0 pt-6 px-6'>
-					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
-						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
-							{/* 1. Searchbar */}
-							<div>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-									className='me-0'
-								/>
-							</div>
+			<div className='gz-mgmt-card'>
+				<div className='gz-mgmt-toolbar'>
+					<div className='gz-mgmt-toolbar-left'>
+						{/* 1. Searchbar */}
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
 
-							{/* 2. Dropdown (show entries per page) */}
-							<div>
-								<LengthMenu
-									expenseData={attendanceData}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-									value={pagination.itemsPerPage}
-									className='me-0'
-								/>
-							</div>
+						{/* 2. Dropdown (show entries per page) */}
+						<LengthMenu
+							expenseData={attendanceData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
 
-							{/* 3. Download Excel Button */}
-							<div>
-								<button
-									type='button'
-									className='btn btn-icon d-flex align-items-center justify-content-center'
-									onClick={downloadExcel}
-									disabled={exporting}
-									style={{
-										width: '38px',
-										height: '38px',
-										minWidth: '38px',
-										padding: 0,
-										borderRadius: '8px',
-										fontSize: '14px',
-										backgroundColor: '#ffffff',
-										border: '1px solid #DFE7F0',
-										color: '#1E3A5F',
-										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-										cursor: exporting ? 'not-allowed' : 'pointer',
-									}}
-									onMouseEnter={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#1E3A5F'
-											e.currentTarget.style.borderColor = '#1E3A5F'
-											e.currentTarget.style.color = '#ffffff'
-											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
-											e.currentTarget.style.transform = 'translateY(-1px)'
-										}
-									}}
-									onMouseLeave={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#ffffff'
-											e.currentTarget.style.borderColor = '#DFE7F0'
-											e.currentTarget.style.color = '#1E3A5F'
-											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
-											e.currentTarget.style.transform = 'translateY(0)'
-										}
-									}}
-									title='Download Excel'>
-									{exporting ? (
-										<span
-											className='spinner-border spinner-border-sm'
-											role='status'
-											aria-hidden='true'></span>
-									) : (
-										<FontAwesomeIcon icon={faDownload} />
-									)}
-								</button>
-							</div>
-
-							{/* 4. Datefilter */}
-							<div className='d-flex align-items-center flex-shrink-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-								/>
-							</div>
+						{/* 3. Datefilter */}
+						<div className='d-flex align-items-center flex-shrink-0'>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+							/>
 						</div>
 					</div>
+
+					{/* 4. Right: Excel Download */}
+					<div className='gz-mgmt-toolbar-right'>
+						<button
+							type='button'
+							className='gz-mgmt-export-btn'
+							onClick={downloadExcel}
+							disabled={exporting}
+							title='Download Excel'>
+							{exporting ? (
+								<span
+									className='spinner-border spinner-border-sm'
+									role='status'
+									aria-hidden='true'></span>
+							) : (
+								<FontAwesomeIcon icon={faDownload} />
+							)}
+							<span>Export Excel</span>
+						</button>
+					</div>
 				</div>
 
-				<div className='card-body py-3'>
+				<div className='card-body p-0'>
 					<div className='table-responsive'>
 						<Table
 							data={attendanceData}
@@ -371,62 +351,54 @@ const AttendenceList = () => {
 										onClick={() => handleRowClick(attendance?._id)}
 										className='data-row'>
 										<td className='text-center'>
-											<div className='d-flex'>
+											<div className='d-flex align-items-center justify-content-center'>
 												<FontAwesomeIcon
 													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
+													className='mx-1 mb-1 plus-icon'
 													style={{ color: '#607D8B', fontSize: '18px' }}
 												/>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>{actualIndex}</span>
+												<span className='fw-bold d-block mb-1 fs-6' style={{ color: '#172B4D' }}>{actualIndex}</span>
 											</div>
 										</td>
 										<td>
-											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
-													<img
-														src={
-															attendance?.photo
-																? `https://files.fggroup.in/${attendance?.photo}`
-																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-														}
-														alt={attendance?.Name}
-														style={{ width: '50px', height: '50px' }}
-													/>
-												</div>
-												<div className='d-flex justify-content-start flex-column'>
-													<span className='text-dark fw-bold  fs-6'>{attendance?.Name}</span>
-													<span className='text-muted fw-semibold text-muted d-block fs-7'>
-														{attendance?.mobile}
+											<div className='gz-mgmt-identity-cell'>
+												<img
+													src={
+														attendance?.photo
+															? `https://files.fggroup.in/${attendance?.photo}`
+															: toAbsoluteUrl('/media/logos/fgiit-logo.png')
+													}
+													alt={attendance?.Name}
+													className='gz-mgmt-avatar'
+												/>
+												<div className='gz-mgmt-identity-info'>
+													<span className='name'>{attendance?.Name || 'Staff Member'}</span>
+													<span className='sub'>
+														{attendance?.mobile || '-'}
 													</span>
 												</div>
 											</div>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span className='gz-mgmt-pill info'>
 												{attendance?.employee_code ? attendance?.employee_code : 'N/A'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{attendance?.half_day === 0
-													? attendance?.total_present
-														? attendance?.total_present
-														: '0'
-													: attendance?.total_present
-													? attendance?.total_present + ` ( ${attendance?.half_day} Half Day )`
-													: '0'}
+											<span className='gz-mgmt-pill success'>
+												P: {attendance?.total_present ?? 0}
+												{attendance?.half_day ? ` (${attendance?.half_day} Half)` : ''}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{attendance?.total_absent ? attendance?.total_absent : '0'}
+											<span className='gz-mgmt-pill danger'>
+												A: {attendance?.total_absent ?? 0}
 											</span>
 										</td>
 
 										<td>
 											<TableButton
 												action='view'
-												// to={`/hr/attendance-view?employee_code=${attendance?.employee_code}`}
 												onClick={() => {
 													if (selectedDateRange) {
 														localStorage.setItem(
@@ -445,72 +417,15 @@ const AttendenceList = () => {
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12}>
-												<div>
-													<div className='d-flex align-items-center'>
-														<div className='symbol symbol-45px me-5'>
-															<img
-																src={
-																	attendance?.profile_image
-																		? `https://files.fggroup.in/${attendance?.profile_image}`
-																		: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-																}
-																alt={attendance?.Name}
-																style={{ width: '50px', height: '50px' }}
-															/>
-														</div>
-														<div className='d-flex justify-content-start flex-column'>
-															<span className='text-dark fw-bold  fs-6'>{attendance?.Name}</span>
-															<span className='text-muted fw-semibold text-muted d-block fs-7'>
-																{attendance?._id}
-															</span>
-														</div>
-													</div>
+												<div className='p-3' style={{ background: '#F8FAFC', borderRadius: '8px' }}>
+													<strong>Employee:</strong> {attendance?.Name}
+													<br />
 													<strong>{sortableFields[1].title}:</strong>{' '}
 													{attendance?.employee_code ? attendance?.employee_code : 'N/A'}
 													<br />
-													<strong>{sortableFields[2].title}:</strong>{' '}
-													{attendance?.INTime ? attendance?.INTime : 'N/A'}
+													<strong>Total Present:</strong> {attendance?.total_present || 0}
 													<br />
-													<strong>{sortableFields[3].title}:</strong>{' '}
-													{attendance?.OUTTime ? attendance?.OUTTime : 'N/A'}
-													<br />
-													<strong>{sortableFields[4].title}:</strong>{' '}
-													{attendance?.OverTime ? attendance?.OverTime : 'N/A'}
-													<br />
-													<strong>{sortableFields[5].title}:</strong>{' '}
-													{attendance?.Late_In ? attendance?.Late_In : 'N/A'}
-													<br />
-													<strong>{sortableFields[7].title}:</strong>{' '}
-													{attendance?.createdAt
-														? DayJS(attendance?.createdAt).format('DD/MM/YYYY hh:mm:ss A')
-														: 'N/A'}
-													<br />
-													<div className='d-flex my-1'>
-														<strong className='mt-2 me-2'>{sortableFields[6].title}:</strong>{' '}
-														<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-															{attendance?.halfDay ? (
-																attendance?.Status === 'Leave' || attendance?.Status === 'A' ? (
-																	<span className='badge badge-light-danger py-3 px-4 fs-7'>
-																		Half Day{' / '}
-																		{attendance?.Status}
-																	</span>
-																) : (
-																	<span className='badge badge-light-success py-3 px-4 fs-7'>
-																		Half Day{' / '}
-																		{attendance?.Status}
-																	</span>
-																)
-															) : attendance?.Status === 'Leave' || attendance?.Status === 'A' ? (
-																<span className='badge badge-light-danger py-3 px-4 fs-7'>
-																	{attendance?.Status}
-																</span>
-															) : (
-																<span className='badge badge-light-success py-3 px-4 fs-7'>
-																	{attendance?.Status}
-																</span>
-															)}
-														</span>
-													</div>
+													<strong>Total Absent:</strong> {attendance?.total_absent || 0}
 												</div>
 											</td>
 										</tr>
@@ -524,8 +439,8 @@ const AttendenceList = () => {
 						/>
 					</div>
 					{attendanceData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10 text-muted'>
+							<b>No attendance records found</b>
 						</div>
 					)}
 					{attendanceData.length > 0 && (
@@ -537,7 +452,7 @@ const AttendenceList = () => {
 					)}
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 

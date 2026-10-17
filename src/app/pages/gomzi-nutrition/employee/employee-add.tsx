@@ -1,8 +1,6 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-/* eslint-disable jsx-a11y/img-redundant-alt */
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import SelectField from '../../../components/SelectField'
@@ -12,6 +10,7 @@ import {
 	FileUploadToFGGroup,
 	GetNextGlsEmployeeCode,
 } from '../../../Functions/FGGroup'
+import '../common-management.css'
 
 // Add interfaces for location data
 interface Country {
@@ -370,363 +369,421 @@ const EmployeeAdd = () => {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Add Employee</PageTitle>
-			<div className='row'>
-				<div className='col-12 mt-3'>
-					<div className='card py-10'>
-						<div className='card-body'>
-							<div className='row'>
-								<div className='col-md-12'>
-									<h2 className='mb-5'>Personal Details:</h2>
-									<div className='row'>
-										<div className='col-md-4 fv-row mb-7'>
-											<InputField
-												placeholder='Employee Code'
-												type='text'
-												className='col-12 fv-row mb-7'
-												name='employee_code'
-												label='Employee Code'
-												htmlFor='employee_code'
-												value={employeeData.employee_code || employee_code || ''}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-4 fv-row mb-md-7'>
-											<InputField
-												placeholder='Joining Date'
-												type='date'
-												className='col-12 fv-row mb-7'
-												name='joining_date'
-												label='Joining Date'
-												htmlFor='joining_date'
-												value={employeeData.joining_date}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<InputField
-												placeholder='Name'
-												type='text'
-												className='col-12 fv-row mb-7'
-												name='name'
-												label='Name'
-												htmlFor='name'
-												value={employeeData.name}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<SelectField
-												className='col-12 fv-row'
-												name='position'
-												label='Position'
-												htmlFor='position'
-												value={employeeData.position}
-												onChange={handleInputChange}
-												options={[
-													'Web Developer',
-													'Web Designer',
-													'Digital marketing',
-													'Franchise Owner',
-													'Graphics Designer',
-													'Sales manager',
-													'Video Editor',
-													'Back Office',
-													'faculty',
-													'Trainer',
-													'Dietitian',
-													'Admin',
-													'Receptionist',
-													'Worker',
-													'Branch Manager',
-													'Human Resources',
-													'Team Leader',
-													'Manager',
-													'Director',
-													'Social Media Assistant',
-													'Fitness Counselor',
-													'Production Manager',
-													'Seo',
-													'Junior Production Manager',
-													'Content Creator',
-													'R&D and Procurement Manager',
-													'R&D and Procurement Jr. Manager',
-												]}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Salary'
-												type='text'
-												className='col-12 fv-row mb-7'
-												name='salary'
-												label='Salary'
-												htmlFor='salary'
-												value={employeeData.salary}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Mobile No.'
-												type='number'
-												className='col-12 fv-row mb-7'
-												name='mobile'
-												label='Mobile No.'
-												htmlFor='mobile'
-												value={employeeData.mobile}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<SelectField
-												className='col-12 fv-row'
-												name='blood_group'
-												label='Blood Group'
-												htmlFor='bloodGroup'
-												value={employeeData.blood_group}
-												onChange={handleInputChange}
-												options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']}
-											/>
-										</div>
 
-										<div className='col-md-12 mt-3'>
-											<h2 className='mb-5'>Address Details:</h2>
-											<div className='row'>
-												<SelectField
-													className='col-md-4 fv-row mb-7'
-													label='Country'
-													name='billing_country'
-													value={employeeData.billing_country}
-													onChange={handleInputChange}
-													htmlFor='billing_country'
-													options={countries.map((country) => country.name)}
-													disabled={loadingCountries}
-												/>
-												<SelectField
-													className='col-md-4 fv-row mb-7'
-													label='State'
-													name='billing_state'
-													value={employeeData.billing_state}
-													onChange={handleInputChange}
-													htmlFor='billing_state'
-													options={states.map((state) => state.name)}
-													disabled={loadingStates || !employeeData.billing_country}
-												/>
-												<SelectField
-													className='col-md-4 fv-row mb-7'
-													label='City'
-													name='billing_city'
-													value={employeeData.billing_city}
-													onChange={handleInputChange}
-													htmlFor='billing_city'
-													options={cities.map((city) => city.name)}
-													disabled={loadingCities || !employeeData.billing_state}
-												/>
-												<InputField
-													className='col-md-8 fv-row'
-													label='Address'
-													placeholder='Enter Address'
-													type='text'
-													name='billing_address_line_1'
-													htmlFor='billing_address_line_1'
-													value={employeeData.billing_address_line_1}
-													onChange={handleInputChange}
-												/>
-												<InputField
-													className='col-md-4 fv-row'
-													label='Postal/Zip Code'
-													placeholder='Enter Postal/Zip Code'
-													type='text'
-													name='billing_pin_code'
-													htmlFor='billing_pin_code'
-													value={employeeData.billing_pin_code}
-													onChange={handleInputChange}
-												/>
-											</div>
-										</div>
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<Link to='/rag/employees'>Staff Management</Link>
+				<span className='sep'>/</span>
+				<span className='current'>Add Employee</span>
+			</div>
 
-										<div className='col-md-12 mt-3'>
-											<h2 className='mb-5'>Family Details:</h2>
-											<div className='row'>
-												{family_details.map((family, index) => (
-													<div
-														className='row'
-														key={index}>
-														<div className='col-md-6 fv-row'>
-															<InputField
-																placeholder='Name'
-																type='text'
-																className='col-12 fv-row'
-																name='name'
-																label='Name'
-																htmlFor='name'
-																value={family.name}
-																onChange={(e: any) => handleFamilyChange(index, e)}
-															/>
-														</div>
-														<div className='col-md-6 fv-row'>
-															<InputField
-																placeholder='Contact Number'
-																type='number'
-																className='col-12 fv-row'
-																name='mobile'
-																label='Contact Number'
-																htmlFor='number'
-																value={family.mobile}
-																onChange={(e: any) => handleFamilyChange(index, e)}
-															/>
-														</div>
-														{family_details.length > 1 && index != 0 ? (
-															<div className='col-2 d-flex  align-items-center'>
-																<div className='d-flex mt-5 justify-content-center align-items-center'>
-																	<TableButton
-																		action='remove'
-																		backgroundDark={true}
-																		onClick={(e) => removePlan(index, e)}
-																	/>
-																</div>
-															</div>
-														) : (
-															''
-														)}
-													</div>
-												))}
-											</div>
-										</div>
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Onboard New Employee</h1>
+					<p className='gz-mgmt-subtitle'>Register employee credentials, role designation, family emergency contacts, and bank accounts</p>
+				</div>
+				<Link to='/rag/employees' className='gz-mgmt-btn-secondary text-decoration-none'>
+					Back to Staff
+				</Link>
+			</div>
 
-										<div className='col-12 my-3 d-flex justify-content-end'>
-											<button
-												className='btn-primary btn gap-2 mx-2 btn-sm me-1'
-												onClick={(e) => addPlan(e)}>
-												<strong>
-													<big>+</big>
-												</strong>{' '}
-												Add
-											</button>
-										</div>
-										<div className='col-md-12 mt-3'>
-											<h2 className='mb-5'>Account Details:</h2>
-											<div className='row'>
-												<div className='col-md-4 fv-row mb-7'>
-													<InputField
-														placeholder='Bank Name'
-														type='text'
-														className='col-12 fv-row mb-7'
-														name='bank_name'
-														label='Bank Name'
-														htmlFor='bank_name'
-														value={employeeData.bank_name}
-														onChange={handleInputChange}
-													/>
-												</div>
-												<div className='col-md-4 fv-row mb-7'>
-													<InputField
-														placeholder='Account No.'
-														type='text'
-														className='col-12 fv-row mb-7'
-														name='account_details'
-														label='Account No.'
-														htmlFor='account_details'
-														value={employeeData.account_details}
-														onChange={handleInputChange}
-													/>
-												</div>
-												<div className='col-md-4 fv-row mb-7'>
-													<InputField
-														placeholder='IFSC Code'
-														type='text'
-														className='col-12 fv-row mb-7'
-														name='IFSC'
-														label='IFSC Code'
-														htmlFor='IFSC'
-														value={employeeData.IFSC}
-														onChange={handleInputChange}
-													/>
-												</div>
-											</div>
-										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<InputField
-												placeholder='Upload Photo'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='photo'
-												label='Upload Photo'
-												htmlFor='photo'
-												onChange={handleFileChange}
-											/>
-										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<InputField
-												placeholder='Upload Proof'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='proof'
-												label='Upload Proof'
-												htmlFor='proof'
-												onChange={handleFileChange}
-											/>
-										</div>
-										<div className='col-md-4 fv-row mb-7'>
-											<InputField
-												placeholder='Upload Pdf'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='document'
-												label='Upload Pdf'
-												htmlFor='document'
-												onChange={handleFileChange}
-											/>
-										</div>
-										<div className='col-md-12 mt-3'>
-											<h2 className='mb-5'>Shift Time:</h2>
-											<div className='row'>
-												<div className='col-md-6 fv-row mb-md-7'>
-													<InputField
-														placeholder='In-Time'
-														type='time'
-														className='col-12 fv-row mb-7'
-														name='in_time'
-														label='In-Time'
-														htmlFor='in_time'
-														value={employeeData.in_time}
-														onChange={handleInputChange}
-													/>
-												</div>
-												<div className='col-md-6 fv-row mb-md-7'>
-													<InputField
-														placeholder='Out-Time'
-														type='time'
-														className='col-12 fv-row mb-7'
-														name='out_time'
-														label='Out-Time'
-														htmlFor='out_time'
-														value={employeeData.out_time}
-														onChange={handleInputChange}
-													/>
-												</div>
-											</div>
-										</div>
-
-										<div className='col-md-12 fv-row mt-4 mb-2 d-flex justify-content-end'>
-											<button
-												type='button'
-												className='btn btn-success mx-2 mb-4'
-												onClick={handleAddButtonClick}
-												disabled={isSubmitting}>
-												{isSubmitting ? 'Submitting...' : 'Submit'}
-											</button>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
+			<div className='gz-mgmt-form-card'>
+				{/* Section 1: Personal Details */}
+				<div className='gz-mgmt-section-header'>
+					<div className='gz-mgmt-section-badge'>1</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>Personal & Role Details</h3>
+						<p className='gz-mgmt-section-subtitle'>Basic identification, joining date, and corporate designation</p>
 					</div>
 				</div>
+
+				<div className='row mb-6'>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							placeholder='Employee Code'
+							type='text'
+							className='col-12 fv-row'
+							name='employee_code'
+							label='Employee Code'
+							htmlFor='employee_code'
+							value={employeeData.employee_code || employee_code || ''}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							placeholder='Joining Date'
+							type='date'
+							className='col-12 fv-row'
+							name='joining_date'
+							label='Joining Date'
+							htmlFor='joining_date'
+							value={employeeData.joining_date}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							placeholder='Full Name'
+							type='text'
+							className='col-12 fv-row'
+							name='name'
+							label='Name'
+							htmlFor='name'
+							value={employeeData.name}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className='col-md-6 fv-row mb-4'>
+						<SelectField
+							className='col-12 fv-row'
+							name='position'
+							label='Position / Role'
+							htmlFor='position'
+							value={employeeData.position}
+							onChange={handleInputChange}
+							options={[
+								'Web Developer',
+								'Web Designer',
+								'Digital marketing',
+								'Franchise Owner',
+								'Graphics Designer',
+								'Sales manager',
+								'Video Editor',
+								'Back Office',
+								'faculty',
+								'Trainer',
+								'Dietitian',
+								'Admin',
+								'Receptionist',
+								'Worker',
+								'Branch Manager',
+								'Human Resources',
+								'Team Leader',
+								'Manager',
+								'Director',
+								'Social Media Assistant',
+								'Fitness Counselor',
+								'Production Manager',
+								'Seo',
+								'Junior Production Manager',
+								'Content Creator',
+								'R&D and Procurement Manager',
+								'R&D and Procurement Jr. Manager',
+							]}
+						/>
+					</div>
+					<div className='col-md-6 fv-row mb-4'>
+						<InputField
+							placeholder='Salary'
+							type='text'
+							className='col-12 fv-row'
+							name='salary'
+							label='Salary (₹)'
+							htmlFor='salary'
+							value={employeeData.salary}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className='col-md-6 fv-row mb-4'>
+						<InputField
+							placeholder='Mobile No.'
+							type='number'
+							className='col-12 fv-row'
+							name='mobile'
+							label='Mobile Number'
+							htmlFor='mobile'
+							value={employeeData.mobile}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className='col-md-6 fv-row mb-4'>
+						<SelectField
+							className='col-12 fv-row'
+							name='blood_group'
+							label='Blood Group'
+							htmlFor='bloodGroup'
+							value={employeeData.blood_group}
+							onChange={handleInputChange}
+							options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']}
+						/>
+					</div>
+				</div>
+
+				{/* Section 2: Address Details */}
+				<div className='gz-mgmt-section-header'>
+					<div className='gz-mgmt-section-badge'>2</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>Address Information</h3>
+						<p className='gz-mgmt-section-subtitle'>Residential location and regional postal routing</p>
+					</div>
+				</div>
+
+				<div className='row mb-6'>
+					<SelectField
+						className='col-md-4 fv-row mb-4'
+						label='Country'
+						name='billing_country'
+						value={employeeData.billing_country}
+						onChange={handleInputChange}
+						htmlFor='billing_country'
+						options={countries.map((country) => country.name)}
+						disabled={loadingCountries}
+					/>
+					<SelectField
+						className='col-md-4 fv-row mb-4'
+						label='State'
+						name='billing_state'
+						value={employeeData.billing_state}
+						onChange={handleInputChange}
+						htmlFor='billing_state'
+						options={states.map((state) => state.name)}
+						disabled={loadingStates || !employeeData.billing_country}
+					/>
+					<SelectField
+						className='col-md-4 fv-row mb-4'
+						label='City'
+						name='billing_city'
+						value={employeeData.billing_city}
+						onChange={handleInputChange}
+						htmlFor='billing_city'
+						options={cities.map((city) => city.name)}
+						disabled={loadingCities || !employeeData.billing_state}
+					/>
+					<div className='col-md-8 fv-row mb-4'>
+						<InputField
+							className='col-12 fv-row'
+							label='Full Address'
+							placeholder='Street address, flat/unit number, landmark'
+							type='text'
+							name='billing_address_line_1'
+							htmlFor='billing_address_line_1'
+							value={employeeData.billing_address_line_1}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							className='col-12 fv-row'
+							label='Postal / Zip Code'
+							placeholder='6-digit Pincode'
+							type='text'
+							name='billing_pin_code'
+							htmlFor='billing_pin_code'
+							value={employeeData.billing_pin_code}
+							onChange={handleInputChange}
+						/>
+					</div>
+				</div>
+
+				{/* Section 3: Family Details */}
+				<div className='gz-mgmt-section-header'>
+					<div className='gz-mgmt-section-badge'>3</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>Family & Emergency Contacts</h3>
+						<p className='gz-mgmt-section-subtitle'>Immediate relatives and emergency notification numbers</p>
+					</div>
+				</div>
+
+				<div className='mb-6'>
+					{family_details.map((family, index) => (
+						<div key={index} className='gz-mgmt-item-row'>
+							<div className='row flex-grow-1'>
+								<div className='col-md-6 fv-row'>
+									<InputField
+										placeholder='Relative Name'
+										type='text'
+										className='col-12 fv-row'
+										name='name'
+										label={`Family Member #${index + 1} Name`}
+										htmlFor={`name-${index}`}
+										value={family.name}
+										onChange={(e: any) => handleFamilyChange(index, e)}
+									/>
+								</div>
+								<div className='col-md-6 fv-row'>
+									<InputField
+										placeholder='Contact Number'
+										type='number'
+										className='col-12 fv-row'
+										name='mobile'
+										label='Contact Number'
+										htmlFor={`number-${index}`}
+										value={family.mobile}
+										onChange={(e: any) => handleFamilyChange(index, e)}
+									/>
+								</div>
+							</div>
+							{family_details.length > 1 && index !== 0 && (
+								<div className='ms-3 d-flex align-items-center'>
+									<TableButton
+										action='remove'
+										backgroundDark={true}
+										onClick={(e) => removePlan(index, e)}
+									/>
+								</div>
+							)}
+						</div>
+					))}
+
+					<div className='d-flex justify-content-end mt-3'>
+						<button
+							type='button'
+							className='gz-mgmt-btn-secondary'
+							onClick={(e) => addPlan(e)}>
+							<i className='bi bi-plus-lg me-1'></i> Add Family Contact
+						</button>
+					</div>
+				</div>
+
+				{/* Section 4: Account Details */}
+				<div className='gz-mgmt-section-header'>
+					<div className='gz-mgmt-section-badge'>4</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>Bank Account Details</h3>
+						<p className='gz-mgmt-section-subtitle'>Direct deposit payout and banking credentials</p>
+					</div>
+				</div>
+
+				<div className='row mb-6'>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							placeholder='Bank Name'
+							type='text'
+							className='col-12 fv-row'
+							name='bank_name'
+							label='Bank Name'
+							htmlFor='bank_name'
+							value={employeeData.bank_name}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							placeholder='Account Number'
+							type='text'
+							className='col-12 fv-row'
+							name='account_details'
+							label='Account Number'
+							htmlFor='account_details'
+							value={employeeData.account_details}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							placeholder='IFSC Code'
+							type='text'
+							className='col-12 fv-row'
+							name='IFSC'
+							label='IFSC Code'
+							htmlFor='IFSC'
+							value={employeeData.IFSC}
+							onChange={handleInputChange}
+						/>
+					</div>
+				</div>
+
+				{/* Section 5: Documents & Shift Time */}
+				<div className='gz-mgmt-section-header'>
+					<div className='gz-mgmt-section-badge'>5</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>Documents & Shift Timings</h3>
+						<p className='gz-mgmt-section-subtitle'>Identity verification proofs and daily attendance window</p>
+					</div>
+				</div>
+
+				<div className='row mb-6'>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							placeholder='Upload Photo'
+							type='file'
+							className='col-12 fv-row'
+							name='photo'
+							label='Profile Photo'
+							htmlFor='photo'
+							onChange={handleFileChange}
+						/>
+					</div>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							placeholder='Upload Proof'
+							type='file'
+							className='col-12 fv-row'
+							name='proof'
+							label='ID / Address Proof'
+							htmlFor='proof'
+							onChange={handleFileChange}
+						/>
+					</div>
+					<div className='col-md-4 fv-row mb-4'>
+						<InputField
+							placeholder='Upload PDF'
+							type='file'
+							className='col-12 fv-row'
+							name='document'
+							label='Supporting PDF Document'
+							htmlFor='document'
+							onChange={handleFileChange}
+						/>
+					</div>
+					<div className='col-md-6 fv-row mb-4'>
+						<InputField
+							placeholder='In-Time'
+							type='time'
+							className='col-12 fv-row'
+							name='in_time'
+							label='Shift In-Time'
+							htmlFor='in_time'
+							value={employeeData.in_time}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className='col-md-6 fv-row mb-4'>
+						<InputField
+							placeholder='Out-Time'
+							type='time'
+							className='col-12 fv-row'
+							name='out_time'
+							label='Shift Out-Time'
+							htmlFor='out_time'
+							value={employeeData.out_time}
+							onChange={handleInputChange}
+						/>
+					</div>
+				</div>
+
+				{/* Footer submit */}
+				<div className='d-flex justify-content-end align-items-center gap-3 pt-4' style={{ borderTop: '1px solid #F1F5F9' }}>
+					<Link to='/rag/employees' className='gz-mgmt-btn-secondary text-decoration-none'>
+						Cancel
+					</Link>
+					<button
+						type='button'
+						className='gz-mgmt-btn-primary'
+						onClick={handleAddButtonClick}
+						disabled={isSubmitting}>
+						{isSubmitting ? (
+							<>
+								<span
+									className='spinner-border spinner-border-sm me-2'
+									role='status'
+									aria-hidden='true'></span>
+								Registering Employee...
+							</>
+						) : (
+							<>
+								<i className='bi bi-person-check me-2'></i>
+								Register Employee
+							</>
+						)}
+					</button>
+				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 

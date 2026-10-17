@@ -229,8 +229,16 @@ export default function BlogManage() {
 				{/* Header */}
 				<div className='card-header border-0 pt-5'>
 					<h3 className='card-title align-items-start flex-column'>
-						<span className='card-label fw-bold fs-3 mb-1'>
-							Science Journal Publications ({blogs.length})
+						<span className='card-label fw-bold fs-3 mb-1 d-inline-flex align-items-center'>
+							Science Journal Publications{' '}
+							{loading ? (
+								<span
+									className='gz-skeleton rounded ms-2'
+									style={{ width: '36px', height: '22px', verticalAlign: 'middle' }}
+								/>
+							) : (
+								`(${blogs.length})`
+							)}
 						</span>
 						<span className='text-muted mt-1 fw-semibold fs-7'>
 							Manage evidence-based clinical articles, read times, and reviewers. Total Reads: {totalViews}
@@ -285,35 +293,94 @@ export default function BlogManage() {
 
 				{/* Table */}
 				<div className='card-body py-3'>
-					{loading ? (
-						<div className='text-center py-10'>
-							<div className='spinner-border text-primary' role='status' />
-							<div className='mt-2 text-muted'>Loading publications...</div>
-						</div>
-					) : (
-						<div className='table-responsive'>
-							<table className='table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4'>
-								<thead>
-									<tr className='fw-bold text-muted'>
-										<th className='w-40px text-center'>#</th>
-										<th className='min-w-200px'>Article Title</th>
-										<th className='min-w-100px'>Category</th>
-										<th className='min-w-120px'>Reviewer</th>
-										<th className='min-w-80px text-center'>Featured</th>
-										<th className='min-w-80px text-center'>Reads</th>
-										<th className='min-w-80px text-center'>Status</th>
-										<th className='min-w-100px text-end'>Actions</th>
-									</tr>
-								</thead>
-								<tbody>
-									{filteredBlogs.length === 0 ? (
-										<tr>
-											<td colSpan={8} className='text-center py-10 text-muted'>
-												No articles found matching filters.
+					<div className='table-responsive'>
+						<table className='table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4'>
+							<thead>
+								<tr className='fw-bold text-muted'>
+									<th className='w-40px text-center'>#</th>
+									<th className='min-w-200px'>Article Title</th>
+									<th className='min-w-100px'>Category</th>
+									<th className='min-w-120px'>Reviewer</th>
+									<th className='min-w-80px text-center'>Featured</th>
+									<th className='min-w-80px text-center'>Reads</th>
+									<th className='min-w-80px text-center'>Status</th>
+									<th className='min-w-100px text-end'>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{loading ? (
+									Array.from({ length: 6 }).map((_, idx) => (
+										<tr key={`blog-skeleton-${idx}`} className='gz-skeleton-tr'>
+											<td className='text-center'>
+												<div
+													className='gz-skeleton'
+													style={{ width: '20px', height: '14px', margin: '0 auto' }}
+												/>
+											</td>
+											<td>
+												<div className='d-flex align-items-center'>
+													<div
+														className='gz-skeleton rounded me-3'
+														style={{ width: '45px', height: '45px', flexShrink: 0 }}
+													/>
+													<div className='d-flex flex-column gap-2 w-100' style={{ maxWidth: '300px' }}>
+														<div className='gz-skeleton' style={{ width: '85%', height: '15px' }} />
+														<div className='gz-skeleton' style={{ width: '55%', height: '12px' }} />
+													</div>
+												</div>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton rounded-pill'
+													style={{ width: '75px', height: '22px' }}
+												/>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton'
+													style={{ width: '130px', height: '14px' }}
+												/>
+											</td>
+											<td className='text-center'>
+												<div
+													className='gz-skeleton rounded'
+													style={{ width: '32px', height: '32px', margin: '0 auto' }}
+												/>
+											</td>
+											<td className='text-center'>
+												<div
+													className='gz-skeleton'
+													style={{ width: '35px', height: '14px', margin: '0 auto' }}
+												/>
+											</td>
+											<td className='text-center'>
+												<div
+													className='gz-skeleton rounded'
+													style={{ width: '70px', height: '24px', margin: '0 auto' }}
+												/>
+											</td>
+											<td className='text-end'>
+												<div className='d-inline-flex gap-2 justify-content-end'>
+													<div
+														className='gz-skeleton rounded'
+														style={{ width: '30px', height: '30px' }}
+													/>
+													<div
+														className='gz-skeleton rounded'
+														style={{ width: '30px', height: '30px' }}
+													/>
+												</div>
 											</td>
 										</tr>
-									) : (
-										filteredBlogs.map((b, idx) => (
+									))
+								) : filteredBlogs.length === 0 ? (
+									<tr>
+										<td colSpan={8} className='text-center py-10 text-muted'>
+											No articles found matching filters.
+										</td>
+									</tr>
+								) : (
+									filteredBlogs.map((b, idx) => (
 											<tr key={b._id || b.id || idx}>
 												<td className='text-center text-muted fw-bold'>{idx + 1}</td>
 												<td>
@@ -400,7 +467,6 @@ export default function BlogManage() {
 								</tbody>
 							</table>
 						</div>
-					)}
 				</div>
 			</div>
 

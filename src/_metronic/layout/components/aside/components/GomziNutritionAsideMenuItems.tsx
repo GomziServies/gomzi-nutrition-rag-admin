@@ -40,41 +40,42 @@ export function GomziNutritionAsideMenuItems() {
 				title='Dashboard'
 			/>
 
-			<AsideMenuItem
-				to='/rag/hero-banner'
-				Icon={faImage}
-				title='Hero Banner'
-			/>
-
-			<AsideMenuItem
-				to='/rag/blogs'
-				Icon={faBookOpen}
-				title='Blogs & Journal'
-			/>
-
-			<AsideMenuItem
-				to='/rag/deals'
-				Icon={faTags}
-				title='Trending Deals'
-			/>
-
-			<AsideMenuItem
-				to='/rag/promo-banners'
-				Icon={faSliders}
-				title='Promo Sliders'
-			/>
-
-			<AsideMenuItem
-				to='/rag/nutrition-promo-banners'
-				Icon={faImage}
-				title='Discount Strip Banner'
-			/>
-
-			<AsideMenuItem
-				to='/rag/bank-offers'
-				Icon={faCreditCard}
-				title='Bank Offers Banner'
-			/>
+			{/* 2. Content */}
+			<AsideMenuItemWithSub
+				to=''
+				title='Content'
+				Icon={faImage}>
+				<AsideMenuItem
+					to='/rag/hero-banner'
+					title='Hero Banners'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/blogs'
+					title='Blogs'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/deals'
+					title='Deals'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/promo-banners'
+					title='Promo Banners'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/nutrition-promo-banners'
+					title='Nutrition Promo Banners'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/bank-offers'
+					title='Bank Offers'
+					hasBullet={true}
+				/>
+			</AsideMenuItemWithSub>
 
 			<AsideMenuItem
 				to='/rag/company-ads'

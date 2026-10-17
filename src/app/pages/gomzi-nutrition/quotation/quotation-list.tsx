@@ -1,10 +1,11 @@
 import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import * as XLSX from 'xlsx'
-import { KTCard, toAbsoluteUrl } from '../../../../_metronic/helpers'
+import { toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
@@ -13,7 +14,9 @@ import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
+import { PlusIcon } from '../../../components/animated-icons'
 import { deleteQuotation, getQuotation } from '../../../Functions/FGGroup/Quotation'
+import '../common-management.css'
 
 const QuotationList: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -178,80 +181,81 @@ const QuotationList: React.FC = () => {
 					onClick={() => handleRowClick(item._id)}>
 					<td className='text-center'>
 						<div
-							className='d-flex ms-8'
+							className='d-flex align-items-center justify-content-center'
 							role='button'>
 							<FontAwesomeIcon
 								icon={faPlusCircle}
-								className='mx-2 ms-5 mb-1 plus-icon'
-								style={{ color: '#607D8B', fontSize: '18px' }}
+								className='me-2 plus-icon'
+								style={{ color: '#607D8B', fontSize: '15px' }}
 							/>
-							<span className='text-dark fw-bold d-block mb-1 fs-6'>{actualIndex}</span>
+							<span className='text-muted fw-bold fs-7'>{actualIndex}</span>
 						</div>
 					</td>
 					<td>
-						<span className='text-dark fw-bold d-block mb-1 fs-6'>
-							{item?.quotation_number || 'N/A'}
+						<span className='gz-mgmt-pill info' style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '12.5px', letterSpacing: '0.03em' }}>
+							#{item?.quotation_number || 'N/A'}
 						</span>
 					</td>
 					<td>
-						<div className='d-flex align-items-center'>
-							<div className='d-flex justify-content-start flex-column'>
-								<span className='text-dark fw-bold fs-6'>{item?.name}</span>
-								<span className='text-muted fw-semibold text-muted d-flex fs-7'>
-									{item?.mobile || ''}
-								</span>
+						<div className='gz-mgmt-identity-cell'>
+							<div className='avatar'>
+								{(item?.name || 'Q').charAt(0).toUpperCase()}
+							</div>
+							<div className='info'>
+								<span className='name'>{item?.name || 'Unnamed Client'}</span>
+								<span className='sub'>{item?.mobile || item?.email || '-'}</span>
 							</div>
 						</div>
 					</td>
-
 					<td>
-						<span className='text-dark fw-bold d-block mb-1 fs-6'>{item?.net_amount}</span>
+						<span className='fw-bold' style={{ color: '#172B4D', fontSize: '14.5px' }}>
+							₹{Number(item?.net_amount || 0).toLocaleString('en-IN')}
+						</span>
 					</td>
 					<td>
-						<span className='text-dark fw-bold d-block mb-1 fs-6'>
-							{DayJS(item?.date).format('YYYY-MM-DD')}
+						<span className='text-muted fs-7'>
+							{item?.date ? DayJS(item.date).format('DD MMM YYYY') : '-'}
 						</span>
 					</td>
 					<td className='text-nowrap'>
-						<div className='d-flex align-items-center text-nowrap'>
+						<div className='d-flex align-items-center text-nowrap gap-2'>
 							<TableButton
 								action='edit'
 								to={`/rag/update-quotation?id=${item?._id}`}
-								title='Edit'
+								title='Edit Quotation'
 							/>
 							<TableButton
 								action='remove'
 								onClick={() => handleDeleteQuotation(item?._id)}
-								title='Delete'
+								title='Delete Quotation'
 							/>
 						</div>
 					</td>
 				</tr>
 				{isVisible && (
 					<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-						<td colSpan={12}>
-							<div>
-								<strong>Quotation No.:</strong> {item?.quotation_number || 'N/A'}
-								<br />
-								<div className='d-flex align-items-center'>
-									<div className='symbol symbol-45px me-3'>
-										<img
-											src={toAbsoluteUrl('/media/logos/fgiit-logo.png')}
-											alt='User'
-											style={{ width: '50px', height: '50px' }}
-										/>
+						<td colSpan={12} className='p-6 bg-light'>
+							<div className='p-4 rounded-3 bg-white border'>
+								<div className='d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom'>
+									<div>
+										<span className='text-muted fs-8 text-uppercase fw-bolder'>Quotation Number</span>
+										<h4 className='fw-bolder mb-0 text-primary'>#{item?.quotation_number || 'N/A'}</h4>
 									</div>
-									<div className='d-flex justify-content-start flex-column'>
-										<span className='text-dark fw-bold fs-6'>{item?.name}</span>
-										<span className='text-muted fw-semibold text-muted d-flex fs-7'>
-											{item?.mobile || ''}
-										</span>
+									<span className='badge badge-light-primary fs-7'>
+										{DayJS(item?.date).format('DD MMMM YYYY')}
+									</span>
+								</div>
+								<div className='row g-4'>
+									<div className='col-md-6'>
+										<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>Customer Details</span>
+										<div className='fw-bold text-dark fs-6'>{item?.name}</div>
+										<div className='text-muted fs-7'>{item?.mobile || 'No Phone'} • {item?.email || 'No Email'}</div>
+									</div>
+									<div className='col-md-6 text-md-end'>
+										<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>Estimated Value</span>
+										<div className='fw-bolder text-dark fs-4'>₹{Number(item?.net_amount || 0).toLocaleString('en-IN')}</div>
 									</div>
 								</div>
-								<br />
-								<strong>Total Amount:</strong> {item?.net_amount}
-								<br />
-								<strong>Date:</strong> {DayJS(item?.date).format('YYYY-MM-DD')}
 							</div>
 						</td>
 					</tr>
@@ -261,67 +265,77 @@ const QuotationList: React.FC = () => {
 	}
 
 	return (
-		<>
-			<PageTitle breadcrumbs={[]}>Quotation List</PageTitle>
-			<KTCard>
-				<div className='card-header border-0 pt-6 px-6'>
-					<div className='d-flex flex-wrap align-items-center gap-3 w-100'>
-						{/* 1. Search */}
-						<div>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-								className='me-0'
-							/>
-						</div>
+		<div className='gz-mgmt-container'>
+			<PageTitle breadcrumbs={[]}>Quotations</PageTitle>
 
-						{/* 2. Dropdown (show entries per page) */}
-						<div>
-							<LengthMenu
-								expenseData={quotationData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-								className='me-0'
-							/>
-						</div>
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<span className='current'>Quotations</span>
+			</div>
 
-						{/* 3. Download Excel Button */}
-						<div>
-							<button
-								type='button'
-								className='btn btn-primary d-flex align-items-center justify-content-center'
-								onClick={exportToExcel}
-								disabled={loading || quotationData.length === 0}
-								style={{
-									width: '38px',
-									height: '38px',
-									padding: 0,
-									borderRadius: '8px',
-									fontSize: '14px',
-								}}
-								title='Download Excel'>
-								<FontAwesomeIcon icon={faDownload} />
-							</button>
-						</div>
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Quotations</h1>
+					<p className='gz-mgmt-subtitle'>Manage client price estimates, commercial proposals, and convert them to invoices</p>
+				</div>
+				<div className='d-flex align-items-center gap-3'>
+					{masterData === 'MASTER' && (
+						<button
+							type='button'
+							className='gz-mgmt-export-btn'
+							onClick={exportToExcel}
+							disabled={loading || quotationData.length === 0}
+							title='Export to Excel'>
+							<FontAwesomeIcon icon={faDownload} />
+							<span>Export</span>
+						</button>
+					)}
+					<Link to='/rag/create-quotation' className='gz-mgmt-btn-primary'>
+						<PlusIcon size={14} strokeWidth={3.6} />
+						<span>Create Quotation</span>
+					</Link>
+				</div>
+			</div>
 
-						{/* 4. Date Filter */}
+			<div className='gz-mgmt-card'>
+				<div className='gz-mgmt-toolbar'>
+					<div className='gz-mgmt-toolbar-left'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
+						<LengthMenu
+							expenseData={quotationData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							className='me-0'
+						/>
+						<button
+							type='button'
+							className='gz-mgmt-export-btn'
+							onClick={exportToExcel}
+							disabled={loading || quotationData.length === 0}
+							title='Download Excel'>
+							<FontAwesomeIcon icon={faDownload} />
+							<span>Export</span>
+						</button>
 						<div className='d-flex align-items-center'>
 							<DateFilter
 								onDateRangeChange={handleDateRangeChange}
 								rightValue='0'
 							/>
 						</div>
-
-						{/* 5. End me Create Quotation */}
-						<div className='ms-auto'>
-							<TableButton
-								action='add'
-								to='/rag/create-quotation'
-								text='Create Quotation'
-							/>
-						</div>
+					</div>
+					<div className='gz-mgmt-toolbar-right'>
+						<Link to='/rag/create-quotation' className='gz-mgmt-btn-primary'>
+							<PlusIcon size={14} strokeWidth={3.6} />
+							<span>Create Quotation</span>
+						</Link>
 					</div>
 				</div>
-				<div className='py-4 card-body'>
+
+				<div className='card-body p-0'>
 					<div className='table-responsive'>
 						<Table
 							data={quotationData}
@@ -337,23 +351,27 @@ const QuotationList: React.FC = () => {
 						/>
 					</div>
 					{quotationData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='text-center py-12 text-muted'>
+							<i className='bi bi-file-earmark-text fs-2x mb-3 d-block text-muted opacity-50'></i>
+							<b>No quotation records found</b>
+							<div className='fs-7 mt-1'>Create your first client quotation to get started.</div>
 						</div>
 					)}
 					{quotationData.length > 0 && metaData && (
-						<UsersListPagination
-							totalPages={metaData?.totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-							totalRecords={metaData?.totalRecords || quotationData.length}
-							itemsPerPage={pagination.itemsPerPage}
-							entityName='quotations'
-						/>
+						<div className='px-6 py-4' style={{ borderTop: '1px solid #F1F5F9' }}>
+							<UsersListPagination
+								totalPages={metaData?.totalPages}
+								currentPage={pagination.page}
+								onPageChange={handlePageChange}
+								totalRecords={metaData?.totalRecords || quotationData.length}
+								itemsPerPage={pagination.itemsPerPage}
+								entityName='quotations'
+							/>
+						</div>
 					)}
 				</div>
-			</KTCard>
-		</>
+			</div>
+		</div>
 	)
 }
 

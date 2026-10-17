@@ -21,6 +21,7 @@ import './_metronic/assets/sass/style.scss'
 // GOMZI enterprise workspace theme (visual-only layer, loaded last)
 import './_metronic/assets/sass/gomzi-theme.scss'
 import './_metronic/assets/css/rag-theme-overrides.css'
+import './app/components/animated-icons/animated-icons.css'
 // Apps
 import { MetronicI18nProvider } from './_metronic/i18n/Metronici18n'
 /**

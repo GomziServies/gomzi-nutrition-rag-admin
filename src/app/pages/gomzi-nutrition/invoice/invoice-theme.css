@@ -84,12 +84,12 @@
 .gz-inv-btn-primary:hover {
 	background-color: var(--gz-inv-navy-hover);
 	border-color: var(--gz-inv-navy-hover);
-	transform: translateY(-1px);
+	transform: none;
 	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.18);
 }
 
 .gz-inv-btn-primary:active {
-	transform: translateY(0);
+	transform: none;
 }
 
 /* Secondary Button (Cancel / Soft Pink) */

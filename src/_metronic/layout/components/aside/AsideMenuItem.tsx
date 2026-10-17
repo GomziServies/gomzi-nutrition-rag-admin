@@ -1,7 +1,7 @@
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import clsx from 'clsx'
-import { FC } from 'react'
+import React, { FC } from 'react'
 import { OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { useLocation } from 'react-router'
 import { Link } from 'react-router-dom'
@@ -75,6 +75,18 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 
 	const tipId = `aside-tip-${(to || title).replace(/[^a-zA-Z0-9_-]/g, '')}`
 
+	const renderIcon = () => {
+		if (!Icon) return null
+		if (React.isValidElement(Icon)) return Icon
+		if (typeof Icon === 'object' && Icon !== null && 'prefix' in Icon && 'iconName' in Icon) {
+			return <FontAwesomeIcon icon={Icon as any} className='fs-2' />
+		}
+		if (typeof Icon === 'function' || (typeof Icon === 'object' && Icon !== null && (Icon.$$typeof || Icon.render))) {
+			return React.createElement(Icon as any)
+		}
+		return <FontAwesomeIcon icon={Icon as any} className='fs-2' />
+	}
+
 	const linkContent = (
 		<Link
 			className={clsx('menu-link without-sub', { active: isActive })}
@@ -84,14 +96,7 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 					<span className='bullet bullet-dot'></span>
 				</span>
 			)}
-			{Icon && (
-				<span className='menu-icon'>
-					<FontAwesomeIcon
-						icon={Icon as any}
-						className='fs-2'
-					/>
-				</span>
-			)}
+			{Icon && <span className='menu-icon'>{renderIcon()}</span>}
 			{fontIcon && <i className={clsx('bi fs-3', fontIcon)}></i>}
 			<span className='menu-title'>{title}</span>
 			{badge !== undefined && badge !== null && (

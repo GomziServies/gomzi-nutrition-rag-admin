@@ -26,6 +26,7 @@ import LengthMenu from '../../../components/LengthMenu'
 import NumberTicker from '../../../components/NumberTicker'
 import GomziTablePagination from '../../../components/GomziTablePagination'
 import { DeleteProduct, GetProduct } from '../../../Functions/FGGroup'
+import { PlusIcon } from '../../../components/animated-icons'
 import '../products-theme.css'
 
 const GomziNutritionProductList: React.FC = () => {
@@ -221,7 +222,7 @@ const GomziNutritionProductList: React.FC = () => {
 					<p className='gz-prod-subtitle'>Manage all products in your catalog</p>
 				</div>
 				<Link to='/rag/product-add' className='gz-prod-btn-primary'>
-					<FontAwesomeIcon icon={faPlus} />
+					<PlusIcon size={14} strokeWidth={3.6} />
 					<span>Add Product</span>
 				</Link>
 			</div>
@@ -443,7 +444,7 @@ const GomziNutritionProductList: React.FC = () => {
 											</p>
 											{!searchTerm && selectedCategory === 'All' && selectedStatus === 'All' && (
 												<Link to='/rag/product-add' className='gz-prod-btn-primary'>
-													<FontAwesomeIcon icon={faPlus} />
+													<PlusIcon size={14} strokeWidth={3.6} />
 													<span>Add Product</span>
 												</Link>
 											)}

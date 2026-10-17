@@ -1,17 +1,16 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import moment from 'moment'
 import React, { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useSearchParams } from 'react-router-dom'
-import { KTCard } from '../../../../_metronic/helpers'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
-import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetInventoryHistory } from '../../../Functions/FGGroup'
+import './inventory-theme.css'
 
 const InventoryLogList = () => {
 	const [loading, setLoading] = useState(false)
@@ -74,8 +73,10 @@ const InventoryLogList = () => {
 		setPagination({ ...pagination, page })
 		sessionStorage.setItem('currentPage', page.toString())
 	}
+
 	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value })
+		setPagination({ ...pagination, itemsPerPage: value, page: 1 })
+		sessionStorage.setItem('currentPage', '1')
 	}
 
 	useEffect(() => {
@@ -103,115 +104,190 @@ const InventoryLogList = () => {
 		}
 	}, [searchTerm])
 
-	return (
-		<>
-			<PageTitle breadcrumbs={[]}>Product Stock History</PageTitle>
+	const renderStockMovement = (item: any) => {
+		const qty = Math.abs(Number(item.quantity) || 0)
+		const isStockIn =
+			item.transaction_type === 'IN' ||
+			(typeof item.current_stock === 'number' &&
+				typeof item.previous_stock === 'number' &&
+				item.current_stock > item.previous_stock)
 
-			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title'>
-						<div className='card-branch_code d-flex'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-							<LengthMenu
-								expenseData={inventoryData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-							/>
-						</div>
-					</div>
-					<div className='card-toolbar' style={{ minWidth: '170px' }}>
-						<SelectField
-							name='Select status'
-							options={[
-								{ label: 'Select Source', value: '' },
-								{ label: 'MANUAL', value: 'MANUAL' },
-								{ label: 'ORDER', value: 'ORDER' },
-								{ label: 'INVOICE', value: 'INVOICE' },
-								{ label: 'RESET', value: 'RESET' },
-								{ label: 'RETURN', value: 'RETURN' },
-								{ label: 'PURCHASE', value: 'PURCHASE' },
-							]}
+		const isStockOut =
+			item.transaction_type === 'OUT' ||
+			(typeof item.current_stock === 'number' &&
+				typeof item.previous_stock === 'number' &&
+				item.current_stock < item.previous_stock)
+
+		let sign = ''
+		let badgeClass = 'neutral'
+
+		if (isStockIn && !isStockOut) {
+			sign = '+'
+			badgeClass = 'positive'
+		} else if (isStockOut) {
+			sign = '−'
+			badgeClass = 'negative'
+		}
+
+		return (
+			<span className='gz-stock-movement-reveal'>
+				<span className={`gz-movement-badge ${badgeClass}`}>
+					{sign}
+					{qty}
+				</span>
+			</span>
+		)
+	}
+
+	return (
+		<div className='gz-inv-container'>
+			<PageTitle breadcrumbs={[]}>Inventory History</PageTitle>
+
+			{/* Breadcrumbs */}
+			<div className='gz-inv-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<span>Inventory & Stock</span>
+				<span className='sep'>/</span>
+				<span className='current'>Inventory History</span>
+			</div>
+
+			{/* Header */}
+			<div className='gz-inv-header'>
+				<div className='gz-inv-title-wrap'>
+					<h1 className='gz-inv-title'>Inventory History</h1>
+					<p className='gz-inv-subtitle'>Track every recorded stock movement.</p>
+				</div>
+			</div>
+
+			{/* Main Content Card */}
+			<div className='gz-inv-card'>
+				{/* Toolbar */}
+				<div className='gz-inv-toolbar'>
+					<div className='gz-inv-toolbar-left'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search history by remarks or source...'
+							className='me-0'
+						/>
+
+						{/* LengthMenu directly rendered without double background */}
+						<LengthMenu
+							expenseData={inventoryData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
+
+						{/* Native Select Source Dropdown */}
+						<select
+							className='gz-prod-select'
 							value={selectedSource}
 							onChange={(e: any) => setSelectedSource(e.target.value)}
-							showLabel={false}
-							marginRemove={true}
-							hideDefaultOption={true}
-							searchable={false}
-							height='38px'
-						/>
+							title='Select Source'>
+							<option value=''>All Sources</option>
+							<option value='MANUAL'>MANUAL</option>
+							<option value='ORDER'>ORDER</option>
+							<option value='INVOICE'>INVOICE</option>
+							<option value='RESET'>RESET</option>
+							<option value='RETURN'>RETURN</option>
+							<option value='PURCHASE'>PURCHASE</option>
+						</select>
 					</div>
 				</div>
 
-				<div className='card-body py-4'>
-					<div className='table-responsive'>
-						<Table
-							data={inventoryData}
-							columns={sortableFields}
-							sort={sort}
-							sortOrder={sortOrder}
-							removeAction
-							onSortChange={handleSortChange}
-							renderRow={(item: any, index: number, actualIndex: number, isVisible: boolean) => (
-								<React.Fragment key={item._id}>
-									<tr key={item._id}>
-										<td>
-											<span className='text-dark fw-bold  ms-6 mb-1 fs-6'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='me-2 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
+				{/* Table Area */}
+				<div className='gz-inv-table-wrap'>
+					<Table
+						data={inventoryData}
+						columns={sortableFields}
+						sort={sort}
+						sortOrder={sortOrder}
+						removeAction
+						onSortChange={handleSortChange}
+						renderRow={(item: any, index: number, actualIndex: number) => {
+							const isTypeIn = item.transaction_type === 'IN'
+
+							return (
+								<React.Fragment key={item._id || index}>
+									<tr>
+										<td className='text-center' style={{ width: '60px' }}>
+											<span className='fw-bold' style={{ color: '#64748B', fontSize: '13px' }}>
 												{actualIndex}
 											</span>
 										</td>
 
-										<td>{moment(item.createdAt).format('DD MMM YYYY hh:mm A')}</td>
-
 										<td>
-											<span
-												className={`badge ${
-													item.transaction_type === 'IN'
-														? 'badge-light-success'
-														: 'badge-light-danger'
-												}`}>
-												{item.transaction_type}
+											<span style={{ fontSize: '13px', color: '#1E293B', fontWeight: 500 }}>
+												{moment(item.createdAt).format('DD MMM YYYY, hh:mm A')}
 											</span>
 										</td>
 
-										<td>{item.source}</td>
+										<td>
+											<span className={`gz-trans-badge ${isTypeIn ? 'in' : 'out'}`}>
+												{item.transaction_type || '—'}
+											</span>
+										</td>
 
-										<td>{item.quantity}</td>
+										<td>
+											<span className='gz-source-badge'>{item.source || '—'}</span>
+										</td>
 
-										<td>{item.previous_stock}</td>
+										<td>{renderStockMovement(item)}</td>
 
-										<td>{item.current_stock}</td>
+										<td>
+											<span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: '#475569' }}>
+												{item.previous_stock ?? '—'}
+											</span>
+										</td>
 
-										<td>{item.remarks}</td>
+										<td>
+											<span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: '#172B4D' }}>
+												{item.current_stock ?? '—'}
+											</span>
+										</td>
+
+										<td>
+											<div className='gz-remarks-cell' title={item.remarks || ''}>
+												{item.remarks || '—'}
+											</div>
+										</td>
 									</tr>
 								</React.Fragment>
-							)}
-							pagination={pagination}
-							setPagination={setPagination}
-							loading={loading}
-						/>
-					</div>
-					{inventoryData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
-					{inventoryData.length > 0 && (
-						<UsersListPagination
-							totalPages={metaData?.totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					)}
+							)
+						}}
+						pagination={pagination}
+						setPagination={setPagination}
+						loading={loading}
+					/>
 				</div>
-			</KTCard>
-		</>
+
+				{/* Empty State */}
+				{inventoryData.length === 0 && !loading && (
+					<div className='gz-inv-empty-state'>
+						<div className='gz-inv-empty-icon'>
+							<FontAwesomeIcon icon={faClockRotateLeft} />
+						</div>
+						<h3 className='gz-inv-empty-title'>No stock movement records</h3>
+						<p className='gz-inv-empty-desc'>
+							{searchTerm || selectedSource
+								? 'No logs matched your current filters. Try resetting search or source.'
+								: 'Stock history logs will be recorded as inventory levels change.'}
+						</p>
+					</div>
+				)}
+
+				{/* Pagination */}
+				{inventoryData.length > 0 && (
+					<UsersListPagination
+						totalPages={metaData?.totalPages}
+						currentPage={pagination.page}
+						onPageChange={handlePageChange}
+					/>
+				)}
+			</div>
+		</div>
 	)
 }
 

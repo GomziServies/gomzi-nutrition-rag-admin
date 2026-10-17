@@ -1,29 +1,40 @@
-import { faDownload, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+/* eslint-disable */
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useEffect, useRef, useState } from 'react'
+import {
+	faDownload,
+	faEye,
+	faBoxesStacked,
+	faCheckCircle,
+	faClock,
+	faBan,
+	faBoxOpen,
+	faReceipt,
+} from '@fortawesome/free-solid-svg-icons'
 import { MultiSelect } from 'react-multi-select-component'
-import { useLocation } from 'react-router-dom'
 import * as XLSX from 'xlsx'
-import { KTCard, toAbsoluteUrl } from '../../../../../_metronic/helpers'
+import { toAbsoluteUrl } from '../../../../../_metronic/helpers'
+import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import DateFilter from '../../../../components/DateRangePicker'
 import SearchFilter from '../../../../components/SearchFilter'
-import SelectField from '../../../../components/SelectField'
-import Table from '../../../../components/Table'
-import TableButton from '../../../../components/TableButton'
-import UsersListPagination from '../../../../components/TablePagination'
+import LengthMenu from '../../../../components/LengthMenu'
+import NumberTicker from '../../../../components/NumberTicker'
+import GomziTablePagination from '../../../../components/GomziTablePagination'
 import { GetBooks, GetOrders } from '../../../../Functions/FGGroup'
-import { DayJS } from '../../../../../_metronic/helpers/Utils'
+import '../../../gomzi-nutrition/products-theme.css'
+import '../../../gomzi-nutrition/orders-theme.css'
 
 const AllOrder: React.FC = () => {
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
 	const user_id: any = searchParams.get('user_id')
+
 	const [searchTerm, setSearchTerm] = useState('')
 	const [metaData, setMetaData] = useState<any>()
-	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
-	const [orderData, setOrderData] = useState<any>([])
+	const [orderData, setOrderData] = useState<any[]>([])
 	const [sort, setSort] = useState('createdAt')
 	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 	const [bookData, setBookData] = useState<any>([])
@@ -60,8 +71,8 @@ const AllOrder: React.FC = () => {
 				search: searchTerm ? searchTerm : null,
 			}
 
-			if (formData.order_status) {
-				filterQuery.order_status = formData.order_status || 'SUCCESS'
+			if (formData.order_status && formData.order_status !== 'ALL') {
+				filterQuery.order_status = formData.order_status
 			}
 			if (startDate && endDate) {
 				filterQuery.from_date = DayJS(startDate).format('YYYY-MM-DD')
@@ -75,9 +86,9 @@ const AllOrder: React.FC = () => {
 			}
 
 			const response = await GetOrders(filterQuery)
-			const data: any = response.data
-			const metaData: any = response.metadata
-			setMetaData(metaData.pagination)
+			const data: any = response?.data || []
+			const meta: any = response?.metadata || {}
+			setMetaData(meta.pagination)
 
 			const filteredData = data.map((AllData: any) => {
 				const cartItems = AllData.CART || []
@@ -115,9 +126,9 @@ const AllOrder: React.FC = () => {
 
 			setOrderData(filteredData)
 		} catch (error) {
-			console.error(error)
+			console.error('Error fetching orders:', error)
 		} finally {
-			setLoading(false) // Ensure loading is stopped in both success and error cases
+			setLoading(false)
 		}
 	}
 
@@ -136,22 +147,57 @@ const AllOrder: React.FC = () => {
 		selectedDateRange,
 	])
 
-	const fetchBookData = async (page?: number) => {
-		setLoading(true)
+	const fetchBookData = async () => {
 		try {
 			const response = await GetBooks()
-			const data: any = response.data
-
-			setBookData(data)
+			setBookData(response?.data || [])
 		} catch (error) {
 			console.error(error)
 		}
-		setLoading(false)
 	}
 
 	useEffect(() => {
 		fetchBookData()
 	}, [])
+
+	const isFirstRender = useRef(true)
+	useEffect(() => {
+		if (isFirstRender.current) {
+			isFirstRender.current = false
+			return
+		}
+
+		if (searchTerm.trim() || searchTerm === '') {
+			setPagination((prev) => ({ ...prev, page: 1 }))
+			if (pagination.page === 1) fetchOrderData()
+		}
+	}, [searchTerm])
+
+	const handleInputChange = (
+		event:
+			| React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+			| { target: { name: string; value: any } }
+	) => {
+		setPagination((prev) => ({ ...prev, page: 1 }))
+		const { name, value } = event.target
+		setFormData((prevData: any) => ({
+			...prevData,
+			[name]: value,
+		}))
+	}
+
+	const handlePageChange = (page: number) => {
+		setPagination({ ...pagination, page })
+	}
+
+	const handleItemsPerPageChange = (value: number) => {
+		setPagination({ page: 1, itemsPerPage: value })
+	}
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setSelectedDateRange(range)
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}
 
 	const downloadExcel = () => {
 		const worksheetData = orderData.map((order: any) => {
@@ -181,7 +227,7 @@ const AllOrder: React.FC = () => {
 			return {
 				'Receipt ID': order.receipt_id || 'N/A',
 				'Gateway ID': order.gateway_order_id || 'N/A',
-				'User Name': `${order?.user_info?.first_name || '-'} ${order?.user_info?.last_name || ''}`,
+				'User Name': `${order?.user_info?.first_name || '-'} ${order?.user_info?.last_name || ''}`.trim(),
 				Mobile: order?.user_info?.mobile || 'N/A',
 				'Item Name': itemName,
 				'Item Type': itemType,
@@ -199,492 +245,442 @@ const AllOrder: React.FC = () => {
 		const worksheet = XLSX.utils.json_to_sheet(worksheetData)
 		const workbook = XLSX.utils.book_new()
 		XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders')
-		XLSX.writeFile(workbook, 'OrderData.xlsx')
+		XLSX.writeFile(workbook, `All_Orders_${DayJS().format('YYYY-MM-DD')}.xlsx`)
 	}
-
-	const isFirstRender = useRef(true);
-
-	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false
-			return
-		}
-
-		if (searchTerm.trim() || searchTerm === '') {
-			setPagination((prev) => ({ ...prev, page: 1 }))
-			if (pagination.page === 1) fetchOrderData()
-		}
-	}, [searchTerm])
-
-	// useEffect(() => {
-	// 	setPagination((prev) => ({ ...prev, page: 1 }))
-	// 	if (pagination.page === 1) fetchOrderData()
-	// }, [searchTerm, user_id])
-
-	const handleInputChange = (
-		event:
-			| React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-			| { target: { name: string; value: any } }
-	) => {
-		setPagination((prev) => ({ ...prev, page: 1 }))
-		const { name, value } = event.target
-		setFormData((prevData: any) => ({
-			...prevData,
-			[name]: value,
-		}))
-	}
-
-	const handlePageChange = async (page: number) => {
-		setPagination({ ...pagination, page })
-	}
-
-	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ page: 1, itemsPerPage: value })
-	}
-
-	const handleDateRangeChange = (range: [Date, Date] | null) => {
-		setSelectedDateRange(range)
-		setPagination((prev) => ({ ...prev, page: 1 }))
-	}
-
-	const handleSortChange = (newSort: string, newSortOrder: 'asc' | 'desc') => {
-		setSort(newSort)
-		setSortOrder(newSortOrder)
-	}
-
-	const getItemNames = () => {
-		const itemNamesSet: Set<string> = new Set()
-
-		orderData.forEach((order: any) => {
-			switch (order.order_item_type) {
-				case 'FG_MEAL_PRODUCT':
-					itemNamesSet.add(order.product?.name || 'N/A')
-					break
-				case 'PT_PLAN':
-					itemNamesSet.add(order.fitness_plan?.plan_name || 'N/A')
-					break
-				case 'FITNESS_COURSE':
-					itemNamesSet.add(order.fitness_course?.course_name || 'N/A')
-					break
-				case 'DIGITAL_PLAN':
-					itemNamesSet.add(order.digital_plan?.plan_name || 'N/A')
-					break
-				case 'BOOKS':
-					itemNamesSet.add(order.books?.book_title || 'N/A')
-					break
-				case 'EBOOKS':
-					itemNamesSet.add(order.ebook?.ebook_title || 'N/A')
-					break
-				default:
-					break
-			}
-		})
-
-		// Convert set to array of strings
-		const itemNamesOptions = Array.from(itemNamesSet)
-
-		return itemNamesOptions
-	}
-
-	const itemNameOption: any[] = getItemNames()
 
 	const itemTypeOption = [
-		{
-			value: 'FG_MEAL_PRODUCT',
-			label: 'FG Meal Product',
-		},
-		{
-			value: 'PT_PLAN',
-			label: 'PT Plan',
-		},
-		{
-			value: 'FITNESS_COURSE',
-			label: 'Fitness Course',
-		},
-		{
-			value: 'DIGITAL_PLAN',
-			label: 'Digital Plan',
-		},
-		{
-			value: 'BOOKS',
-			label: 'Books',
-		},
-		{
-			value: 'EBOOKS',
-			label: 'Ebooks',
-		},
+		{ value: 'FG_MEAL_PRODUCT', label: 'FG Meal Product' },
+		{ value: 'PT_PLAN', label: 'PT Plan' },
+		{ value: 'FITNESS_COURSE', label: 'Fitness Course' },
+		{ value: 'DIGITAL_PLAN', label: 'Digital Plan' },
+		{ value: 'BOOKS', label: 'Books' },
+		{ value: 'EBOOKS', label: 'Ebooks' },
 	]
 
-	const orderStatusOption = ['SUCCESS', 'PENDING', 'FAILED', 'CANCELLED', 'REFUNDED']
+	const orderStatusOption = ['ALL', 'SUCCESS', 'PENDING', 'FAILED', 'CANCELLED', 'REFUNDED']
 
-	const sortableFields = [
-		{ title: 'User', field: 'user_info.first_name' },
-		{ title: 'Receipt ID', field: 'receipt_id' },
-		{ title: 'Gateway ID', field: 'gateway_order_id' },
-		{ title: 'Item Name', field: 'itemName' },
-		{ title: 'Item Type', field: 'itemType' },
-		{ title: 'Amount', field: 'amount' },
-		{ title: 'Paid Amount', field: 'payment_breakdowns.paid_amount' },
-		{ title: 'Order Created At', field: 'createdAt' },
-		{ title: 'Order Status', field: 'status' },
-	]
-
-	const handleRowClick = (id: string) => {
-		if (window.innerWidth <= 1024) {
-			setVisibleDetails(visibleDetails === id ? null : id)
-		}
+	const renderStatusBadge = (status: string) => {
+		const s = (status || '').toUpperCase()
+		if (s === 'SUCCESS') return <span className='gz-status-pill success'>Success</span>
+		if (s === 'PENDING') return <span className='gz-status-pill pending'>Pending</span>
+		if (s === 'FAILED') return <span className='gz-status-pill danger'>Failed</span>
+		if (s === 'CANCELLED') return <span className='gz-status-pill secondary'>Cancelled</span>
+		if (s === 'REFUNDED') return <span className='gz-status-pill primary'>Refunded</span>
+		return <span className='gz-status-pill secondary'>{status || 'N/A'}</span>
 	}
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case 'SUCCESS':
-				return 'success'
-			case 'FAILED':
-				return 'danger'
-			case 'CANCELLED':
-				return 'Secondary'
-			case 'PENDING':
-				return 'warning'
-			case 'REFUNDED':
-				return 'primary'
-			default:
-				return 'dark'
-		}
-	}
+	// Derived metrics for summary cards
+	const summaryStats = useMemo(() => {
+		const total = metaData?.totalRecords || orderData.length
+		let successCount = 0
+		let pendingCount = 0
+		let failedCount = 0
 
-	const filteredAdminData = orderData.filter((admin: any) =>
-		admin?.user_info?.first_name.toLowerCase().includes(searchTerm.toLowerCase())
-	)
-	const paginatedAdminData = filteredAdminData.slice(
-		(pagination.page - 1) * pagination.itemsPerPage,
-		pagination.page * pagination.itemsPerPage
-	)
+		orderData.forEach((order) => {
+			const st = (order.status || order.order_status || '').toUpperCase()
+			if (st === 'SUCCESS') successCount++
+			else if (st === 'PENDING') pendingCount++
+			else failedCount++
+		})
+
+		return { total, successCount, pendingCount, failedCount }
+	}, [orderData, metaData])
+
+	const viewBasePath = location.pathname.startsWith('/rag')
+		? '/rag/all-order/view-order'
+		: location.pathname.startsWith('/fgiit')
+		? '/fgiit/all-order/view-order'
+		: '/all-order/view-order'
+
+	const currentStart = (pagination.page - 1) * pagination.itemsPerPage + 1
+	const totalItems = metaData?.totalRecords || orderData.length
+	const totalPages = metaData?.totalPages || Math.ceil(totalItems / pagination.itemsPerPage) || 1
 
 	return (
-		<>
-			<PageTitle>User Orders</PageTitle>
-			<KTCard className='py-5'>
-				<div className='col-md-12 mt-8 px-5'>
-					<div className='row justify-content-between'>
-						<div className='col-md-12'>
-							<div className='row'>
-								<div className='col-md-4'>
-									<label
-										className='fw-bold fs-6 mb-5'
-										htmlFor='Select'>
-										Item Type
-									</label>
-									<MultiSelect
-										options={itemTypeOption}
-										value={formData.itemType}
-										hasSelectAll={true}
-										onChange={(selected: any) =>
-											handleInputChange({ target: { name: 'itemType', value: selected } })
-										}
-										labelledBy='Select'
-										className='col-md-12 fv-row'
-									/>
-								</div>
-								<div className='col-md-4 mt-md-0 mt-3'>
-									<label
-										className='fw-bold fs-6 mb-5'
-										htmlFor='Select'>
-										Select Date
-									</label>
-									<DateFilter onDateRangeChange={handleDateRangeChange} rightValue='0'/>
-								</div>
-								<SelectField
-									className='col-md-4 fv-row'
-									name='order_status'
-									label='Order Status'
-									htmlFor='orderStatus'
-									value={formData.order_status}
-									onChange={handleInputChange}
-									options={orderStatusOption}
-									multiSelect
-								/>
-							</div>
-						</div>
-					</div>
+		<div className='gz-prod-container'>
+			<PageTitle>Customer Orders</PageTitle>
+
+			{/* =========================================================================
+			    BREADCRUMBS
+			    ========================================================================= */}
+			<div className='gz-prod-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<span>Order Management</span>
+				<span className='sep'>&gt;</span>
+				<span className='current'>All Orders</span>
+			</div>
+
+			{/* =========================================================================
+			    HEADER
+			    ========================================================================= */}
+			<div className='gz-prod-header'>
+				<div>
+					<h1 className='gz-prod-title'>All Customer Orders</h1>
+					<p className='gz-prod-subtitle'>
+						Centralized directory of all customer transactions, purchases, and subscriptions
+					</p>
 				</div>
-				<div className='row justify-content-between mx-3 m-5 mt-0 me-0'>
-					<div className='col-md-8 d-flex justify-content-md-start justify-content-center pt-md-1 pt-0'>
-						<div className='d-flex align-items-center justify-content-between'>
-							<div>
-								<select
-									className='form-select form-select mx-3'
-									onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}>
-									<option value='10'>10</option>
-									<option value='25'>25</option>
-									<option value='50'>50</option>
-								</select>
-							</div>
-						</div>
-						<button
-							className='btn btn-primary ms-5 mx-2'
-							onClick={downloadExcel}
-							disabled={loading}>
-							<FontAwesomeIcon
-								icon={faDownload}
-								className='fs-3'
-								style={{ marginRight: '10px' }}
-							/>
-							Excel
-						</button>
+			</div>
+
+			{/* =========================================================================
+			    SUMMARY METRICS CARDS
+			    ========================================================================= */}
+			<div className='gz-prod-summary-grid'>
+				<div className='gz-prod-summary-card blue'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faBoxesStacked} />
 					</div>
-					<div className='col-md-4 mt-md-0 mt-5'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-						/>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Total Orders</span>
+						<span className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
+							) : (
+								<NumberTicker value={summaryStats.total} />
+							)}
+						</span>
 					</div>
 				</div>
 
-				<div className='py-4 card-body'>
-					<div className='table-responsive'>
-						<Table
-							data={orderData}
-							columns={sortableFields}
-							sort={sort}
-							sortOrder={sortOrder}
-							manualSearch={searchTerm}
-							onSortChange={handleSortChange}
-							renderRow={(order: any, index: number, actualIndex: number, isVisible: boolean) => {
-								let currentPlanData: any
-								let itemName: any = '-'
-								const itemType: string =
-									order?.order_item_type == 'CART'
-										? String(order?.productData?.[0]?.type).split('_').join(' ')
-										: String(order?.order_item_type).split('_').join(' ')
+				<div className='gz-prod-summary-card green'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faCheckCircle} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Successful Orders</span>
+						<span className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
+							) : (
+								<NumberTicker value={summaryStats.successCount} />
+							)}
+						</span>
+					</div>
+				</div>
 
-								switch (order.order_item_type) {
-									case 'FG_MEAL_PRODUCT':
-										currentPlanData = order.product
-										itemName = currentPlanData?.name || 'N/A'
-										break
-									case 'CART':
-										currentPlanData = order.product
-										itemName = currentPlanData?.name || 'N/A'
-										break
-									case 'PT_PLAN':
-										currentPlanData = order.fitness_plan
-										itemName = currentPlanData?.plan_name || 'N/A'
-										break
-									case 'FITNESS_COURSE':
-										currentPlanData = order.fitness_course
-										itemName = currentPlanData?.course_name || 'N/A'
-										break
-									case 'DIGITAL_PLAN':
-										currentPlanData = order.digital_plan
-										itemName = currentPlanData?.plan_name || 'N/A'
-										break
-									case 'BOOKS':
-										currentPlanData = order.books
-										itemName = currentPlanData?.book_title || 'N/A'
-										break
-									case 'EBOOKS':
-										currentPlanData = order.ebook
-										itemName = currentPlanData?.ebook_title || 'N/A'
-										break
+				<div className='gz-prod-summary-card amber'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faClock} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Pending</span>
+						<span className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
+							) : (
+								<NumberTicker value={summaryStats.pendingCount} />
+							)}
+						</span>
+					</div>
+				</div>
+
+				<div className='gz-prod-summary-card red'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faBan} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Failed / Cancelled</span>
+						<span className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
+							) : (
+								<NumberTicker value={summaryStats.failedCount} />
+							)}
+						</span>
+					</div>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    FILTER ROW
+			    ========================================================================= */}
+			<div className='gz-order-card mb-4'>
+				<div className='p-4'>
+					<div className='row g-3 align-items-center'>
+						<div className='col-lg-4 col-md-6'>
+							<label className='gz-prod-label mb-1'>Item Type Filter</label>
+							<MultiSelect
+								options={itemTypeOption}
+								value={formData.itemType}
+								hasSelectAll={true}
+								onChange={(selected: any) =>
+									handleInputChange({ target: { name: 'itemType', value: selected } })
 								}
+								labelledBy='Filter by Item Type'
+							/>
+						</div>
 
-								return (
-									<React.Fragment key={order._id}>
-										<tr
-											onClick={() => handleRowClick(order._id)}
-											className='data-row'>
-											<td>
-												<span className='text-dark ms-6 fw-bold  d-block mb-1 fs-6'>
-													<FontAwesomeIcon
-														icon={faPlusCircle}
-														className='me-2 plus-icon'
-														style={{ color: '#607D8B', fontSize: '18px' }}
-													/>
-													{actualIndex}
-												</span>
+						<div className='col-lg-4 col-md-6'>
+							<label className='gz-prod-label mb-1'>Date Range</label>
+							<DateFilter onDateRangeChange={handleDateRangeChange} rightValue='0' />
+						</div>
+
+						<div className='col-lg-4 col-md-12'>
+							<label className='gz-prod-label mb-1'>Order Status</label>
+							<select
+								name='order_status'
+								className='gz-prod-input'
+								value={formData.order_status}
+								onChange={handleInputChange}>
+								{orderStatusOption.map((status) => (
+									<option key={status} value={status}>
+										{status === 'ALL' ? 'All Statuses' : status}
+									</option>
+								))}
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    TOOLBAR (SEARCHBAR -> LENGTHMENU -> EXPORT)
+			    ========================================================================= */}
+			<div className='gz-prod-toolbar'>
+				<div className='gz-prod-toolbar-left'>
+					<SearchFilter
+						searchTerm={searchTerm}
+						setSearchTerm={setSearchTerm}
+						className='me-0'
+					/>
+					<LengthMenu
+						expenseData={orderData}
+						handleItemsPerPageChange={handleItemsPerPageChange}
+						className='me-0'
+					/>
+				</div>
+
+				<div className='gz-prod-toolbar-right'>
+					<button
+						type='button'
+						className='gz-prod-btn-icon-export'
+						onClick={downloadExcel}
+						disabled={loading || orderData.length === 0}
+						title='Export Orders to Excel'>
+						<FontAwesomeIcon icon={faDownload} />
+					</button>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    ORDERS TABLE
+			    ========================================================================= */}
+			<div className='gz-prod-table-card'>
+				<div className='table-responsive'>
+					<table className='gz-prod-table'>
+						<thead>
+							<tr>
+								<th style={{ width: '48px', textAlign: 'center' }}>#</th>
+								<th>Customer</th>
+								<th>Receipt ID</th>
+								<th>Gateway Order ID</th>
+								<th>Item Name &amp; Qty</th>
+								<th>Item Type</th>
+								<th>Amount</th>
+								<th>Paid Amount</th>
+								<th>Created At</th>
+								<th style={{ textAlign: 'center' }}>Status</th>
+								<th style={{ textAlign: 'center', width: '80px' }}>Action</th>
+							</tr>
+						</thead>
+						<tbody>
+							{loading ? (
+								Array.from({ length: 5 }).map((_, sIdx) => (
+									<tr key={`skel-${sIdx}`} className='gz-prod-skeleton-row'>
+										<td style={{ textAlign: 'center' }}>
+											<span className='gz-prod-skeleton' style={{ width: '18px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<div className='gz-prod-identity-cell'>
+												<span className='gz-prod-skeleton' style={{ width: '40px', height: '40px', borderRadius: '10px' }}></span>
+												<div className='d-flex flex-column gap-1'>
+													<span className='gz-prod-skeleton' style={{ width: '110px', height: '15px', borderRadius: '4px' }}></span>
+													<span className='gz-prod-skeleton' style={{ width: '80px', height: '12px', borderRadius: '4px' }}></span>
+												</div>
+											</div>
+										</td>
+										<td>
+											<span className='gz-prod-skeleton' style={{ width: '70px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-prod-skeleton' style={{ width: '90px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-prod-skeleton' style={{ width: '130px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-prod-skeleton' style={{ width: '80px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-prod-skeleton' style={{ width: '65px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-prod-skeleton' style={{ width: '65px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td>
+											<span className='gz-prod-skeleton' style={{ width: '85px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td style={{ textAlign: 'center' }}>
+											<span className='gz-prod-skeleton' style={{ width: '65px', height: '22px', borderRadius: '999px' }}></span>
+										</td>
+										<td style={{ textAlign: 'center' }}>
+											<span className='gz-prod-skeleton' style={{ width: '34px', height: '34px', borderRadius: '10px' }}></span>
+										</td>
+									</tr>
+								))
+							) : orderData.length === 0 ? (
+								<tr>
+									<td colSpan={11} className='gz-table-empty-cell'>
+										<div className='gz-empty-state-wrap'>
+											<div className='gz-prod-empty-icon'>
+												<FontAwesomeIcon icon={faBoxOpen} />
+											</div>
+											<h4 className='gz-empty-state-title'>No orders found</h4>
+											<p className='gz-empty-state-desc'>
+												{searchTerm || formData.itemType?.length > 0 || formData.order_status !== 'ALL'
+													? 'No orders matched your filter criteria.'
+													: 'Orders placed by customers will appear here.'}
+											</p>
+										</div>
+									</td>
+								</tr>
+							) : (
+								orderData.map((order: any, index: number) => {
+									const actualIndex = currentStart + index
+									const itemType =
+										order?.order_item_type === 'CART'
+											? String(order?.productData?.[0]?.type || 'Cart')
+													.split('_')
+													.join(' ')
+											: String(order?.order_item_type || '-')
+													.split('_')
+													.join(' ')
+
+									const userInitials = `${(order?.user_info?.first_name || '').charAt(0)}${(order?.user_info?.last_name || '').charAt(0)}`.toUpperCase() || 'U'
+
+									const paidAmount = !isNaN(order?.payment_breakdowns?.paid_amount)
+										? order.payment_breakdowns.paid_amount
+										: order.amount
+
+									return (
+										<tr key={order._id || index}>
+											<td style={{ textAlign: 'center', color: '#71809A', fontSize: '12.5px' }}>
+												{actualIndex}
 											</td>
 											<td>
-												<div className='d-flex align-items-center'>
-													<div className='symbol symbol-45px me-5'>
-														<img
-															src={
-																order?.user_info?.profile_image
-																	? `https://files.fggroup.in/${order?.user_info?.profile_image}`
-																	: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-															}
-															alt='User'
-															style={{ width: '50px', height: '50px' }}
-														/>
+												<div className='gz-prod-identity-cell'>
+													<div className='gz-order-item-thumb' style={{ width: '40px', height: '40px' }}>
+														{order?.user_info?.profile_image ? (
+															<img
+																src={`https://files.fggroup.in/${order.user_info.profile_image}`}
+																alt='User'
+																onError={(e) => {
+																	;(e.target as HTMLElement).style.display = 'none'
+																}}
+															/>
+														) : (
+															<span style={{ fontWeight: 700, fontSize: '13px', color: '#172B4D' }}>
+																{userInitials}
+															</span>
+														)}
 													</div>
-													<div className='d-flex justify-content-start flex-column'>
-														<span className='text-dark fw-bold  fs-6'>
-															{(order?.user_info?.first_name || '-') +
-																' ' +
-																(order?.user_info?.last_name || '')}
+													<div className='gz-prod-identity-info'>
+														<span className='gz-prod-name'>
+															{`${order?.user_info?.first_name || '-'} ${order?.user_info?.last_name || ''}`.trim() || 'Customer'}
 														</span>
-														<span className='text-muted fw-semibold text-muted d-block fs-7'>
+														<span className='gz-prod-subtext'>
 															{order?.user_info?.mobile || 'N/A'}
 														</span>
 													</div>
 												</div>
 											</td>
 											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+												<span className='font-monospace' style={{ color: '#172B4D', fontWeight: 600, fontSize: '13px' }}>
 													{order.receipt_id || 'N/A'}
 												</span>
 											</td>
 											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+												<span className='font-monospace' style={{ color: '#71809A', fontSize: '12.5px' }}>
 													{order.gateway_order_id || 'N/A'}
 												</span>
 											</td>
 											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													{order?.productData ? (
-														<ul>
-															{order?.productData &&
-																order?.productData.map((product: any) => (
-																	<li>
-																		{product?.name} + (×{product?.quantity})
-																	</li>
-																))}
-														</ul>
-													) : order?.order_item_type == 'FG_MEAL_PRODUCT' ? (
-														order?.product?.name + ` (×${order?.notes?.quantity})`
-													) : order?.order_item_type == 'FITNESS_COURSE' ? (
-														order?.fitness_course?.course_name
-													) : order?.order_item_type == 'BOOKS' ? (
-														order?.books?.book_title + ` (×${order?.notes?.quantity})`
-													) : order?.order_item_type == 'EBOOKS' ? (
-														order?.ebook?.ebook_title + ` (×${order?.notes?.quantity})`
-													) : order?.order_item_type == 'PT_PLAN' ? (
-														order?.fitness_plan?.plan_name
+												<div style={{ maxWidth: '240px', color: '#172B4D', fontSize: '13px', fontWeight: 500 }}>
+													{order?.productData?.length > 0 ? (
+														<div className='d-flex flex-column gap-1'>
+															{order.productData.slice(0, 2).map((prod: any, pIdx: number) => (
+																<span key={pIdx}>
+																	{prod?.name} <span className='text-muted'>(×{prod?.quantity})</span>
+																</span>
+															))}
+															{order.productData.length > 2 && (
+																<span className='text-muted fs-8'>
+																	+{order.productData.length - 2} more items
+																</span>
+															)}
+														</div>
+													) : order?.order_item_type === 'FG_MEAL_PRODUCT' ? (
+														`${order?.product?.name || 'Meal Product'} (×${order?.notes?.quantity || 1})`
+													) : order?.order_item_type === 'FITNESS_COURSE' ? (
+														order?.fitness_course?.course_name || 'Fitness Course'
+													) : order?.order_item_type === 'BOOKS' ? (
+														`${order?.books?.book_title || 'Book'} (×${order?.notes?.quantity || 1})`
+													) : order?.order_item_type === 'EBOOKS' ? (
+														`${order?.ebook?.ebook_title || 'Ebook'} (×${order?.notes?.quantity || 1})`
+													) : order?.order_item_type === 'PT_PLAN' ? (
+														order?.fitness_plan?.plan_name || 'PT Plan'
 													) : (
-														order?.fitness_course?.course_name
+														order?.fitness_course?.course_name || '-'
 													)}
-												</span>
+												</div>
 											</td>
 											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+												<span className='badge bg-light text-dark fw-semibold'>
 													{itemType}
 												</span>
 											</td>
-											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													{order.amount + ' ' + (order.currency || 'INR')}
-												</span>
+											<td style={{ fontWeight: 600, color: '#172B4D', fontVariantNumeric: 'tabular-nums' }}>
+												₹{Number(order.amount || 0).toLocaleString('en-IN')}
 											</td>
-											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													{(!isNaN(order?.payment_breakdowns?.paid_amount)
-														? order.payment_breakdowns.paid_amount
-														: order.amount) +
-														' ' +
-														(order.currency || 'INR')}
-												</span>
+											<td style={{ fontWeight: 600, color: '#168064', fontVariantNumeric: 'tabular-nums' }}>
+												₹{Number(paidAmount || 0).toLocaleString('en-IN')}
 											</td>
-											<td>
-												<span className='text-dark fw-bold d-block mb-1 fs-6'>
-													{DayJS(order.createdAt).format('DD/MM/YYYY hh:mm:ss A')}
-												</span>
+											<td style={{ color: '#71809A', fontSize: '12.5px' }}>
+												{DayJS(order.createdAt).format('DD/MM/YYYY, hh:mm A')}
 											</td>
-											<td>
-												<span
-													className={`fw-bold d-block mb-1 fs-6 text-${getStatusColor(
-														order.status
-													)}`}>
-													{order.status || 'N/A'}
-												</span>
+											<td style={{ textAlign: 'center' }}>
+												{renderStatusBadge(order.status)}
 											</td>
-											<td>
-												<TableButton
-													action='view'
-													to={'/fgiit/all-order/view-order?order_id=' + order._id}
-												/>
+											<td style={{ textAlign: 'center' }}>
+												<Link
+													to={`${viewBasePath}?order_id=${order._id}`}
+													className='gz-prod-action-btn view'
+													title='View Order Details'>
+													<FontAwesomeIcon icon={faEye} />
+												</Link>
 											</td>
 										</tr>
-										{isVisible && (
-											<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-												<td colSpan={12}>
-													<div>
-														<div className='d-flex align-items-center'>
-															<div className='symbol symbol-45px me-5'>
-																<img
-																	src={
-																		order?.user_info?.profile_image
-																			? `https://files.fggroup.in/${order?.user_info?.profile_image}`
-																			: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-																	}
-																	alt='User'
-																	style={{ width: '50px', height: '50px' }}
-																/>
-															</div>
-															<div className='d-flex justify-content-start flex-column'>
-																<span className='text-dark fw-bold  fs-6'>
-																	{(order?.user_info?.first_name || '-') +
-																		' ' +
-																		(order?.user_info?.last_name || '')}
-																</span>
-																<span className='text-muted fw-semibold text-muted d-block fs-7'>
-																	{order?.user_info?.mobile || 'N/A'}
-																</span>
-															</div>
-														</div>
-														<br />
-														<strong>{sortableFields[1].title}: </strong> {order.receipt_id || 'N/A'}
-														<br />
-														<strong>{sortableFields[2].title}: </strong>{' '}
-														{order.gateway_order_id || 'N/A'}
-														<br />
-														<strong>{sortableFields[3].title}: </strong> {itemName}
-														<br />
-														<strong>{sortableFields[4].title}: </strong> {itemType}
-														<br />
-														<strong>{sortableFields[5].title}: </strong>{' '}
-														{order.amount + ' ' + (order.currency || 'INR')}
-														<br />
-														<strong>{sortableFields[6].title}: </strong>{' '}
-														{(!isNaN(order?.payment_breakdowns?.paid_amount)
-															? order.payment_breakdowns.paid_amount
-															: order.amount) +
-															' ' +
-															(order.currency || 'INR')}
-														<br />
-														<strong>{sortableFields[7].title}: </strong>{' '}
-														{DayJS(order.createdAt).format('DD/MM/YYYY hh:mm:ss A')}
-														<br />
-														<strong>{sortableFields[8].title}: </strong> {order.status || 'N/A'}
-														<br />
-													</div>
-												</td>
-											</tr>
-										)}
-									</React.Fragment>
-								)
-							}}
-							visibleDetails={visibleDetails}
-							pagination={pagination}
-							setPagination={setPagination}
-							loading={loading}
-						/>
-					</div>
+									)
+								})
+							)}
+						</tbody>
+					</table>
 				</div>
-				{orderData.length === 0 && !loading && (
-					<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-						<b>No records found</b>
-					</div>
-				)}
+
+				{/* Pagination */}
 				{orderData.length > 0 && (
-					<div className='me-5'>
-						<UsersListPagination
-							totalPages={metaData?.totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-						/>
-					</div>
+					<GomziTablePagination
+						totalRecords={totalItems}
+						page={pagination.page}
+						totalPages={totalPages}
+						itemsPerPage={pagination.itemsPerPage}
+						onPageChange={handlePageChange}
+						entityName='orders'
+					/>
 				)}
-			</KTCard>
-		</>
+			</div>
+		</div>
 	)
 }
 

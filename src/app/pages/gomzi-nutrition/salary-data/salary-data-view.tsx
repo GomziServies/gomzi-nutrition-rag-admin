@@ -14,6 +14,7 @@ import LengthMenu from '../../../components/LengthMenu'
 import UsersListPagination from '../../../components/TablePagination'
 import Table from '../../../components/Table'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
+import '../common-management.css'
 
 const SalaryDataView = () => {
     const location = useLocation()
@@ -187,259 +188,133 @@ const SalaryDataView = () => {
     }
 
     return (
-        <>
+        <div className='gz-mgmt-container'>
             <PageTitle breadcrumbs={[]}>Employee Salary Details</PageTitle>
 
-            <div className='row mb-6'>
-                <div className='col-12 mt-3'>
-                    <div className='card py-10'>
-                        <div className='card-body'>
-                            <div className='row'>
-                                <div className='col-2 d-md-block d-none text-center'>
-                                    <img
-                                        src={
-                                            (employeeData?.employee_photo || employeeData?.photo)
-                                                ? `https://files.fggroup.in/${employeeData?.employee_photo || employeeData?.photo}`
-                                                : toAbsoluteUrl('/media/logos/fgiit-logo.png')
-                                        }
-                                        alt={employeeData?.employee_name || employeeData?.full_name}
-                                        style={{ borderRadius: '10px', width: '90%' }}
-                                    />
+            <nav className='gz-mgmt-breadcrumb'>
+                <a href='/rag/dashboard'>Dashboard</a>
+                <span>/</span>
+                <a href='/rag/employees'>Staff Management</a>
+                <span>/</span>
+                <a href='/rag/salary-data'>Salary Data</a>
+                <span>/</span>
+                <span>Compensation Statement</span>
+            </nav>
+
+            <div className='gz-mgmt-header mb-6'>
+                <div>
+                    <h1 className='gz-mgmt-title'>Employee Compensation Statement</h1>
+                    <p className='gz-mgmt-subtitle'>
+                        Itemized salary details, attendance performance deductions, and expense claims for period
+                    </p>
+                </div>
+                <button
+                    type='button'
+                    className='gz-mgmt-btn-secondary'
+                    onClick={() => window.history.back()}
+                >
+                    <i className='bi bi-arrow-left me-2'></i>
+                    Back to Salary Data
+                </button>
+            </div>
+
+            {/* Profile & Metric Banner */}
+            <div className='gz-mgmt-card mb-6'>
+                <div className='p-6'>
+                    <div className='d-flex flex-wrap align-items-center gap-6 mb-6'>
+                        <img
+                            src={
+                                (employeeData?.employee_photo || employeeData?.photo)
+                                    ? `https://files.fggroup.in/${employeeData?.employee_photo || employeeData?.photo}`
+                                    : toAbsoluteUrl('/media/logos/fgiit-logo.png')
+                            }
+                            alt={employeeData?.employee_name || employeeData?.full_name || 'Employee'}
+                            style={{
+                                width: '84px',
+                                height: '84px',
+                                objectFit: 'cover',
+                                borderRadius: '14px',
+                                border: '2px solid #E2E8F0',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                            }}
+                        />
+                        <div className='flex-grow-1'>
+                            <div className='d-flex align-items-center gap-3 mb-2 flex-wrap'>
+                                <h3 className='m-0 fw-bold' style={{ color: '#0F172A', fontSize: '20px' }}>
+                                    {employeeData?.employee_name || employeeData?.full_name || 'Employee'}
+                                </h3>
+                                {employeeData?.employee_code && (
+                                    <span className='gz-mgmt-pill info'>
+                                        {employeeData.employee_code}
+                                    </span>
+                                )}
+                            </div>
+                            <div className='d-flex flex-wrap align-items-center gap-4 text-muted fs-7'>
+                                {employeeData?.employee_email && (
+                                    <span className='d-flex align-items-center gap-1'>
+                                        <i className='bi bi-envelope text-primary'></i>
+                                        {employeeData.employee_email}
+                                    </span>
+                                )}
+                                {employeeData?.mobile && (
+                                    <span className='d-flex align-items-center gap-1'>
+                                        <i className='bi bi-telephone text-primary'></i>
+                                        {employeeData.mobile}
+                                    </span>
+                                )}
+                                {(employeeData?.month || employeeData?.year) && (
+                                    <span className='d-flex align-items-center gap-1'>
+                                        <i className='bi bi-calendar-event text-primary'></i>
+                                        Period: {employeeData?.month} {employeeData?.year}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Metric Cards Row */}
+                    <div className='row g-4'>
+                        <div className='col-sm-6 col-md-3'>
+                            <div className='p-4 rounded-3' style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                                <div className='fs-8 text-muted fw-semibold text-uppercase mb-1'>Base Salary</div>
+                                <div className='fs-4 fw-bold' style={{ color: '#0F172A' }}>
+                                    ₹{Number(employeeData?.total_salary || 0).toLocaleString('en-IN')}
                                 </div>
-                                <div className='col-12 d-md-none d-block mb-5 text-center'>
-                                    <img
-                                        src={
-                                            (employeeData?.employee_photo || employeeData?.photo)
-                                                ? `https://files.fggroup.in/${employeeData?.employee_photo || employeeData?.photo}`
-                                                : toAbsoluteUrl('/media/logos/fgiit-logo.png')
-                                        }
-                                        alt={employeeData?.employee_name || employeeData?.full_name}
-                                        style={{ borderRadius: '5px', width: '50%' }}
-                                    />
-                                </div>
-                                <div className='col-md-10'>
-                                    <div className='row'>
-                                        <div className='col-md-4 fv-row mb-7'>
-                                            <InputField
-                                                placeholder='Name'
-                                                type='text'
-                                                className='col-12 fv-row mb-7'
-                                                name='employee_name'
-                                                label='Name'
-                                                htmlFor='employee_name'
-                                                value={employeeData?.employee_name || ''}
-                                                onChange={handleInputChange}
-                                                disabled
-                                            />
-                                        </div>
-                                        <div className='col-md-4 fv-row mb-7'>
-                                            <InputField
-                                                placeholder='Email'
-                                                type='text'
-                                                className='col-12 fv-row mb-7'
-                                                name='employee_email'
-                                                label='Email'
-                                                htmlFor='employee_email'
-                                                value={employeeData?.employee_email || ''}
-                                                onChange={handleInputChange}
-                                                disabled
-                                            />
-                                        </div>
-                                        <div className='col-md-4 fv-row mb-7'>
-                                            <InputField
-                                                placeholder='Total Salary'
-                                                type='text'
-                                                className='col-12 fv-row mb-7'
-                                                name='total_salary'
-                                                label='Total Salary'
-                                                htmlFor='total_salary'
-                                                value={employeeData?.total_salary || ''}
-                                                onChange={handleInputChange}
-                                                disabled
-                                            />
-                                        </div>
-                                        <div className='col-md-4 fv-row mb-7'>
-                                            <InputField
-                                                placeholder='Final Salary'
-                                                type='text'
-                                                className='col-12 fv-row mb-7'
-                                                name='final_salary'
-                                                label='Final Salary'
-                                                htmlFor='final_salary'
-                                                value={employeeData?.final_salary || ''}
-                                                onChange={handleInputChange}
-                                                disabled
-                                            />
-                                        </div>
-                                        <div className='col-md-4 fv-row mb-7'>
-                                            <InputField
-                                                placeholder='One Day Salary'
-                                                type='text'
-                                                className='col-12 fv-row mb-7'
-                                                name='one_day_salary'
-                                                label='One Day Salary'
-                                                htmlFor='one_day_salary'
-                                                value={employeeData?.total_salary ? Math.round(employeeData?.total_salary / 30).toString() : ''}
-                                                onChange={handleInputChange}
-                                                disabled
-                                            />
-                                        </div>
-                                        <div className='col-md-4 fv-row mb-7'>
-                                            <InputField
-                                                className='col-12 fv-row'
-                                                placeholder='Period'
-                                                type='text'
-                                                name='period'
-                                                label='Period'
-                                                htmlFor='period'
-                                                value={employeeData?.month && employeeData?.year ? `${employeeData?.month} ${employeeData?.year}` : ''}
-                                                onChange={handleInputChange}
-                                                disabled
-                                            />
-                                        </div>
-                                    </div>
+                                <div className='fs-8 text-muted mt-1'>
+                                    ~₹{Math.round((employeeData?.total_salary || 0) / 30).toLocaleString('en-IN')}/day
                                 </div>
                             </div>
-
-                            <div className='container mt-7 mx-6'>
-                                <div className='row align-items-center mb-5'>
-                                    <div className='col-md-4 px-0'>
-                                        <h3 className='fw-bold fs-3'>Salary Calculation</h3>
-                                    </div>
-                                    <div className='col-md-4 d-flex align-items-center'>
-                                        <SearchFilter
-                                            searchTerm={searchTerm}
-                                            setSearchTerm={setSearchTerm}
-                                        />
-                                        <LengthMenu
-                                            expenseData={salaryData?.attendance || []}
-                                            handleItemsPerPageChange={handleItemsPerPageChange}
-                                        />
-                                    </div>
-                                    <div className='col-md-4 px-0 mb-5'>
-                                        <DateFilter
-                                            onDateRangeChange={handleDateRangeChange}
-                                            leftValue='-450px'
-                                            lastMonth={true}
-                                        />
-                                    </div>
+                        </div>
+                        <div className='col-sm-6 col-md-3'>
+                            <div className='p-4 rounded-3' style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                                <div className='fs-8 text-muted fw-semibold text-uppercase mb-1'>Deductions</div>
+                                <div className='fs-4 fw-bold text-danger'>
+                                    -₹{Number(employeeData?.deducted_salary || 0).toLocaleString('en-IN')}
                                 </div>
-
-                                <div className='row'>
-                                    <div className='col-md-10 p-0'>
-                                        <table className='table table-bordered shadow-sm mb-0'>
-                                            <thead className='bg-light border-bottom border-black'>
-                                                <tr className=' border-top-0'>
-                                                    <th
-                                                        scope='col'
-                                                        className='text-center border-0'>
-                                                        Description
-                                                    </th>
-                                                    <th
-                                                        scope='col'
-                                                        className='text-center border-end '>
-                                                        Amount
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className=''>
-                                                <tr>
-                                                    <td className='text-center fw-bold border-start-0 border-black'>
-                                                        Salary
-                                                    </td>
-                                                    <td className='text-center fs-5 fw-bold'>
-                                                        ₹{employeeData?.total_salary || 0} /-
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td className='text-center fw-bold border-start-0 border-black'>
-                                                        Absent ({employeeData?.absent_cutting_salary?.absent || 0} Days)
-                                                        {employeeData?.absent_cutting_salary?.paidLeave ? (
-                                                            <span className='ms-2 badge bg-success text-light-success'>
-                                                                Paid Leave Apply
-                                                            </span>
-                                                        ) : (
-                                                            ''
-                                                        )}
-                                                        {employeeData?.absent_cutting_salary?.sandwichLeave ? (
-                                                            <span className='ms-2 badge bg-success text-light-success'>
-                                                                {employeeData?.absent_cutting_salary?.sandwichLeave} Sandwich
-                                                                Leave Apply
-                                                            </span>
-                                                        ) : (
-                                                            ''
-                                                        )}
-                                                    </td>
-                                                    <td className='text-center text-danger fs-5 fw-bold'>
-                                                        - ₹{employeeData?.absent_cutting_salary?.salary || 0} /-
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td className='text-center fw-bold border-start-0 border-black'>
-                                                        Half-Day ({employeeData?.half_day_salary?.halfDay || 0} Half)
-                                                        {employeeData?.half_day_salary?.paidLeave ? (
-                                                            <span className='ms-2 badge bg-success text-light-success'>
-                                                                Paid Leave Apply
-                                                            </span>
-                                                        ) : (
-                                                            ''
-                                                        )}
-                                                    </td>
-                                                    <td className='text-center text-danger fs-5 fw-bold'>
-                                                        - ₹{employeeData?.half_day_salary?.salary || 0} /-
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td className='text-center fw-bold border-start-0 border-black'>
-                                                        Deducted Salary
-                                                    </td>
-                                                    <td className='text-center text-danger fs-5 fw-bold'>
-                                                        - ₹{employeeData?.deducted_salary || 0} /-
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td className='text-center fw-bold border-start-0 border-black'>
-                                                        Task {employeeData?.task_rating?.rating || 0}% Rating Salary (
-                                                        {employeeData?.task_rating?.percentage?.value || 0}%)
-                                                    </td>
-                                                    {employeeData?.task_rating?.percentage?.type === 'plus' ? (
-                                                        <td className='text-center text-success fs-5 fw-bold'>
-                                                            + ₹{employeeData?.task_rating?.task_rating_salary || 0} /-
-                                                        </td>
-                                                    ) : (
-                                                        <td className='text-center text-danger fs-5 fw-bold'>
-                                                            - ₹{employeeData?.task_rating?.task_rating_salary || 0} /-
-                                                        </td>
-                                                    )}
-                                                </tr>
-                                                {/* Expense Information Section */}
-                                                <tr>
-                                                    <td className='text-center fw-bold border-start-0 border-black'>
-                                                        Approved Expenses ({employeeData?.approved_expenses_count || 0} Items)
-                                                    </td>
-                                                    <td className='text-center text-success fs-5 fw-bold'>
-                                                        + ₹{employeeData?.total_approved_expenses || 0} /-
-                                                    </td>
-                                                </tr>
-                                                <tr className='border-top border-black'>
-                                                    <td className='text-center border-start-0 border-black fw-bold'>
-                                                        10% Salary
-                                                    </td>
-                                                    <td className='text-center border-0 fs-5 text-danger fw-bold'>
-                                                        - ₹{employeeData?.ten_percent_salary || 0} /-
-                                                    </td>
-                                                </tr>
-                                                <tr className=''>
-                                                    <td className='text-center fw-bolder border-start-0 border-black fw-bold'>
-                                                        Final Salary
-                                                    </td>
-                                                    <td className='text-center fs-4 fw-bold'>
-                                                        ₹{employeeData?.final_salary || 0} /-
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                <div className='fs-8 text-muted mt-1'>
+                                    Absent & Half-day cuts
+                                </div>
+                            </div>
+                        </div>
+                        <div className='col-sm-6 col-md-3'>
+                            <div className='p-4 rounded-3' style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                                <div className='fs-8 text-muted fw-semibold text-uppercase mb-1'>Approved Expenses</div>
+                                <div className='fs-4 fw-bold text-success'>
+                                    +₹{Number(employeeData?.total_approved_expenses || 0).toLocaleString('en-IN')}
+                                </div>
+                                <div className='fs-8 text-muted mt-1'>
+                                    {employeeData?.approved_expenses_count || 0} claims reimbursed
+                                </div>
+                            </div>
+                        </div>
+                        <div className='col-sm-6 col-md-3'>
+                            <div className='p-4 rounded-3' style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+                                <div className='fs-8 text-primary fw-semibold text-uppercase mb-1'>Final Net Payout</div>
+                                <div className='fs-3 fw-bold' style={{ color: '#1E40AF' }}>
+                                    ₹{Number(employeeData?.final_salary || 0).toLocaleString('en-IN')}
+                                </div>
+                                <div className='fs-8 text-muted mt-1'>
+                                    Net payable for period
                                 </div>
                             </div>
                         </div>
@@ -447,83 +322,183 @@ const SalaryDataView = () => {
                 </div>
             </div>
 
-            {/* Expense Information Section */}
-            <div className='card mt-8'>
-                <div className='row justify-content-between mt-7 mx-6'>
-                    <div className='col-md-9'>
-                        <h3 className='card-title align-items-start flex-column'>
-                            <span className='card-label fw-bold fs-3 mb-1'>
-                                Approved Expense Reports
-                            </span>
-                        </h3>
+            {/* Salary Calculation Breakdown Card */}
+            <div className='gz-mgmt-card mb-6'>
+                <div className='gz-mgmt-toolbar flex-wrap gap-4'>
+                    <div className='gz-mgmt-toolbar-left'>
+                        <h4 className='m-0 fw-bold' style={{ color: '#0F172A', fontSize: '16px' }}>
+                            Itemized Salary Statement
+                        </h4>
+                    </div>
+                    <div className='gz-mgmt-toolbar-right'>
+                        <DateFilter
+                            onDateRangeChange={handleDateRangeChange}
+                            rightValue='0'
+                            lastMonth={true}
+                        />
                     </div>
                 </div>
 
-                <div className='py-4 card-body'>
+                <div className='card-body p-0'>
+                    <div className='table-responsive'>
+                        <table className='table table-hover align-middle mb-0' style={{ fontSize: '14px' }}>
+                            <thead>
+                                <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                                    <th className='py-3 px-6 text-start fw-bold' style={{ color: '#475569' }}>Description</th>
+                                    <th className='py-3 px-6 text-end fw-bold' style={{ color: '#475569', width: '220px' }}>Amount (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                    <td className='py-3 px-6 fw-bold' style={{ color: '#0F172A' }}>Base Monthly Salary</td>
+                                    <td className='py-3 px-6 text-end fw-bold' style={{ color: '#0F172A' }}>
+                                        ₹{Number(employeeData?.total_salary || 0).toLocaleString('en-IN')}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                    <td className='py-3 px-6'>
+                                        <span className='fw-semibold'>Absenteeism Deduction</span>
+                                        <span className='text-muted fs-8 ms-2'>({employeeData?.absent_cutting_salary?.absent || 0} Days)</span>
+                                        {employeeData?.absent_cutting_salary?.sandwichLeave && (
+                                            <span className='gz-mgmt-pill warning ms-2'>
+                                                {employeeData?.absent_cutting_salary?.sandwichLeave} Sandwich Leave
+                                            </span>
+                                        )}
+                                        {employeeData?.absent_cutting_salary?.paidLeave && (
+                                            <span className='gz-mgmt-pill success ms-2'>Paid Leave Applied</span>
+                                        )}
+                                    </td>
+                                    <td className='py-3 px-6 text-end fw-bold text-danger'>
+                                        - ₹{Number(employeeData?.absent_cutting_salary?.salary || 0).toLocaleString('en-IN')}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                    <td className='py-3 px-6'>
+                                        <span className='fw-semibold'>Half-Day Deduction</span>
+                                        <span className='text-muted fs-8 ms-2'>({employeeData?.half_day_salary?.halfDay || 0} Half Days)</span>
+                                        {employeeData?.half_day_salary?.paidLeave && (
+                                            <span className='gz-mgmt-pill success ms-2'>Paid Leave Applied</span>
+                                        )}
+                                    </td>
+                                    <td className='py-3 px-6 text-end fw-bold text-danger'>
+                                        - ₹{Number(employeeData?.half_day_salary?.salary || 0).toLocaleString('en-IN')}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                    <td className='py-3 px-6 fw-semibold text-danger'>
+                                        Total Deductions Applied
+                                    </td>
+                                    <td className='py-3 px-6 text-end fw-bold text-danger'>
+                                        - ₹{Number(employeeData?.deducted_salary || 0).toLocaleString('en-IN')}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                    <td className='py-3 px-6'>
+                                        <span className='fw-semibold'>Task Performance Incentive/Penalty</span>
+                                        <span className='text-muted fs-8 ms-2'>
+                                            ({employeeData?.task_rating?.rating || 0}% rating · {employeeData?.task_rating?.percentage?.value || 0}%)
+                                        </span>
+                                    </td>
+                                    <td className={`py-3 px-6 text-end fw-bold ${employeeData?.task_rating?.percentage?.type === 'plus' ? 'text-success' : 'text-danger'}`}>
+                                        {employeeData?.task_rating?.percentage?.type === 'plus' ? '+' : '-'} ₹{Number(employeeData?.task_rating?.task_rating_salary || 0).toLocaleString('en-IN')}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                    <td className='py-3 px-6'>
+                                        <span className='fw-semibold'>Approved Expenses Reimbursement</span>
+                                        <span className='text-muted fs-8 ms-2'>({employeeData?.approved_expenses_count || 0} claims)</span>
+                                    </td>
+                                    <td className='py-3 px-6 text-end fw-bold text-success'>
+                                        + ₹{Number(employeeData?.total_approved_expenses || 0).toLocaleString('en-IN')}
+                                    </td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                    <td className='py-3 px-6 fw-semibold'>10% Security / Withholding</td>
+                                    <td className='py-3 px-6 text-end fw-bold text-danger'>
+                                        - ₹{Number(employeeData?.ten_percent_salary || 0).toLocaleString('en-IN')}
+                                    </td>
+                                </tr>
+                                <tr style={{ background: '#F8FAFC', borderTop: '2px solid #E2E8F0' }}>
+                                    <td className='py-4 px-6 fw-bolder fs-6' style={{ color: '#0F172A' }}>
+                                        Net Payable Salary
+                                    </td>
+                                    <td className='py-4 px-6 text-end fw-bolder fs-5' style={{ color: '#16A34A' }}>
+                                        ₹{Number(employeeData?.final_salary || 0).toLocaleString('en-IN')}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {/* Approved Expense Reports Card */}
+            <div className='gz-mgmt-card mb-6'>
+                <div className='gz-mgmt-toolbar'>
+                    <div className='gz-mgmt-toolbar-left'>
+                        <h4 className='m-0 fw-bold' style={{ color: '#0F172A', fontSize: '16px' }}>
+                            Approved Expense Claims
+                        </h4>
+                    </div>
+                </div>
+
+                <div className='card-body p-0'>
                     <div className='table-responsive'>
                         {expenseData && expenseData.length > 0 ? (
-                            <table className='table table-bordered shadow-sm mb-0'>
-                                <thead className='bg-light border-bottom border-black'>
-                                    <tr className='border-black'>
-                                        <th scope='col' className='text-center border-black'>Date</th>
-                                        <th scope='col' className='text-center border-black'>Purpose</th>
-                                        <th scope='col' className='text-center border-black'>Items</th>
-                                        <th scope='col' className='text-center border-black'>Amount</th>
+                            <table className='table table-hover align-middle mb-0' style={{ fontSize: '14px' }}>
+                                <thead>
+                                    <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                                        <th className='py-3 px-6 text-start fw-bold' style={{ color: '#475569' }}>Date</th>
+                                        <th className='py-3 px-6 text-start fw-bold' style={{ color: '#475569' }}>Purpose</th>
+                                        <th className='py-3 px-6 text-start fw-bold' style={{ color: '#475569' }}>Line Items</th>
+                                        <th className='py-3 px-6 text-end fw-bold' style={{ color: '#475569' }}>Total Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {expenseData.map((expense: any) => (
-                                        <tr key={expense._id} className='border-black'>
-                                            <td className='text-center  border-black'>
-                                                {new Date(expense.createdAt).toLocaleDateString('en-GB')}
+                                        <tr key={expense._id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                            <td className='py-3 px-6 fw-semibold' style={{ color: '#0F172A' }}>
+                                                {DayJS(expense.createdAt).format('DD MMM YYYY')}
                                             </td>
-                                            <td className='text-center  border-black'>{expense.purpose}</td>
-                                            <td className='text-center  border-black'>
-                                                {expense.expenses?.map((item: any, index: number) => (
-                                                    <div key={index}>
-                                                        {item.type}: {item.description} (₹{item.amount})
+                                            <td className='py-3 px-6 fw-medium text-dark'>{expense.purpose}</td>
+                                            <td className='py-3 px-6'>
+                                                {expense.expenses?.map((item: any, idx: number) => (
+                                                    <div key={idx} className='text-muted fs-8'>
+                                                        <strong className='text-dark'>{item.type}:</strong> {item.description} (₹{Number(item.amount || 0).toLocaleString('en-IN')})
                                                     </div>
                                                 ))}
                                             </td>
-                                            <td className='text-center fs-5 fw-bold'>
-                                                ₹{expense.total_amount || 0} /-
+                                            <td className='py-3 px-6 text-end fw-bold' style={{ color: '#0F172A' }}>
+                                                ₹{Number(expense.total_amount || 0).toLocaleString('en-IN')}
                                             </td>
                                         </tr>
                                     ))}
-                                    <tr className='border-top border-black'>
-                                        <td colSpan={3} className='text-center fw-bold'>
-                                            Total Approved Expenses
+                                    <tr style={{ background: '#F8FAFC', borderTop: '2px solid #E2E8F0' }}>
+                                        <td colSpan={3} className='py-4 px-6 fw-bolder fs-6' style={{ color: '#0F172A' }}>
+                                            Total Reimbursable Claims
                                         </td>
-                                        <td className='text-center fs-5 fw-bold text-success'>
-                                            + ₹{employeeData?.total_approved_expenses || 0} /-
+                                        <td className='py-4 px-6 text-end fw-bolder fs-5 text-success'>
+                                            + ₹{Number(employeeData?.total_approved_expenses || 0).toLocaleString('en-IN')}
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         ) : (
-                            <div className='d-flex justify-content-center align-items-center'>
-                                <div className='text-center'>
-                                    <h3 className='fw-bolder text-gray-600'>No Approved Expense Reports Found</h3>
-                                </div>
+                            <div className='d-flex text-center w-100 align-content-center justify-content-center py-10 text-muted'>
+                                <b>No approved expense reports found for this period</b>
                             </div>
                         )}
                     </div>
-                    
-                    {expenseData?.length === 0 && !loadingExpenses && (
-                        <div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-                            <b>No expense reports found</b>
-                        </div>
-                    )}
                     {expenseData?.length > 0 && (
                         <UsersListPagination
-                            totalPages={Math.ceil(expenseData?.length / pagination.itemsPerPage)}
+                            totalPages={Math.ceil((expenseData?.length || 0) / pagination.itemsPerPage) || 1}
                             currentPage={pagination.page}
                             onPageChange={handlePageChange}
                         />
                     )}
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 

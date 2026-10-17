@@ -46,10 +46,17 @@ const AsideMenu: React.FC<Props> = ({ asideMenuCSSClasses }) => {
 			DrawerComponent.reinitialization()
 			ToggleComponent.reinitialization()
 			ScrollComponent.reinitialization()
-			if (scrollRef.current) {
-				scrollRef.current.scrollTop = 0
-			}
 			hideEmptySections()
+
+			// Keep the active menu item in view without resetting sidebar scroll to top
+			if (scrollRef.current) {
+				const activeItem = scrollRef.current.querySelector(
+					'.menu-link.active, .menu-item.here > .menu-link, .menu-item.show > .menu-link'
+				) as HTMLElement | null
+				if (activeItem) {
+					activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+				}
+			}
 		}, 50)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [pathname])

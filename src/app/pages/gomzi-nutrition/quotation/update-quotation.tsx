@@ -1,6 +1,7 @@
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -9,7 +10,9 @@ import InputField from '../../../components/InputField'
 import SelectField from '../../../components/SelectField'
 import TableButton from '../../../components/TableButton'
 import TermAndCondition from '../../../components/TermAndCondition'
+import { PlusIcon } from '../../../components/animated-icons'
 import { getQuotation, updateQuotation } from '../../../Functions/FGGroup/Quotation'
+import '../common-management.css'
 
 interface QuotationItem {
 	item_name: string
@@ -508,307 +511,374 @@ const NutritionUpdateQuotation: React.FC = () => {
 		doc.addImage(imgData, 'PNG', xOffset, margin, pdfWidth, pdfHeight)
 	}
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Update Quotation</PageTitle>
 
-			{/* <h1 className='fw-bold text-dark fs-1 mb-6 '>Update Quotation</h1> */}
-			<div className='row'>
-				<div className='col-md-12 mt-3'>
-					<div className='card'>
-						<div className='card-body'>
-							<p className='fw-bold fs-2 mb-4'>Update Quotation</p>
-							<form>
-								<div className='row'>
-									<div className='col-12 row'>
-										{' '}
-										<InputField
-											className='col-md-4 fv-row'
-											label='Date'
-											placeholder="Date'"
-											type='date'
-											name='date'
-											htmlFor='date'
-											value={formData?.date}
-											onChange={handleInputChange}
-										/>{' '}
-										<InputField
-											className='col-md-4 fv-row'
-											label='Full Name'
-											placeholder='Enter Full Name'
-											type='text'
-											name='name'
-											htmlFor='name'
-											value={formData?.name}
-											onChange={handleInputChange}
-										/>{' '}
-										<InputField
-											className='col-md-4 fv-row'
-											label='Address'
-											placeholder='Enter Address'
-											type='text'
-											name='billing_address'
-											htmlFor='billing_address'
-											value={formData?.billing_address}
-											onChange={handleInputChange}
-										/>{' '}
-										<InputField
-											className='col-md-6 fv-row'
-											label='Phone No.'
-											placeholder='Enter Phone No.'
-											type='text'
-											name='mobile'
-											htmlFor='mobile'
-											value={formData?.mobile}
-											onChange={handleInputChange}
-										/>{' '}
-										<InputField
-											className='col-md-6 fv-row'
-											label='Email'
-											placeholder='Enter Email'
-											type='email'
-											name='email'
-											htmlFor='email'
-											value={formData?.email}
-											onChange={handleInputChange}
-										/>
-									</div>
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<Link to='/rag/quotation-list'>Quotations</Link>
+				<span className='sep'>/</span>
+				<span className='current'>Update Quotation</span>
+			</div>
 
-									<h1 className='mb-4'>Supplements:</h1>
-									{plans.map((plan, index) => (
-										<div
-											key={index}
-											className='col-12 mb-5'>
-											<div
-												className='row'
-												style={{
-													border: '1px solid #00000008',
-													borderRadius: '10px',
-													backgroundColor: '#00000008',
-												}}>
-												<div className='col-11 row py-5 pb-0'>
-													<SelectField
-														className='col-md-2 fv-row mb-7'
-														label='Product Type'
-														name='item_type'
-														value={plan?.item_type || ''}
-														onChange={(e: any) => handlePlanInputChange(index, e)}
-														htmlFor='item_type'
-														options={[
-															'peanut butter',
-															'mass gainer',
-															'whey protein',
-															'eaa',
-															'bcaa',
-															'pre-workout',
-															'creatine',
-															'energy drink',
-														]}
-													/>
-													<InputField
-														className='col-md-6 fv-row'
-														label='Product'
-														placeholder='Enter Product'
-														type='text'
-														name='item_name'
-														htmlFor='item_name'
-														value={plan?.item_name}
-														onChange={(e: any) => handlePlanInputChange(index, e)}
-													/>
-													{/* Item Weight Fields */}
-													<div className='col-md-4 fv-row mb-7'>
-														<label
-															className='fw-bold fs-6 mb-md-5 mb-2'
-															htmlFor={`item_weight_${index}`}>
-															Weight
-														</label>
-														<div className='d-flex align-items-center gap-3'>
-															<input
-																type='number'
-																name='item_weight'
-																id={`item_weight_${index}`}
-																value={(plan.item_weight || '').toString()}
-																onChange={(e: any) => handlePlanInputChange(index, e)}
-																placeholder='Enter Weight'
-																className='form-control inputfield-bg flex-grow-1'
-																style={{
-																	height: '38px',
-																	borderRadius: '8px',
-																	minWidth: 0,
-																}}
-															/>
-															<div style={{ width: '95px', flexShrink: 0 }}>
-																<SelectField
-																	showLabel={false}
-																	marginRemove
-																	name='item_weight_type'
-																	value={plan.item_weight_type || 'kg'}
-																	onChange={(e: any) => handlePlanInputChange(index, e)}
-																	options={['gm', 'kg', 'ml', 'ltr']}
-																	searchable={false}
-																	hideDefaultOption={true}
-																/>
-															</div>
-														</div>
-													</div>
-													<InputField
-														className='col-md-4 fv-row'
-														label='Rate'
-														placeholder='Enter Rate'
-														type='number'
-														name='amount'
-														htmlFor='amount'
-														value={(plan?.amount || '').toString()}
-														onChange={(e: any) => handlePlanInputChange(index, e)}
-													/>{' '}
-													<InputField
-														className='col-md-4 fv-row'
-														label='Quantity'
-														placeholder='Enter Quantity'
-														type='number'
-														name='quantity'
-														htmlFor='quantity'
-														value={(plan?.quantity || '').toString()}
-														onChange={(e: any) => handlePlanInputChange(index, e)}
-													/>{' '}
-													<InputField
-														className='col-md-4 fv-row'
-														label='Amount'
-														placeholder='Amount'
-														type='number'
-														name='totalAmount'
-														htmlFor='totalAmount'
-														value={`${(Number(plan?.amount) || 0) * (Number(plan?.quantity) || 0)}`}
-														disabled
-													/>
-													<InputField
-														className='col-md-4 fv-row'
-														label='GST'
-														placeholder='GST'
-														type='number'
-														name='gst'
-														htmlFor='gst'
-														value={(plan.gst || '').toString()}
-														onChange={(e: any) => handlePlanInputChange(index, e)}
-													/>
-													<div className='col-md-4 fv-row'>
-														<div className='d-flex align-items-center mb-2'>
-															<label
-																htmlFor={`discount-${index}`}
-																className='fw-bold fs-6 mb-3'>
-																Discount
-															</label>
-															<div className='form-check form-switch form-check-custom form-check-solid mb-2 ms-2'>
-																<input
-																	className='form-check-input w-25px h-15px'
-																	type='checkbox'
-																	id={`discountTypeSwitch-${index}`}
-																	checked={
-																		plan.isDiscountPercentage !== undefined
-																			? plan.isDiscountPercentage
-																			: true
-																	}
-																	onChange={() => toggleDiscountType(index)}
-																/>
-																<label
-																	className='form-check-label fw-bold fs-8 ms-1'
-																	htmlFor={`discountTypeSwitch-${index}`}>
-																	{plan.isDiscountPercentage !== undefined
-																		? plan.isDiscountPercentage
-																			? '(%)'
-																			: '(₹)'
-																		: '(%)'}
-																</label>
-															</div>
-														</div>
-														<input
-															type='number'
-															className='form-control inputfield-bg'
-															id={`discount-${index}`}
-															name='discount'
-															placeholder={`Discount in ${
-																plan.isDiscountPercentage !== undefined
-																	? plan.isDiscountPercentage
-																		? 'percentage'
-																		: 'rupees'
-																	: 'percentage'
-															}`}
-															value={(plan.discount || '').toString()}
-															onChange={(e: any) => handlePlanInputChange(index, e)}
-														/>
-													</div>
-													<InputField
-														className='col-md-4 fv-row'
-														label='Total'
-														placeholder='Total'
-														type='number'
-														name='totalAmount'
-														htmlFor='totalAmount'
-														value={(plan?.totalAmount || '').toString()}
-														disabled
-													/>
-												</div>
-												<div className='col-1'>
-													<div className='mt-17 d-flex justify-content-end'>
-														<TableButton
-															action='remove'
-															backgroundDark={true}
-															onClick={(e) => removePlan(index, e)}
-														/>
-													</div>
-												</div>
-											</div>
-										</div>
-									))}
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Update Quotation</h1>
+					<p className='gz-mgmt-subtitle'>Modify quotation terms, customer pricing, and item specifications</p>
+				</div>
+				<Link to='/rag/quotation-list' className='gz-mgmt-btn-secondary text-decoration-none'>
+					Back to Quotations
+				</Link>
+			</div>
 
-									<div className='col-12 my-3 d-flex justify-content-end'>
-										<button
-											className='btn-primary btn gap-2 mx-2 btn-sm me-1'
-											onClick={(e) => addPlan(e)}>
-											Add
-										</button>
-									</div>
+			<div className='gz-mgmt-form-card mb-8'>
+				<form>
+					{/* SECTION 1: CLIENT INFORMATION */}
+					<div className='gz-mgmt-section-header mb-6'>
+						<div className='d-flex align-items-center gap-2'>
+							<span className='bullet bullet-vertical h-20px bg-primary'></span>
+							<h3 className='fw-bold mb-0' style={{ fontSize: '16px', color: '#172B4D' }}>
+								Client & Proposal Information
+							</h3>
+						</div>
+					</div>
 
-									<div className='col-12 row'>
-										{' '}
-										<InputField
-											className='col-md-3 fv-row'
-											label='Total Amount'
-											placeholder='Enter Total Amount'
+					<div className='row g-5 mb-8'>
+						<InputField
+							className='col-md-4 fv-row'
+							label='Quotation Date'
+							placeholder='Select Date'
+							type='date'
+							name='date'
+							htmlFor='date'
+							value={formData?.date}
+							onChange={handleInputChange}
+						/>
+						<InputField
+							className='col-md-4 fv-row'
+							label='Full Name'
+							placeholder='Enter Full Name'
+							type='text'
+							name='name'
+							htmlFor='name'
+							value={formData?.name}
+							onChange={handleInputChange}
+						/>
+						<InputField
+							className='col-md-4 fv-row'
+							label='Billing Address'
+							placeholder='Enter Billing Address'
+							type='text'
+							name='billing_address'
+							htmlFor='billing_address'
+							value={formData?.billing_address}
+							onChange={handleInputChange}
+						/>
+						<InputField
+							className='col-md-6 fv-row'
+							label='Phone Number'
+							placeholder='Enter Phone Number'
+							type='text'
+							name='mobile'
+							htmlFor='mobile'
+							value={formData?.mobile}
+							onChange={handleInputChange}
+						/>
+						<InputField
+							className='col-md-6 fv-row'
+							label='Email Address'
+							placeholder='Enter Email Address'
+							type='email'
+							name='email'
+							htmlFor='email'
+							value={formData?.email}
+							onChange={handleInputChange}
+						/>
+					</div>
+
+					{/* SECTION 2: SUPPLEMENTS & PRODUCTS */}
+					<div className='gz-mgmt-section-header mb-6 d-flex justify-content-between align-items-center'>
+						<div className='d-flex align-items-center gap-2'>
+							<span className='bullet bullet-vertical h-20px bg-primary'></span>
+							<h3 className='fw-bold mb-0' style={{ fontSize: '16px', color: '#172B4D' }}>
+								Supplements & Product Pricing
+							</h3>
+						</div>
+						<button
+							type='button'
+							className='gz-mgmt-btn-secondary'
+							style={{ height: '36px', fontSize: '13px' }}
+							onClick={(e) => addPlan(e)}>
+							<PlusIcon size={13} strokeWidth={3} />
+							<span>Add Supplement</span>
+						</button>
+					</div>
+
+					{plans.map((plan, index) => (
+						<div
+							key={index}
+							className='p-6 mb-5 rounded-3'
+							style={{
+								backgroundColor: '#F8FAFC',
+								border: '1px solid #E2E8F0',
+								boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+							}}>
+							<div
+								className='d-flex justify-content-between align-items-center mb-4 pb-3'
+								style={{ borderBottom: '1px solid #E2E8F0' }}>
+								<span className='fw-bold text-dark fs-6 d-flex align-items-center gap-2'>
+									<span
+										className='badge badge-circle badge-light-primary fw-bolder fs-8'
+										style={{ width: '22px', height: '22px' }}>
+										{index + 1}
+									</span>
+									Item #{index + 1} {plan.item_name ? `— ${plan.item_name}` : ''}
+								</span>
+								{plans.length > 1 && (
+									<button
+										type='button'
+										className='btn btn-icon btn-sm btn-light-danger'
+										style={{ width: '30px', height: '30px' }}
+										onClick={(e) => removePlan(index, e)}
+										title='Remove Item'>
+										<i className='bi bi-trash fs-6'></i>
+									</button>
+								)}
+							</div>
+
+							<div className='row g-4'>
+								<SelectField
+									className='col-md-3 fv-row'
+									label='Product Type'
+									name='item_type'
+									value={plan?.item_type || ''}
+									onChange={(e: any) => handlePlanInputChange(index, e)}
+									htmlFor='item_type'
+									options={[
+										'peanut butter',
+										'mass gainer',
+										'whey protein',
+										'eaa',
+										'bcaa',
+										'pre-workout',
+										'creatine',
+										'energy drink',
+									]}
+								/>
+								<InputField
+									className='col-md-6 fv-row'
+									label='Product Name / Description'
+									placeholder='Enter Product Name'
+									type='text'
+									name='item_name'
+									htmlFor='item_name'
+									value={plan?.item_name}
+									onChange={(e: any) => handlePlanInputChange(index, e)}
+								/>
+								<div className='col-md-3 fv-row'>
+									<label
+										className='fw-bold fs-6 mb-2'
+										htmlFor={`item_weight_${index}`}>
+										Weight / Pack Size
+									</label>
+									<div className='d-flex align-items-center gap-2'>
+										<input
 											type='number'
-											name='net_amount'
-											htmlFor='net_amount'
-											value={(formData?.net_amount || '').toString()}
-											onChange={handleInputChange}
-										/>{' '}
-									</div>
-									<div className='col-md-12 fv-row mb-7'>
-										<div className='d-flex justify-content-end'>
-											{downloadBtn ? (
-												<button
-													type='button'
-													className='btn btn-success mb-4 me-3'
-													onClick={() => generatePDF(quotationData?.name)}>
-													Download Quotation
-												</button>
-											) : (
-												''
-											)}
-											<button
-												type='button'
-												className={`btn btn-primary btn-block mb-4 ${
-													isSubmitting ? 'disabled' : ''
-												}`}
-												onClick={handleUpdateQuotation}
-												disabled={isSubmitting}>
-												{isSubmitting ? 'Please wait, updating quotation...' : 'Update Quotation'}
-											</button>
+											name='item_weight'
+											id={`item_weight_${index}`}
+											value={(plan.item_weight || '').toString()}
+											onChange={(e: any) => handlePlanInputChange(index, e)}
+											placeholder='Weight'
+											className='form-control flex-grow-1'
+											style={{
+												height: '38px',
+												borderRadius: '8px',
+												border: '1px solid #E2E8F0',
+												minWidth: 0,
+											}}
+										/>
+										<div style={{ width: '85px', flexShrink: 0 }}>
+											<SelectField
+												showLabel={false}
+												marginRemove
+												name='item_weight_type'
+												value={plan.item_weight_type || 'kg'}
+												onChange={(e: any) => handlePlanInputChange(index, e)}
+												options={['gm', 'kg', 'ml', 'ltr']}
+												searchable={false}
+												hideDefaultOption={true}
+											/>
 										</div>
 									</div>
 								</div>
-							</form>
+
+								<InputField
+									className='col-md-3 fv-row'
+									label='Rate (₹)'
+									placeholder='Enter Rate'
+									type='number'
+									name='amount'
+									htmlFor='amount'
+									value={(plan?.amount || '').toString()}
+									onChange={(e: any) => handlePlanInputChange(index, e)}
+								/>
+								<InputField
+									className='col-md-2 fv-row'
+									label='Quantity'
+									placeholder='Enter Quantity'
+									type='number'
+									name='quantity'
+									htmlFor='quantity'
+									value={(plan?.quantity || '').toString()}
+									onChange={(e: any) => handlePlanInputChange(index, e)}
+								/>
+								<InputField
+									className='col-md-2 fv-row'
+									label='Base Amount (₹)'
+									placeholder='Amount'
+									type='number'
+									name='totalAmount'
+									htmlFor='totalAmount'
+									value={`${(Number(plan?.amount) || 0) * (Number(plan?.quantity) || 0)}`}
+									disabled
+								/>
+								<InputField
+									className='col-md-2 fv-row'
+									label='GST Rate (%)'
+									placeholder='GST'
+									type='number'
+									name='gst'
+									htmlFor='gst'
+									value={(plan.gst || '').toString()}
+									onChange={(e: any) => handlePlanInputChange(index, e)}
+								/>
+								<div className='col-md-3 fv-row'>
+									<div className='d-flex align-items-center justify-content-between mb-2'>
+										<label
+											htmlFor={`discount-${index}`}
+											className='fw-bold fs-6 mb-0'>
+											Discount
+										</label>
+										<div className='d-flex align-items-center gap-1'>
+											<input
+												className='form-check-input w-25px h-15px'
+												type='checkbox'
+												id={`discountTypeSwitch-${index}`}
+												checked={
+													plan.isDiscountPercentage !== undefined
+														? plan.isDiscountPercentage
+														: true
+												}
+												onChange={() => toggleDiscountType(index)}
+											/>
+											<label
+												className='fw-bold fs-8 text-muted'
+												htmlFor={`discountTypeSwitch-${index}`}>
+												{plan.isDiscountPercentage !== undefined
+													? plan.isDiscountPercentage
+														? '(%)'
+														: '(₹)'
+													: '(%)'}
+											</label>
+										</div>
+									</div>
+									<input
+										type='number'
+										className='form-control'
+										style={{ height: '38px', borderRadius: '8px', border: '1px solid #E2E8F0' }}
+										id={`discount-${index}`}
+										name='discount'
+										placeholder={`Discount in ${
+											plan.isDiscountPercentage !== undefined
+												? plan.isDiscountPercentage
+													? 'percentage'
+													: 'rupees'
+												: 'percentage'
+										}`}
+										value={(plan.discount || '').toString()}
+										onChange={(e: any) => handlePlanInputChange(index, e)}
+									/>
+								</div>
+
+								<div className='col-12 text-end pt-2'>
+									<span className='text-muted fs-7 me-2'>Item Net Total:</span>
+									<span className='fw-bolder fs-5 text-dark'>
+										₹{Number(plan?.totalAmount || 0).toLocaleString('en-IN')}
+									</span>
+								</div>
+							</div>
+						</div>
+					))}
+
+					<div className='d-flex justify-content-end mb-8'>
+						<button
+							type='button'
+							className='gz-mgmt-btn-secondary'
+							onClick={(e) => addPlan(e)}>
+							<PlusIcon size={14} strokeWidth={3} />
+							<span>Add Another Supplement</span>
+						</button>
+					</div>
+
+					{/* SECTION 3: TOTAL & ACTIONS */}
+					<div
+						className='p-6 rounded-3 mb-8'
+						style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+						<div className='row align-items-center g-4'>
+							<div className='col-md-6'>
+								<InputField
+									className='col-12 fv-row'
+									label='Calculated Grand Total'
+									placeholder='Total Net Amount'
+									type='number'
+									name='net_amount'
+									htmlFor='net_amount'
+									value={(formData?.net_amount || '').toString()}
+									onChange={handleInputChange}
+								/>
+							</div>
+							<div className='col-md-6 text-md-end'>
+								<span className='text-muted fs-7 d-block mb-1 text-uppercase fw-bold'>
+									Payable Estimate
+								</span>
+								<div className='fw-bolder fs-2x' style={{ color: '#172B4D' }}>
+									₹{Number(formData?.net_amount || 0).toLocaleString('en-IN')}
+								</div>
+							</div>
 						</div>
 					</div>
-				</div>
+
+					<div
+						className='d-flex justify-content-between align-items-center flex-wrap gap-3 pt-6'
+						style={{ borderTop: '1px solid #F1F5F9' }}>
+						<Link
+							to='/rag/quotation-list'
+							className='gz-mgmt-btn-secondary text-decoration-none'>
+							Cancel & Return
+						</Link>
+						<div className='d-flex align-items-center gap-3'>
+							{downloadBtn && (
+								<button
+									type='button'
+									className='btn btn-light-success d-inline-flex align-items-center gap-2'
+									style={{ height: '42px', borderRadius: '10px', fontWeight: 600 }}
+									onClick={() => generatePDF(quotationData?.name)}>
+									<i className='bi bi-file-earmark-pdf fs-5'></i>
+									Download PDF
+								</button>
+							)}
+							<button
+								type='button'
+								className='gz-mgmt-btn-primary'
+								onClick={handleUpdateQuotation}
+								disabled={isSubmitting}>
+								<i className='bi bi-check2-circle me-1'></i>
+								{isSubmitting ? 'Updating Quotation...' : 'Update Quotation'}
+							</button>
+						</div>
+					</div>
+				</form>
 			</div>
 
 			<div
@@ -1082,7 +1152,7 @@ const NutritionUpdateQuotation: React.FC = () => {
 					Download Invoice
 				</button>
 			</div>
-		</>
+		</div>
 	)
 }
 

@@ -1,14 +1,17 @@
-import { faAngleDown } from '@fortawesome/free-solid-svg-icons'
+import { faAngleDown, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import SelectField from '../../../components/SelectField'
 import TableButton from '../../../components/TableButton'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
 import { GetGnFollowUpReport, UpdatePitchReport } from '../../../Functions/FGGroup/GnFollowUpReport'
+import '../common-management.css'
+import '../products-theme.css'
+import '../orders-theme.css'
 import './follow-up-report.css'
 
 interface Country {
@@ -518,8 +521,37 @@ function UpdateFollowUpReport(): JSX.Element {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Update Follow Up Report</PageTitle>
+
+			{/* Breadcrumb */}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<Link to='/rag/follow-up-report-list'>Follow-Up Reports</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>
+					{personalDetails.client_name ? `Update: ${personalDetails.client_name}` : 'Update Report'}
+				</span>
+			</div>
+
+			{/* Header */}
+			<div className='gz-mgmt-header mb-6'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>
+						{personalDetails.client_name ? `Update Follow-Up: ${personalDetails.client_name}` : 'Update Follow-Up Report'}
+					</h1>
+					<p className='gz-mgmt-subtitle'>
+						Review customer profile, update stage progress, manage pitch recordings, and record objection remarks.
+					</p>
+				</div>
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<Link to='/rag/follow-up-report-list' className='gz-mgmt-btn-secondary'>
+						<FontAwesomeIcon icon={faArrowLeft} />
+						<span>Back to Leads</span>
+					</Link>
+				</div>
+			</div>
 
 			{/* Personal Details & Product Details  */}
 			<div className='col-12'>
@@ -1186,7 +1218,7 @@ function UpdateFollowUpReport(): JSX.Element {
 					</div>
 				</div>
 			)}
-		</>
+		</div>
 	)
 }
 

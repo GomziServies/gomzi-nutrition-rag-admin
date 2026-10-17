@@ -18,6 +18,7 @@ import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetGlsEmployees, RemoveGlsEmployee } from '../../../Functions/FGGroup'
+import '../common-management.css'
 
 const EmployeeDetail: React.FC = () => {
 	const intl = useIntl()
@@ -325,103 +326,78 @@ const EmployeeDetail: React.FC = () => {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Team Members</PageTitle>
-			<KTCard>
-				<div className='card-header border-0 pt-6 px-6'>
-					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
-						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
-							{/* 1. Searchbar */}
-							<div>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-									className='me-0'
-								/>
-							</div>
 
-							{/* 2. Dropdown (show entries per page) */}
-							<div>
-								<LengthMenu
-									expenseData={employeeData}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-									value={pagination.itemsPerPage}
-									className='me-0'
-								/>
-							</div>
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<span>Staff Management</span>
+				<span className='sep'>/</span>
+				<span className='current'>Team Members</span>
+			</div>
 
-							{/* 3. Download Excel Button */}
-							<div>
-								<button
-									type='button'
-									className='btn btn-icon d-flex align-items-center justify-content-center'
-									onClick={downloadExcel}
-									disabled={exporting}
-									style={{
-										width: '38px',
-										height: '38px',
-										minWidth: '38px',
-										padding: 0,
-										borderRadius: '8px',
-										fontSize: '14px',
-										backgroundColor: '#ffffff',
-										border: '1px solid #DFE7F0',
-										color: '#1E3A5F',
-										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-										cursor: exporting ? 'not-allowed' : 'pointer',
-									}}
-									onMouseEnter={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#1E3A5F'
-											e.currentTarget.style.borderColor = '#1E3A5F'
-											e.currentTarget.style.color = '#ffffff'
-											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
-											e.currentTarget.style.transform = 'translateY(-1px)'
-										}
-									}}
-									onMouseLeave={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#ffffff'
-											e.currentTarget.style.borderColor = '#DFE7F0'
-											e.currentTarget.style.color = '#1E3A5F'
-											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
-											e.currentTarget.style.transform = 'translateY(0)'
-										}
-									}}
-									title='Download Excel'>
-									{exporting ? (
-										<span
-											className='spinner-border spinner-border-sm'
-											role='status'
-											aria-hidden='true'></span>
-									) : (
-										<FontAwesomeIcon icon={faDownload} />
-									)}
-								</button>
-							</div>
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Employee Directory</h1>
+					<p className='gz-mgmt-subtitle'>Manage internal staff, designations, biometric QR credentials, and member profiles</p>
+				</div>
+				<TableButton
+					action='add'
+					to='/rag/employee-add'
+					text='Add Employee'
+				/>
+			</div>
 
-							{/* 4. Datefilter */}
-							<div className='d-flex align-items-center flex-shrink-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-								/>
-							</div>
-						</div>
+			<div className='gz-mgmt-card'>
+				<div className='gz-mgmt-toolbar'>
+					<div className='gz-mgmt-toolbar-left'>
+						{/* 1. Searchbar */}
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
 
-						{/* Right side Add Employee Button */}
-						<div className='flex-shrink-0 ms-auto'>
-							<TableButton
-								action='add'
-								to='/rag/employee-add'
-								text='Add Employee'
+						{/* 2. Dropdown (show entries per page) */}
+						<LengthMenu
+							expenseData={employeeData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
+
+						{/* 3. Datefilter */}
+						<div className='d-flex align-items-center flex-shrink-0'>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
 							/>
 						</div>
 					</div>
+
+					{/* 4. Right side: Excel Download */}
+					<div className='gz-mgmt-toolbar-right'>
+						<button
+							type='button'
+							className='gz-mgmt-export-btn'
+							onClick={downloadExcel}
+							disabled={exporting}
+							title='Download Excel'>
+							{exporting ? (
+								<span
+									className='spinner-border spinner-border-sm'
+									role='status'
+									aria-hidden='true'></span>
+							) : (
+								<FontAwesomeIcon icon={faDownload} />
+							)}
+							<span>Export Excel</span>
+						</button>
+					</div>
 				</div>
 
-				<div className='py-4 card-body'>
+				<div className='card-body p-0'>
 					<div className='table-responsive'>
 						<Table
 							data={employeeData}
@@ -441,45 +417,52 @@ const EmployeeDetail: React.FC = () => {
 											onClick={() => handleRowClick(employee._id)}
 											className='data-row'>
 											<td className='text-center'>
-												<div className='d-flex justify-content-center'>
+												<div className='d-flex align-items-center justify-content-center'>
 													<FontAwesomeIcon
 														icon={faPlusCircle}
-														className='mx-2 ms-5 mb-1 plus-icon'
+														className='mx-1 mb-1 plus-icon'
 														style={{ color: '#607D8B', fontSize: '18px' }}
 													/>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+													<span className='fw-bold d-block mb-1 fs-6' style={{ color: '#172B4D' }}>
 														{actualIndex}
 													</span>
 												</div>
 											</td>
 											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													{employee?.employee_code}
+												<span className='gz-mgmt-pill info'>
+													{employee?.employee_code || '-'}
 												</span>
 											</td>
 											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													{employee.name}
+												<div className='gz-mgmt-identity-cell'>
+													<img
+														src={employee.photo ? `https://files.fggroup.in/${employee.photo}` : '/media/avatars/300-1.jpg'}
+														alt={employee.name}
+														className='gz-mgmt-avatar'
+													/>
+													<div className='gz-mgmt-identity-info'>
+														<span className='name'>{employee.name}</span>
+														<span className='sub'>{employee.mobile || '-'}</span>
+													</div>
+												</div>
+											</td>
+											<td>
+												<span className='gz-mgmt-pill' style={{ background: '#F1F5F9', color: '#475569' }}>
+													{employee?.position || 'Staff'}
 												</span>
 											</td>
 											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													{employee?.position}
-												</span>
-											</td>
-											<td>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-													<a
-														href={`https://files.fggroup.in/` + employee.photo}
-														target='_blank'
-														rel='noopener noreferrer'>
-														<img
-															src={`https://files.fggroup.in/` + employee.photo}
-															alt={employee.name}
-															style={{ width: '80px', height: '80px', borderRadius: '10px' }}
-														/>
-													</a>
-												</span>
+												<a
+													href={`https://files.fggroup.in/` + employee.photo}
+													target='_blank'
+													rel='noopener noreferrer'
+													className='text-decoration-none'>
+													<img
+														src={`https://files.fggroup.in/` + employee.photo}
+														alt={employee.name}
+														style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover', border: '1px solid #DFE7F0' }}
+													/>
+												</a>
 											</td>
 											<td>
 												<div className='d-flex justify-content-center align-items-center gap-1'>
@@ -513,22 +496,18 @@ const EmployeeDetail: React.FC = () => {
 										{isVisible && (
 											<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 												<td colSpan={12}>
-													<div>
-														<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-															<a
-																href={`https://files.fggroup.in/` + employee.photo}
-																target='_blank'
-																rel='noopener noreferrer'>
-																<img
-																	src={`https://files.fggroup.in/` + employee.photo}
-																	alt={employee.name}
-																	style={{ width: '80px', height: '80px', borderRadius: '10px' }}
-																/>
-															</a>
-														</span>
-														<strong>{sortableFields[0].title}:</strong> {employee.name}
+													<div className='p-3' style={{ background: '#F8FAFC', borderRadius: '8px' }}>
+														<img
+															src={`https://files.fggroup.in/` + employee.photo}
+															alt={employee.name}
+															style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover' }}
+														/>
 														<br />
-														<strong>{sortableFields[1].title}:</strong> {employee?.position}
+														<strong>Employee Code:</strong> {employee?.employee_code}
+														<br />
+														<strong>Name:</strong> {employee.name}
+														<br />
+														<strong>Position:</strong> {employee?.position}
 													</div>
 												</td>
 											</tr>
@@ -543,8 +522,8 @@ const EmployeeDetail: React.FC = () => {
 						/>
 					</div>
 					{employeeData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10 text-muted'>
+							<b>No employee records found</b>
 						</div>
 					)}
 					{employeeData.length > 0 && (
@@ -555,6 +534,7 @@ const EmployeeDetail: React.FC = () => {
 						/>
 					)}
 				</div>
+			</div>
 
 				{/* member view modal */}
 
@@ -642,8 +622,7 @@ const EmployeeDetail: React.FC = () => {
 						</Button>
 					</Modal.Footer>
 				</Modal>
-			</KTCard>
-		</>
+		</div>
 	)
 }
 

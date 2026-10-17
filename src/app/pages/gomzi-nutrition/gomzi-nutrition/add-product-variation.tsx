@@ -1,47 +1,89 @@
-import { useState } from 'react'
+/* eslint-disable */
+import React, { useState, useRef, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faPlus,
+	faCloudArrowUp,
+	faArrowLeft,
+	faCircleNotch,
+} from '@fortawesome/free-solid-svg-icons'
 import toast from 'react-hot-toast'
-import { useLocation } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import InputField from '../../../components/InputField'
-import SelectField from '../../../components/SelectField'
-import TableButton from '../../../components/TableButton'
-import { AddProductVariation, FileUploadToFGGroup } from '../../../Functions/FGGroup'
+import { AddProductVariation, FileUploadToFGGroup, GetProduct } from '../../../Functions/FGGroup'
+import '../products-theme.css'
 
-const AddGomziNutritionVariationProduct = () => {
+const AddGomziNutritionVariationProduct: React.FC = () => {
+	const navigate = useNavigate()
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
-	const product_id: string | any = searchParams.get('product_id')
+	const product_id: string = searchParams.get('product_id') || ''
+	const fileInputRef = useRef<HTMLInputElement>(null)
+
 	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [activeSection, setActiveSection] = useState<string>('basic')
+	const [parentProduct, setParentProduct] = useState<any>(null)
+
 	const [formData, setFormData] = useState({
 		name: '',
 		sku: '',
 		flavour: '',
 		price: '',
 		discountPrice: '',
-
 		stock: '',
-
 		servings: '',
-
 		weight: {
 			amount: '',
 			unit: 'g',
 		},
-
 		isAvailable: true,
-
 		displayImages: [] as string[],
 		selectedFiles: [] as File[],
 	})
-	// const handleInputChange = (event: any) => {
-	// 	const files = event.target.files
-	// 	const imageUrls: any = Array.from(files).map((file: any) => URL.createObjectURL(file))
-	// 	setImages(imageUrls)
-	// }
 
-	// const handleFileButtonClick = () => {
-	// 	document.getElementById('fileInput').click()
-	// }
+	useEffect(() => {
+		if (product_id) {
+			GetProduct({ id: product_id })
+				.then((res: any) => {
+					if (res?.data?.[0]) {
+						setParentProduct(res.data[0])
+					}
+				})
+				.catch((err) => console.error('Error fetching parent product:', err))
+		}
+	}, [product_id])
+
+	// Section scroll tracking
+	useEffect(() => {
+		const sections = ['basic', 'pricing', 'weight', 'images']
+		const handleScroll = () => {
+			const scrollPos = window.scrollY + 160
+			for (const sec of sections) {
+				const el = document.getElementById(`section-${sec}`)
+				if (el) {
+					const top = el.offsetTop
+					const height = el.offsetHeight
+					if (scrollPos >= top && scrollPos < top + height) {
+						setActiveSection(sec)
+						break
+					}
+				}
+			}
+		}
+
+		window.addEventListener('scroll', handleScroll, { passive: true })
+		return () => window.removeEventListener('scroll', handleScroll)
+	}, [])
+
+	const scrollToSection = (id: string) => {
+		setActiveSection(id)
+		const el = document.getElementById(`section-${id}`)
+		if (el) {
+			const yOffset = -120
+			const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset
+			window.scrollTo({ top: y, behavior: 'smooth' })
+		}
+	}
 
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { id, name, value } = event.target
@@ -61,55 +103,10 @@ const AddGomziNutritionVariationProduct = () => {
 		}
 	}
 
-	const handleAddButtonClick = async () => {
-		try {
-			setIsSubmitting(true)
-			let imageUrls: string[] = []
-
-			if (formData.selectedFiles.length > 0) {
-				const uploadedImages = await Promise.all(
-					formData.selectedFiles.map(async (file) => {
-						const response: any = await FileUploadToFGGroup([file], {
-							directory: 'products',
-						})
-						return response.data?.fileURLs?.[0]
-					})
-				)
-				imageUrls = uploadedImages.filter(Boolean)
-			}
-			const payload = {
-				product_id,
-				name: formData.name,
-				flavour: formData.flavour,
-				sku: formData.sku,
-				price: Number(formData.price),
-				discountPrice: formData.discountPrice ? Number(formData.discountPrice) : undefined,
-				weight: {
-					amount: Number(formData.weight.amount),
-					unit: formData.weight.unit,
-				},
-				servings: formData.servings ? Number(formData.servings) : undefined,
-				displayImages: imageUrls,
-				stock: Number(formData.stock || 0),
-				isAvailable: formData.isAvailable,
-			}
-
-			await AddProductVariation(payload)
-
-			toast.success('Product Added Successfully')
-			setIsSubmitting(false)
-		} catch (error: any) {
-			toast.error(error.message)
-			setIsSubmitting(false)
-			console.error(error)
-		}
-	}
-
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (!e.target.files) return
 
 		const files = Array.from(e.target.files)
-
 		setFormData((prev) => ({
 			...prev,
 			selectedFiles: [...prev.selectedFiles, ...files],
@@ -135,260 +132,469 @@ const AddGomziNutritionVariationProduct = () => {
 		}))
 	}
 
+	const handleAddButtonClick = async () => {
+		try {
+			if (!formData.name.trim()) {
+				toast.error('Product variation name is required')
+				return
+			}
+
+			if (!formData.price || Number(formData.price) <= 0) {
+				toast.error('Valid price is required')
+				return
+			}
+
+			setIsSubmitting(true)
+			let imageUrls: string[] = []
+
+			if (formData.selectedFiles.length > 0) {
+				const uploadedImages = await Promise.all(
+					formData.selectedFiles.map(async (file) => {
+						const response: any = await FileUploadToFGGroup([file], {
+							directory: 'products',
+						})
+						return response.data?.fileURLs?.[0]
+					})
+				)
+				imageUrls = uploadedImages.filter(Boolean)
+			}
+
+			const payload = {
+				product_id,
+				name: formData.name,
+				flavour: formData.flavour,
+				sku: formData.sku,
+				price: Number(formData.price),
+				discountPrice: formData.discountPrice ? Number(formData.discountPrice) : undefined,
+				weight: {
+					amount: Number(formData.weight.amount || 0),
+					unit: formData.weight.unit,
+				},
+				servings: formData.servings ? Number(formData.servings) : undefined,
+				displayImages: imageUrls,
+				stock: Number(formData.stock || 0),
+				isAvailable: formData.isAvailable,
+			}
+
+			await AddProductVariation(payload)
+			toast.success('Product Added Successfully')
+			navigate(`/rag/product-list/variation-list?product_id=${product_id}`)
+		} catch (error: any) {
+			toast.error(error?.message || 'Failed to add variation')
+			console.error(error)
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
+
+	const backUrl = `/rag/product-list/variation-list?product_id=${product_id}`
+
 	return (
-		<>
-			<PageTitle breadcrumbs={[]}>Product Details</PageTitle>
-			<div className='row'>
-				<div className='col-12 mt-3'>
-					<div className='card py-10'>
-						<div className='card-body'>
-							<div className='row px-6 justify-content-between'>
-								<div className='col-md-5'>
-									<div className='card-header'>
-										<h3 className='card-title fw-bold'>Product Images</h3>
-									</div>
+		<div className='gz-prod-container'>
+			<PageTitle breadcrumbs={[]}>Add Product Variation</PageTitle>
 
-									<div className='card-body'>
-										<div className='mb-5'>
-											<input
-												type='file'
-												multiple
-												accept='image/*'
-												className='form-control'
-												onChange={handleImageChange}
-											/>
-										</div>
+			{/* =========================================================================
+			    BREADCRUMBS
+			    ========================================================================= */}
+			<div className='gz-prod-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<Link to='/rag/product-list'>Products &amp; Orders</Link>
+				<span className='sep'>&gt;</span>
+				<Link to={backUrl}>
+					{parentProduct?.name ? `${parentProduct.name} Variations` : 'Variations'}
+				</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Add Variation</span>
+			</div>
 
-										{formData.displayImages.length === 0 && (
-											<div className='text-center py-10 border rounded'>
-												<img
-													src='/media/logos/rag-favicon-logo.png'
-													alt='preview'
-													style={{
-														maxHeight: '150px',
-													}}
-												/>
+			{/* =========================================================================
+			    HEADER
+			    ========================================================================= */}
+			<div className='gz-prod-header'>
+				<div>
+					<h1 className='gz-prod-title'>Add Product Variation</h1>
+					<p className='gz-prod-subtitle'>
+						{parentProduct?.name
+							? `Create a new variant, flavor, or packaging for ${parentProduct.name}`
+							: 'Create a new variant, flavor, or pack size for this product'}
+					</p>
+				</div>
+				<div className='d-flex align-items-center gap-3'>
+					<button
+						type='button'
+						className='gz-prod-btn-cancel'
+						onClick={() => navigate(backUrl)}>
+						<FontAwesomeIcon icon={faArrowLeft} />
+						<span>Cancel</span>
+					</button>
+					<button
+						type='button'
+						className='gz-prod-btn-primary'
+						onClick={handleAddButtonClick}
+						disabled={isSubmitting}>
+						{isSubmitting ? (
+							<>
+								<FontAwesomeIcon icon={faCircleNotch} spin />
+								<span>Adding Variation...</span>
+							</>
+						) : (
+							<>
+								<FontAwesomeIcon icon={faPlus} />
+								<span>Add Product Variation</span>
+							</>
+						)}
+					</button>
+				</div>
+			</div>
 
-												<div className='text-muted mt-3'>No images selected</div>
-											</div>
-										)}
+			{/* =========================================================================
+			    SPLIT LAYOUT: STICKY NAV + FORM SECTIONS
+			    ========================================================================= */}
+			<div className='gz-prod-split-layout'>
+				{/* Left: Sticky Section Navigator */}
+				<div className='gz-prod-sticky-nav'>
+					{[
+						{ id: 'basic', num: 1, label: 'Basic Details' },
+						{ id: 'pricing', num: 2, label: 'Pricing & Stock' },
+						{ id: 'weight', num: 3, label: 'Weight & Pack' },
+						{ id: 'images', num: 4, label: 'Variant Images' },
+					].map((item) => (
+						<button
+							key={item.id}
+							type='button'
+							className={`gz-prod-nav-item ${activeSection === item.id ? 'active' : ''}`}
+							onClick={() => scrollToSection(item.id)}>
+							<span className='gz-prod-nav-num'>{item.num}</span>
+							<span>{item.label}</span>
+						</button>
+					))}
+				</div>
 
-										{formData.displayImages.length > 0 && (
-											<div className='row'>
-												{formData.displayImages.map((image, index) => (
-													<div
-														className='col-md-3 mb-5'
-														key={index}>
-														<div
-															className='position-relative border rounded overflow-hidden'
-															style={{
-																height: '180px',
-															}}>
-															<img
-																src={image}
-																alt='product'
-																className='w-100 h-100'
-																style={{
-																	objectFit: 'cover',
-																}}
-															/>
-
-															<button
-																type='button'
-																className='btn btn-danger btn-sm position-absolute top-0 end-0 m-2'
-																onClick={() => removeImage(index)}>
-																×
-															</button>
-														</div>
-													</div>
-												))}
-											</div>
-										)}
-									</div>
+				{/* Right: Form Sections */}
+				<div className='gz-prod-form-content'>
+					{/* SECTION 1: Basic Details */}
+					<div className='gz-prod-form-section' id='section-basic'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>1. Basic Details</h3>
+								<div className='gz-prod-form-section-sub'>
+									Variant name, flavor identifier, and SKU code
 								</div>
-								<div className='col-md-7'>
-									<div className='row'>
-										<div className='col-md-6 fv-row'>
-											<InputField
-												labelMarginRemove
-												placeholder='Enter Product Name'
-												type='text'
-												className='fv-row'
-												name='name'
-												label='Product Name'
-												htmlFor='name'
-												value={formData.name}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row'>
-											<InputField
-												labelMarginRemove
-												placeholder='Enter Price'
-												type='number'
-												className='fv-row'
-												name='price'
-												label='Price'
-												htmlFor='price'
-												value={formData.price}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row'>
-											<InputField
-												labelMarginRemove
-												placeholder='Enter Discount Price'
-												type='number'
-												className='fv-row'
-												name='discountPrice'
-												label='Discount Price'
-												htmlFor='discountPrice'
-												value={formData.discountPrice}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row'>
-											<InputField
-												labelMarginRemove
-												placeholder='Enter Stock'
-												type='number'
-												className='fv-row'
-												name='stock'
-												label='Stock'
-												htmlFor='stock'
-												value={formData.stock}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												labelMarginRemove
-												placeholder='enter flavour'
-												type='text'
-												name='flavour'
-												label='Flavour'
-												htmlFor='flavour'
-												value={formData.flavour}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row'>
-											<InputField
-												labelMarginRemove
-												label='SKU'
-												name='sku'
-												htmlFor='sku'
-												type='text'
-												value={formData.sku}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row'>
-											<InputField
-												labelMarginRemove
-												label='Servings'
-												name='servings'
-												htmlFor='servings'
-												type='text'
-												value={formData.servings}
-												onChange={handleInputChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row'>
-											<InputField
-												labelMarginRemove
-												label='Weight Amount'
-												htmlFor='WeightAmount'
-												name='weight'
-												type='number'
-												value={formData.weight.amount}
-												onChange={(e) => updateWeight('amount', e.target.value)}
-											/>
-										</div>
-										<div className='col-md-6 fv-row'>
-											<SelectField
-												label='Weight Unit'
-												name='unit'
-												htmlFor='weightUnit'
-												value={formData.weight.unit}
-												onChange={(e) => updateWeight('unit', e.target.value)}
-												options={['g', 'kg', 'mg', 'lb', 'oz']}
-												searchable={false}
-												hideDefaultOption
-											/>
-										</div>
-										<div className='col-md-6 fv-row'>
-											<label
-												htmlFor='isAvailable'
-												className='fw-bold fs-6 mb-md-5 mb-2'>
-												isAvailable
-											</label>
-											<br />
-											<div className='d-flex'>
-												<div className='me-4'>
-													<input
-														type='radio'
-														name='isAvailable'
-														id='Yes'
-														checked={formData.isAvailable === true}
-														onChange={() =>
-															setFormData((prevData: any) => ({
-																...prevData,
-																isAvailable: true,
-															}))
-														}
-													/>{' '}
-													<label
-														htmlFor='Yes'
-														className='fw-bold fs-6 mb-md-5 mb-2'>
-														Yes
-													</label>
-												</div>
-												<div>
-													<input
-														type='radio'
-														name='isAvailable'
-														id='No'
-														checked={formData.isAvailable === false}
-														onChange={() =>
-															setFormData((prevData: any) => ({
-																...prevData,
-																isAvailable: false,
-															}))
-														}
-													/>{' '}
-													<label
-														htmlFor='No'
-														className='fw-bold fs-6 mb-md-5 mb-2'>
-														No
-													</label>
-												</div>
-											</div>
-										</div>
-										<div className='col-md-12 fv-row text-end mb-7'>
-											<TableButton
-												action='add'
-												onClick={handleAddButtonClick}
-												text={
-													isSubmitting
-														? 'Please wait, Adding Product Variation...'
-														: 'Add Product Variation'
+							</div>
+						</div>
+
+						<div className='row'>
+							<div className='col-md-12'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label' htmlFor='name'>
+										<span>Variant Name</span>
+										<span className='req'>*</span>
+									</label>
+									<input
+										id='name'
+										type='text'
+										name='name'
+										className='gz-prod-input'
+										placeholder='e.g. Chocolate Fudge Whey Protein - 1kg'
+										value={formData.name}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label' htmlFor='flavour'>
+										<span>Flavour</span>
+									</label>
+									<input
+										id='flavour'
+										type='text'
+										name='flavour'
+										className='gz-prod-input'
+										placeholder='e.g. Chocolate, Vanilla, Unflavoured'
+										value={formData.flavour}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label' htmlFor='sku'>
+										<span>SKU</span>
+									</label>
+									<input
+										id='sku'
+										type='text'
+										name='sku'
+										className='gz-prod-input'
+										placeholder='e.g. GOMZI-WP-CHOC-1KG'
+										value={formData.sku}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-md-12'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label' htmlFor='servings'>
+										<span>Servings</span>
+									</label>
+									<input
+										id='servings'
+										type='text'
+										name='servings'
+										className='gz-prod-input'
+										placeholder='e.g. 30 Servings'
+										value={formData.servings}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* SECTION 2: Pricing & Stock */}
+					<div className='gz-prod-form-section' id='section-pricing'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>2. Pricing &amp; Stock</h3>
+								<div className='gz-prod-form-section-sub'>
+									Price, discounted selling price, inventory count and availability
+								</div>
+							</div>
+						</div>
+
+						<div className='row'>
+							<div className='col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label' htmlFor='price'>
+										<span>Regular Price (₹)</span>
+										<span className='req'>*</span>
+									</label>
+									<input
+										id='price'
+										type='number'
+										name='price'
+										className='gz-prod-input'
+										placeholder='e.g. 2499'
+										value={formData.price}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label' htmlFor='discountPrice'>
+										<span>Discount Price (₹)</span>
+									</label>
+									<input
+										id='discountPrice'
+										type='number'
+										name='discountPrice'
+										className='gz-prod-input'
+										placeholder='e.g. 1999'
+										value={formData.discountPrice}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label' htmlFor='stock'>
+										<span>Stock Quantity</span>
+									</label>
+									<input
+										id='stock'
+										type='number'
+										name='stock'
+										className='gz-prod-input'
+										placeholder='e.g. 100'
+										value={formData.stock}
+										onChange={handleInputChange}
+									/>
+								</div>
+							</div>
+
+							<div className='col-md-6'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label'>
+										<span>Availability Status</span>
+									</label>
+									<div className='d-flex align-items-center gap-4 mt-2'>
+										<label
+											className='d-flex align-items-center gap-2'
+											style={{ cursor: 'pointer', fontSize: '13.5px', fontWeight: 500 }}>
+											<input
+												type='radio'
+												name='isAvailable'
+												id='avail-yes'
+												checked={formData.isAvailable === true}
+												onChange={() =>
+													setFormData((prev: any) => ({ ...prev, isAvailable: true }))
 												}
-												showIcon={false}
-												disabled={isSubmitting}
-												backgroundDark={true}
-												className={`mb-4 btn-block ${isSubmitting ? 'disabled' : ''}`}
 											/>
-										</div>
+											<span>Active / Available</span>
+										</label>
+										<label
+											className='d-flex align-items-center gap-2'
+											style={{ cursor: 'pointer', fontSize: '13.5px', fontWeight: 500 }}>
+											<input
+												type='radio'
+												name='isAvailable'
+												id='avail-no'
+												checked={formData.isAvailable === false}
+												onChange={() =>
+													setFormData((prev: any) => ({ ...prev, isAvailable: false }))
+												}
+											/>
+											<span>Inactive / Unavailable</span>
+										</label>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
+
+					{/* SECTION 3: Weight & Packaging */}
+					<div className='gz-prod-form-section' id='section-weight'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>3. Weight &amp; Packaging</h3>
+								<div className='gz-prod-form-section-sub'>
+									Unit weight and measure for shipping and labels
+								</div>
+							</div>
+						</div>
+
+						<div className='row'>
+							<div className='col-md-8'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label' htmlFor='weightAmount'>
+										<span>Weight Amount</span>
+									</label>
+									<input
+										id='weightAmount'
+										type='number'
+										name='weight'
+										className='gz-prod-input'
+										placeholder='e.g. 1000'
+										value={formData.weight.amount}
+										onChange={(e) => updateWeight('amount', e.target.value)}
+									/>
+								</div>
+							</div>
+
+							<div className='col-md-4'>
+								<div className='gz-prod-field-group'>
+									<label className='gz-prod-label' htmlFor='weightUnit'>
+										<span>Unit</span>
+									</label>
+									<select
+										id='weightUnit'
+										className='gz-prod-input'
+										value={formData.weight.unit}
+										onChange={(e) => updateWeight('unit', e.target.value)}>
+										<option value='g'>g (Grams)</option>
+										<option value='kg'>kg (Kilograms)</option>
+										<option value='mg'>mg (Milligrams)</option>
+										<option value='lb'>lb (Pounds)</option>
+										<option value='oz'>oz (Ounces)</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* SECTION 4: Variant Images */}
+					<div className='gz-prod-form-section' id='section-images'>
+						<div className='gz-prod-form-section-header'>
+							<div>
+								<h3 className='gz-prod-form-section-title'>4. Variant Images</h3>
+								<div className='gz-prod-form-section-sub'>
+									Product photos specific to this variation / flavor
+								</div>
+							</div>
+						</div>
+
+						<div
+							className='gz-prod-upload-zone'
+							onClick={() => fileInputRef.current?.click()}>
+							<input
+								ref={fileInputRef}
+								type='file'
+								multiple
+								accept='image/*'
+								className='d-none'
+								onChange={handleImageChange}
+							/>
+							<div className='gz-prod-upload-icon'>
+								<FontAwesomeIcon icon={faCloudArrowUp} />
+							</div>
+							<div className='gz-prod-upload-text'>
+								Click to upload or drag &amp; drop variant images
+							</div>
+							<div className='gz-prod-upload-hint'>
+								PNG, JPG, WEBP recommended up to 5MB each
+							</div>
+						</div>
+
+						{formData.displayImages.length > 0 && (
+							<div className='gz-prod-image-previews'>
+								{formData.displayImages.map((image, index) => (
+									<div className='gz-prod-image-card' key={index}>
+										<img src={image} alt={`Variant preview ${index + 1}`} />
+										<button
+											type='button'
+											className='gz-prod-image-remove'
+											onClick={(e) => {
+												e.stopPropagation()
+												removeImage(index)
+											}}
+											title='Remove image'>
+											×
+										</button>
+									</div>
+								))}
+							</div>
+						)}
+					</div>
+
+					{/* Bottom Actions */}
+					<div className='d-flex justify-content-end align-items-center gap-3 pt-3'>
+						<button
+							type='button'
+							className='gz-prod-btn-cancel'
+							onClick={() => navigate(backUrl)}>
+							Cancel
+						</button>
+						<button
+							type='button'
+							className='gz-prod-btn-primary'
+							onClick={handleAddButtonClick}
+							disabled={isSubmitting}>
+							{isSubmitting ? (
+								<>
+									<FontAwesomeIcon icon={faCircleNotch} spin />
+									<span>Adding Variation...</span>
+								</>
+							) : (
+								<>
+									<FontAwesomeIcon icon={faPlus} />
+									<span>Add Product Variation</span>
+								</>
+							)}
+						</button>
+					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 
 export { AddGomziNutritionVariationProduct }
+export default AddGomziNutritionVariationProduct

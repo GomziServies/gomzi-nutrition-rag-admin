@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
@@ -15,6 +15,7 @@ import {
 	getNextExpenseSequence,
 	updateExpense,
 } from '../../../Functions/FGGroup/Expense'
+import '../common-management.css'
 
 const AddExpenseNutrition = () => {
 	const navigate = useNavigate()
@@ -286,339 +287,329 @@ const AddExpenseNutrition = () => {
 	}, [isUpdateMode])
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>{expense_id ? 'Update Expense' : 'Add Expense'}</PageTitle>
-			<div className='row'>
-				<div className='col-12 mt-3'>
-					<div className='card'>
-						<h1 className='fw-bold m-6 text-dark fs-1 mb-6 '>Expenses Details</h1>
-						<div className='card-body'>
-							<div className='row'>
-								<InputField
-									className='col-md-6 fv-row'
-									label='Expenses No'
-									placeholder='Expenses No'
-									type='text'
-									name='expense_number'
-									htmlFor='expense_number'
-									value={formData?.expense_number || ''}
-									disabled={!!expense_id}
-								/>
-								<InputField
-									className='col-md-6 fv-row'
-									label='Date'
-									placeholder='date'
-									type='date'
-									name='date'
-									htmlFor='date'
-									value={formData?.date || ''}
-									onChange={handleInputChange}
-								/>
 
-								<h1 className='mb-4'>PARTICULAR:</h1>
-								{plans.map((plan, index) => (
-									<div
-										key={index}
-										className='col-12 mb-5'>
-										<div
-											className='row'
-											style={{
-												border: '1px solid #00000008',
-												borderRadius: '10px',
-												backgroundColor: '#00000008',
-											}}>
-											<div className='col-11 row py-5 pb-0'>
-												<InputField
-													className='col-md-6 fv-row'
-													label='Expense Name'
-													placeholder='Expense Name'
-													type='text'
-													name='item_name'
-													htmlFor={`item_name-${index}`}
-													value={plan?.item_name}
-													onChange={(e: any) => handlePlanInputChange(index, e)}
-												/>
-												<InputField
-													className='col-md-6 fv-row'
-													label='Amount'
-													placeholder='Enter Amount'
-													type='text'
-													name='amount'
-													htmlFor='amount'
-													value={plan?.amount}
-													onChange={(e: any) => handlePlanInputChange(index, e)}
-												/>
-											</div>
-											<div className='col-1'>
-												<div className='mt-17 d-flex justify-content-end'>
-													<TableButton
-														action='remove'
-														backgroundDark={true}
-														onClick={(e) => removePlan(index, e)}
-													/>
-												</div>
-											</div>
-										</div>
-									</div>
-								))}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<Link to='/rag/expense'>Expenses</Link>
+				<span className='sep'>/</span>
+				<span className='current'>{expense_id ? 'Update Expense' : 'Create Expense'}</span>
+			</div>
 
-								{!expense_id && (
-									<div className='col-12 my-3 d-flex justify-content-end'>
-										<button
-											className='btn-primary btn gap-2 mx-2 btn-sm me-1'
-											onClick={(e) => addPlan(e)}>
-											Add
-										</button>
-									</div>
-								)}
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>{expense_id ? 'Update Expense Record' : 'Record New Expense'}</h1>
+					<p className='gz-mgmt-subtitle'>Specify expenditure particulars, payment mode, receipts and financial allocation</p>
+				</div>
+				<Link to='/rag/expense' className='gz-mgmt-btn-secondary text-decoration-none'>
+					Back to Expenses
+				</Link>
+			</div>
 
-								<InputField
-									className='col-md-4 fv-row'
-									label='Total Amount'
-									placeholder='Total Amount'
-									type='text'
-									name='expenseAmount'
-									htmlFor='expenseAmount'
-									value={formData?.expenseAmount}
-									onChange={handleInputChange}
-									disabled
-								/>
-								{formData.inputField ? (
-									<InputField
-										className='col-md-4 fv-row'
-										label='Expenses category'
-										placeholder='Enter Expenses category'
-										type='text'
-										name='expense_category'
-										htmlFor='expense_category'
-										value={formData.expense_category == 'Others' ? '' : formData.expense_category}
-										onChange={handleInputChange}
-									/>
-								) : (
-									<SelectField
-										className='col-md-4 fv-row mb-7'
-										label='Expenses category'
-										name='expense_category'
-										value={formData.expense_category}
-										onChange={handleInputChange}
-										htmlFor='expense_category'
-										options={[
-											'Ads',
-											'Counselling',
-											'Electricity',
-											'Salary',
-											'Petrol',
-											'Transport',
-											'Rent',
-											'Fix cost',
-											'Equipment',
-											'Miscellaneous',
-											'Others',
-										]}
-									/>
-								)}
-
-								<SelectField
-									className='col-md-4 fv-row mb-7'
-									label='Payment Method'
-									name='expensePaymentMethod'
-									value={formData?.expensePaymentMethod}
-									onChange={handleInputChange}
-									htmlFor='expensePaymentMethod'
-									options={['Online', 'Cash', 'Cheque']}
-								/>
-
-								<TextareaField
-									className='col-md-12 fv-row'
-									label='Notes'
-									placeholder='Write Notes'
-									name='expenseNotes'
-									htmlFor='expenseNotes'
-									value={formData?.expenseNotes}
-									onChange={handleNotesChange}
-								/>
-
-								<div className='col-md-12 fv-row mb-7'>
-									<label className='form-label fw-bold'>
-										Reference Document / Bill
-										<span className='text-muted fw-normal ms-2'>(Optional)</span>
-									</label>
-
-									{/* Existing document */}
-									{expense_id && existingDocument && !referenceDocument && (
-										<div className='border rounded p-4 mb-4'>
-											<div className='d-flex align-items-center justify-content-between mb-3'>
-												<div>
-													<div className='fw-bold text-gray-800'>Existing Document</div>
-
-													<div className='text-muted fs-7'>{existingDocument.name}</div>
-												</div>
-
-												<div className='d-flex align-items-center gap-2'>
-													<a
-														href={getDocumentUrl(existingDocument.url)}
-														target='_blank'
-														rel='noopener noreferrer'
-														className='btn btn-sm d-inline-flex align-items-center justify-content-center gap-2'
-														style={{
-															height: '38px',
-															padding: '0 16px',
-															borderRadius: '8px',
-															fontSize: '13px',
-															fontWeight: 600,
-															backgroundColor: '#ffffff',
-															border: '1px solid #DFE7F0',
-															color: '#1E3A5F',
-															boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-															transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-														}}
-														onMouseEnter={(e) => {
-															e.currentTarget.style.backgroundColor = '#1E3A5F'
-															e.currentTarget.style.borderColor = '#1E3A5F'
-															e.currentTarget.style.color = '#ffffff'
-															e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
-														}}
-														onMouseLeave={(e) => {
-															e.currentTarget.style.backgroundColor = '#ffffff'
-															e.currentTarget.style.borderColor = '#DFE7F0'
-															e.currentTarget.style.color = '#1E3A5F'
-															e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
-														}}>
-														<i className='bi bi-eye fs-5'></i>
-														{isImageDocument(existingDocument) ? 'View Document' : 'Download / View Document'}
-													</a>
-
-													<label
-														className='btn btn-sm btn-primary mb-0 d-inline-flex align-items-center justify-content-center gap-2'
-														style={{
-															height: '38px',
-															padding: '0 16px',
-															borderRadius: '8px',
-															fontSize: '13px',
-															fontWeight: 600,
-															cursor: 'pointer',
-															boxShadow: '0 2px 6px rgba(30, 58, 95, 0.25)',
-														}}>
-														<i className='bi bi-arrow-repeat fs-5 text-white'></i>
-														Replace Document
-														<input
-															type='file'
-															className='d-none'
-															accept='.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx'
-															onChange={handleReferenceDocumentChange}
-														/>
-													</label>
-												</div>
-											</div>
-
-											{isImageDocument(existingDocument) && (
-												<div className='mt-3'>
-													<img
-														src={getDocumentUrl(existingDocument.url)}
-														alt={existingDocument.name}
-														className='img-fluid rounded border'
-														style={{
-															maxHeight: '300px',
-															maxWidth: '100%',
-															objectFit: 'contain',
-														}}
-													/>
-												</div>
-											)}
-										</div>
-									)}
-
-									{/* Upload / Replace document */}
-									{(!expense_id || !existingDocument || referenceDocument) && (
-										<>
-											<input
-												type='file'
-												className='form-control'
-												accept='.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx'
-												onChange={handleReferenceDocumentChange}
-											/>
-
-											<div className='text-muted fs-8 mt-2'>
-												Upload a bill, invoice, receipt or supporting document.
-											</div>
-										</>
-									)}
-
-									{/* Newly selected document */}
-									{referenceDocument && (
-										<div className='border rounded p-4 mt-3'>
-											<div className='d-flex align-items-center justify-content-between'>
-												<div>
-													<div className='fw-bold text-gray-800'>New Document</div>
-
-													<div className='text-muted fs-7'>{referenceDocument.name}</div>
-												</div>
-
-												<button
-													type='button'
-													className='btn btn-sm btn-light-danger'
-													onClick={() => setReferenceDocument(null)}>
-													Remove
-												</button>
-											</div>
-
-											{/* New image preview */}
-											{referenceDocument.type.startsWith('image/') && (
-												<div className='mt-3'>
-													<img
-														src={URL.createObjectURL(referenceDocument)}
-														alt={referenceDocument.name}
-														className='img-fluid rounded border'
-														style={{
-															maxHeight: '300px',
-															maxWidth: '100%',
-															objectFit: 'contain',
-														}}
-													/>
-												</div>
-											)}
-										</div>
-									)}
-								</div>
-
-								{/* Add / Update Expense */}
-								<div className='col-md-12 d-flex justify-content-end fv-row mb-7 mt-5'>
-									<button
-										type='button'
-										className='btn btn-primary d-inline-flex align-items-center justify-content-center px-6'
-										onClick={handleSaveExpense}
-										disabled={isSubmitting}
-										style={{
-											height: '42px',
-											fontSize: '14px',
-											fontWeight: 600,
-											borderRadius: '8px',
-											minWidth: '160px',
-											boxShadow: '0 2px 6px rgba(30, 58, 95, 0.28)',
-											transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-										}}>
-										{isSubmitting ? (
-											<>
-												<span
-													className='spinner-border spinner-border-sm me-2'
-													role='status'
-													aria-hidden='true'></span>
-												Please wait...
-											</>
-										) : (
-											<>
-												<i className={`bi ${expense_id ? 'bi-check2-circle' : 'bi-plus-circle'} fs-5 me-2`}></i>
-												{expense_id ? 'Update Expense' : 'Add Expense'}
-											</>
-										)}
-									</button>
-								</div>
-							</div>
-						</div>
+			<div className='gz-mgmt-form-card'>
+				<div className='gz-mgmt-section-header'>
+					<div className='gz-mgmt-section-badge'>1</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>General Information</h3>
+						<p className='gz-mgmt-section-subtitle'>Basic identification and date for this expense voucher</p>
 					</div>
 				</div>
+
+				<div className='row mb-8'>
+					<InputField
+						className='col-md-6 fv-row mb-4'
+						label='Expenses No'
+						placeholder='Expenses No'
+						type='text'
+						name='expense_number'
+						htmlFor='expense_number'
+						value={formData?.expense_number || ''}
+						disabled={!!expense_id}
+					/>
+					<InputField
+						className='col-md-6 fv-row mb-4'
+						label='Date'
+						placeholder='date'
+						type='date'
+						name='date'
+						htmlFor='date'
+						value={formData?.date || ''}
+						onChange={handleInputChange}
+					/>
+				</div>
+
+				<div className='gz-mgmt-section-header'>
+					<div className='gz-mgmt-section-badge'>2</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>Expenditure Particulars</h3>
+						<p className='gz-mgmt-section-subtitle'>List individual item breakdown or line items</p>
+					</div>
+				</div>
+
+				<div className='mb-6'>
+					{plans.map((plan, index) => (
+						<div key={index} className='gz-mgmt-item-row'>
+							<div className='row flex-grow-1'>
+								<InputField
+									className='col-md-7 fv-row'
+									label={`Item #${index + 1} Name`}
+									placeholder='e.g. Server hosting, Packaging supplies'
+									type='text'
+									name='item_name'
+									htmlFor={`item_name-${index}`}
+									value={plan?.item_name}
+									onChange={(e: any) => handlePlanInputChange(index, e)}
+								/>
+								<InputField
+									className='col-md-5 fv-row'
+									label='Amount (₹)'
+									placeholder='0.00'
+									type='text'
+									name='amount'
+									htmlFor='amount'
+									value={plan?.amount}
+									onChange={(e: any) => handlePlanInputChange(index, e)}
+								/>
+							</div>
+							{plans.length > 1 && (
+								<div className='ms-3 d-flex align-items-center'>
+									<TableButton
+										action='remove'
+										backgroundDark={true}
+										onClick={(e) => removePlan(index, e)}
+									/>
+								</div>
+							)}
+						</div>
+					))}
+
+					{!expense_id && (
+						<div className='d-flex justify-content-end mt-3'>
+							<button
+								type='button'
+								className='gz-mgmt-btn-secondary'
+								onClick={(e) => addPlan(e)}>
+								<i className='bi bi-plus-lg me-1'></i> Add Particular Line
+							</button>
+						</div>
+					)}
+				</div>
+
+				<div className='gz-mgmt-section-header'>
+					<div className='gz-mgmt-section-badge'>3</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>Payment & Classification</h3>
+						<p className='gz-mgmt-section-subtitle'>Define accounting category and disbursement channel</p>
+					</div>
+				</div>
+
+				<div className='row mb-6'>
+					<InputField
+						className='col-md-4 fv-row mb-4'
+						label='Total Amount (₹)'
+						placeholder='Total Amount'
+						type='text'
+						name='expenseAmount'
+						htmlFor='expenseAmount'
+						value={formData?.expenseAmount}
+						onChange={handleInputChange}
+						disabled
+					/>
+					{formData.inputField ? (
+						<InputField
+							className='col-md-4 fv-row mb-4'
+							label='Expenses category'
+							placeholder='Enter Expenses category'
+							type='text'
+							name='expense_category'
+							htmlFor='expense_category'
+							value={formData.expense_category == 'Others' ? '' : formData.expense_category}
+							onChange={handleInputChange}
+						/>
+					) : (
+						<SelectField
+							className='col-md-4 fv-row mb-4'
+							label='Expenses category'
+							name='expense_category'
+							value={formData.expense_category}
+							onChange={handleInputChange}
+							htmlFor='expense_category'
+							options={[
+								'Ads',
+								'Counselling',
+								'Electricity',
+								'Salary',
+								'Petrol',
+								'Transport',
+								'Rent',
+								'Fix cost',
+								'Equipment',
+								'Miscellaneous',
+								'Others',
+							]}
+						/>
+					)}
+
+					<SelectField
+						className='col-md-4 fv-row mb-4'
+						label='Payment Method'
+						name='expensePaymentMethod'
+						value={formData?.expensePaymentMethod}
+						onChange={handleInputChange}
+						htmlFor='expensePaymentMethod'
+						options={['Online', 'Cash', 'Cheque']}
+					/>
+
+					<TextareaField
+						className='col-md-12 fv-row mb-4'
+						label='Expense Notes / Remarks'
+						placeholder='Add any references, internal tracking notes or narration...'
+						name='expenseNotes'
+						htmlFor='expenseNotes'
+						value={formData?.expenseNotes}
+						onChange={handleNotesChange}
+					/>
+				</div>
+
+				<div className='gz-mgmt-section-header'>
+					<div className='gz-mgmt-section-badge'>4</div>
+					<div>
+						<h3 className='gz-mgmt-section-title'>Receipt / Reference Document</h3>
+						<p className='gz-mgmt-section-subtitle'>Attach proof of transaction, bill or voucher (optional)</p>
+					</div>
+				</div>
+
+				<div className='mb-8'>
+					{/* Existing document */}
+					{expense_id && existingDocument && !referenceDocument && (
+						<div className='p-4 mb-4' style={{ border: '1px solid #DFE7F0', borderRadius: '12px', background: '#F8FAFC' }}>
+							<div className='d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2'>
+								<div>
+									<div className='fw-bold' style={{ color: '#172B4D' }}>Existing Document</div>
+									<div className='text-muted fs-7'>{existingDocument.name}</div>
+								</div>
+
+								<div className='d-flex align-items-center gap-2'>
+									<a
+										href={getDocumentUrl(existingDocument.url)}
+										target='_blank'
+										rel='noopener noreferrer'
+										className='gz-mgmt-btn-secondary text-decoration-none'>
+										<i className='bi bi-eye me-1'></i>
+										{isImageDocument(existingDocument) ? 'View Document' : 'Download / View'}
+									</a>
+
+									<label
+										className='gz-mgmt-btn-primary mb-0 d-inline-flex align-items-center'
+										style={{ cursor: 'pointer' }}>
+										<i className='bi bi-arrow-repeat me-1'></i>
+										Replace Document
+										<input
+											type='file'
+											className='d-none'
+											accept='.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx'
+											onChange={handleReferenceDocumentChange}
+										/>
+									</label>
+								</div>
+							</div>
+
+							{isImageDocument(existingDocument) && (
+								<div className='mt-3 text-center'>
+									<img
+										src={getDocumentUrl(existingDocument.url)}
+										alt={existingDocument.name}
+										className='img-fluid rounded border'
+										style={{
+											maxHeight: '260px',
+											maxWidth: '100%',
+											objectFit: 'contain',
+										}}
+									/>
+								</div>
+							)}
+						</div>
+					)}
+
+					{/* Upload / Replace document */}
+					{(!expense_id || !existingDocument || referenceDocument) && (
+						<div className='p-4' style={{ border: '1.5px dashed #CBD5E1', borderRadius: '12px', background: '#F8FAFC' }}>
+							<input
+								type='file'
+								className='form-control'
+								accept='.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx'
+								onChange={handleReferenceDocumentChange}
+							/>
+							<div className='text-muted fs-8 mt-2'>
+								Supported formats: PDF, PNG, JPG, WEBP, DOCX (Max 15MB)
+							</div>
+						</div>
+					)}
+
+					{/* Newly selected document */}
+					{referenceDocument && (
+						<div className='p-4 mt-3' style={{ border: '1px solid #DFE7F0', borderRadius: '12px', background: '#FFFFFF' }}>
+							<div className='d-flex align-items-center justify-content-between'>
+								<div>
+									<div className='fw-bold' style={{ color: '#172B4D' }}>Selected New Document</div>
+									<div className='text-muted fs-7'>{referenceDocument.name}</div>
+								</div>
+								<button
+									type='button'
+									className='btn btn-sm btn-light-danger'
+									onClick={() => setReferenceDocument(null)}>
+									Remove
+								</button>
+							</div>
+
+							{referenceDocument.type.startsWith('image/') && (
+								<div className='mt-3 text-center'>
+									<img
+										src={URL.createObjectURL(referenceDocument)}
+										alt={referenceDocument.name}
+										className='img-fluid rounded border'
+										style={{
+											maxHeight: '260px',
+											maxWidth: '100%',
+											objectFit: 'contain',
+										}}
+									/>
+								</div>
+							)}
+						</div>
+					)}
+				</div>
+
+				{/* Footer Actions */}
+				<div className='d-flex justify-content-end align-items-center gap-3 pt-4' style={{ borderTop: '1px solid #F1F5F9' }}>
+					<Link to='/rag/expense' className='gz-mgmt-btn-secondary text-decoration-none'>
+						Cancel
+					</Link>
+					<button
+						type='button'
+						className='gz-mgmt-btn-primary'
+						onClick={handleSaveExpense}
+						disabled={isSubmitting}>
+						{isSubmitting ? (
+							<>
+								<span
+									className='spinner-border spinner-border-sm me-2'
+									role='status'
+									aria-hidden='true'></span>
+								Saving Record...
+							</>
+						) : (
+							<>
+								<i className={`bi ${expense_id ? 'bi-check2-circle' : 'bi-plus-circle'} me-2`}></i>
+								{expense_id ? 'Update Expense' : 'Save Expense'}
+							</>
+						)}
+					</button>
+				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 

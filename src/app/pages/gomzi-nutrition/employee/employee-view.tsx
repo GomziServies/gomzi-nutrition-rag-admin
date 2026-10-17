@@ -1,10 +1,9 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-/* eslint-disable jsx-a11y/img-redundant-alt */
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import CopyableInput from '../../../components/CopyableInput'
 import InputField from '../../../components/InputField'
@@ -12,9 +11,8 @@ import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
-import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
-import { GetGlsEmployees, UpdateGlsEmployee } from '../../../Functions/FGGroup'
-import { DayJS } from '../../../../_metronic/helpers/Utils'
+import { FileUploadToFGGroup, GetGlsEmployees, UpdateGlsEmployee } from '../../../Functions/FGGroup'
+import '../common-management.css'
 
 const EmployeeView = () => {
     const location = useLocation()
@@ -344,12 +342,43 @@ const EmployeeView = () => {
     }
 
     return (
-			<>
-				<PageTitle breadcrumbs={[]}>Employee Detail</PageTitle>
-				<>
-					<div className='card pb-3'>
-						<div className='card-body'>
-							<h1 className='fw-bold text-dark fs-1 mb-6 mt-3 '>Member Detail</h1>
+		<div className='gz-mgmt-container'>
+			<PageTitle breadcrumbs={[]}>Employee Profile</PageTitle>
+
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<Link to='/rag/employees'>Staff Management</Link>
+				<span className='sep'>/</span>
+				<span className='current'>{memberDetailData.name || 'Employee Profile'}</span>
+			</div>
+
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Employee Profile & Documents</h1>
+					<p className='gz-mgmt-subtitle'>View staff credentials, payroll parameters, identity documents, and contract records</p>
+				</div>
+				<Link to='/rag/employees' className='gz-mgmt-btn-secondary text-decoration-none'>
+					Back to Staff
+				</Link>
+			</div>
+
+			<div className='gz-mgmt-form-card mb-8'>
+				<div className='d-flex justify-content-between align-items-center flex-wrap gap-3 pb-6 mb-6' style={{ borderBottom: '1px solid #F1F5F9' }}>
+					<div>
+						<h2 className='fw-bold mb-1' style={{ fontSize: '18px', color: '#172B4D' }}>
+							Member Details
+						</h2>
+						<div className='text-muted fs-7'>
+							{memberDetailData.position || 'Staff'} • {memberDetailData.employee_code || '-'}
+						</div>
+					</div>
+					{joiningTime && (
+						<span className='gz-mgmt-pill info' style={{ fontSize: '13px', padding: '6px 12px' }}>
+							Tenure: {joiningTime}
+						</span>
+					)}
+				</div>
 
 							<div className='row'>
 								<div className='col-md-3 d-md-block d-flex mb-md-0 mb-5'>
@@ -646,17 +675,17 @@ const EmployeeView = () => {
 									</div>
 								</div>
 
-								<div className='col-12 d-flex justify-content-end'>
-									<TableButton
-										action='edit'
-										onClick={() => handleUpdateDocument('Employee')}
-										text='Save Changes'
-										backgroundDark={true}
-									/>
+								<div className='col-12 d-flex justify-content-end pt-4' style={{ borderTop: '1px solid #F1F5F9' }}>
+									<button
+										type='button'
+										className='gz-mgmt-btn-primary'
+										onClick={() => handleUpdateDocument('Employee')}>
+										<i className='bi bi-check2-circle me-2'></i>
+										Save Profile Changes
+									</button>
 								</div>
 							</div>
 						</div>
-					</div>
 					{documentLoading && (
 						<div className='loader-background'>
 							<div
@@ -668,8 +697,8 @@ const EmployeeView = () => {
 						</div>
 					)}
 					<div className='row'>
-						<div className='col-12 mt-7'>
-							<div className='card'>
+						<div className='col-12 mt-6'>
+							<div className='gz-mgmt-card'>
 								<div className='card-body px-10 py-10'>
 									<div
 										className='mb-10 p-8 rounded-3'
@@ -885,9 +914,8 @@ const EmployeeView = () => {
 							</div>
 						</div>
 					</div>
-				</>
-			</>
-		)
+		</div>
+	)
 }
 
 export default EmployeeView

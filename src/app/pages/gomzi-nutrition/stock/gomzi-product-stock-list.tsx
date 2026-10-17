@@ -1,14 +1,19 @@
-import { faCheck, faPlusCircle, faXmark } from '@fortawesome/free-solid-svg-icons'
+import {
+	faBoxesStacked,
+	faCheck,
+	faTrashCan,
+	faTriangleExclamation,
+	faXmark,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import Modal from 'react-bootstrap/Modal'
 import toast from 'react-hot-toast'
-import Swal from 'sweetalert2'
-import { KTCard } from '../../../../_metronic/helpers'
+import { Link } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import { PlusIcon } from '../../../components/animated-icons'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
-import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -19,6 +24,7 @@ import {
 	RemoveProductStock,
 	UpdateProductStock,
 } from '../../../Functions/FGGroup'
+import '../product-inventory/inventory-theme.css'
 
 const GomziNutritionProductStock: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState<any>('')
@@ -31,6 +37,19 @@ const GomziNutritionProductStock: React.FC = () => {
 	const [showModal, setShowModal] = useState(false)
 	const [product, setProduct] = useState([])
 	const [updateShowModal, setUpdateShowModal] = useState(false)
+	const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({})
+	const [deleteModal, setDeleteModal] = useState<{
+		show: boolean
+		stockId: string | null
+		productName?: string
+		loading?: boolean
+	}>({
+		show: false,
+		stockId: null,
+		productName: '',
+		loading: false,
+	})
+
 	const [pagination, setPagination] = useState({
 		page: 1,
 		itemsPerPage: 10,
@@ -113,24 +132,6 @@ const GomziNutritionProductStock: React.FC = () => {
 	const handleRowClick = (id: string) => {
 		if (window.innerWidth <= 1024) {
 			setVisibleDetails(visibleDetails === id ? null : id)
-		}
-	}
-
-	const handleCopy = (id: string) => {
-		navigator.clipboard
-			.writeText(id)
-			.then(() => {
-				toast.success('ID copied to clipboard!')
-			})
-			.catch((err) => {
-				console.error('Failed to copy ID: ', err)
-				toast.success('Failed to copy ID!')
-			})
-	}
-
-	const handleKeyPress = (event: React.KeyboardEvent<HTMLSpanElement>, id: string) => {
-		if (event.key === 'Enter' || event.key === ' ') {
-			handleCopy(id)
 		}
 	}
 
@@ -217,317 +218,406 @@ const GomziNutritionProductStock: React.FC = () => {
 		setFormData({ ...formData, [name]: value })
 	}
 
-	const deleteReply = (stock_id: any) => {
-		Swal.fire({
-			title: 'Are you sure?',
-			text: 'You want to remove this Reply',
-			icon: 'question',
-			showCancelButton: true,
-			confirmButtonColor: '#d33',
-			cancelButtonColor: '#3085d6',
-			confirmButtonText: 'Remove',
-			cancelButtonText: 'Cancel',
-		}).then(async (result) => {
-			if (result.isConfirmed) {
-				try {
-					await RemoveProductStock({
-						stock_id: stock_id,
-					})
-					toast.success('Comment reply removed successfully')
-					fetchData()
-				} catch (error: any) {
-					toast.error(error.message)
-					console.error(error)
-				}
-			}
+	const openDeleteModal = (item: any) => {
+		setDeleteModal({
+			show: true,
+			stockId: item?._id,
+			productName: item?.item_id?.name || 'this stock record',
+			loading: false,
 		})
 	}
 
+	const closeDeleteModal = () => {
+		setDeleteModal({
+			show: false,
+			stockId: null,
+			productName: '',
+			loading: false,
+		})
+	}
+
+	const handleConfirmDelete = async () => {
+		if (!deleteModal.stockId) return
+
+		try {
+			setDeleteModal((prev) => ({ ...prev, loading: true }))
+			await RemoveProductStock({
+				stock_id: deleteModal.stockId,
+			})
+			toast.success('Stock record removed successfully')
+			closeDeleteModal()
+			fetchData()
+		} catch (error: any) {
+			toast.error(error.message || 'Failed to remove stock record')
+			setDeleteModal((prev) => ({ ...prev, loading: false }))
+		}
+	}
+
 	return (
-		<>
-			<PageTitle breadcrumbs={[]}>Gomzi Nutrition Products</PageTitle>
-			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title'>
-						<div className='card-branch_code d-flex'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-							<LengthMenu
-								expenseData={productData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-								value={pagination.itemsPerPage}
-							/>
-						</div>
-					</div>
-					<div className='card-toolbar'>
-						<TableButton
-							action='add'
-							onClick={() => setShowModal(true)}
-							text='Add Product Stock'
+		<div className='gz-inv-container'>
+			<PageTitle breadcrumbs={[]}>Stock List</PageTitle>
+
+			{/* Breadcrumbs */}
+			<div className='gz-inv-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<span>Inventory & Stock</span>
+				<span className='sep'>/</span>
+				<span className='current'>Stock List</span>
+			</div>
+
+			{/* Header */}
+			<div className='gz-inv-header'>
+				<div className='gz-inv-title-wrap'>
+					<h1 className='gz-inv-title'>Stock List</h1>
+					<p className='gz-inv-subtitle'>Manage product stock records and availability.</p>
+				</div>
+
+				{/* Add Product Stock Button */}
+				<button
+					type='button'
+					className='gz-inv-primary-btn'
+					onClick={() => setShowModal(true)}>
+					<PlusIcon size={14} strokeWidth={3.6} />
+					<span>Add Product Stock</span>
+				</button>
+			</div>
+
+			{/* Main Content Card */}
+			<div className='gz-inv-card'>
+				{/* Toolbar */}
+				<div className='gz-inv-toolbar'>
+					<div className='gz-inv-toolbar-left'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search products...'
+							className='me-0'
+						/>
+
+						{/* LengthMenu directly rendered without double background */}
+						<LengthMenu
+							expenseData={productData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
 						/>
 					</div>
 				</div>
-				<div className='py-4 card-body'>
-					<div className='table-responsive'>
-						<Table
-							data={productData}
-							columns={sortableFields}
-							sort={sort}
-							sortOrder={sortOrder}
-							onSortChange={handleSortChange}
-							renderRow={(product: any, index: number, actualIndex: number, isVisible: boolean) => (
-								<React.Fragment key={product._id}>
+
+				{/* Table Area */}
+				<div className='gz-inv-table-wrap'>
+					<Table
+						data={productData}
+						columns={sortableFields}
+						sort={sort}
+						sortOrder={sortOrder}
+						onSortChange={handleSortChange}
+						renderRow={(product: any, index: number, actualIndex: number, isVisible: boolean) => {
+							const hasImage =
+								product?.item_id?.display_image && !imageErrors[product?._id]
+
+							return (
+								<React.Fragment key={product._id || index}>
 									<tr
 										onClick={() => handleRowClick(product._id)}
-										className='data-row'>
-										<td>
-											<span className='text-dark fw-bold  ms-6 mb-1 fs-6'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='me-2 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
+										style={{ cursor: 'pointer' }}>
+										<td className='text-center' style={{ width: '60px' }}>
+											<span className='fw-bold' style={{ color: '#64748B', fontSize: '13px' }}>
 												{actualIndex}
 											</span>
 										</td>
+
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{product?.item_id?.name}
+											<span className='gz-inv-product-name'>
+												{product?.item_id?.name || '—'}
 											</span>
 										</td>
+
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											{hasImage ? (
 												<img
-													src={`https://files.fggroup.in/` + product?.item_id?.display_image}
-													alt={product?.item_id?.name}
-													style={{ width: '80px', height: '80px', borderRadius: '10px' }}
+													src={`https://files.fggroup.in/${product?.item_id?.display_image}`}
+													alt={product?.item_id?.name || 'Product'}
+													className='gz-inv-thumb'
+													onError={() =>
+														setImageErrors((prev) => ({ ...prev, [product?._id]: true }))
+													}
 												/>
-											</span>
+											) : (
+												<div className='gz-inv-thumb-fallback'>
+													<FontAwesomeIcon icon={faBoxesStacked} />
+												</div>
+											)}
 										</td>
+
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{product?.stock}
-											</span>
+											<span className='gz-inv-stock-value'>{product?.stock ?? 0}</span>
 										</td>
+
 										<td>
-											<TableButton
-												action='edit'
-												onClick={() => {
-													setUpdateShowModal(true)
-													setFormData({
-														stock_id: product?._id,
-														stock: product?.stock,
-														item_id: product?.item_id?.name,
-													})
-												}}
-											/>
-											<TableButton
-												action='remove'
-												onClick={() => deleteReply(product?._id)}
-											/>
+											<div className='gz-inv-actions'>
+												<TableButton
+													action='edit'
+													className='table-action-btn-square'
+													onClick={() => {
+														setUpdateShowModal(true)
+														setFormData({
+															stock_id: product?._id,
+															stock: product?.stock,
+															item_id: product?.item_id?.name,
+														})
+													}}
+													title='Edit Stock'
+												/>
+												<TableButton
+													action='remove'
+													className='table-action-btn-square'
+													onClick={() => openDeleteModal(product)}
+													title='Delete Stock'
+												/>
+											</div>
 										</td>
 									</tr>
+
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-											<td colSpan={12}>
-												<div>
-													<strong>{sortableFields[0].title}: </strong> {product?.item_id?.name}
-													<br />
-													<strong>{sortableFields[2].title}: </strong> ₹ {product?.stock}
-													<br />
+											<td colSpan={12} className='bg-light-subtle p-4'>
+												<div className='d-flex flex-column gap-1'>
+													<div>
+														<strong className='text-gray-700'>{sortableFields[0].title}: </strong>
+														<span className='text-gray-900 fw-semibold'>{product?.item_id?.name}</span>
+													</div>
+													<div>
+														<strong className='text-gray-700'>{sortableFields[2].title}: </strong>
+														<span className='text-gray-900 fw-bold'>{product?.stock}</span>
+													</div>
 												</div>
 											</td>
 										</tr>
 									)}
 								</React.Fragment>
-							)}
-							visibleDetails={visibleDetails}
-							pagination={pagination}
-							setPagination={setPagination}
-							loading={loading}
-						/>
-					</div>
-					{productData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
-					{productData.length > 0 && (
-						<UsersListPagination
-							totalPages={metaData?.totalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-							totalRecords={metaData?.totalRecords || productData.length}
-							itemsPerPage={pagination.itemsPerPage}
-							entityName='products'
-						/>
-					)}
+							)
+						}}
+						visibleDetails={visibleDetails}
+						pagination={pagination}
+						setPagination={setPagination}
+						loading={loading}
+					/>
 				</div>
-			</KTCard>
-			{/* Add Modal */}
+
+				{/* Empty State */}
+				{productData.length === 0 && !loading && (
+					<div className='gz-inv-empty-state'>
+						<div className='gz-inv-empty-icon'>
+							<FontAwesomeIcon icon={faBoxesStacked} />
+						</div>
+						<h3 className='gz-inv-empty-title'>No product stock records found</h3>
+						<p className='gz-inv-empty-desc'>
+							{searchTerm
+								? 'No stock records match your search query. Try another keyword.'
+								: 'Click "Add Product Stock" above to create your first stock entry.'}
+						</p>
+					</div>
+				)}
+
+				{/* Pagination */}
+				{productData.length > 0 && (
+					<UsersListPagination
+						totalPages={metaData?.totalPages}
+						currentPage={pagination.page}
+						onPageChange={handlePageChange}
+						totalRecords={metaData?.totalRecords || productData.length}
+						itemsPerPage={pagination.itemsPerPage}
+						entityName='products'
+					/>
+				)}
+			</div>
+
+			{/* Add Product Stock Modal */}
 			<Modal
 				centered
 				show={showModal}
 				onHide={closeAddModal}
+				dialogClassName='gz-inv-modal'
 				contentClassName='border-0 shadow-lg'
-				style={{ borderRadius: '12px' }}>
-				<div className='modal-header border-bottom py-4 px-6 d-flex align-items-center justify-content-between'>
-					<h3 className='modal-title fw-bolder text-gray-900 fs-4 m-0'>Add Product Stock</h3>
+				style={{ borderRadius: '16px' }}>
+				<div className='gz-inv-modal-header'>
+					<h3 className='gz-inv-modal-title'>Add Product Stock</h3>
 					<button
 						type='button'
-						className='btn btn-sm btn-icon btn-active-light-primary rounded-circle'
+						className='gz-inv-modal-close'
 						onClick={closeAddModal}
-						aria-label='Close'
-						style={{ width: '32px', height: '32px' }}>
-						<FontAwesomeIcon icon={faXmark} className='fs-4 text-gray-500' />
+						aria-label='Close'>
+						<FontAwesomeIcon icon={faXmark} />
 					</button>
 				</div>
-				<div className='modal-body px-6 py-5'>
+
+				<div className='gz-inv-modal-body'>
 					<div className='mb-4'>
-						<label className='form-label required fw-bold text-gray-800 fs-7 mb-1'>Product</label>
-						<SelectField
-							className='w-100'
-							label=''
+						<label className='gz-inv-form-label required'>Product</label>
+						<select
+							className='form-select gz-prod-select w-100'
 							name='item_id'
-							options={product.map((item: any) => item?.label)}
 							value={formData.item_id}
-							onChange={handleInputChange}
-							showLabel={false}
-							marginRemove
-						/>
+							onChange={handleInputChange}>
+							<option value=''>Select Product</option>
+							{product.map((item: any, idx: number) => (
+								<option key={idx} value={item?.label}>
+									{item?.label}
+								</option>
+							))}
+						</select>
 					</div>
+
 					<div>
-						<label className='form-label required fw-bold text-gray-800 fs-7 mb-1'>Stock Quantity</label>
+						<label className='gz-inv-form-label required'>Stock Quantity</label>
 						<input
 							placeholder='Enter stock quantity'
 							type='number'
 							name='stock'
 							min='0'
-							className='form-control'
+							className='gz-inv-form-control'
 							autoComplete='off'
 							value={formData.stock}
 							onChange={handleInputChange}
-							style={{
-								border: '1px solid #DFE7F0',
-								borderRadius: '8px',
-								height: '40px',
-								fontSize: '14px',
-								fontWeight: 600,
-							}}
 						/>
 					</div>
 				</div>
-				<div className='modal-footer border-top py-3 px-6 d-flex justify-content-end gap-2'>
+
+				<div className='gz-inv-modal-footer'>
 					<button
 						type='button'
-						className='btn btn-light btn-active-light-primary fw-semibold px-4'
-						style={{ height: '38px', borderRadius: '8px', fontSize: '13px' }}
+						className='gz-inv-btn-cancel'
 						onClick={closeAddModal}>
 						Cancel
 					</button>
 					<button
 						type='button'
-						className='btn btn-primary fw-bold px-5 d-flex align-items-center gap-2'
-						style={{
-							height: '38px',
-							borderRadius: '8px',
-							fontSize: '13px',
-							backgroundColor: '#0F172A',
-							borderColor: '#0F172A',
-						}}
+						className='gz-inv-btn-submit'
 						onClick={handleAddStock}>
 						<FontAwesomeIcon icon={faCheck} />
-						Add Stock
+						<span>Add Stock</span>
 					</button>
 				</div>
 			</Modal>
 
-			{/* Update Modal */}
+			{/* Update Product Stock Modal */}
 			<Modal
 				centered
 				show={updateShowModal}
 				onHide={closeUpdateModal}
+				dialogClassName='gz-inv-modal'
 				contentClassName='border-0 shadow-lg'
-				style={{ borderRadius: '12px' }}>
-				<div className='modal-header border-bottom py-4 px-6 d-flex align-items-center justify-content-between'>
-					<h3 className='modal-title fw-bolder text-gray-900 fs-4 m-0'>Update Product Stock</h3>
+				style={{ borderRadius: '16px' }}>
+				<div className='gz-inv-modal-header'>
+					<h3 className='gz-inv-modal-title'>Update Product Stock</h3>
 					<button
 						type='button'
-						className='btn btn-sm btn-icon btn-active-light-primary rounded-circle'
+						className='gz-inv-modal-close'
 						onClick={closeUpdateModal}
-						aria-label='Close'
-						style={{ width: '32px', height: '32px' }}>
-						<FontAwesomeIcon icon={faXmark} className='fs-4 text-gray-500' />
+						aria-label='Close'>
+						<FontAwesomeIcon icon={faXmark} />
 					</button>
 				</div>
-				<div className='modal-body px-6 py-5'>
+
+				<div className='gz-inv-modal-body'>
 					{/* Product (Read-Only) */}
 					<div className='mb-4'>
-						<label className='form-label fw-bold text-gray-700 fs-7 mb-1'>Product</label>
+						<label className='gz-inv-form-label'>Product</label>
 						<input
 							type='text'
 							name='item_id'
-							className='form-control form-control-solid fw-semibold fs-7 text-gray-700'
+							className='gz-inv-form-control'
 							value={formData.item_id}
 							readOnly
-							style={{
-								backgroundColor: '#F8FAFC',
-								border: '1px solid #E2E8F0',
-								borderRadius: '8px',
-								height: '40px',
-							}}
 						/>
 					</div>
 
 					{/* Stock Quantity */}
 					<div>
-						<label className='form-label required fw-bold text-gray-800 fs-7 mb-1'>Stock Quantity</label>
+						<label className='gz-inv-form-label required'>Stock Quantity</label>
 						<input
 							placeholder='Enter stock quantity'
 							type='number'
 							name='stock'
 							min='0'
-							className='form-control'
+							className='gz-inv-form-control'
 							autoComplete='off'
 							value={formData.stock}
 							onChange={handleInputChange}
-							style={{
-								border: '1px solid #DFE7F0',
-								borderRadius: '8px',
-								height: '40px',
-								fontSize: '14px',
-								fontWeight: 600,
-							}}
 						/>
 					</div>
 				</div>
-				<div className='modal-footer border-top py-3 px-6 d-flex justify-content-end gap-2'>
+
+				<div className='gz-inv-modal-footer'>
 					<button
 						type='button'
-						className='btn btn-light btn-active-light-primary fw-semibold px-4'
-						style={{ height: '38px', borderRadius: '8px', fontSize: '13px' }}
+						className='gz-inv-btn-cancel'
 						onClick={closeUpdateModal}>
 						Cancel
 					</button>
 					<button
 						type='button'
-						className='btn btn-primary fw-bold px-5 d-flex align-items-center gap-2'
-						style={{
-							height: '38px',
-							borderRadius: '8px',
-							fontSize: '13px',
-							backgroundColor: '#0F172A',
-							borderColor: '#0F172A',
-						}}
+						className='gz-inv-btn-submit'
 						onClick={handleUpdateStock}>
 						<FontAwesomeIcon icon={faCheck} />
-						Update Stock
+						<span>Update Stock</span>
 					</button>
 				</div>
 			</Modal>
-		</>
+
+			{/* Delete Confirmation Modal */}
+			<Modal
+				centered
+				show={deleteModal.show}
+				onHide={closeDeleteModal}
+				dialogClassName='gz-inv-modal'
+				contentClassName='border-0 shadow-lg'
+				style={{ borderRadius: '16px', maxWidth: '440px' }}>
+				<div className='gz-inv-modal-header'>
+					<h3 className='gz-inv-modal-title'>Delete Stock Record</h3>
+					<button
+						type='button'
+						className='gz-inv-modal-close'
+						onClick={closeDeleteModal}
+						aria-label='Close'>
+						<FontAwesomeIcon icon={faXmark} />
+					</button>
+				</div>
+
+				<div className='gz-inv-modal-body text-center py-5'>
+					<div className='gz-inv-delete-icon-box'>
+						<FontAwesomeIcon icon={faTriangleExclamation} />
+					</div>
+					<h4 style={{ fontSize: '16.5px', fontWeight: 700, color: '#172B4D', marginBottom: '8px' }}>
+						Are you sure you want to delete this stock?
+					</h4>
+					<p style={{ fontSize: '13.5px', color: '#64748B', lineHeight: '1.5', margin: 0 }}>
+						This will permanently remove the stock record for{' '}
+						<strong style={{ color: '#172B4D' }}>{deleteModal.productName}</strong>. This action cannot be undone.
+					</p>
+				</div>
+
+				<div className='gz-inv-modal-footer'>
+					<button
+						type='button'
+						className='gz-inv-btn-cancel'
+						onClick={closeDeleteModal}
+						disabled={deleteModal.loading}>
+						Cancel
+					</button>
+					<button
+						type='button'
+						className='gz-inv-btn-delete-confirm'
+						onClick={handleConfirmDelete}
+						disabled={deleteModal.loading}>
+						<FontAwesomeIcon icon={faTrashCan} />
+						<span>{deleteModal.loading ? 'Deleting...' : 'Delete Stock'}</span>
+					</button>
+				</div>
+			</Modal>
+		</div>
 	)
 }
 

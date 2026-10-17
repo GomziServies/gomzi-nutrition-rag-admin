@@ -3,7 +3,7 @@ import { Button, Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { Link, useLocation } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import { KTCard, KTIcon } from '../../../../_metronic/helpers'
+import { KTCard, KTIcon, toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import LengthMenu from '../../../components/LengthMenu'
@@ -17,6 +17,7 @@ import {
 	RemoveTrainer,
 	UpdateTrainer,
 } from '../../../Functions/FGGroup'
+import '../common-management.css'
 
 const GomziNutritionTrainerDetail: React.FC = () => {
 	const location = useLocation()
@@ -267,43 +268,49 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Trainer List</PageTitle>
-			<KTCard>
-				<div className='row mx-6 my-4 align-items-center justify-content-between'>
-					<div className='col-md-8 col-12'>
-						<div className='d-md-flex'>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-							/>
-							<div className='d-md-block d-none'>
-								<LengthMenu
-									expenseData={trainerData}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-								/>
-							</div>
-						</div>
-					</div>
-					<div className='col-md-4 col-12 px-0 d-flex justify-content-md-end justify-content-center mb-md-0 mt-4'>
-						<div className='d-md-none d-block me-3'>
-							<LengthMenu
-								expenseData={trainerData}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-							/>
-						</div>
-						<Link to='/rag/add-trainer'>
-							<button className='btn btn-sm py-4 btn-primary'>
-								<KTIcon
-									iconName='plus'
-									className='fs-2'
-								/>
-								Add Trainer
-							</button>
-						</Link>
+
+			<nav className='gz-mgmt-breadcrumb'>
+				<a href='/rag/dashboard'>Dashboard</a>
+				<span>/</span>
+				<a href='/rag/trainer-list'>Trainers</a>
+				<span>/</span>
+				<span>Trainer Directory</span>
+			</nav>
+
+			<div className='gz-mgmt-header mb-6'>
+				<div>
+					<h1 className='gz-mgmt-title'>Trainer Directory</h1>
+					<p className='gz-mgmt-subtitle'>
+						Manage certified fitness trainers, assigned gym affiliations, nutrition coaches, and credentials
+					</p>
+				</div>
+				<Link to='/rag/add-trainer' style={{ textDecoration: 'none' }}>
+					<button type='button' className='gz-mgmt-btn-primary'>
+						<i className='bi bi-plus-lg me-2'></i>
+						Add Trainer
+					</button>
+				</Link>
+			</div>
+
+			<div className='gz-mgmt-card'>
+				<div className='gz-mgmt-toolbar flex-wrap gap-3'>
+					<div className='gz-mgmt-toolbar-left flex-wrap gap-3'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
+						<LengthMenu
+							expenseData={trainerData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							className='me-0'
+						/>
 					</div>
 				</div>
-				<div className='py-4 card-body'>
+
+				<div className='card-body p-0'>
 					<div className='table-responsive'>
 						<Table
 							data={trainerData}
@@ -315,26 +322,75 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 								<React.Fragment key={trainer._id}>
 									<tr
 										onClick={() => handleRowClick(trainer._id)}
-										className='data-row'>
+										className='data-row'
+									>
 										<td className='text-center'>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>{actualIndex}</span>
+											<span className='fw-bold text-muted fs-7'>{actualIndex}</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>{trainer.name}</span>
+											<div className='gz-mgmt-identity-cell'>
+												<img
+													src={
+														trainer?.profile_image
+															? `https://files.fggroup.in/${trainer?.profile_image}`
+															: toAbsoluteUrl('/media/avatars/300-1.jpg')
+													}
+													alt={trainer?.name}
+													className='gz-mgmt-avatar'
+													onError={(e) => {
+														const target = e.currentTarget
+														target.style.display = 'none'
+														if (target.nextElementSibling) {
+															(target.nextElementSibling as HTMLElement).style.display = 'flex'
+														}
+													}}
+												/>
+												<div
+													className='gz-mgmt-avatar-fallback'
+													style={{ display: 'none' }}
+												>
+													{(trainer?.name || 'T').charAt(0).toUpperCase()}
+												</div>
+												<div className='gz-mgmt-identity-info'>
+													<span className='gz-mgmt-identity-name'>
+														{trainer?.name || 'Unnamed Trainer'}
+													</span>
+													<span className='gz-mgmt-identity-sub'>
+														{trainer?.email || 'No email provided'}
+													</span>
+												</div>
+											</div>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>{trainer.mobile}</span>
-										</td>
-										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>{trainer.city}</span>
-										</td>
-										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{trainer.company}
+											<span className='fw-semibold text-dark fs-7'>
+												{trainer?.mobile ? (
+													<span className='d-inline-flex align-items-center gap-1'>
+														<i className='bi bi-telephone text-primary fs-8'></i>
+														{trainer.mobile}
+													</span>
+												) : '-'}
 											</span>
 										</td>
 										<td>
-											<div className='d-flex justify-content-center'>
+											{trainer?.city ? (
+												<span className='gz-mgmt-pill info'>
+													{trainer.city}
+												</span>
+											) : (
+												<span className='text-muted'>-</span>
+											)}
+										</td>
+										<td>
+											{trainer?.company ? (
+												<span className='gz-mgmt-pill success'>
+													{trainer.company}
+												</span>
+											) : (
+												<span className='text-muted'>-</span>
+											)}
+										</td>
+										<td>
+											<div className='d-flex justify-content-center gap-2'>
 												<TableButton
 													action='edit'
 													onClick={() => {
@@ -351,10 +407,11 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12}>
-												<div>
-													<strong>{sortableFields[0].title}:</strong> {trainer.name}
-													<br />
-													<strong>{sortableFields[1].title}:</strong> {trainer.position}
+												<div className='p-4' style={{ background: '#F8FAFC', borderRadius: '8px' }}>
+													<strong>Name:</strong> {trainer.name}<br />
+													<strong>Mobile:</strong> {trainer.mobile}<br />
+													<strong>City:</strong> {trainer.city}<br />
+													<strong>Company/Gym:</strong> {trainer.company}
 												</div>
 											</td>
 										</tr>
@@ -368,67 +425,79 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 						/>
 					</div>
 					{trainerData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10 text-muted'>
+							<b>No trainers found</b>
 						</div>
 					)}
 					{trainerData.length > 0 && (
 						<UsersListPagination
-							totalPages={Math.ceil(trainerData.length / pagination.itemsPerPage)}
+							totalPages={Math.ceil(trainerData.length / pagination.itemsPerPage) || 1}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
 						/>
 					)}
 				</div>
+			</div>
 
-				{/* member view modal */}
-
-				<Modal
-					show={showModal}
-					onHide={() => setShowModal(false)}
-					size='lg'
-					centered>
-					<Modal.Header closeButton>
-						<Modal.Title>Edit Trainer Details</Modal.Title>
-					</Modal.Header>
-					<Modal.Body>
-						{/* Form Fields */}
-						<form>
-							<div className='row'>
-								<div className='col-md-4 mb-7'>
-									<img
-										alt='Photos'
-										src={
-											trainerViewData.profile_image
-												? trainerViewData.profile_image.startsWith('blob:')
-													? trainerViewData.profile_image
-													: `https://files.fggroup.in/${trainerViewData.profile_image}`
-												: '/media/avatars/300-1.jpg'
-										}
-										style={{ borderRadius: '10px', width: '90%' }}
+			{/* Edit Trainer Modal */}
+			<Modal
+				show={showModal}
+				onHide={() => setShowModal(false)}
+				size='lg'
+				centered
+			>
+				<Modal.Header closeButton style={{ borderBottom: '1px solid #E2E8F0', padding: '20px 24px' }}>
+					<Modal.Title style={{ color: '#0F172A', fontWeight: 700, fontSize: '18px' }}>
+						Edit Trainer Profile
+					</Modal.Title>
+				</Modal.Header>
+				<Modal.Body style={{ padding: '24px' }}>
+					<form>
+						<div className='row g-4'>
+							<div className='col-md-4 text-center'>
+								<img
+									alt={trainerViewData.name || 'Trainer photo'}
+									src={
+										trainerViewData.profile_image
+											? trainerViewData.profile_image.startsWith('blob:')
+												? trainerViewData.profile_image
+												: `https://files.fggroup.in/${trainerViewData.profile_image}`
+											: '/media/avatars/300-1.jpg'
+									}
+									style={{
+										width: '120px',
+										height: '120px',
+										objectFit: 'cover',
+										borderRadius: '16px',
+										border: '2px solid #E2E8F0',
+										boxShadow: '0 4px 12px rgba(0,0,0,0.06)'
+									}}
+								/>
+								<div className='mt-4'>
+									<button
+										type='button'
+										className='gz-mgmt-btn-secondary'
+										style={{ padding: '6px 14px', fontSize: '13px' }}
+										onClick={handleFileButtonClick}
+									>
+										<i className='bi bi-camera me-1'></i> Change Photo
+									</button>
+									<input
+										type='file'
+										id='fileInput'
+										accept='image/*'
+										className='d-none'
+										onChange={handleInputChange}
 									/>
-									<div>
-										<button
-											type='button'
-											className='mt-5 px-2 py-1 mb-2 btn btn-success'
-											onClick={handleFileButtonClick}>
-											Upload Photo
-										</button>
-										<input
-											type='file'
-											id='fileInput'
-											accept='image/*'
-											className='d-none'
-											onChange={handleInputChange}
-										/>
-									</div>
 								</div>
-								<div className='col-md-8 mb-7'>
-									<div className='row'>
+							</div>
+							<div className='col-md-8'>
+								<div className='row g-3'>
+									<div className='col-6'>
 										<InputField
 											placeholder='Name'
 											type='text'
-											className='col-6 fv-row'
+											className='col-12 fv-row'
 											name='name'
 											label='Name'
 											htmlFor='name'
@@ -436,10 +505,12 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 											value={trainerViewData.name}
 											onChange={handleInputChange}
 										/>
+									</div>
+									<div className='col-6'>
 										<InputField
 											placeholder='Mobile No.'
 											type='number'
-											className='col-6 fv-row'
+											className='col-12 fv-row'
 											name='mobile'
 											label='Mobile No.'
 											htmlFor='mobile'
@@ -447,10 +518,12 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 											value={trainerViewData.mobile}
 											onChange={handleInputChange}
 										/>
+									</div>
+									<div className='col-6'>
 										<InputField
 											placeholder='Email'
 											type='text'
-											className='col-6 fv-row'
+											className='col-12 fv-row'
 											name='email'
 											label='Email'
 											htmlFor='email'
@@ -458,10 +531,12 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 											value={trainerViewData.email}
 											onChange={handleInputChange}
 										/>
+									</div>
+									<div className='col-6'>
 										<InputField
 											placeholder='DOB'
 											type='date'
-											className='col-6 fv-row'
+											className='col-12 fv-row'
 											name='birthdate'
 											label='DOB'
 											htmlFor='birthdate'
@@ -469,21 +544,12 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 											value={trainerViewData.birthdate}
 											onChange={handleInputChange}
 										/>
-										<InputField
-											placeholder='Address'
-											type='text'
-											className='col-6 fv-row'
-											name='address'
-											label='Address'
-											labelMarginRemove
-											htmlFor='address'
-											value={trainerViewData.address}
-											onChange={handleInputChange}
-										/>
+									</div>
+									<div className='col-6'>
 										<InputField
 											placeholder='City'
 											type='text'
-											className='col-6 fv-row'
+											className='col-12 fv-row'
 											name='city'
 											label='City'
 											htmlFor='city'
@@ -491,10 +557,12 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 											value={trainerViewData.city}
 											onChange={handleInputChange}
 										/>
+									</div>
+									<div className='col-6'>
 										<InputField
 											placeholder='Company / Gym'
 											type='text'
-											className='col-6 fv-row'
+											className='col-12 fv-row'
 											name='company'
 											label='Company / Gym'
 											htmlFor='company'
@@ -503,193 +571,42 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 											onChange={handleInputChange}
 										/>
 									</div>
-								</div>
-							</div>
-						</form>
-					</Modal.Body>
-					<Modal.Footer>
-						<Button
-							variant='secondary'
-							onClick={() => setShowModal(false)}>
-							Close
-						</Button>
-						<Button
-							variant='primary'
-							onClick={handleSubmit}>
-							Save Changes
-						</Button>
-					</Modal.Footer>
-				</Modal>
-
-				{/* <div
-					className='modal fade'
-					id='kt_modal_member_view'
-					aria-hidden='true'>
-					<div className='modal-dialog modal-dialog-centered mw-650px'>
-						<div className='modal-content'>
-							<div className='modal-header justify-content-between'>
-								<h2 className='fw-bolder'>Details: </h2>
-								<div
-									className='btn btn-sm btn-icon btn-active-color-primary'
-									data-bs-dismiss='modal'>
-									<FontAwesomeIcon
-										className='fs-1 position-absolute ms-3'
-										icon={faXmark}
-									/>
-								</div>
-							</div>
-							<div className='modal-body scroll-y'>
-								<div className='col-md-12'>
-									<div className='row'>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Name'
-												type='text'
-												className='col-12 fv-row mb-7'
-												name='name'
-												label='Name'
-												htmlFor='name'
-												value={trainerViewData.name}
-												onChange={(e) => handleInputChange(e)}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<SelectField
-												className='col-12 fv-row'
-												name='position'
-												label='Position'
-												htmlFor='position'
-												value={trainerViewData.position}
-												onChange={(e) => handleInputChange(e)}
-												options={[
-													'Developer',
-													'Marketing',
-													'Franchise Owner',
-													'Graphic Designer',
-													'Sales Manager',
-													'Video Editor',
-													'Back Office',
-													'Trainer',
-													'Dietician',
-													'Telecalling',
-													'Branch Manager',
-													'Human Resources',
-													'Team Leader',
-													'Manager',
-													'Director',
-													'Social Media Assistant',
-												]}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Salary'
-												type='text'
-												className='col-12 fv-row mb-7'
-												name='salary'
-												label='Salary'
-												htmlFor='salary'
-												value={trainerViewData.salary}
-												onChange={(e) => handleInputChange(e)}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Mobile No.'
-												type='number'
-												className='col-12 fv-row mb-7'
-												name='mobile'
-												label='Mobile No.'
-												htmlFor='mobile'
-												value={trainerViewData.mobile}
-												onChange={(e) => handleInputChange(e)}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Address'
-												type='text'
-												className='col-12 fv-row mb-7'
-												name='address'
-												label='Address'
-												htmlFor='address'
-												value={trainerViewData.address}
-												onChange={(e) => handleInputChange(e)}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Account Detail'
-												type='number'
-												className='col-12 fv-row mb-7'
-												name='account_details'
-												label='Account Detail'
-												htmlFor='account_details'
-												value={trainerViewData.account_details}
-												onChange={(e) => handleInputChange(e)}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Email'
-												type='text'
-												className='col-12 fv-row mb-7'
-												name='email'
-												label='Email'
-												htmlFor='email'
-												value={trainerViewData.email}
-												onChange={(e) => handleInputChange(e)}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Upload Photo'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='photo'
-												label='Upload Photo'
-												htmlFor='photo'
-												onChange={handleFileChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Upload Proof'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='proof'
-												label='Upload Proof'
-												htmlFor='proof'
-												onChange={handleFileChange}
-											/>
-										</div>
-										<div className='col-md-6 fv-row mb-7'>
-											<InputField
-												placeholder='Upload Pdf'
-												type='file'
-												className='col-12 fv-row mb-7'
-												name='document'
-												label='Upload Pdf'
-												htmlFor='document'
-												onChange={handleFileChange}
-											/>
-										</div>
+									<div className='col-12'>
+										<InputField
+											placeholder='Address'
+											type='text'
+											className='col-12 fv-row'
+											name='address'
+											label='Address'
+											labelMarginRemove
+											htmlFor='address'
+											value={trainerViewData.address}
+											onChange={handleInputChange}
+										/>
 									</div>
 								</div>
 							</div>
-							<div className='modal-footer justify-content-end'>
-								<button
-									className='btn btn-primary'
-									data-bs-dismiss='modal'
-									onClick={handleSubmit}>
-									Save Changes
-								</button>
-							</div>
 						</div>
-					</div>
-				</div> */}
-			</KTCard>
-		</>
+					</form>
+				</Modal.Body>
+				<Modal.Footer style={{ borderTop: '1px solid #E2E8F0', padding: '16px 24px' }}>
+					<button
+						type='button'
+						className='gz-mgmt-btn-secondary'
+						onClick={() => setShowModal(false)}
+					>
+						Cancel
+					</button>
+					<button
+						type='button'
+						className='gz-mgmt-btn-primary'
+						onClick={handleSubmit}
+					>
+						Save Changes
+					</button>
+				</Modal.Footer>
+			</Modal>
+		</div>
 	)
 }
 

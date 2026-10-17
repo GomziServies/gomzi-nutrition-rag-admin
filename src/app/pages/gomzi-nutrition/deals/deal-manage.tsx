@@ -304,9 +304,17 @@ export default function DealManage() {
 				<div className='card-header border-0 pt-6'>
 					<div className='card-title'>
 						<div className='d-flex align-items-center position-relative my-1'>
-							<h3 className='fw-bolder m-0 text-gray-800'>
+							<h3 className='fw-bolder m-0 text-gray-800 d-inline-flex align-items-center'>
 								<FontAwesomeIcon icon={faFire} className='text-warning me-2' />
-								Landing Page Trending Promotional Cards ({deals.length})
+								Landing Page Trending Promotional Cards{' '}
+								{loading ? (
+									<span
+										className='gz-skeleton rounded ms-2'
+										style={{ width: '36px', height: '22px', verticalAlign: 'middle' }}
+									/>
+								) : (
+									`(${deals.length})`
+								)}
 							</h3>
 						</div>
 					</div>
@@ -323,9 +331,85 @@ export default function DealManage() {
 
 				<div className='card-body py-4'>
 					{loading ? (
-						<div className='text-center py-10'>
-							<div className='spinner-border text-primary' role='status' />
-							<div className='text-gray-500 mt-2'>Loading promotional deals...</div>
+						<div className='table-responsive'>
+							<table className='table align-middle table-row-dashed fs-6 gy-5'>
+								<thead>
+									<tr className='text-start text-muted fw-bolder fs-7 text-uppercase gs-0'>
+										<th style={{ width: '60px' }}>Order</th>
+										<th style={{ width: '140px' }}>Card Preview</th>
+										<th>Deal Title & Subtitle</th>
+										<th>Badge / Tag</th>
+										<th>Pricing</th>
+										<th>Coupon</th>
+										<th>Status</th>
+										<th className='text-end'>Actions</th>
+									</tr>
+								</thead>
+								<tbody className='text-gray-600 fw-bold'>
+									{Array.from({ length: 5 }).map((_, idx) => (
+										<tr key={`deal-skeleton-${idx}`} className='gz-skeleton-tr'>
+											<td>
+												<div className='d-flex flex-column align-items-center gap-1'>
+													<div className='gz-skeleton rounded' style={{ width: '28px', height: '28px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '20px', height: '14px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '28px', height: '28px' }} />
+												</div>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton'
+													style={{
+														width: '100px',
+														height: '120px',
+														borderRadius: '16px',
+													}}
+												/>
+											</td>
+											<td>
+												<div className='d-flex flex-column gap-2'>
+													<div className='gz-skeleton' style={{ width: '75%', height: '16px' }} />
+													<div className='gz-skeleton' style={{ width: '55%', height: '13px' }} />
+													<div className='gz-skeleton' style={{ width: '35%', height: '11px' }} />
+												</div>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton'
+													style={{
+														width: '120px',
+														height: '24px',
+														borderRadius: '20px',
+													}}
+												/>
+											</td>
+											<td>
+												<div className='d-flex flex-column gap-1'>
+													<div className='gz-skeleton' style={{ width: '80px', height: '16px' }} />
+													<div className='gz-skeleton' style={{ width: '60px', height: '13px' }} />
+												</div>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton rounded'
+													style={{ width: '85px', height: '26px' }}
+												/>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton rounded'
+													style={{ width: '65px', height: '24px' }}
+												/>
+											</td>
+											<td className='text-end'>
+												<div className='d-inline-flex gap-2 justify-content-end'>
+													<div className='gz-skeleton rounded' style={{ width: '32px', height: '32px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '32px', height: '32px' }} />
+												</div>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
 						</div>
 					) : deals.length === 0 ? (
 						<div className='text-center py-10'>

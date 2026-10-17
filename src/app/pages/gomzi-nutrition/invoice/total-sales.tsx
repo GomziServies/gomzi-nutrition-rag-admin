@@ -28,6 +28,7 @@ import {
 	GetInvoiceInsights,
 	GetTrainers,
 } from '../../../Functions/FGGroup'
+import { PlusIcon } from '../../../components/animated-icons'
 import './invoice-theme.css'
 
 const NutritionTotalSalesList: React.FC = () => {
@@ -337,7 +338,7 @@ const NutritionTotalSalesList: React.FC = () => {
 						</button>
 					)}
 					<Link to='/rag/create-invoice' className='gz-inv-btn-primary'>
-						<FontAwesomeIcon icon={faPlus} />
+						<PlusIcon size={14} strokeWidth={3.6} />
 						<span>Create Invoice</span>
 					</Link>
 				</div>

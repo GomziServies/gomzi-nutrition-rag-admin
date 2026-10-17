@@ -1,10 +1,16 @@
-import { faDownload } from '@fortawesome/free-solid-svg-icons'
+import {
+	faArrowLeft,
+	faDownload,
+	faPlus,
+	faShareAlt,
+	faUserFriends,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { endOfMonth, startOfMonth } from 'date-fns'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
@@ -21,6 +27,9 @@ import {
 	UpdateGnPersonalDetails,
 } from '../../../Functions/FGGroup/GnFollowUpReport'
 import { useAuth } from '../../../modules/auth/core/Auth'
+import '../common-management.css'
+import '../products-theme.css'
+import '../orders-theme.css'
 
 const FollowUpReportList: React.FC = () => {
 	const { currentUser } = useAuth()
@@ -1131,18 +1140,58 @@ const FollowUpReportList: React.FC = () => {
 				}
 			`}</style>
 
-			<PageTitle breadcrumbs={[]}>
-				{adId
-					? adNameFromUrl
-						? `Leads — ${decodeURIComponent(adNameFromUrl)}`
-						: 'Gomzi Lead Management'
-					: 'Gomzi Lead Management'}
-			</PageTitle>
+			<div className='gz-mgmt-container'>
+				<PageTitle breadcrumbs={[]}>
+					{adId
+						? adNameFromUrl
+							? `Leads — ${decodeURIComponent(adNameFromUrl)}`
+							: 'Gomzi Lead Management'
+						: 'Gomzi Lead Management'}
+				</PageTitle>
 
-			<KTCard className='flr-card'>
-				{/* Filter Bar */}
-				<div className='flr-filter-bar'>
-					<div className='flr-filter-row'>
+				{/* Breadcrumb */}
+				<div className='gz-mgmt-breadcrumb'>
+					<Link to='/rag/dashboard'>Dashboard</Link>
+					<span className='sep'>&gt;</span>
+					<Link to='/rag/follow-up-report-dashboard'>Follow-Up Dashboard</Link>
+					<span className='sep'>&gt;</span>
+					<span className='current'>
+						{adId
+							? adNameFromUrl
+								? `Leads — ${decodeURIComponent(adNameFromUrl)}`
+								: 'Lead Management'
+							: 'Lead Management'}
+					</span>
+				</div>
+
+				{/* Header */}
+				<div className='gz-mgmt-header mb-4'>
+					<div className='gz-mgmt-title-wrap'>
+						<h1 className='gz-mgmt-title'>
+							{adId
+								? adNameFromUrl
+									? `Campaign Leads: ${decodeURIComponent(adNameFromUrl)}`
+									: 'Follow-Up Lead Management'
+								: 'Follow-Up Lead Management'}
+						</h1>
+						<p className='gz-mgmt-subtitle'>
+							Filter incoming inquiries, categorize lead priority status, and distribute leads across sales staff.
+						</p>
+					</div>
+					<div className='d-flex align-items-center gap-3 flex-wrap'>
+						{adId && (
+							<Link to='/rag/follow-up-report-dashboard' className='gz-mgmt-btn-secondary'>
+								<FontAwesomeIcon icon={faArrowLeft} />
+								<span>Back to Ads</span>
+							</Link>
+						)}
+					</div>
+				</div>
+
+				<KTCard className='flr-card gz-mgmt-card'>
+					{/* Filter Bar */}
+					<div className='flr-filter-bar'>
+						<div className='flr-filter-row'>
 						<div>
 							<SearchFilter
 								searchTerm={searchTerm}
@@ -1936,6 +1985,7 @@ const FollowUpReportList: React.FC = () => {
 					</button>
 				</Modal.Body>
 			</Modal>
+			</div>
 		</>
 	)
 }

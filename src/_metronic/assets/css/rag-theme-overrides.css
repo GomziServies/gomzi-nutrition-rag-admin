@@ -711,77 +711,443 @@ body.gz-floating-sub-active .tooltip.gz-aside-tooltip {
 	pointer-events: none !important;
 }
 
-/* --- 8. COLLAPSED ASIDE RAIL: PERFECT DEAD-CENTER ALIGNMENT --- */
+/* --- 8. COLLAPSED ASIDE RAIL: PERFECT DEAD-CENTER ALIGNMENT & HOVER/ACTIVE STATES --- */
+body.aside-minimize .aside,
+body.gz-aside-collapsed .aside,
+body[data-kt-aside-minimize="on"] .aside,
+body.aside-minimize #kt_aside,
+body.gz-aside-collapsed #kt_aside,
+body[data-kt-aside-minimize="on"] #kt_aside {
+	width: 72px !important;
+	min-width: 72px !important;
+	max-width: 72px !important;
+	padding: 0 !important;
+}
+
+body.aside-minimize .aside .aside-menu,
+body.gz-aside-collapsed .aside .aside-menu,
+body[data-kt-aside-minimize="on"] .aside .aside-menu,
+body.aside-minimize #kt_aside .aside-menu,
+body.gz-aside-collapsed #kt_aside .aside-menu,
+body[data-kt-aside-minimize="on"] #kt_aside .aside-menu,
+body.aside-minimize #kt_aside_menu_wrapper,
+body.gz-aside-collapsed #kt_aside_menu_wrapper,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper,
+body.aside-minimize #kt_aside_menu,
+body.gz-aside-collapsed #kt_aside_menu,
+body[data-kt-aside-minimize="on"] #kt_aside_menu,
+body.aside-minimize [id="#kt_aside_menu"],
+body.gz-aside-collapsed [id="#kt_aside_menu"],
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] {
+	width: 72px !important;
+	min-width: 72px !important;
+	max-width: 72px !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	box-sizing: border-box !important;
+}
+
 body.aside-minimize .aside .menu-item,
 body.gz-aside-collapsed .aside .menu-item,
 body[data-kt-aside-minimize="on"] .aside .menu-item,
 body.aside-minimize #kt_aside .menu-item,
 body.gz-aside-collapsed #kt_aside .menu-item,
-body[data-kt-aside-minimize="on"] #kt_aside .menu-item {
-	width: 100% !important;
+body[data-kt-aside-minimize="on"] #kt_aside .menu-item,
+body.aside-minimize #kt_aside_menu_wrapper .menu-item,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-item,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-item,
+body.aside-minimize #kt_aside_menu .menu-item,
+body.gz-aside-collapsed #kt_aside_menu .menu-item,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item,
+body.aside-minimize [id="#kt_aside_menu"] .menu-item,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-item,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item {
+	width: 72px !important;
+	min-width: 72px !important;
+	max-width: 72px !important;
 	display: flex !important;
 	justify-content: center !important;
 	align-items: center !important;
 	padding: 0 !important;
 	margin: 3px 0 !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	box-sizing: border-box !important;
 }
 
 body.aside-minimize .aside .menu-item .menu-link,
 body.gz-aside-collapsed .aside .menu-item .menu-link,
 body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link,
+body.aside-minimize #kt_aside .menu-item .menu-link,
+body.gz-aside-collapsed #kt_aside .menu-item .menu-link,
+body[data-kt-aside-minimize="on"] #kt_aside .menu-item .menu-link,
 body.aside-minimize .aside-menu .menu-link,
 body.gz-aside-collapsed .aside-menu .menu-link,
-body[data-kt-aside-minimize="on"] .aside-menu .menu-link {
-	width: 42px !important;
-	height: 42px !important;
-	min-width: 42px !important;
-	max-width: 42px !important;
+body[data-kt-aside-minimize="on"] .aside-menu .menu-link,
+body.aside-minimize #kt_aside_menu_wrapper .menu-link,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link,
+body.aside-minimize #kt_aside_menu .menu-link,
+body.gz-aside-collapsed #kt_aside_menu .menu-link,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link,
+body.aside-minimize [id="#kt_aside_menu"] .menu-link,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-link,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link {
+	width: 44px !important;
+	height: 44px !important;
+	min-width: 44px !important;
+	max-width: 44px !important;
+	min-height: 44px !important;
+	max-height: 44px !important;
 	padding: 0 !important;
 	margin: 0 auto !important;
+	margin-left: auto !important;
+	margin-right: auto !important;
 	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;
+	text-align: center !important;
 	border-radius: 12px !important;
 	position: relative !important;
 	box-sizing: border-box !important;
+	background-color: transparent !important;
+	border: 1px solid transparent !important;
+	transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 body.aside-minimize .aside .menu-item .menu-icon,
 body.gz-aside-collapsed .aside .menu-item .menu-icon,
 body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon,
+body.aside-minimize #kt_aside .menu-item .menu-icon,
+body.gz-aside-collapsed #kt_aside .menu-item .menu-icon,
+body[data-kt-aside-minimize="on"] #kt_aside .menu-item .menu-icon,
 body.aside-minimize .aside-menu .menu-link .menu-icon,
 body.gz-aside-collapsed .aside-menu .menu-link .menu-icon,
-body[data-kt-aside-minimize="on"] .aside-menu .menu-link .menu-icon {
+body[data-kt-aside-minimize="on"] .aside-menu .menu-link .menu-icon,
+body.aside-minimize #kt_aside_menu_wrapper .menu-icon,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-icon,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-icon,
+body.aside-minimize #kt_aside_menu .menu-icon,
+body.gz-aside-collapsed #kt_aside_menu .menu-icon,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-icon,
+body.aside-minimize [id="#kt_aside_menu"] .menu-icon,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-icon,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-icon {
 	margin: 0 !important;
 	margin-right: 0 !important;
 	margin-left: 0 !important;
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
 	padding: 0 !important;
-	width: 42px !important;
-	height: 42px !important;
-	min-width: 42px !important;
-	max-width: 42px !important;
+	width: 44px !important;
+	height: 44px !important;
+	min-width: 44px !important;
+	max-width: 44px !important;
+	min-height: 44px !important;
+	max-height: 44px !important;
 	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;
 	text-align: center !important;
+	box-sizing: border-box !important;
+	flex-shrink: 0 !important;
+	line-height: 1 !important;
 }
 
 body.aside-minimize .aside .menu-item .menu-icon svg,
 body.aside-minimize .aside .menu-item .menu-icon i,
+body.aside-minimize .aside .menu-item .menu-icon .svg-inline--fa,
 body.gz-aside-collapsed .aside .menu-item .menu-icon svg,
 body.gz-aside-collapsed .aside .menu-item .menu-icon i,
+body.gz-aside-collapsed .aside .menu-item .menu-icon .svg-inline--fa,
 body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg,
 body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon i,
-body.aside-minimize .aside-menu .menu-link .menu-icon svg,
-body.aside-minimize .aside-menu .menu-link .menu-icon i,
-body.gz-aside-collapsed .aside-menu .menu-link .menu-icon svg,
-body.gz-aside-collapsed .aside-menu .menu-link .menu-icon i,
-body[data-kt-aside-minimize="on"] .aside-menu .menu-link .menu-icon svg,
-body[data-kt-aside-minimize="on"] .aside-menu .menu-link .menu-icon i {
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside .menu-icon svg,
+body.aside-minimize #kt_aside .menu-icon i,
+body.aside-minimize #kt_aside .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside .menu-icon svg,
+body.gz-aside-collapsed #kt_aside .menu-icon i,
+body.gz-aside-collapsed #kt_aside .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu_wrapper .menu-icon svg,
+body.aside-minimize #kt_aside_menu_wrapper .menu-icon i,
+body.aside-minimize #kt_aside_menu_wrapper .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu .menu-icon svg,
+body.aside-minimize #kt_aside_menu .menu-icon i,
+body.aside-minimize #kt_aside_menu .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-icon .svg-inline--fa,
+body.aside-minimize [id="#kt_aside_menu"] .menu-icon svg,
+body.aside-minimize [id="#kt_aside_menu"] .menu-icon i,
+body.aside-minimize [id="#kt_aside_menu"] .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-icon svg,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-icon i,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-icon svg,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-icon i,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-icon .svg-inline--fa {
 	margin: 0 auto !important;
 	margin-right: 0 !important;
 	margin-left: 0 !important;
+	margin-top: 0 !important;
+	margin-bottom: 0 !important;
+	padding: 0 !important;
 	display: block !important;
+	font-size: 18px !important;
+	width: 18px !important;
+	height: 18px !important;
+	max-width: 18px !important;
+	max-height: 18px !important;
+	line-height: 1 !important;
+	text-align: center !important;
+	vertical-align: middle !important;
+	color: #64748B !important;
+	fill: #64748B !important;
+	transition: color 0.18s ease, fill 0.18s ease !important;
+}
+
+/* Inactive Link Hover State in Collapsed Rail */
+body.aside-minimize .aside .menu-item .menu-link:hover:not(.active),
+body.gz-aside-collapsed .aside .menu-item .menu-link:hover:not(.active),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link:hover:not(.active),
+body.aside-minimize #kt_aside .menu-item .menu-link:hover:not(.active),
+body.gz-aside-collapsed #kt_aside .menu-item .menu-link:hover:not(.active),
+body[data-kt-aside-minimize="on"] #kt_aside .menu-item .menu-link:hover:not(.active),
+body.aside-minimize #kt_aside_menu_wrapper .menu-link:hover:not(.active),
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link:hover:not(.active),
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link:hover:not(.active),
+body.aside-minimize #kt_aside_menu .menu-link:hover:not(.active),
+body.gz-aside-collapsed #kt_aside_menu .menu-link:hover:not(.active),
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link:hover:not(.active),
+body.aside-minimize [id="#kt_aside_menu"] .menu-link:hover:not(.active),
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-link:hover:not(.active),
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link:hover:not(.active) {
+	background-color: #EAF0FA !important;
+	border-radius: 12px !important;
+}
+
+body.aside-minimize .aside .menu-item .menu-link:hover:not(.active) .menu-icon svg,
+body.aside-minimize .aside .menu-item .menu-link:hover:not(.active) .menu-icon i,
+body.aside-minimize .aside .menu-item .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed .aside .menu-item .menu-link:hover:not(.active) .menu-icon svg,
+body.gz-aside-collapsed .aside .menu-item .menu-link:hover:not(.active) .menu-icon i,
+body.gz-aside-collapsed .aside .menu-item .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link:hover:not(.active) .menu-icon svg,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link:hover:not(.active) .menu-icon i,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon svg,
+body.aside-minimize #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon i,
+body.aside-minimize #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu .menu-link:hover:not(.active) .menu-icon svg,
+body.aside-minimize #kt_aside_menu .menu-link:hover:not(.active) .menu-icon i,
+body.aside-minimize #kt_aside_menu .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu .menu-link:hover:not(.active) .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu .menu-link:hover:not(.active) .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link:hover:not(.active) .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link:hover:not(.active) .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body.aside-minimize [id="#kt_aside_menu"] .menu-link:hover:not(.active) .menu-icon svg,
+body.aside-minimize [id="#kt_aside_menu"] .menu-link:hover:not(.active) .menu-icon i,
+body.aside-minimize [id="#kt_aside_menu"] .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-link:hover:not(.active) .menu-icon svg,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-link:hover:not(.active) .menu-icon i,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-link:hover:not(.active) .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link:hover:not(.active) .menu-icon svg,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link:hover:not(.active) .menu-icon i,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link:hover:not(.active) .menu-icon .svg-inline--fa {
+	color: #172B4D !important;
+	fill: #172B4D !important;
+}
+
+/* Active Link & Active Parent State in Collapsed Rail */
+body.aside-minimize .aside .menu-item .menu-link.active,
+body.gz-aside-collapsed .aside .menu-item .menu-link.active,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link.active,
+body.aside-minimize #kt_aside .menu-item .menu-link.active,
+body.gz-aside-collapsed #kt_aside .menu-item .menu-link.active,
+body[data-kt-aside-minimize="on"] #kt_aside .menu-item .menu-link.active,
+body.aside-minimize #kt_aside_menu_wrapper .menu-link.active,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link.active,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link.active,
+body.aside-minimize #kt_aside_menu .menu-link.active,
+body.gz-aside-collapsed #kt_aside_menu .menu-link.active,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link.active,
+body.aside-minimize [id="#kt_aside_menu"] .menu-link.active,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-link.active,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link.active,
+body.aside-minimize .aside .menu-item > .menu-link.without-sub.active,
+body.gz-aside-collapsed .aside .menu-item > .menu-link.without-sub.active,
+body[data-kt-aside-minimize="on"] .aside .menu-item > .menu-link.without-sub.active,
+body.aside-minimize #kt_aside_menu .menu-item > .menu-link.without-sub.active,
+body.gz-aside-collapsed #kt_aside_menu .menu-item > .menu-link.without-sub.active,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item > .menu-link.without-sub.active,
+body.aside-minimize .aside .menu-item.here > .menu-link,
+body.gz-aside-collapsed .aside .menu-item.here > .menu-link,
+body[data-kt-aside-minimize="on"] .aside .menu-item.here > .menu-link,
+body.aside-minimize #kt_aside .menu-item.here > .menu-link,
+body.gz-aside-collapsed #kt_aside .menu-item.here > .menu-link,
+body[data-kt-aside-minimize="on"] #kt_aside .menu-item.here > .menu-link,
+body.aside-minimize #kt_aside_menu_wrapper .menu-item.here > .menu-link,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-item.here > .menu-link,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-item.here > .menu-link,
+body.aside-minimize #kt_aside_menu .menu-item.here > .menu-link,
+body.gz-aside-collapsed #kt_aside_menu .menu-item.here > .menu-link,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item.here > .menu-link,
+body.aside-minimize [id="#kt_aside_menu"] .menu-item.here > .menu-link,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-item.here > .menu-link,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.here > .menu-link,
+body.aside-minimize .aside .menu-item.show > .menu-link,
+body.gz-aside-collapsed .aside .menu-item.show > .menu-link,
+body[data-kt-aside-minimize="on"] .aside .menu-item.show > .menu-link,
+body.aside-minimize #kt_aside .menu-item.show > .menu-link,
+body.gz-aside-collapsed #kt_aside .menu-item.show > .menu-link,
+body[data-kt-aside-minimize="on"] #kt_aside .menu-item.show > .menu-link,
+body.aside-minimize #kt_aside_menu_wrapper .menu-item.show > .menu-link,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-item.show > .menu-link,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-item.show > .menu-link,
+body.aside-minimize #kt_aside_menu .menu-item.show > .menu-link,
+body.gz-aside-collapsed #kt_aside_menu .menu-item.show > .menu-link,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item.show > .menu-link,
+body.aside-minimize [id="#kt_aside_menu"] .menu-item.show > .menu-link,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-item.show > .menu-link,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.show > .menu-link {
+	background-color: #172B4D !important;
+	border-radius: 12px !important;
+	color: #FFFFFF !important;
+}
+
+body.aside-minimize .aside .menu-item .menu-link.active .menu-icon svg,
+body.aside-minimize .aside .menu-item .menu-link.active .menu-icon i,
+body.aside-minimize .aside .menu-item .menu-link.active .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed .aside .menu-item .menu-link.active .menu-icon svg,
+body.gz-aside-collapsed .aside .menu-item .menu-link.active .menu-icon i,
+body.gz-aside-collapsed .aside .menu-item .menu-link.active .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link.active .menu-icon svg,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link.active .menu-icon i,
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link.active .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu_wrapper .menu-link.active .menu-icon svg,
+body.aside-minimize #kt_aside_menu_wrapper .menu-link.active .menu-icon i,
+body.aside-minimize #kt_aside_menu_wrapper .menu-link.active .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link.active .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link.active .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link.active .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link.active .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link.active .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link.active .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu .menu-link.active .menu-icon svg,
+body.aside-minimize #kt_aside_menu .menu-link.active .menu-icon i,
+body.aside-minimize #kt_aside_menu .menu-link.active .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu .menu-link.active .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu .menu-link.active .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu .menu-link.active .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link.active .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link.active .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link.active .menu-icon .svg-inline--fa,
+body.aside-minimize [id="#kt_aside_menu"] .menu-link.active .menu-icon svg,
+body.aside-minimize [id="#kt_aside_menu"] .menu-link.active .menu-icon i,
+body.aside-minimize [id="#kt_aside_menu"] .menu-link.active .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-link.active .menu-icon svg,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-link.active .menu-icon i,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-link.active .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link.active .menu-icon svg,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link.active .menu-icon i,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link.active .menu-icon .svg-inline--fa,
+body.aside-minimize .aside .menu-item.here > .menu-link .menu-icon svg,
+body.aside-minimize .aside .menu-item.here > .menu-link .menu-icon i,
+body.aside-minimize .aside .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed .aside .menu-item.here > .menu-link .menu-icon svg,
+body.gz-aside-collapsed .aside .menu-item.here > .menu-link .menu-icon i,
+body.gz-aside-collapsed .aside .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] .aside .menu-item.here > .menu-link .menu-icon svg,
+body[data-kt-aside-minimize="on"] .aside .menu-item.here > .menu-link .menu-icon i,
+body[data-kt-aside-minimize="on"] .aside .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu_wrapper .menu-item.here > .menu-link .menu-icon svg,
+body.aside-minimize #kt_aside_menu_wrapper .menu-item.here > .menu-link .menu-icon i,
+body.aside-minimize #kt_aside_menu_wrapper .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-item.here > .menu-link .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-item.here > .menu-link .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-item.here > .menu-link .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-item.here > .menu-link .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu .menu-item.here > .menu-link .menu-icon svg,
+body.aside-minimize #kt_aside_menu .menu-item.here > .menu-link .menu-icon i,
+body.aside-minimize #kt_aside_menu .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu .menu-item.here > .menu-link .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu .menu-item.here > .menu-link .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item.here > .menu-link .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item.here > .menu-link .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body.aside-minimize [id="#kt_aside_menu"] .menu-item.here > .menu-link .menu-icon svg,
+body.aside-minimize [id="#kt_aside_menu"] .menu-item.here > .menu-link .menu-icon i,
+body.aside-minimize [id="#kt_aside_menu"] .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-item.here > .menu-link .menu-icon svg,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-item.here > .menu-link .menu-icon i,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.here > .menu-link .menu-icon svg,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.here > .menu-link .menu-icon i,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+body.aside-minimize .aside .menu-item.show > .menu-link .menu-icon svg,
+body.aside-minimize .aside .menu-item.show > .menu-link .menu-icon i,
+body.aside-minimize .aside .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed .aside .menu-item.show > .menu-link .menu-icon svg,
+body.gz-aside-collapsed .aside .menu-item.show > .menu-link .menu-icon i,
+body.gz-aside-collapsed .aside .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] .aside .menu-item.show > .menu-link .menu-icon svg,
+body[data-kt-aside-minimize="on"] .aside .menu-item.show > .menu-link .menu-icon i,
+body[data-kt-aside-minimize="on"] .aside .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu_wrapper .menu-item.show > .menu-link .menu-icon svg,
+body.aside-minimize #kt_aside_menu_wrapper .menu-item.show > .menu-link .menu-icon i,
+body.aside-minimize #kt_aside_menu_wrapper .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-item.show > .menu-link .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-item.show > .menu-link .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-item.show > .menu-link .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-item.show > .menu-link .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body.aside-minimize #kt_aside_menu .menu-item.show > .menu-link .menu-icon svg,
+body.aside-minimize #kt_aside_menu .menu-item.show > .menu-link .menu-icon i,
+body.aside-minimize #kt_aside_menu .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed #kt_aside_menu .menu-item.show > .menu-link .menu-icon svg,
+body.gz-aside-collapsed #kt_aside_menu .menu-item.show > .menu-link .menu-icon i,
+body.gz-aside-collapsed #kt_aside_menu .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item.show > .menu-link .menu-icon svg,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item.show > .menu-link .menu-icon i,
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body.aside-minimize [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon svg,
+body.aside-minimize [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon i,
+body.aside-minimize [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon svg,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon i,
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon .svg-inline--fa,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon svg,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon i,
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon .svg-inline--fa {
+	color: #FFFFFF !important;
+	fill: #FFFFFF !important;
 }
 
 /* ==========================================================================

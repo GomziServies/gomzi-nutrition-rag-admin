@@ -1,9 +1,9 @@
 import {
 	faCheck,
 	faCompass,
+	faEdit,
 	faEye,
 	faPaperPlane,
-	faPencil,
 	faPlus,
 	faQrcode,
 	faStar,
@@ -13,6 +13,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { CSSProperties, FC } from 'react'
 import { Link } from 'react-router-dom'
+import { PlusIcon } from './animated-icons'
 
 type ActionType =
 	| 'add'
@@ -57,31 +58,51 @@ const TableButton: FC<Props> = ({
 		if (hasText) {
 			switch (action) {
 				case 'add':
-					return 'btn-primary gz-table-text-btn'
+					return 'btn btn-primary gz-table-text-btn'
 				case 'edit':
-					return 'btn-light-info gz-table-text-btn'
+					return 'btn btn-light-warning gz-table-text-btn'
 				case 'remove':
-					return 'btn-light-danger gz-table-text-btn'
+					return 'btn btn-light-danger gz-table-text-btn'
 				case 'view':
-					return 'btn-light-primary gz-table-text-btn'
+					return 'btn btn-light-primary gz-table-text-btn'
 				case 'assign':
-					return 'btn-light-warning gz-table-text-btn'
+					return 'btn btn-light-warning gz-table-text-btn'
 				case 'approve':
-					return 'btn-light-success gz-table-text-btn'
+					return 'btn btn-light-success gz-table-text-btn'
 				case 'send':
-					return 'btn-light-success gz-table-text-btn'
+					return 'btn btn-light-success gz-table-text-btn'
 				case 'qr':
-					return 'btn-light-dark gz-table-text-btn'
+					return 'btn btn-light-dark gz-table-text-btn'
 				case 'star':
-					return 'btn-light-warning gz-table-text-btn'
+					return 'btn btn-light-warning gz-table-text-btn'
 				case 'explore':
-					return 'btn-light-info gz-table-text-btn'
+					return 'btn btn-light-info gz-table-text-btn'
 				default:
-					return 'btn-light-primary gz-table-text-btn'
+					return 'btn btn-light-primary gz-table-text-btn'
 			}
 		}
 
-		return `gz-table-action-btn is-${action}`
+		switch (action) {
+			case 'edit':
+				return 'btn btn-icon btn-light-warning btn-sm gz-table-action-btn is-edit'
+			case 'remove':
+				return 'btn btn-icon btn-light-danger btn-sm gz-table-action-btn is-remove'
+			case 'view':
+				return 'btn btn-icon btn-light-primary btn-sm gz-table-action-btn is-view'
+			case 'approve':
+				return 'btn btn-icon btn-light-success btn-sm gz-table-action-btn is-approve'
+			case 'send':
+				return 'btn btn-icon btn-light-success btn-sm gz-table-action-btn is-send'
+			case 'assign':
+			case 'star':
+				return 'btn btn-icon btn-light-warning btn-sm gz-table-action-btn is-warning'
+			case 'qr':
+				return 'btn btn-icon btn-light-dark btn-sm gz-table-action-btn is-qr'
+			case 'explore':
+				return 'btn btn-icon btn-light-info btn-sm gz-table-action-btn is-explore'
+			default:
+				return 'btn btn-icon btn-light-primary btn-sm gz-table-action-btn is-default'
+		}
 	}
 
 	const getIcon = (action: string) => {
@@ -89,7 +110,7 @@ const TableButton: FC<Props> = ({
 			case 'add':
 				return faPlus
 			case 'edit':
-				return faPencil
+				return faEdit
 			case 'remove':
 				return faTrash
 			case 'view':
@@ -149,18 +170,32 @@ const TableButton: FC<Props> = ({
 
 	const handleClick = onClick ? (e: React.MouseEvent<HTMLButtonElement>) => onClick(e) : undefined
 
+	const renderButtonIcon = () => {
+		if (!showIcon) return null
+		if (action === 'add') {
+			return (
+				<PlusIcon
+					size={hasText ? 13 : 14}
+					strokeWidth={3.6}
+					style={iconStyle}
+				/>
+			)
+		}
+		return (
+			<FontAwesomeIcon
+				icon={icon as any}
+				style={{ fontSize: hasText ? '12px' : '13px', ...iconStyle }}
+			/>
+		)
+	}
+
 	return to ? (
 		<Link
 			to={to}
 			className={buttonClass}
 			style={style}
 			title={titleText}>
-			{showIcon && (
-				<FontAwesomeIcon
-					icon={icon as any}
-					style={{ fontSize: hasText ? '12px' : '13px', ...iconStyle }}
-				/>
-			)}
+			{renderButtonIcon()}
 			{text && <span className='fs-7 fw-semibold'>{text}</span>}
 		</Link>
 	) : (
@@ -171,12 +206,7 @@ const TableButton: FC<Props> = ({
 			disabled={disabled}
 			style={style}
 			title={titleText}>
-			{showIcon && (
-				<FontAwesomeIcon
-					icon={icon as any}
-					style={{ fontSize: hasText ? '12px' : '13px', ...iconStyle }}
-				/>
-			)}
+			{renderButtonIcon()}
 			{text && <span className='fs-7 fw-semibold'>{text}</span>}
 		</button>
 	)

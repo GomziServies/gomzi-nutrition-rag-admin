@@ -229,6 +229,7 @@ const AsideMenuItemWithSub: React.FC<Props & WithChildren> = ({
 				<span
 					ref={triggerRef}
 					className={clsx('menu-link', {
+						active: isActive,
 						'gz-floating-trigger-active': isFloatingOpen,
 					})}
 					tabIndex={0}
@@ -250,10 +251,21 @@ const AsideMenuItemWithSub: React.FC<Props & WithChildren> = ({
 					)}
 					{Icon && (
 						<span className='menu-icon'>
-							<FontAwesomeIcon
-								icon={Icon}
-								className='fs-2'
-							/>
+							{React.isValidElement(Icon) ? (
+								Icon
+							) : typeof Icon === 'object' && Icon !== null && 'prefix' in Icon && 'iconName' in Icon ? (
+								<FontAwesomeIcon
+									icon={Icon}
+									className='fs-2'
+								/>
+							) : typeof Icon === 'function' || (typeof Icon === 'object' && Icon !== null && (Icon.$$typeof || Icon.render)) ? (
+								React.createElement(Icon as any)
+							) : (
+								<FontAwesomeIcon
+									icon={Icon}
+									className='fs-2'
+								/>
+							)}
 						</span>
 					)}
 					{fontIcon && <i className={clsx('bi fs-3', fontIcon)}></i>}

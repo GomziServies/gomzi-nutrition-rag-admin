@@ -1,7 +1,18 @@
+import {
+	faArrowLeft,
+	faCalendarAlt,
+	faClock,
+	faEnvelope,
+	faHistory,
+	faPhone,
+	faPlus,
+	faUser,
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useIntl } from 'react-intl'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
@@ -15,6 +26,10 @@ import {
 	GetIVRMembers,
 	InitiateCall,
 } from '../../../Functions/FGGroup/IVRFunctions'
+import '../common-management.css'
+import '../products-theme.css'
+import '../orders-theme.css'
+import './follow-up-report.css'
 
 const FollowUpReportInnerList: React.FC = () => {
 	const intl = useIntl()
@@ -418,20 +433,22 @@ const FollowUpReportInnerList: React.FC = () => {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Follow Up Report</PageTitle>
 
 			<style>{`
 				.data-row {
 					cursor: pointer;
-					border-bottom: 1px solid #f4f4f8;
+					border-bottom: 1px solid #EEF2F7;
+					transition: background 0.15s ease;
 				}
-
+				.data-row:hover {
+					background: #F8FAFD;
+				}
 				.data-row td {
-					padding: 14px 12px;
+					padding: 14px 14px;
 					vertical-align: middle;
 				}
-
 				.sr-badge {
 					display: inline-flex;
 					align-items: center;
@@ -439,89 +456,203 @@ const FollowUpReportInnerList: React.FC = () => {
 					width: 32px;
 					height: 32px;
 					border-radius: 8px;
-					background: #f1f3f9;
-					color: #7e8299;
+					background: #EFF6FF;
+					color: #172B4D;
 					font-weight: 700;
 					font-size: 12px;
 				}
-
 				.text-cell {
 					font-weight: 500;
-					color: #181c32;
+					color: #172B4D;
 					font-size: 13px;
 				}
 				.recording-table thead th {
-					padding-top: 0.75rem !important;
-					padding-bottom: 0.75rem !important;
+					padding-top: 0.85rem !important;
+					padding-bottom: 0.85rem !important;
 					letter-spacing: 0.03rem;
-					font-size: 1.1rem !important;
-					font-weight: 600 !important;
-					color: #A1A5B7 !important;
-				}
-				.recording-table thead tr {
-					border-radius: 0.625rem;
-					overflow: hidden;
-				}
-				.recording-table thead th:first-child {
-					border-top-left-radius: 0.625rem;
-					border-bottom-left-radius: 0.625rem;
-				}
-				.recording-table thead th:last-child {
-					border-top-right-radius: 0.625rem;
-					border-bottom-right-radius: 0.625rem;
+					font-size: 12px !important;
+					font-weight: 700 !important;
+					color: #172B4D !important;
+					background: #F8FAFD !important;
+					border-bottom: 1px solid #DFE7F0 !important;
 				}
 				.recording-table tbody td {
-					padding-top: 1.25rem !important;
-					padding-bottom: 1.25rem !important;
+					padding-top: 1rem !important;
+					padding-bottom: 1rem !important;
+					vertical-align: middle;
 				}
 				.audio-player-custom {
-					height: 32px;
-					width: 350px;
-					border-radius: 30px;
-					background: #f1f3f9;
+					height: 36px;
+					width: 340px;
+					border-radius: 20px;
+					background: #F1F5F9;
 				}
 			`}</style>
 
-			{/* ================= USER INFORMATION CARD ================= */}
+			{/* Breadcrumb */}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<Link to='/rag/follow-up-report-list'>Follow-Up Reports</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>
+					{selectedData?.name ? `${selectedData.name} — Timeline` : 'Lead Timeline & Calls'}
+				</span>
+			</div>
 
-			<div className='card mb-8 shadow-sm border-0'>
-				<div className='card-body p-8'>
-					<div className='d-flex align-items-center mb-6'>
-						<div className='symbol symbol-75px me-5'>
-							<div className='symbol-label bg-light-primary text-primary fw-bold fs-2'>
-								{selectedData?.name?.charAt(0)}
+			{/* Header */}
+			<div className='gz-mgmt-header mb-6'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>
+						{selectedData?.name ? `${selectedData.name} — Call Timeline` : 'Lead History & Call Timeline'}
+					</h1>
+					<p className='gz-mgmt-subtitle'>
+						Track multi-stage interactions, telephone call recordings, IVR logs, and follow-up activities.
+					</p>
+				</div>
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<button
+						type='button'
+						className='gz-mgmt-btn-secondary'
+						onClick={() => navigate('/rag/follow-up-report-list')}>
+						<FontAwesomeIcon icon={faArrowLeft} />
+						<span>Back to Leads</span>
+					</button>
+
+					{selectedData?.phone && selectedData.phone !== 'N/A' && (
+						<button
+							type='button'
+							className='btn text-white d-flex align-items-center gap-2'
+							style={{
+								backgroundColor: '#2563EB',
+								borderRadius: '10px',
+								height: '40px',
+								padding: '0 18px',
+								fontWeight: 600,
+								fontSize: '13.5px',
+								boxShadow: '0 2px 8px rgba(37,99,235,0.2)',
+							}}
+							onClick={() => setShowCallModal(true)}>
+							<FontAwesomeIcon icon={faPhone} />
+							<span>Click to Call</span>
+						</button>
+					)}
+
+					{shouldShowAddButton && (
+						<TableButton
+							action='add'
+							to={
+								selectedData?.parent_id
+									? `/rag/add-follow-up-report?edit=true&id=${
+											selectedData.parent_id
+									  }&mobile=${encodeURIComponent(
+											selectedData?.phone || searchParams.get('mobile') || ''
+									  )}&name=${encodeURIComponent(
+											selectedData?.name || searchParams.get('name') || ''
+									  )}&ad_name=${encodeURIComponent(
+											adNameFromUrl || ''
+									  )}&lead_created_at=${encodeURIComponent(
+											leadCreatedAtFromUrl || ''
+									  )}&platform=${encodeURIComponent(searchParams.get('platform') || '')}`
+									: `/rag/add-follow-up-report?mobile=${encodeURIComponent(
+											selectedData?.phone || searchParams.get('mobile') || ''
+									  )}&email=${encodeURIComponent(
+											selectedData?.email || searchParams.get('email') || ''
+									  )}&name=${encodeURIComponent(
+											selectedData?.name || searchParams.get('name') || ''
+									  )}&city=${encodeURIComponent(
+											selectedData?.city || searchParams.get('city') || ''
+									  )}&ad_name=${encodeURIComponent(
+											adNameFromUrl || ''
+									  )}&lead_created_at=${encodeURIComponent(
+											leadCreatedAtFromUrl || ''
+									  )}&platform=${encodeURIComponent(searchParams.get('platform') || '')}`
+							}
+							text='Add Follow Up'
+							showIcon={false}
+							backgroundDark={true}
+						/>
+					)}
+				</div>
+			</div>
+
+			{/* ================= USER INFORMATION CARD ================= */}
+			<div className='gz-mgmt-card mb-6'>
+				<div className='p-6'>
+					<div className='d-flex align-items-center justify-content-between flex-wrap gap-4 mb-6 pb-5 border-bottom'>
+						<div className='d-flex align-items-center gap-4'>
+							<div
+								style={{
+									width: '56px',
+									height: '56px',
+									borderRadius: '14px',
+									backgroundColor: '#EFF6FF',
+									color: '#2563EB',
+									fontWeight: 700,
+									fontSize: '22px',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									border: '1.5px solid #DBEAFE',
+								}}>
+								{selectedData?.name?.charAt(0) || <FontAwesomeIcon icon={faUser} />}
+							</div>
+
+							<div>
+								<div className='d-flex align-items-center gap-3'>
+									<h2 className='m-0 fw-bold fs-4 text-dark'>{selectedData?.name || 'Customer'}</h2>
+									{selectedData?.gender && (
+										<span className='badge bg-light-success text-success fw-bold px-3 py-1'>
+											{selectedData.gender}
+										</span>
+									)}
+								</div>
+								<div className='text-muted fs-7 mt-1'>
+									ID: <span className='font-monospace text-dark'>{selectedData?.parent_id || 'N/A'}</span>
+								</div>
 							</div>
 						</div>
 
-						<div>
-							<h3 className='fw-bold text-gray-900 mb-1'>{selectedData?.name}</h3>
-							<span className='badge badge-light-success me-2'>{selectedData?.gender}</span>
-						</div>
+						{selectedData?.follow_up_date && selectedData.follow_up_date !== 'N/A' && (
+							<div
+								className='d-flex align-items-center gap-2 px-4 py-2 rounded-3'
+								style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+								<FontAwesomeIcon icon={faCalendarAlt} className='text-primary' />
+								<span className='fs-7 fw-bold text-dark'>Next Follow-up:</span>
+								<span className='fs-7 fw-bolder text-primary'>{selectedData.follow_up_date}</span>
+							</div>
+						)}
 					</div>
 
-					<div className='row g-6'>
-						<div className='col-md-3'>
-							<div className='bg-light rounded p-4'>
-								<div className='text-muted fs-7'>Email Address</div>
-								<div className='fw-bold fs-6'>
+					<div className='row g-4'>
+						<div className='col-md-3 col-sm-6'>
+							<div
+								className='p-4 rounded-3 h-100'
+								style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+								<div className='text-muted fs-8 text-uppercase fw-bolder mb-1'>Email Address</div>
+								<div className='fw-bold fs-6 text-dark text-truncate'>
 									{selectedData?.email && selectedData.email !== 'N/A' ? selectedData.email : '-'}
 								</div>
 							</div>
 						</div>
 
-						<div className='col-md-3'>
-							<div className='bg-light rounded p-4'>
-								<div className='text-muted fs-7'>Phone Number</div>
-								<div className='fw-bold fs-6'>
+						<div className='col-md-3 col-sm-6'>
+							<div
+								className='p-4 rounded-3 h-100'
+								style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+								<div className='text-muted fs-8 text-uppercase fw-bolder mb-1'>Phone Number</div>
+								<div className='fw-bold fs-6 text-dark'>
 									{selectedData?.phone && selectedData.phone !== 'N/A' ? selectedData.phone : '-'}
 								</div>
 							</div>
 						</div>
 
-						<div className='col-md-3'>
-							<div className='bg-light rounded p-4'>
-								<div className='text-muted fs-7'>Last Call</div>
-								<div className='fw-bold fs-6'>
+						<div className='col-md-3 col-sm-6'>
+							<div
+								className='p-4 rounded-3 h-100'
+								style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+								<div className='text-muted fs-8 text-uppercase fw-bolder mb-1'>Last Call Date</div>
+								<div className='fw-bold fs-6 text-dark'>
 									{selectedData?.call_date && selectedData.call_date !== 'N/A'
 										? selectedData.call_date
 										: '-'}
@@ -529,10 +660,12 @@ const FollowUpReportInnerList: React.FC = () => {
 							</div>
 						</div>
 
-						<div className='col-md-3'>
-							<div className='bg-light rounded p-4'>
-								<div className='text-muted fs-7'>Campaign</div>
-								<div className='fw-bold fs-6'>
+						<div className='col-md-3 col-sm-6'>
+							<div
+								className='p-4 rounded-3 h-100'
+								style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+								<div className='text-muted fs-8 text-uppercase fw-bolder mb-1'>Campaign / Ad Name</div>
+								<div className='fw-bold fs-6 text-dark text-truncate'>
 									{selectedData?.ad_name && selectedData.ad_name !== 'N/A'
 										? selectedData.ad_name
 										: '-'}
@@ -540,9 +673,11 @@ const FollowUpReportInnerList: React.FC = () => {
 							</div>
 						</div>
 
-						<div className='col-md-3'>
-							<div className='bg-light rounded p-4'>
-								<div className='text-muted fs-7'>Next Follow-up Date</div>
+						<div className='col-md-4 col-sm-6'>
+							<div
+								className='p-4 rounded-3 h-100'
+								style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+								<div className='text-muted fs-8 text-uppercase fw-bolder mb-1'>Next Follow-up</div>
 								<div className='fw-bold fs-6 text-primary'>
 									{selectedData?.follow_up_date && selectedData.follow_up_date !== 'N/A'
 										? selectedData.follow_up_date
@@ -551,10 +686,12 @@ const FollowUpReportInnerList: React.FC = () => {
 							</div>
 						</div>
 
-						<div className='col-md-3'>
-							<div className='bg-light rounded p-4'>
-								<div className='text-muted fs-7'>Platform</div>
-								<div className='fw-bold fs-6'>
+						<div className='col-md-4 col-sm-6'>
+							<div
+								className='p-4 rounded-3 h-100'
+								style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+								<div className='text-muted fs-8 text-uppercase fw-bolder mb-1'>Lead Platform</div>
+								<div className='fw-bold fs-6 text-dark'>
 									{selectedData?.platform === 'ig'
 										? 'Instagram'
 										: selectedData?.platform === 'fb'
@@ -568,10 +705,12 @@ const FollowUpReportInnerList: React.FC = () => {
 							</div>
 						</div>
 
-						<div className='col-md-3'>
-							<div className='bg-light rounded p-4'>
-								<div className='text-muted fs-7'>Lead Created At</div>
-								<div className='fw-bold fs-6'>
+						<div className='col-md-4 col-sm-6'>
+							<div
+								className='p-4 rounded-3 h-100'
+								style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+								<div className='text-muted fs-8 text-uppercase fw-bolder mb-1'>Lead Created At</div>
+								<div className='fw-bold fs-6 text-dark'>
 									{selectedData?.lead_created_at && selectedData.lead_created_at !== 'N/A'
 										? selectedData.lead_created_at
 										: '-'}
@@ -581,33 +720,52 @@ const FollowUpReportInnerList: React.FC = () => {
 					</div>
 
 					{/* IVR INFO SECTION */}
-					<div className='separator separator-dashed my-6'></div>
-					<div className='d-flex flex-wrap align-items-center gap-10'>
-						<div className='d-flex align-items-center'>
-							<div className='symbol symbol-35px me-3'>
-								<div className='symbol-label bg-light-danger text-danger'>
-									<i className='bi bi-telephone-outbound fs-4'></i>
-								</div>
+					<div
+						className='mt-6 pt-5 border-top d-flex flex-wrap align-items-center justify-content-between gap-6 p-4 rounded-3'
+						style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+						<div className='d-flex align-items-center gap-3'>
+							<div
+								style={{
+									width: '38px',
+									height: '38px',
+									borderRadius: '10px',
+									backgroundColor: '#FEE2E2',
+									color: '#DC2626',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									fontSize: '16px',
+								}}>
+								<i className='bi bi-telephone-outbound'></i>
 							</div>
-							<div className='d-flex flex-column'>
-								<span className='text-muted fs-8 fw-bold text-uppercase'>GLS DID</span>
-								<span className='fw-bold fs-7 text-gray-800'>08069220266</span>
+							<div>
+								<div className='text-muted fs-8 fw-bold text-uppercase'>GLS DID Telephony</div>
+								<div className='fw-bold fs-6 text-dark font-monospace'>08069220266</div>
 							</div>
 						</div>
 
-						<div className='d-flex align-items-center'>
-							<div className='symbol symbol-35px me-3'>
-								<div className='symbol-label bg-light-primary text-primary'>
-									<i className='bi bi-people fs-4'></i>
-								</div>
+						<div className='d-flex align-items-center gap-3'>
+							<div
+								style={{
+									width: '38px',
+									height: '38px',
+									borderRadius: '10px',
+									backgroundColor: '#EFF6FF',
+									color: '#2563EB',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									fontSize: '16px',
+								}}>
+								<i className='bi bi-people'></i>
 							</div>
-							<div className='d-flex flex-column'>
-								<span className='text-muted fs-8 fw-bold text-uppercase'>Members Information</span>
+							<div>
+								<div className='text-muted fs-8 fw-bold text-uppercase'>Assigned Members</div>
 								<div className='d-flex flex-wrap gap-2 mt-1'>
-									<span className='badge badge-light-primary fw-bold fs-8 px-3 py-2'>
+									<span className='badge bg-light-primary text-primary fw-bold fs-8 px-3 py-2'>
 										Siddharth GLS: 08780127993
 									</span>
-									<span className='badge badge-light-primary fw-bold fs-8 px-3 py-2'>
+									<span className='badge bg-light-primary text-primary fw-bold fs-8 px-3 py-2'>
 										Sahid GLS: 09924291998
 									</span>
 								</div>
@@ -618,19 +776,10 @@ const FollowUpReportInnerList: React.FC = () => {
 			</div>
 
 			{/* ================= MAIN TABLE CARD ================= */}
-
-			<KTCard>
+			<div className='gz-mgmt-card mb-6'>
 				{/* Filters Section */}
-				<div className='card-header border-0 pt-6'>
-					<div className='d-flex flex-wrap align-items-center gap-4'>
-						<button
-							className='btn btn-sm btn-icon btn-light me-1'
-							title='Go Back'
-							onClick={() => navigate('/rag/follow-up-report-list')}
-							style={{ borderRadius: '10px', width: '36px', height: '36px' }}>
-							<i className='bi bi-arrow-left fs-4'></i>
-						</button>
-
+				<div className='gz-mgmt-toolbar'>
+					<div className='d-flex flex-wrap align-items-center gap-3'>
 						<SearchFilter
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
@@ -647,13 +796,14 @@ const FollowUpReportInnerList: React.FC = () => {
 					{(shouldShowAddButton || (selectedData?.phone && selectedData.phone !== 'N/A')) && (
 						<div className='d-flex align-items-center gap-2'>
 							{selectedData?.phone && selectedData.phone !== 'N/A' && (
-								<TableButton
-									action='edit'
-									text='Click to Call'
-									showIcon={false}
-									className='btn-sm btn-info'
-									onClick={() => setShowCallModal(true)}
-								/>
+								<button
+									type='button'
+									className='btn btn-sm btn-info text-white fw-bold px-4'
+									style={{ borderRadius: '8px' }}
+									onClick={() => setShowCallModal(true)}>
+									<i className='bi bi-telephone me-1'></i>
+									Click to Call
+								</button>
 							)}
 							{shouldShowAddButton && (
 								<TableButton
@@ -695,7 +845,7 @@ const FollowUpReportInnerList: React.FC = () => {
 				</div>
 
 				{/* Table Section */}
-				<div className='card-body py-4'>
+				<div className='p-6 pt-0'>
 					<div className='table-responsive'>
 						<Table
 							data={jobData}
@@ -723,7 +873,7 @@ const FollowUpReportInnerList: React.FC = () => {
 										</td>
 
 										<td>
-											<span className='text-cell'>{data.telecaller_name || 'N/A'}</span>
+											<span className='text-cell fw-bold'>{data.telecaller_name || 'N/A'}</span>
 										</td>
 
 										<td>
@@ -755,7 +905,7 @@ const FollowUpReportInnerList: React.FC = () => {
 										</td>
 
 										<td>
-											<div className='d-flex align-items-center'>
+											<div className='d-flex align-items-center gap-1'>
 												<TableButton
 													action='view'
 													to={`/rag/view-follow-up-report?id=${data.parent_id}&call_id=${data.call_id}`}
@@ -810,7 +960,7 @@ const FollowUpReportInnerList: React.FC = () => {
 
 					{jobData.length === 0 && !loading && (
 						<div className='text-center py-10'>
-							<b>No records found</b>
+							<span className='text-muted fw-bold'>No records found</span>
 						</div>
 					)}
 
@@ -822,7 +972,7 @@ const FollowUpReportInnerList: React.FC = () => {
 						/>
 					)}
 				</div>
-			</KTCard>
+			</div>
 
 			{/* ===== CALL MODAL ===== */}
 			{showCallModal && (
@@ -831,29 +981,29 @@ const FollowUpReportInnerList: React.FC = () => {
 					tabIndex={-1}
 					style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
 					<div className='modal-dialog modal-dialog-centered'>
-						<div className='modal-content shadow-lg border-0'>
-							<div className='modal-header py-4'>
-								<h4 className='modal-title fw-bold text-gray-900'>Select IVR Member</h4>
+						<div className='modal-content shadow-lg border-0' style={{ borderRadius: '16px' }}>
+							<div className='modal-header py-4 px-6 border-bottom'>
+								<h4 className='modal-title fw-bold text-dark m-0'>Select IVR Member</h4>
 								<button
 									type='button'
 									className='btn-close'
 									onClick={() => setShowCallModal(false)}></button>
 							</div>
-							<div className='modal-body px-8'>
-								<p className='text-gray-600 mb-7 fs-6'>
+							<div className='modal-body px-6 py-5'>
+								<p className='text-muted mb-5 fs-6'>
 									Choose the agent identity to initiate the call to{' '}
-									<strong>{selectedData?.name}</strong>.
+									<strong className='text-dark'>{selectedData?.name}</strong>.
 								</p>
 
 								<div className='fv-row'>
-									<label className='form-label fw-bold fs-6 mb-2'>Calling Member</label>
-									<div className='row g-4'>
+									<label className='form-label fw-bold fs-6 mb-3 text-dark'>Calling Member</label>
+									<div className='row g-3'>
 										{ivrMembers.map((member) => (
 											<div
 												className='col-12'
 												key={member.member_id}>
 												<label
-													className={`d-flex align-items-center p-4 rounded border border-2 cursor-pointer transition-all ${
+													className={`d-flex align-items-center p-4 rounded-3 border cursor-pointer transition-all ${
 														selectedIvrMemberId === member.member_id
 															? 'border-primary bg-light-primary'
 															: 'border-gray-200'
@@ -867,8 +1017,8 @@ const FollowUpReportInnerList: React.FC = () => {
 														onChange={() => setSelectedIvrMemberId(member.member_id)}
 													/>
 													<div className='d-flex flex-column'>
-														<span className='fw-bold text-gray-800 fs-6'>{member.member_name}</span>
-														<span className='text-muted fs-7'>{member.member_num}</span>
+														<span className='fw-bold text-dark fs-6'>{member.member_name}</span>
+														<span className='text-muted fs-7 font-monospace'>{member.member_num}</span>
 													</div>
 												</label>
 											</div>
@@ -876,19 +1026,21 @@ const FollowUpReportInnerList: React.FC = () => {
 									</div>
 								</div>
 							</div>
-							<div className='modal-footer border-0 pt-0 pb-8 px-8 justify-content-center'>
+							<div className='modal-footer border-0 pt-0 pb-6 px-6 justify-content-end gap-2'>
 								<button
 									type='button'
-									className='btn btn-light me-3 px-8'
+									className='btn btn-light px-6'
+									style={{ borderRadius: '10px' }}
 									onClick={() => setShowCallModal(false)}>
 									Cancel
 								</button>
 								<button
 									type='button'
-									className='btn btn-primary px-10'
+									className='btn btn-primary px-8 d-flex align-items-center gap-2'
+									style={{ borderRadius: '10px', backgroundColor: '#172B4D', borderColor: '#172B4D' }}
 									onClick={handleInitiateCall}>
-									<i className='bi bi-telephone fs-2 me-2'></i>
-									Initiate Call
+									<i className='bi bi-telephone fs-5'></i>
+									<span>Initiate Call</span>
 								</button>
 							</div>
 						</div>
@@ -897,35 +1049,35 @@ const FollowUpReportInnerList: React.FC = () => {
 			)}
 
 			{/* ===== CALL RECORDINGS TABLE CARD ===== */}
-			<div className='card mb-8 shadow-sm border-0 mt-8'>
-				<div className='card-header border-0 pt-6'>
-					<h3 className='card-title align-items-start flex-column'>
-						<span className='card-label fw-bold text-gray-900'>Call Recordings</span>
-						<span className='text-muted mt-1 fw-semibold fs-7'>Recordings for this lead</span>
-					</h3>
+			<div className='gz-mgmt-card mb-6'>
+				<div className='p-6 border-bottom d-flex align-items-center justify-content-between'>
+					<div>
+						<h3 className='m-0 fw-bold fs-5 text-dark'>IVR Call Recordings</h3>
+						<p className='m-0 text-muted fs-7 mt-1'>Automated recordings logged through telephony provider</p>
+					</div>
 				</div>
-				<div className='card-body p-0'>
+				<div className='p-0'>
 					<div className='table-responsive'>
-						<table className='table table-flush align-middle table-row-bordered table-row-gray-200 gs-9 gy-6 mb-0 recording-table'>
+						<table className='table align-middle gs-6 gy-4 mb-0 recording-table'>
 							<thead>
-								<tr className='bg-light fw-bold text-muted fs-2'>
-									<th className='min-w-50px ps-9'>No.</th>
+								<tr>
+									<th className='min-w-50px ps-6'>No.</th>
 									<th className='min-w-50px'>Dir.</th>
 									<th className='min-w-150px'>Date & Time</th>
 									<th className='min-w-125px'>Agent Name</th>
 									<th className='min-w-125px'>Status</th>
 									<th className='min-w-100px'>Duration</th>
-									<th className='min-w-250px text-center pe-9'>Recording Player</th>
+									<th className='min-w-250px text-center pe-6'>Recording Player</th>
 								</tr>
 							</thead>
 							<tbody>
 								{logsLoading ? (
 									<tr>
 										<td
-											colSpan={5}
-											className='text-center py-20'>
+											colSpan={7}
+											className='text-center py-15'>
 											<div
-												className='spinner-border text-primary w-40px h-40px'
+												className='spinner-border text-primary w-35px h-35px'
 												role='status'>
 												<span className='visually-hidden'>Loading...</span>
 											</div>
@@ -937,9 +1089,9 @@ const FollowUpReportInnerList: React.FC = () => {
 										.map((log: any, idx: number) => (
 											<tr
 												key={log._id}
-												className='hover-elevate-up'>
-												<td className='ps-9'>
-													<span className='fw-bold text-gray-600'>
+												className='hover-elevate-up border-bottom'>
+												<td className='ps-6'>
+													<span className='fw-bold text-muted'>
 														{(logsPage - 1) * logsPerPage + idx + 1}
 													</span>
 												</td>
@@ -960,7 +1112,7 @@ const FollowUpReportInnerList: React.FC = () => {
 												</td>
 												<td>
 													<div className='d-flex flex-column'>
-														<span className='text-gray-900 fw-bold fs-6'>
+														<span className='text-dark fw-bold fs-6'>
 															{new Date(log.createdAt).toLocaleDateString('en-IN', {
 																day: '2-digit',
 																month: 'short',
@@ -978,7 +1130,7 @@ const FollowUpReportInnerList: React.FC = () => {
 													</div>
 												</td>
 												<td>
-													<span className='text-gray-700 fw-bold fs-6'>
+													<span className='text-dark fw-bold fs-6'>
 														{log.raw_payload?.receiver_name || '-'}
 													</span>
 												</td>
@@ -986,18 +1138,18 @@ const FollowUpReportInnerList: React.FC = () => {
 													<span
 														className={`badge badge-light-${
 															log.status === 'ANSWER' ? 'success' : 'danger'
-														} rounded-pill px-4 py-3 fw-bold`}>
+														} rounded-pill px-3 py-2 fw-bold`}>
 														{log.status === 'ANSWER' ? 'Answered' : log.status}
 													</span>
 												</td>
 												<td>
-													<span className='text-gray-700 fw-bold fs-6'>
+													<span className='text-dark fw-bold fs-6 font-monospace'>
 														{log.raw_payload?.CallDuration
 															? `${log.raw_payload.CallDuration}s`
 															: 'N/A'}
 													</span>
 												</td>
-												<td className='text-center pe-9'>
+												<td className='text-center pe-6'>
 													<div className='d-inline-block p-1 bg-light rounded-pill'>
 														<audio
 															controls
@@ -1024,16 +1176,26 @@ const FollowUpReportInnerList: React.FC = () => {
 									<tr>
 										<td
 											colSpan={7}
-											className='text-center py-20'>
+											className='text-center py-15'>
 											<div className='d-flex flex-column align-items-center'>
-												<div className='symbol symbol-60px mb-5'>
-													<div className='symbol-label bg-light-warning'>
-														<i className='bi bi-telephone-x fs-1 text-warning'></i>
-													</div>
+												<div
+													style={{
+														width: '50px',
+														height: '50px',
+														borderRadius: '50%',
+														backgroundColor: '#FEF3C7',
+														color: '#D97706',
+														display: 'flex',
+														alignItems: 'center',
+														justifyContent: 'center',
+														fontSize: '22px',
+														marginBottom: '12px',
+													}}>
+													<i className='bi bi-telephone-x'></i>
 												</div>
-												<span className='text-gray-600 fw-bold fs-5'>No recordings found</span>
-												<span className='text-muted fw-semibold fs-7'>
-													Calls with this number haven't been recorded yet
+												<span className='text-dark fw-bold fs-6'>No recordings found</span>
+												<span className='text-muted fs-7 mt-1'>
+													Calls with this number have not been recorded yet
 												</span>
 											</div>
 										</td>
@@ -1044,7 +1206,7 @@ const FollowUpReportInnerList: React.FC = () => {
 					</div>
 
 					{callLogs.length > logsPerPage && (
-						<div className='d-flex justify-content-end px-9 py-6'>
+						<div className='d-flex justify-content-end px-6 py-4 border-top'>
 							<UsersListPagination
 								totalPages={Math.ceil(callLogs.length / logsPerPage)}
 								currentPage={logsPage}
@@ -1056,22 +1218,22 @@ const FollowUpReportInnerList: React.FC = () => {
 			</div>
 
 			{/* ===== MANUAL CALL RECORDINGS TABLE CARD ===== */}
-			<div className='card mb-8 shadow-sm border-0 mt-8'>
-				<div className='card-header border-0 pt-6'>
-					<h3 className='card-title align-items-start flex-column'>
-						<span className='card-label fw-bold text-gray-900'>Manual Call Recordings</span>
-						<span className='text-muted mt-1 fw-semibold fs-7'>Manually uploaded recordings</span>
-					</h3>
+			<div className='gz-mgmt-card mb-6'>
+				<div className='p-6 border-bottom d-flex align-items-center justify-content-between'>
+					<div>
+						<h3 className='m-0 fw-bold fs-5 text-dark'>Manual Call Recordings</h3>
+						<p className='m-0 text-muted fs-7 mt-1'>Audio files manually attached by agents during pitch updates</p>
+					</div>
 				</div>
-				<div className='card-body p-0'>
+				<div className='p-0'>
 					<div className='table-responsive'>
-						<table className='table table-flush align-middle table-row-bordered table-row-gray-200 gs-9 gy-6 mb-0 recording-table'>
+						<table className='table align-middle gs-6 gy-4 mb-0 recording-table'>
 							<thead>
-								<tr className='bg-light fw-bold text-muted fs-2'>
-									<th className='min-w-50px ps-9'>No.</th>
+								<tr>
+									<th className='min-w-50px ps-6'>No.</th>
 									<th className='min-w-150px'>Date & Time</th>
 									<th className='min-w-125px'>Sales Person</th>
-									<th className='min-w-250px text-center pe-9'>Recording Player</th>
+									<th className='min-w-250px text-center pe-6'>Recording Player</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -1079,13 +1241,13 @@ const FollowUpReportInnerList: React.FC = () => {
 									manualRecordings.map((call: any, idx: number) => (
 										<tr
 											key={idx}
-											className='hover-elevate-up'>
-											<td className='ps-9'>
-												<span className='fw-bold text-gray-600'>{idx + 1}</span>
+											className='hover-elevate-up border-bottom'>
+											<td className='ps-6'>
+												<span className='fw-bold text-muted'>{idx + 1}</span>
 											</td>
 											<td>
 												<div className='d-flex flex-column'>
-													<span className='text-gray-900 fw-bold fs-6'>
+													<span className='text-dark fw-bold fs-6'>
 														{new Date(call.callDate).toLocaleDateString('en-IN', {
 															day: '2-digit',
 															month: 'short',
@@ -1103,11 +1265,11 @@ const FollowUpReportInnerList: React.FC = () => {
 												</div>
 											</td>
 											<td>
-												<span className='text-gray-700 fw-bold fs-6'>
+												<span className='text-dark fw-bold fs-6'>
 													{call.pitchReport?.telecaller_name || '-'}
 												</span>
 											</td>
-											<td className='text-center pe-9'>
+											<td className='text-center pe-6'>
 												<div className='d-inline-block p-1 bg-light rounded-pill'>
 													<audio
 														controls
@@ -1130,9 +1292,9 @@ const FollowUpReportInnerList: React.FC = () => {
 									<tr>
 										<td
 											colSpan={4}
-											className='text-center py-10'>
+											className='text-center py-15'>
 											<div className='d-flex flex-column align-items-center'>
-												<i className='bi bi-mic-mute fs-2x text-muted mb-3'></i>
+												<i className='bi bi-mic-mute fs-2x text-muted mb-2'></i>
 												<span className='text-muted fw-bold fs-6'>No manual recordings found</span>
 											</div>
 										</td>
@@ -1143,7 +1305,7 @@ const FollowUpReportInnerList: React.FC = () => {
 					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 

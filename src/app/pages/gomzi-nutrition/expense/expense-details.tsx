@@ -2,11 +2,10 @@ import { faDownload, faHandHoldingDollar, faPlusCircle } from '@fortawesome/free
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 import * as XLSX from 'xlsx'
-import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import { StatisticsWidget2 } from '../../../../_metronic/partials/widgets'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
@@ -15,6 +14,7 @@ import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetExpenseInsights } from '../../../Functions/FGGroup'
 import { getExpense } from '../../../Functions/FGGroup/Expense'
+import '../common-management.css'
 
 const ExpenseListDetailsNutrition: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -236,114 +236,92 @@ const ExpenseListDetailsNutrition: React.FC = () => {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Expenses Details</PageTitle>
 
-			<div className='row g-5 g-xl-8'>
-				<div className='col-lg-4'>
-					<StatisticsWidget2
-						className='card-xl-stretch mb-xl-8'
-						Icon={faHandHoldingDollar}
-						color='primary'
-						title={ExpenseInsightData?.total_amount}
-						description='Total Expenses'
-					/>
-				</div>
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<span>Finance</span>
+				<span className='sep'>/</span>
+				<span className='current'>Expenses</span>
 			</div>
-			<KTCard>
-				<div className='card-header border-0 pt-6 px-6'>
-					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
-						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
-							{/* 1. Searchbar */}
-							<div>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-									className='me-0'
-								/>
-							</div>
 
-							{/* 2. Dropdown (show entries per page) */}
-							<div>
-								<LengthMenu
-									expenseData={expenseData}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-									value={pagination.itemsPerPage}
-									className='me-0'
-								/>
-							</div>
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Expenses Management</h1>
+					<p className='gz-mgmt-subtitle'>Track company disbursements, recurring outlays, and category breakdowns</p>
+				</div>
+				<TableButton
+					action='add'
+					to={'/rag/expense/create'}
+					text='Add Expense'
+				/>
+			</div>
 
-							{/* 3. Download Excel Button */}
-							<div>
-								<button
-									type='button'
-									className='btn btn-icon d-flex align-items-center justify-content-center'
-									onClick={downloadExcel}
-									disabled={exporting}
-									style={{
-										width: '38px',
-										height: '38px',
-										minWidth: '38px',
-										padding: 0,
-										borderRadius: '8px',
-										fontSize: '14px',
-										backgroundColor: '#ffffff',
-										border: '1px solid #DFE7F0',
-										color: '#1E3A5F',
-										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-										cursor: exporting ? 'not-allowed' : 'pointer',
-									}}
-									onMouseEnter={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#1E3A5F'
-											e.currentTarget.style.borderColor = '#1E3A5F'
-											e.currentTarget.style.color = '#ffffff'
-											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
-											e.currentTarget.style.transform = 'translateY(-1px)'
-										}
-									}}
-									onMouseLeave={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#ffffff'
-											e.currentTarget.style.borderColor = '#DFE7F0'
-											e.currentTarget.style.color = '#1E3A5F'
-											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
-											e.currentTarget.style.transform = 'translateY(0)'
-										}
-									}}
-									title='Download Excel'>
-									{exporting ? (
-										<span
-											className='spinner-border spinner-border-sm'
-											role='status'
-											aria-hidden='true'></span>
-									) : (
-										<FontAwesomeIcon icon={faDownload} />
-									)}
-								</button>
-							</div>
-
-							{/* 4. Datefilter */}
-							<div className='d-flex align-items-center flex-shrink-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-								/>
-							</div>
-						</div>
-
-						{/* 5. End me right side Add Expense Button */}
-						<div className='flex-shrink-0 ms-auto'>
-							<TableButton
-								action='add'
-								to={'/rag/expense/create'}
-								text='Add Expense'
-							/>
+			<div className='gz-mgmt-stats-grid mb-6'>
+				<div className='gz-mgmt-stat-card'>
+					<div className='gz-mgmt-stat-icon-wrap primary'>
+						<FontAwesomeIcon icon={faHandHoldingDollar} />
+					</div>
+					<div className='gz-mgmt-stat-info'>
+						<div className='gz-mgmt-stat-label'>Total Recorded Expenses</div>
+						<div className='gz-mgmt-stat-value'>
+							₹ {ExpenseInsightData?.total_amount ? Number(ExpenseInsightData.total_amount).toLocaleString('en-IN') : '0'}
 						</div>
 					</div>
 				</div>
-				<div className='py-4 card-body'>
+			</div>
+
+			<div className='gz-mgmt-card'>
+				<div className='gz-mgmt-toolbar'>
+					<div className='gz-mgmt-toolbar-left'>
+						{/* 1. Searchbar */}
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
+
+						{/* 2. Dropdown (show entries per page) */}
+						<LengthMenu
+							expenseData={expenseData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
+
+						{/* 3. Datefilter */}
+						<div className='d-flex align-items-center flex-shrink-0'>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+							/>
+						</div>
+					</div>
+
+					{/* Right side: Excel Download */}
+					<div className='gz-mgmt-toolbar-right'>
+						<button
+							type='button'
+							className='gz-mgmt-export-btn'
+							onClick={downloadExcel}
+							disabled={exporting}
+							title='Download Excel'>
+							{exporting ? (
+								<span
+									className='spinner-border spinner-border-sm'
+									role='status'
+									aria-hidden='true'></span>
+							) : (
+								<FontAwesomeIcon icon={faDownload} />
+							)}
+							<span>Export Excel</span>
+						</button>
+					</div>
+				</div>
+
+				<div className='card-body p-0'>
 					<div className='table-responsive'>
 						<Table
 							data={expenseData}
@@ -362,35 +340,37 @@ const ExpenseListDetailsNutrition: React.FC = () => {
 												className='mx-1 mb-1 plus-icon'
 												style={{ color: '#607D8B', fontSize: '18px' }}
 											/>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>{actualIndex}</span>
+											<span className='fw-bold d-block mb-1 fs-6' style={{ color: '#172B4D' }}>{actualIndex}</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span className='fw-bold d-block mb-1' style={{ color: '#172B4D', fontSize: '13.5px' }}>
 												{expense?.expense_number}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{expense?.expense_category}
+											<span className='gz-mgmt-pill info'>
+												{expense?.expense_category || 'General'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{expense?.payment_method}
+											<span className='gz-mgmt-pill' style={{ background: '#F1F5F9', color: '#475569' }}>
+												{expense?.payment_method || '-'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{expense?.total_amount}
+											<span className='fw-bold d-block mb-1' style={{ color: '#172B4D', fontSize: '14px' }}>
+												₹ {Number(expense?.total_amount || 0).toLocaleString('en-IN')}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{DayJS(expense?.date).format('YYYY/MM/DD')}
+											<span style={{ color: '#64748B', fontSize: '13px' }}>
+												{expense?.date ? DayJS(expense?.date).format('DD MMM YYYY') : '-'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>{expense?.note}</span>
+											<span style={{ color: '#475569', fontSize: '13px', maxWidth: '240px', display: 'inline-block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+												{expense?.note || '-'}
+											</span>
 										</td>
 										<td>
 											<TableButton
@@ -402,17 +382,17 @@ const ExpenseListDetailsNutrition: React.FC = () => {
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12}>
-												<div>
+												<div className='p-3' style={{ background: '#F8FAFC', borderRadius: '8px' }}>
 													<strong>{sortableFields[0].title}:</strong> {expense?.expense_number}
 													<br />
 													<strong>{sortableFields[1].title}:</strong> {expense?.expense_category}
 													<br />
 													<strong>{sortableFields[2].title}:</strong> {expense?.payment_method}
 													<br />
-													<strong>{sortableFields[3].title}:</strong> {expense?.total_amount}
+													<strong>{sortableFields[3].title}:</strong> ₹ {Number(expense?.total_amount || 0).toLocaleString('en-IN')}
 													<br />
 													<strong>{sortableFields[4].title}:</strong>{' '}
-													{DayJS(expense?.date).format('YYYY/MM/DD h:mm A')}
+													{DayJS(expense?.date).format('DD MMM YYYY h:mm A')}
 													<br />
 													<strong>{sortableFields[5].title}:</strong>
 													{expense?.note}
@@ -429,8 +409,8 @@ const ExpenseListDetailsNutrition: React.FC = () => {
 						/>
 					</div>
 					{expenseData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10 text-muted'>
+							<b>No expense records found</b>
 						</div>
 					)}
 					{expenseData.length > 0 && (
@@ -441,8 +421,8 @@ const ExpenseListDetailsNutrition: React.FC = () => {
 						/>
 					)}
 				</div>
-			</KTCard>
-		</>
+			</div>
+		</div>
 	)
 }
 

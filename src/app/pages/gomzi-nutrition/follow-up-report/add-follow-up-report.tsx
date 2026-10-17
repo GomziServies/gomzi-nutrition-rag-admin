@@ -1,10 +1,10 @@
-import { faAngleDown } from '@fortawesome/free-solid-svg-icons'
+import { faAngleDown, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
@@ -18,6 +18,9 @@ import {
 	UpdateSampleSelection,
 	UpdateSampleUpdate,
 } from '../../../Functions/FGGroup/GnFollowUpReport'
+import '../common-management.css'
+import '../products-theme.css'
+import '../orders-theme.css'
 import './follow-up-report.css'
 
 interface Country {
@@ -1252,8 +1255,33 @@ function AddFollowUpReport(): JSX.Element {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Follow Up Report</PageTitle>
+
+			{/* Breadcrumb */}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<Link to='/rag/follow-up-report-list'>Follow-Up Reports</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Add Follow-Up Record</span>
+			</div>
+
+			{/* Header */}
+			<div className='gz-mgmt-header mb-6'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Add Follow-Up Report</h1>
+					<p className='gz-mgmt-subtitle'>
+						Capture customer requirements, sample allocations, negotiation remarks, and quotation details.
+					</p>
+				</div>
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<Link to='/rag/follow-up-report-list' className='gz-mgmt-btn-secondary'>
+						<FontAwesomeIcon icon={faArrowLeft} />
+						<span>Back to Leads</span>
+					</Link>
+				</div>
+			</div>
 
 			<div className='col-12'>
 				{/* Personal Details */}
@@ -2903,7 +2931,7 @@ function AddFollowUpReport(): JSX.Element {
 					</>
 				)}
 			</div>
-		</>
+		</div>
 	)
 }
 

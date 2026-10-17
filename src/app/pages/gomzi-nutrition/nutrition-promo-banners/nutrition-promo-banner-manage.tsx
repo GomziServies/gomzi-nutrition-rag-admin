@@ -299,16 +299,30 @@ export default function NutritionPromoBannerManage() {
 				<div className='card-header border-0 pt-6'>
 					<div className='card-title'>
 						<div className='d-flex align-items-center position-relative my-1'>
-							<h3 className='fw-bolder m-0 text-gray-800'>
-								<FontAwesomeIcon icon={faImages} className='text-success me-2' />
-								Nutrition Promotional Banners ({banners.length})
+							<h3 className='fw-bolder m-0 text-gray-800 d-inline-flex align-items-center'>
+								<FontAwesomeIcon icon={faImages} className='me-2' style={{ color: '#172B4D' }} />
+								Nutrition Promotional Banners{' '}
+								{loading ? (
+									<span
+										className='gz-skeleton rounded ms-2'
+										style={{ width: '36px', height: '22px', verticalAlign: 'middle' }}
+									/>
+								) : (
+									`(${banners.length})`
+								)}
 							</h3>
 						</div>
 					</div>
 					<div className='card-toolbar'>
 						<button
 							type='button'
-							className='btn btn-success btn-sm'
+							className='btn btn-sm text-white fw-bold d-inline-flex align-items-center shadow-sm'
+							style={{
+								backgroundColor: '#172B4D',
+								borderColor: '#172B4D',
+								borderRadius: '10px',
+								padding: '9px 18px',
+							}}
 							onClick={() => handleOpenModal()}>
 							<FontAwesomeIcon icon={faPlus} className='me-2' />
 							Add New Offer Banner
@@ -318,9 +332,66 @@ export default function NutritionPromoBannerManage() {
 
 				<div className='card-body py-4'>
 					{loading ? (
-						<div className='text-center py-10'>
-							<div className='spinner-border text-success' role='status' />
-							<div className='text-gray-500 mt-2'>Loading nutrition promo banners...</div>
+						<div className='table-responsive'>
+							<table className='table align-middle table-row-dashed fs-6 gy-5'>
+								<thead>
+									<tr className='text-start text-muted fw-bolder fs-7 text-uppercase gs-0'>
+										<th style={{ width: '70px' }}>Order</th>
+										<th style={{ width: '280px' }}>Offer Banner Image</th>
+										<th>Banner Title</th>
+										<th>Target URL</th>
+										<th style={{ width: '100px' }}>Status</th>
+										<th className='text-end' style={{ width: '120px' }}>Actions</th>
+									</tr>
+								</thead>
+								<tbody className='text-gray-600 fw-bold'>
+									{Array.from({ length: 5 }).map((_, idx) => (
+										<tr key={`nutrition-promo-skeleton-${idx}`} className='gz-skeleton-tr'>
+											<td>
+												<div className='d-flex flex-column align-items-center gap-1'>
+													<div className='gz-skeleton rounded' style={{ width: '28px', height: '28px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '20px', height: '14px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '28px', height: '28px' }} />
+												</div>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton'
+													style={{
+														width: '240px',
+														height: '75px',
+														borderRadius: '10px',
+													}}
+												/>
+											</td>
+											<td>
+												<div className='d-flex flex-column gap-2'>
+													<div className='gz-skeleton' style={{ width: '70%', height: '16px' }} />
+													<div className='gz-skeleton' style={{ width: '40%', height: '12px' }} />
+												</div>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton rounded'
+													style={{ width: '140px', height: '16px' }}
+												/>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton rounded'
+													style={{ width: '70px', height: '24px' }}
+												/>
+											</td>
+											<td className='text-end'>
+												<div className='d-inline-flex gap-2 justify-content-end'>
+													<div className='gz-skeleton rounded' style={{ width: '32px', height: '32px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '32px', height: '32px' }} />
+												</div>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
 						</div>
 					) : banners.length === 0 ? (
 						<div className='text-center py-12 bg-light rounded'>
@@ -331,7 +402,13 @@ export default function NutritionPromoBannerManage() {
 							</p>
 							<button
 								type='button'
-								className='btn btn-success btn-sm'
+								className='btn btn-sm text-white fw-bold d-inline-flex align-items-center shadow-sm'
+								style={{
+									backgroundColor: '#172B4D',
+									borderColor: '#172B4D',
+									borderRadius: '10px',
+									padding: '9px 18px',
+								}}
 								onClick={() => handleOpenModal()}>
 								<FontAwesomeIcon icon={faPlus} className='me-2' />
 								Add First Banner
@@ -361,7 +438,7 @@ export default function NutritionPromoBannerManage() {
 													<div className='d-flex flex-column align-items-center gap-1'>
 														<button
 															type='button'
-															className='btn btn-icon btn-sm btn-light-success'
+															className='btn btn-icon btn-sm btn-light-primary'
 															disabled={idx === 0}
 															onClick={() => handleMove(idx, 'up')}
 															title='Move Up'>
@@ -370,7 +447,7 @@ export default function NutritionPromoBannerManage() {
 														<span className='badge badge-light fw-bold'>{idx + 1}</span>
 														<button
 															type='button'
-															className='btn btn-icon btn-sm btn-light-success'
+															className='btn btn-icon btn-sm btn-light-primary'
 															disabled={idx === banners.length - 1}
 															onClick={() => handleMove(idx, 'down')}
 															title='Move Down'>
@@ -718,7 +795,8 @@ export default function NutritionPromoBannerManage() {
 									</button>
 									<button
 										type='submit'
-										className='btn btn-success'
+										className='btn text-white fw-bold'
+										style={{ backgroundColor: '#172B4D', borderColor: '#172B4D', borderRadius: '8px', padding: '9px 20px' }}
 										disabled={saving || uploadingImage}>
 										{saving ? (
 											<>

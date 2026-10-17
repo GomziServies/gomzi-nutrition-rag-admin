@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import {
@@ -30,6 +31,8 @@ import {
 	faLink,
 	faStar,
 } from '@fortawesome/free-solid-svg-icons'
+import '../common-management.css'
+import '../products-theme.css'
 
 const PRESET_IMAGES = [
 	{ label: 'Whey Protein', url: '/images/product-category/whey-protein.webp' },
@@ -293,133 +296,217 @@ export default function CategoryManage() {
 	const activeCount = categories.filter((c) => c.status !== false).length
 
 	return (
-		<div className='d-flex flex-column gap-6 p-4 p-md-8'>
-			<PageTitle
-				breadcrumbs={[
-					{
-						title: 'Gomzi Nutrition',
-						path: '/rag/dashboard',
-						isSeparator: false,
-						isActive: false,
-					},
-				]}
-			>
+		<div className='gz-mgmt-container'>
+			<PageTitle breadcrumbs={[]}>
 				Product Categories ({categories.length})
 			</PageTitle>
 
-			{/* Top Overview Metric Cards */}
-			<div className='row g-4'>
-				<div className='col-12 col-sm-6 col-xl-4'>
-					<div className='card bg-light-primary border border-primary border-opacity-25 rounded-4 shadow-sm p-5 h-100'>
-						<div className='d-flex align-items-center justify-content-between'>
-							<div>
-								<span className='text-muted fw-semibold fs-7 text-uppercase'>Total Categories</span>
-								<h2 className='fw-bolder fs-2tx text-primary mb-0 mt-1'>{categories.length}</h2>
-							</div>
-							<div className='w-50px h-50px rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center text-primary fs-3'>
-								<FontAwesomeIcon icon={faBoxesStacked} />
-							</div>
-						</div>
-						<div className='text-muted fs-8 mt-2'>
-							Live on <a href='http://localhost:5173/category' target='_blank' rel='noreferrer' className='fw-bold text-primary'>http://localhost:5173/category</a>
-						</div>
+			{/* Breadcrumb */}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<span>Products & Orders</span>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Categories</span>
+			</div>
+
+			{/* Top Header */}
+			<div className='gz-mgmt-header mb-6'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Product Categories</h1>
+					<p className='gz-mgmt-subtitle'>
+						Curate storefront collections, formulation specs, accent branding, and display hierarchy.
+					</p>
+				</div>
+
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<button
+						type='button'
+						className='gz-mgmt-btn-secondary'
+						onClick={loadCategories}
+						disabled={loading}>
+						<FontAwesomeIcon icon={faRotateLeft} className='me-2' />
+						<span>Refresh</span>
+					</button>
+
+					<button
+						type='button'
+						className='gz-mgmt-btn-primary'
+						onClick={openCreateModal}>
+						<FontAwesomeIcon icon={faPlus} className='me-2' />
+						<span>Add New Category</span>
+					</button>
+				</div>
+			</div>
+
+			{/* Top Overview KPI Metric Cards */}
+			<div className='gz-prod-summary-grid mb-6'>
+				<div className='gz-prod-summary-card blue'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faBoxesStacked} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Total Categories</span>
+						{loading ? (
+							<div className='gz-skeleton mt-1' style={{ width: '40px', height: '22px', borderRadius: '4px' }} />
+						) : (
+							<span className='gz-prod-summary-value'>{categories.length}</span>
+						)}
 					</div>
 				</div>
 
-				<div className='col-12 col-sm-6 col-xl-4'>
-					<div className='card bg-light-success border border-success border-opacity-25 rounded-4 shadow-sm p-5 h-100'>
-						<div className='d-flex align-items-center justify-content-between'>
-							<div>
-								<span className='text-muted fw-semibold fs-7 text-uppercase'>Active Categories</span>
-								<h2 className='fw-bolder fs-2tx text-success mb-0 mt-1'>{activeCount}</h2>
-							</div>
-							<div className='w-50px h-50px rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center text-success fs-3'>
-								<FontAwesomeIcon icon={faCheck} />
-							</div>
-						</div>
-						<div className='text-muted fs-8 mt-2'>
-							Displayed in navigation filters &amp; product catalog
-						</div>
+				<div className='gz-prod-summary-card green'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faCheck} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Active on Website</span>
+						{loading ? (
+							<div className='gz-skeleton mt-1' style={{ width: '40px', height: '22px', borderRadius: '4px' }} />
+						) : (
+							<span className='gz-prod-summary-value' style={{ color: '#168064' }}>
+								{activeCount}
+							</span>
+						)}
 					</div>
 				</div>
 
-				<div className='col-12 col-sm-6 col-xl-4'>
-					<div className='card bg-light-warning border border-warning border-opacity-25 rounded-4 shadow-sm p-5 h-100'>
-						<div className='d-flex align-items-center justify-content-between'>
-							<div>
-								<span className='text-muted fw-semibold fs-7 text-uppercase'>Live Products Count</span>
-								<h2 className='fw-bolder fs-2tx text-warning mb-0 mt-1'>{totalProducts || 153}+</h2>
-							</div>
-							<div className='w-50px h-50px rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center text-warning fs-3'>
-								<FontAwesomeIcon icon={faTag} />
-							</div>
-						</div>
-						<div className='text-muted fs-8 mt-2'>
-							Distributed across active category tags
-						</div>
+				<div className='gz-prod-summary-card red'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faTimes} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Draft / Inactive</span>
+						{loading ? (
+							<div className='gz-skeleton mt-1' style={{ width: '40px', height: '22px', borderRadius: '4px' }} />
+						) : (
+							<span className='gz-prod-summary-value' style={{ color: '#DC2626' }}>
+								{categories.length - activeCount}
+							</span>
+						)}
+					</div>
+				</div>
+
+				<div className='gz-prod-summary-card amber'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faTag} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Live Products</span>
+						{loading ? (
+							<div className='gz-skeleton mt-1' style={{ width: '50px', height: '22px', borderRadius: '4px' }} />
+						) : (
+							<span className='gz-prod-summary-value' style={{ color: '#D97706' }}>
+								{totalProducts || 150}+
+							</span>
+						)}
 					</div>
 				</div>
 			</div>
 
 			{/* Main Content Card */}
-			<div className='card rounded-4 border-0 shadow-sm'>
-				<div className='card-header border-0 pt-6 d-flex flex-wrap align-items-center justify-content-between gap-4'>
+			<div className='gz-mgmt-card mb-6'>
+				<div
+					className='p-5 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3'
+					style={{ backgroundColor: '#F8FAFD' }}>
 					<div>
-						<h3 className='card-title align-items-start flex-column mb-0'>
-							<span className='card-label fw-bolder fs-3 text-dark'>Product Categories List</span>
-							<span className='text-muted mt-1 fw-bold fs-7'>
-								Manage product category cards, tags, formulas, high-res images and display order
-							</span>
+						<h3 className='fs-5 fw-bolder text-dark mb-0 d-flex align-items-center gap-2'>
+							<span>Categories Catalog</span>
+							{loading ? (
+								<div className='gz-skeleton rounded' style={{ width: '38px', height: '22px' }} />
+							) : (
+								<span className='badge badge-light-primary fs-8 fw-bolder'>({categories.length})</span>
+							)}
 						</h3>
-					</div>
-
-					<div className='d-flex align-items-center gap-3'>
-						<button
-							type='button'
-							className='btn btn-sm btn-light-primary fw-bold'
-							onClick={loadCategories}
-							disabled={loading}
-						>
-							<FontAwesomeIcon icon={faRotateLeft} className='me-2' />
-							Refresh
-						</button>
-						<button
-							type='button'
-							className='btn btn-sm btn-primary fw-bold shadow-sm'
-							onClick={openCreateModal}
-						>
-							<FontAwesomeIcon icon={faPlus} className='me-2' />
-							Add New Category
-						</button>
+						<span className='text-muted fs-8'>
+							Manage category ordering, formulation pills, and cover visuals for navigation filters.
+						</span>
 					</div>
 				</div>
 
-				<div className='card-body pt-4'>
+				<div className='p-0'>
 					{loading ? (
-						<div className='text-center py-12'>
-							<div className='spinner-border text-primary' role='status' />
-							<p className='text-muted mt-3 fs-7'>Loading Product Categories...</p>
+						<div className='table-responsive'>
+							<table className='gz-prod-table mb-0'>
+								<thead>
+									<tr>
+										<th style={{ width: '85px', textAlign: 'center' }}>Order</th>
+										<th style={{ minWidth: '220px' }}>Category Details</th>
+										<th style={{ minWidth: '180px' }}>Tag &amp; Specification</th>
+										<th style={{ minWidth: '170px' }}>Visual Asset</th>
+										<th style={{ width: '110px', textAlign: 'center' }}>Status</th>
+										<th style={{ width: '130px', textAlign: 'right', paddingRight: '20px' }}>Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									{[...Array(6)].map((_, idx) => (
+										<tr key={`cat-skel-${idx}`} className='gz-skeleton-tr'>
+											<td style={{ textAlign: 'center' }}>
+												<div className='d-inline-flex align-items-center gap-1.5'>
+													<div className='gz-skeleton rounded-2' style={{ width: '32px', height: '24px' }} />
+													<div className='d-flex flex-column gap-1'>
+														<div className='gz-skeleton rounded' style={{ width: '18px', height: '11px' }} />
+														<div className='gz-skeleton rounded' style={{ width: '18px', height: '11px' }} />
+													</div>
+												</div>
+											</td>
+											<td>
+												<div className='d-flex flex-column gap-1.5'>
+													<div className='gz-skeleton rounded' style={{ width: '140px', height: '15px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '90px', height: '11px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '180px', height: '11px' }} />
+												</div>
+											</td>
+											<td>
+												<div className='d-flex flex-column gap-1.5'>
+													<div className='gz-skeleton rounded-pill' style={{ width: '75px', height: '20px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '120px', height: '12px' }} />
+												</div>
+											</td>
+											<td>
+												<div className='d-flex align-items-center gap-2.5'>
+													<div className='gz-skeleton rounded-2' style={{ width: '44px', height: '44px', flexShrink: 0 }} />
+													<div className='d-flex flex-column gap-1'>
+														<div className='gz-skeleton rounded' style={{ width: '90px', height: '12px' }} />
+														<div className='gz-skeleton rounded' style={{ width: '60px', height: '10px' }} />
+													</div>
+												</div>
+											</td>
+											<td style={{ textAlign: 'center' }}>
+												<div className='gz-skeleton rounded-pill mx-auto' style={{ width: '60px', height: '22px' }} />
+											</td>
+											<td style={{ textAlign: 'right', paddingRight: '20px' }}>
+												<div className='d-inline-flex align-items-center justify-content-end gap-1.5'>
+													<div className='gz-skeleton rounded' style={{ width: '30px', height: '30px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '30px', height: '30px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '30px', height: '30px' }} />
+												</div>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
 						</div>
 					) : categories.length === 0 ? (
-						<div className='text-center py-12 border border-dashed rounded-4 p-8'>
+						<div className='text-center py-12 p-8'>
 							<FontAwesomeIcon icon={faBoxesStacked} className='fs-1 text-muted mb-3' />
 							<h4 className='fw-bold text-gray-800'>No Categories Found</h4>
 							<p className='text-muted fs-7'>Click &quot;Add New Category&quot; to create your first category card.</p>
-							<button className='btn btn-primary btn-sm mt-2' onClick={openCreateModal}>
-								<FontAwesomeIcon icon={faPlus} className='me-1' /> Create Category
+							<button className='gz-mgmt-btn-primary mx-auto mt-2' onClick={openCreateModal}>
+								<FontAwesomeIcon icon={faPlus} className='me-2' /> Create Category
 							</button>
 						</div>
 					) : (
 						<div className='table-responsive'>
-							<table className='table table-row-bordered table-row-gray-200 align-middle gs-0 gy-4'>
+							<table className='gz-prod-table mb-0'>
 								<thead>
-									<tr className='fw-bolder text-muted bg-light fs-7 text-uppercase gs-0'>
-										<th className='ps-4 w-70px'>Order</th>
-										<th className='min-w-220px'>Category Details</th>
-										<th className='min-w-160px'>Tag &amp; Specification</th>
-										<th className='min-w-140px'>Visual Image</th>
-										<th className='min-w-90px text-center'>Status</th>
-										<th className='pe-4 min-w-140px text-end'>Actions</th>
+									<tr>
+										<th style={{ width: '85px', textAlign: 'center' }}>Order</th>
+										<th style={{ minWidth: '220px' }}>Category Details</th>
+										<th style={{ minWidth: '180px' }}>Tag &amp; Specification</th>
+										<th style={{ minWidth: '170px' }}>Visual Asset</th>
+										<th style={{ width: '110px', textAlign: 'center' }}>Status</th>
+										<th style={{ width: '130px', textAlign: 'right', paddingRight: '20px' }}>Actions</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -430,31 +517,33 @@ export default function CategoryManage() {
 										const previewSrc = getPreviewUrl(cat.image)
 
 										return (
-											<tr key={catId} className='hover-elevate-up'>
+											<tr key={catId}>
 												{/* Order & Reorder Controls */}
-												<td className='ps-4'>
-													<div className='d-flex align-items-center gap-1'>
-														<span className='badge badge-light-dark fw-bolder fs-7 px-2.5 py-1.5'>
+												<td style={{ textAlign: 'center' }}>
+													<div className='d-inline-flex align-items-center gap-1.5'>
+														<span
+															className='fw-bold fs-8 px-2 py-1 rounded-2'
+															style={{ backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE' }}>
 															#{idx + 1}
 														</span>
-														<div className='d-flex flex-column ms-1'>
+														<div className='d-flex flex-column'>
 															<button
 																type='button'
-																className='btn btn-icon btn-sm btn-light h-20px w-20px p-0'
+																className='btn btn-sm p-0 d-flex align-items-center justify-content-center'
+																style={{ width: '18px', height: '18px', backgroundColor: '#F1F5F9', borderRadius: '4px', border: '1px solid #E2E8F0' }}
 																disabled={isFirst}
 																onClick={() => handleMove(idx, 'up')}
-																title='Move Up'
-															>
-																<FontAwesomeIcon icon={faArrowUp} className='fs-9' />
+																title='Move Up'>
+																<FontAwesomeIcon icon={faArrowUp} style={{ fontSize: '9px', color: isFirst ? '#CBD5E1' : '#334155' }} />
 															</button>
 															<button
 																type='button'
-																className='btn btn-icon btn-sm btn-light h-20px w-20px p-0 mt-0.5'
+																className='btn btn-sm p-0 d-flex align-items-center justify-content-center mt-0.5'
+																style={{ width: '18px', height: '18px', backgroundColor: '#F1F5F9', borderRadius: '4px', border: '1px solid #E2E8F0' }}
 																disabled={isLast}
 																onClick={() => handleMove(idx, 'down')}
-																title='Move Down'
-															>
-																<FontAwesomeIcon icon={faArrowDown} className='fs-9' />
+																title='Move Down'>
+																<FontAwesomeIcon icon={faArrowDown} style={{ fontSize: '9px', color: isLast ? '#CBD5E1' : '#334155' }} />
 															</button>
 														</div>
 													</div>
@@ -463,12 +552,14 @@ export default function CategoryManage() {
 												{/* Category Details */}
 												<td>
 													<div className='d-flex flex-column'>
-														<span className='text-dark fw-bolder fs-6 hover-primary cursor-pointer' onClick={() => openEditModal(cat)}>
+														<span
+															className='fw-bolder text-dark fs-6 cursor-pointer text-hover-primary'
+															onClick={() => openEditModal(cat)}>
 															{cat.title}
 														</span>
 														<span className='text-muted fs-8 font-monospace'>/{cat.slug}</span>
 														{cat.subtitle && (
-															<span className='text-gray-600 fs-8 line-clamp-1 mt-0.5' style={{ maxWidth: 320 }}>
+															<span className='text-muted fs-8 text-truncate mt-0.5' style={{ maxWidth: 320 }}>
 																{cat.subtitle}
 															</span>
 														)}
@@ -477,21 +568,22 @@ export default function CategoryManage() {
 
 												{/* Tag & Specification */}
 												<td>
-													<div className='d-flex flex-column gap-1'>
+													<div className='d-flex flex-column gap-1 align-items-start'>
 														{cat.tag && (
 															<span
-																className='badge px-2.5 py-1 rounded-pill fs-8 fw-bold text-uppercase w-fit'
+																className='badge px-2.5 py-1 rounded-pill fs-9 fw-bold text-uppercase'
 																style={{
-																	backgroundColor: `${cat.accent || '#ff8914'}22`,
+																	backgroundColor: `${cat.accent || '#ff8914'}15`,
 																	color: cat.accent || '#ff8914',
-																	border: `1px solid ${cat.accent || '#ff8914'}55`,
-																}}
-															>
+																	border: `1px solid ${cat.accent || '#ff8914'}40`,
+																}}>
 																{cat.tag}
 															</span>
 														)}
 														{cat.spec && (
-															<span className='badge badge-light-secondary text-gray-700 fs-9 w-fit'>
+															<span
+																className='badge fs-9 fw-semibold px-2 py-1 rounded-2'
+																style={{ backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0' }}>
 																{cat.spec}
 															</span>
 														)}
@@ -502,9 +594,8 @@ export default function CategoryManage() {
 												<td>
 													<div className='d-flex align-items-center gap-2'>
 														<div
-															className='w-50px h-50px rounded-3 overflow-hidden border shadow-sm bg-dark d-flex align-items-center justify-content-center'
-															style={{ minWidth: 50 }}
-														>
+															className='rounded-3 overflow-hidden shadow-sm d-flex align-items-center justify-content-center'
+															style={{ width: '44px', height: '44px', minWidth: '44px', backgroundColor: '#0F172A', border: '1px solid #E2E8F0' }}>
 															<img
 																src={previewSrc}
 																alt={cat.title}
@@ -515,43 +606,60 @@ export default function CategoryManage() {
 																}}
 															/>
 														</div>
-														<span className='text-muted fs-9 text-truncate' style={{ maxWidth: 100 }}>
+														<span className='text-muted fs-9 text-truncate font-monospace' style={{ maxWidth: 110 }}>
 															{cat.image.split('/').pop()}
 														</span>
 													</div>
 												</td>
 
 												{/* Status Toggle */}
-												<td className='text-center'>
+												<td style={{ textAlign: 'center' }}>
 													<button
 														type='button'
-														className={`btn btn-sm btn-icon rounded-pill ${
-															cat.status !== false ? 'btn-light-success' : 'btn-light-danger'
-														}`}
+														className='btn btn-sm px-3 py-1 fw-bold rounded-pill border-0'
+														style={{
+															backgroundColor: cat.status !== false ? '#DCFCE7' : '#FEE2E2',
+															color: cat.status !== false ? '#15803D' : '#B91C1C',
+															fontSize: '11px',
+														}}
 														onClick={() => handleToggleStatus(cat)}
-														title={cat.status !== false ? 'Active (Click to disable)' : 'Inactive (Click to activate)'}
-													>
-														<FontAwesomeIcon icon={cat.status !== false ? faCheck : faTimes} />
+														title={cat.status !== false ? 'Active (Click to disable)' : 'Inactive (Click to activate)'}>
+														<FontAwesomeIcon icon={cat.status !== false ? faCheck : faTimes} className='me-1' />
+														{cat.status !== false ? 'Active' : 'Draft'}
 													</button>
 												</td>
 
 												{/* Actions */}
-												<td className='pe-4 text-end'>
+												<td style={{ textAlign: 'right', paddingRight: '20px' }}>
 													<div className='d-inline-flex gap-2'>
 														<button
 															type='button'
-															className='btn btn-icon btn-sm btn-light-primary rounded-3'
+															className='btn btn-sm btn-icon'
+															style={{
+																width: '32px',
+																height: '32px',
+																borderRadius: '8px',
+																backgroundColor: '#EFF6FF',
+																color: '#2563EB',
+																border: '1px solid #DBEAFE',
+															}}
 															onClick={() => openEditModal(cat)}
-															title='Edit Category'
-														>
+															title='Edit Category'>
 															<FontAwesomeIcon icon={faEdit} />
 														</button>
 														<button
 															type='button'
-															className='btn btn-icon btn-sm btn-light-danger rounded-3'
+															className='btn btn-sm btn-icon'
+															style={{
+																width: '32px',
+																height: '32px',
+																borderRadius: '8px',
+																backgroundColor: '#FEF2F2',
+																color: '#DC2626',
+																border: '1px solid #FEE2E2',
+															}}
 															onClick={() => handleDelete(cat)}
-															title='Delete Category'
-														>
+															title='Delete Category'>
 															<FontAwesomeIcon icon={faTrash} />
 														</button>
 													</div>
@@ -570,33 +678,39 @@ export default function CategoryManage() {
 			{showModal && (
 				<div
 					className='modal fade show d-block'
-					style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}
-					tabIndex={-1}
-				>
+					style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', zIndex: 1055 }}
+					tabIndex={-1}>
 					<div className='modal-dialog modal-dialog-centered modal-lg'>
-						<div className='modal-content rounded-4 border-0 shadow-lg'>
+						<div
+							className='modal-content border-0 shadow-lg'
+							style={{ borderRadius: '16px', overflow: 'hidden' }}>
 							<form onSubmit={handleSave}>
-								<div className='modal-header border-0 pb-0'>
-									<h4 className='modal-title fw-bolder text-dark'>
+								<div
+									className='p-5 d-flex align-items-center justify-content-between border-bottom'
+									style={{ backgroundColor: '#F8FAFD' }}>
+									<h4 className='modal-title fw-bolder text-dark fs-5 mb-0'>
 										{modalMode === 'create' ? 'Create New Category' : `Edit Category: ${formData.title}`}
 									</h4>
 									<button
 										type='button'
-										className='btn btn-icon btn-sm btn-light rounded-circle'
-										onClick={() => setShowModal(false)}
-									>
+										className='btn btn-icon btn-sm btn-light'
+										style={{ borderRadius: '8px', width: '32px', height: '32px' }}
+										onClick={() => setShowModal(false)}>
 										<FontAwesomeIcon icon={faTimes} />
 									</button>
 								</div>
 
-								<div className='modal-body py-4'>
+								<div className='p-6'>
 									<div className='row g-4'>
 										{/* Title */}
 										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold required fs-7'>Category Title</label>
+											<label className='form-label fw-bold text-dark fs-7 required'>
+												Category Title
+											</label>
 											<input
 												type='text'
-												className='form-control form-control-solid rounded-3'
+												className='form-control'
+												style={{ borderRadius: '10px', height: '44px' }}
 												placeholder='e.g. Whey Protein, Creatine'
 												value={formData.title || ''}
 												onChange={(e) => handleTitleChange(e.target.value)}
@@ -606,10 +720,13 @@ export default function CategoryManage() {
 
 										{/* Slug */}
 										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold fs-7'>URL Slug</label>
+											<label className='form-label fw-bold text-dark fs-7'>
+												URL Slug
+											</label>
 											<input
 												type='text'
-												className='form-control form-control-solid rounded-3 font-monospace'
+												className='form-control font-monospace'
+												style={{ borderRadius: '10px', height: '44px' }}
 												placeholder='e.g. whey-protein'
 												value={formData.slug || ''}
 												onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
@@ -618,10 +735,13 @@ export default function CategoryManage() {
 
 										{/* Tag */}
 										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold fs-7'>Tag Badge (e.g. MOST POPULAR, 100% VEGAN)</label>
+											<label className='form-label fw-bold text-dark fs-7'>
+												Tag Badge (e.g. MOST POPULAR, 100% VEGAN)
+											</label>
 											<input
 												type='text'
-												className='form-control form-control-solid rounded-3'
+												className='form-control'
+												style={{ borderRadius: '10px', height: '44px' }}
 												placeholder='e.g. MOST POPULAR'
 												value={formData.tag || ''}
 												onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
@@ -630,10 +750,13 @@ export default function CategoryManage() {
 
 										{/* Spec */}
 										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold fs-7'>Spec Pill (e.g. 24-27g Protein / Scoop)</label>
+											<label className='form-label fw-bold text-dark fs-7'>
+												Spec Pill (e.g. 24-27g Protein / Scoop)
+											</label>
 											<input
 												type='text'
-												className='form-control form-control-solid rounded-3'
+												className='form-control'
+												style={{ borderRadius: '10px', height: '44px' }}
 												placeholder='e.g. 24-27g Protein / Scoop'
 												value={formData.spec || ''}
 												onChange={(e) => setFormData({ ...formData, spec: e.target.value })}
@@ -642,10 +765,13 @@ export default function CategoryManage() {
 
 										{/* Subtitle */}
 										<div className='col-12'>
-											<label className='form-label fw-bold fs-7'>Subtitle / Formulation Description</label>
+											<label className='form-label fw-bold text-dark fs-7'>
+												Subtitle / Formulation Description
+											</label>
 											<textarea
 												rows={2}
-												className='form-control form-control-solid rounded-3'
+												className='form-control'
+												style={{ borderRadius: '10px' }}
 												placeholder='Brief description displayed on the category card...'
 												value={formData.subtitle || ''}
 												onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
@@ -654,14 +780,17 @@ export default function CategoryManage() {
 
 										{/* Image Preview & Selection */}
 										<div className='col-12'>
-											<label className='form-label fw-bold fs-7 d-block'>Category Image</label>
+											<label className='form-label fw-bold text-dark fs-7 d-block mb-2'>
+												Category Visual Image
+											</label>
 
 											{/* Image Preview */}
-											<div className='d-flex align-items-center gap-4 mb-3 p-3 bg-light rounded-3 border'>
+											<div
+												className='d-flex align-items-center gap-3 mb-3 p-3 rounded-3'
+												style={{ backgroundColor: '#F8FAFD', border: '1px solid #E2E8F0' }}>
 												<div
-													className='w-80px h-80px rounded-3 overflow-hidden bg-dark d-flex align-items-center justify-content-center shadow-sm'
-													style={{ minWidth: 80 }}
-												>
+													className='rounded-3 overflow-hidden bg-dark d-flex align-items-center justify-content-center shadow-sm'
+													style={{ width: '64px', height: '64px', minWidth: '64px' }}>
 													<img
 														src={imagePreview || getPreviewUrl(formData.image)}
 														alt='Category Preview'
@@ -673,7 +802,7 @@ export default function CategoryManage() {
 													/>
 												</div>
 												<div>
-													<span className='fw-bold text-dark fs-7 d-block'>Image Preview</span>
+													<span className='fw-bold text-dark fs-7 d-block'>Selected Graphic</span>
 													<span className='text-muted fs-8 font-monospace d-block'>
 														{formData.image || 'None selected'}
 													</span>
@@ -682,19 +811,22 @@ export default function CategoryManage() {
 
 											{/* Preset Selector */}
 											<div className='mb-3'>
-												<label className='form-label text-muted fs-8 fw-bold mb-1'>Choose from Existing Category Images:</label>
+												<label className='form-label text-muted fs-8 fw-bold mb-1'>
+													Choose from Existing Category Presets:
+												</label>
 												<div className='d-flex flex-wrap gap-2'>
 													{PRESET_IMAGES.map((preset) => (
 														<button
 															type='button'
 															key={preset.url}
-															className={`btn btn-xs rounded-pill ${
-																formData.image === preset.url
-																	? 'btn-primary'
-																	: 'btn-light-secondary text-dark'
-															}`}
-															onClick={() => handlePresetSelect(preset.url)}
-														>
+															className='btn btn-sm py-1 px-3 fw-bold rounded-pill'
+															style={{
+																backgroundColor: formData.image === preset.url ? '#172B4D' : '#F1F5F9',
+																color: formData.image === preset.url ? '#FFFFFF' : '#334155',
+																border: formData.image === preset.url ? '1px solid #172B4D' : '1px solid #E2E8F0',
+																fontSize: '11px',
+															}}
+															onClick={() => handlePresetSelect(preset.url)}>
 															{preset.label}
 														</button>
 													))}
@@ -703,29 +835,36 @@ export default function CategoryManage() {
 
 											{/* Upload New File */}
 											<div>
-												<label className='form-label text-muted fs-8 fw-bold mb-1'>Or Upload High-Resolution WebP/PNG:</label>
+												<label className='form-label text-muted fs-8 fw-bold mb-1'>
+													Or Upload High-Resolution Graphic:
+												</label>
 												<input
 													type='file'
 													accept='image/webp,image/png,image/jpeg,image/jpg'
-													className='form-control form-control-solid rounded-3'
+													className='form-control'
+													style={{ borderRadius: '10px', height: '44px' }}
 													onChange={handleImageFileSelect}
 												/>
 											</div>
 										</div>
 
-										{/* Accent Color & Target URL */}
+										{/* Accent Color */}
 										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold fs-7'>Accent Theme Color</label>
+											<label className='form-label fw-bold text-dark fs-7'>
+												Accent Theme Color
+											</label>
 											<div className='d-flex align-items-center gap-2'>
 												<input
 													type='color'
-													className='form-control form-control-color rounded-3 w-50px p-1'
+													className='form-control form-control-color p-1'
+													style={{ width: '44px', height: '44px', borderRadius: '10px' }}
 													value={formData.accent || '#ff8914'}
 													onChange={(e) => setFormData({ ...formData, accent: e.target.value })}
 												/>
 												<input
 													type='text'
-													className='form-control form-control-solid rounded-3'
+													className='form-control'
+													style={{ borderRadius: '10px', height: '44px' }}
 													value={formData.accent || '#ff8914'}
 													onChange={(e) => setFormData({ ...formData, accent: e.target.value })}
 												/>
@@ -734,40 +873,46 @@ export default function CategoryManage() {
 
 										{/* Status Checkbox */}
 										<div className='col-12 col-md-6 d-flex align-items-center mt-auto'>
-											<div className='form-check form-switch form-check-custom form-check-solid'>
-												<input
-													className='form-check-input h-25px w-45px'
-													type='checkbox'
-													id='categoryStatusSwitch'
-													checked={formData.status !== false}
-													onChange={(e) => setFormData({ ...formData, status: e.target.checked })}
-												/>
-												<label className='form-check-label fw-bold text-dark fs-7 ms-2' htmlFor='categoryStatusSwitch'>
-													Active on Website
-												</label>
+											<div
+												className='p-3 rounded-3 d-flex align-items-center justify-content-between w-100'
+												style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+												<div>
+													<span className='fw-bold text-dark fs-7 d-block'>Active on Website</span>
+													<span className='text-muted fs-8'>Display in store navigation</span>
+												</div>
+												<div className='form-check form-switch form-check-custom form-check-solid m-0'>
+													<input
+														className='form-check-input'
+														type='checkbox'
+														id='categoryStatusSwitch'
+														style={{ width: '44px', height: '22px', cursor: 'pointer' }}
+														checked={formData.status !== false}
+														onChange={(e) => setFormData({ ...formData, status: e.target.checked })}
+													/>
+												</div>
 											</div>
 										</div>
 									</div>
 								</div>
 
-								<div className='modal-footer border-0 pt-0'>
+								<div
+									className='p-5 border-top d-flex align-items-center justify-content-end gap-3'
+									style={{ backgroundColor: '#F8FAFD' }}>
 									<button
 										type='button'
-										className='btn btn-light fw-bold'
+										className='gz-mgmt-btn-secondary'
 										onClick={() => setShowModal(false)}
-										disabled={saving}
-									>
+										disabled={saving}>
 										Cancel
 									</button>
 									<button
 										type='submit'
-										className='btn btn-primary fw-bold shadow-sm'
-										disabled={saving}
-									>
+										className='gz-mgmt-btn-primary'
+										disabled={saving}>
 										{saving ? (
 											<>
 												<span className='spinner-border spinner-border-sm me-2' />
-												Saving...
+												Saving Category...
 											</>
 										) : modalMode === 'create' ? (
 											'Create Category'

@@ -1,4 +1,5 @@
 import {
+	faArrowLeft,
 	faAward,
 	faBriefcase,
 	faCertificate,
@@ -18,7 +19,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
@@ -28,6 +29,9 @@ import InputField from '../../../components/InputField'
 import TableButton from '../../../components/TableButton'
 import TextareaField from '../../../components/TextareaField'
 import { GetContactInquiry, UpdateReadReceipt } from '../../../Functions/FGGroup'
+import '../common-management.css'
+import '../products-theme.css'
+import '../orders-theme.css'
 
 const ContactInquiryView: React.FC = () => {
 	const location = useLocation()
@@ -190,103 +194,127 @@ const ContactInquiryView: React.FC = () => {
 	}
 
 	return (
-		<KTCard>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>
 				{isPartnerProgram ? 'RAG Pro Partner Application' : 'Contact Inquiry'}
 			</PageTitle>
 
-			<div className='container my-7'>
-				{/* Top Status & Action Bar */}
-				<div className='d-flex flex-wrap justify-content-between align-items-center mb-6 pb-4 border-bottom gap-3'>
-					<div>
-						<h3 className='fw-bolder mb-1 text-gray-900'>
-							{isPartnerProgram
-								? 'RAG Pro Partner Program Application'
-								: 'Contact Inquiry Details'}
-						</h3>
-						<div className='text-muted fs-7'>
-							Submitted on:{' '}
-							<span className='fw-bold text-gray-800'>
-								{inquiryItem?.createdAt
-									? DayJS(inquiryItem.createdAt).format('DD/MM/YYYY hh:mm:ss A')
-									: 'N/A'}
-							</span>
-							{' | '}
-							Status:{' '}
-							{inquiryItem?.read_receipt ? (
-								<span className='badge badge-light-success fw-bold'>Read</span>
-							) : (
-								<span className='badge badge-light-danger fw-bold'>Unread</span>
-							)}
-						</div>
-					</div>
+			{/* Breadcrumb */}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<Link to='/rag/contact-inquiry/contact'>Contact Inquiries</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>{inquiryItem?.name || details?.full_name || 'Inquiry Details'}</span>
+			</div>
 
-					<div className='d-flex gap-2 align-items-center'>
-						<TableButton
-							action='view'
-							text='Go Back'
-							to='/rag/contact-inquiry/contact'
-							backgroundDark={true}
-							showIcon={false}
-						/>
-
+			{/* Header */}
+			<div className='gz-mgmt-header mb-6'>
+				<div className='gz-mgmt-title-wrap'>
+					<div className='d-flex align-items-center gap-3'>
+						<h1 className='gz-mgmt-title'>
+							{isPartnerProgram ? 'RAG Pro Partner Application' : 'Contact Inquiry Details'}
+						</h1>
 						{inquiryItem?.read_receipt ? (
-							<button
-								type='button'
-								className='btn btn-danger'
-								onClick={handleMarkAsUnread}>
-								<FontAwesomeIcon icon={faCheck} className='me-1' /> Mark as Unread
-							</button>
+							<span className='badge bg-light-success text-success fw-bold px-3 py-1'>Read</span>
 						) : (
-							<button
-								type='button'
-								className='btn btn-warning'
-								onClick={handleMarkAsRead}>
-								<FontAwesomeIcon icon={faCheck} className='me-1' /> Mark as Read
-							</button>
+							<span className='badge bg-light-danger text-danger fw-bold px-3 py-1'>Unread</span>
 						)}
 					</div>
+					<p className='gz-mgmt-subtitle'>
+						Submitted on{' '}
+						<span className='fw-bold text-dark'>
+							{inquiryItem?.createdAt
+								? DayJS(inquiryItem.createdAt).format('DD/MM/YYYY hh:mm:ss A')
+								: 'N/A'}
+						</span>
+					</p>
 				</div>
 
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<Link to='/rag/contact-inquiry/contact' className='gz-mgmt-btn-secondary'>
+						<FontAwesomeIcon icon={faArrowLeft} />
+						<span>Back to Inquiries</span>
+					</Link>
+
+					{inquiryItem?.read_receipt ? (
+						<button
+							type='button'
+							className='btn btn-light-danger text-danger fw-bold d-flex align-items-center gap-2'
+							style={{ borderRadius: '10px', height: '40px', padding: '0 18px', border: '1px solid #FECACA' }}
+							onClick={handleMarkAsUnread}>
+							<FontAwesomeIcon icon={faCheck} />
+							<span>Mark as Unread</span>
+						</button>
+					) : (
+						<button
+							type='button'
+							className='btn text-white fw-bold d-flex align-items-center gap-2'
+							style={{ borderRadius: '10px', height: '40px', padding: '0 18px', backgroundColor: '#D97706', border: 'none' }}
+							onClick={handleMarkAsRead}>
+							<FontAwesomeIcon icon={faCheck} />
+							<span>Mark as Read</span>
+						</button>
+					)}
+				</div>
+			</div>
+
+			<div>
 				{/* Primary Summary Overview */}
-				<div className='card bg-light-primary border-primary border-dashed mb-7'>
-					<div className='card-body py-4'>
-						<div className='row g-3'>
+				<div className='gz-mgmt-card mb-6'>
+					<div className='p-6'>
+						<div className='row g-4'>
 							<div className='col-md-3 col-sm-6'>
-								<span className='text-muted fs-8 text-uppercase fw-bolder d-block'>
-									Applicant Name
-								</span>
-								<span className='fs-6 fw-bolder text-gray-900'>
-									{inquiryItem?.name || details?.full_name || 'N/A'}
-								</span>
+								<div
+									className='p-4 rounded-3 h-100'
+									style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+									<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>
+										Applicant Name
+									</span>
+									<span className='fs-6 fw-bold text-dark'>
+										{inquiryItem?.name || details?.full_name || 'N/A'}
+									</span>
+								</div>
 							</div>
 							<div className='col-md-3 col-sm-6'>
-								<span className='text-muted fs-8 text-uppercase fw-bolder d-block'>
-									Email
-								</span>
-								<a
-									href={`mailto:${inquiryItem?.email || details?.email}`}
-									className='fs-6 fw-bold text-primary text-truncate d-block'>
-									{inquiryItem?.email || details?.email || 'N/A'}
-								</a>
+								<div
+									className='p-4 rounded-3 h-100'
+									style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+									<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>
+										Email Address
+									</span>
+									<a
+										href={`mailto:${inquiryItem?.email || details?.email}`}
+										className='fs-6 fw-bold text-primary text-truncate d-block'>
+										{inquiryItem?.email || details?.email || 'N/A'}
+									</a>
+								</div>
 							</div>
 							<div className='col-md-3 col-sm-6'>
-								<span className='text-muted fs-8 text-uppercase fw-bolder d-block'>
-									Mobile Number
-								</span>
-								<a
-									href={`tel:${inquiryItem?.mobile || details?.mobile}`}
-									className='fs-6 fw-bold text-dark d-block'>
-									{inquiryItem?.mobile || details?.mobile || 'N/A'}
-								</a>
+								<div
+									className='p-4 rounded-3 h-100'
+									style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+									<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>
+										Mobile Number
+									</span>
+									<a
+										href={`tel:${inquiryItem?.mobile || details?.mobile}`}
+										className='fs-6 fw-bold text-dark d-block font-monospace'>
+										{inquiryItem?.mobile || details?.mobile || 'N/A'}
+									</a>
+								</div>
 							</div>
 							<div className='col-md-3 col-sm-6'>
-								<span className='text-muted fs-8 text-uppercase fw-bolder d-block'>
-									Subject / Program
-								</span>
-								<span className='fs-6 fw-bold text-gray-800'>
-									{inquiryItem?.subject || 'RAG Pro Partner Program'}
-								</span>
+								<div
+									className='p-4 rounded-3 h-100'
+									style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+									<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>
+										Subject / Program
+									</span>
+									<span className='fs-6 fw-bold text-dark'>
+										{inquiryItem?.subject || 'RAG Pro Partner Program'}
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -960,32 +988,35 @@ const ContactInquiryView: React.FC = () => {
 				</div>
 
 				{/* Bottom Action Footer */}
-				<div className='d-flex gap-3 pt-3'>
-					<TableButton
-						action='view'
-						text='Go Back to Inquiries'
+				<div className='d-flex align-items-center gap-3 pt-6 border-top mt-6'>
+					<Link
 						to='/rag/contact-inquiry/contact'
-						backgroundDark={true}
-						showIcon={false}
-					/>
+						className='gz-mgmt-btn-secondary'>
+						<FontAwesomeIcon icon={faArrowLeft} />
+						<span>Go Back to Inquiries</span>
+					</Link>
 					{inquiryItem?.read_receipt ? (
 						<button
 							type='button'
-							className='btn btn-danger'
+							className='btn btn-light-danger text-danger fw-bold d-flex align-items-center gap-2'
+							style={{ borderRadius: '10px', height: '40px', padding: '0 18px', border: '1px solid #FECACA' }}
 							onClick={handleMarkAsUnread}>
-							<FontAwesomeIcon icon={faCheck} className='me-1' /> Mark as Unread
+							<FontAwesomeIcon icon={faCheck} />
+							<span>Mark as Unread</span>
 						</button>
 					) : (
 						<button
 							type='button'
-							className='btn btn-warning'
+							className='btn text-white fw-bold d-flex align-items-center gap-2'
+							style={{ borderRadius: '10px', height: '40px', padding: '0 18px', backgroundColor: '#D97706', border: 'none' }}
 							onClick={handleMarkAsRead}>
-							<FontAwesomeIcon icon={faCheck} className='me-1' /> Mark as Read
+							<FontAwesomeIcon icon={faCheck} />
+							<span>Mark as Read</span>
 						</button>
 					)}
 				</div>
 			</div>
-		</KTCard>
+		</div>
 	)
 }
 

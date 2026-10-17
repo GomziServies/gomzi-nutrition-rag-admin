@@ -1,28 +1,46 @@
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+/* eslint-disable */
 import React, { ChangeEvent, useEffect, useState } from 'react'
-import { Modal, OverlayTrigger } from 'react-bootstrap'
-import CopyToClipboard from 'react-copy-to-clipboard'
+import { Link } from 'react-router-dom'
+import { Modal } from 'react-bootstrap'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faArrowLeft,
+	faCalendarAlt,
+	faCheckCircle,
+	faCopy,
+	faEdit,
+	faEye,
+	faLink,
+	faPercent,
+	faPlus,
+	faTag,
+	faTimesCircle,
+	faUserCheck,
+	faUsers,
+	faXmark,
+} from '@fortawesome/free-solid-svg-icons'
 import toast from 'react-hot-toast'
-import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import SearchFilter from '../../../components/SearchFilter'
 import SelectFieldManual from '../../../components/SelectFieldManual'
-import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
+import CopyButton from '../../../components/motion/CopyButton'
 import {
 	CreateReferralCoupon,
 	GetReferralCoupon,
 	GetTrainers,
 	UpdateReferralCoupon,
 } from '../../../Functions/FGGroup'
+import '../common-management.css'
+import '../products-theme.css'
+import '../orders-theme.css'
 
 const ManageCoupon: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [copied, setCopied] = useState(false)
-	const [trainerData, setTrainerData] = useState([])
+	const [trainerData, setTrainerData] = useState<any[]>([])
 	const [subject, setSubject] = useState<any>({
 		name: '',
 		trainer_id: '',
@@ -54,7 +72,7 @@ const ManageCoupon: React.FC = () => {
 	const [showUpdateModal, setShowUpdateModal] = useState(false)
 	const [showGenerateModal, setShowGenerateModal] = useState(false)
 	const [referenceData, setReferenceData] = useState<any>([])
-	const [loading, setLoading] = useState(false)
+	const [loading, setLoading] = useState(true)
 
 	const [pagination, setPagination] = useState({
 		page: 1,
@@ -92,9 +110,10 @@ const ManageCoupon: React.FC = () => {
 
 			setReferenceData(sortedData)
 		} catch (error) {
-			console.error(error)
+			console.error('Error fetching referral coupons:', error)
+		} finally {
+			setLoading(false)
 		}
-		setLoading(false)
 	}
 
 	const fetchTrainerData = async () => {
@@ -104,9 +123,10 @@ const ManageCoupon: React.FC = () => {
 			const filteredData = response.data
 			setTrainerData(filteredData)
 		} catch (error) {
-			console.error(error)
+			console.error('Error fetching trainers:', error)
+		} finally {
+			setLoading(false)
 		}
-		setLoading(false)
 	}
 
 	useEffect(() => {
@@ -117,6 +137,14 @@ const ManageCoupon: React.FC = () => {
 	const handleUpdateModal = (data: any) => {
 		setShowUpdateModal(true)
 		setUpdateData(data)
+		if (data?.assign_trainer) {
+			setSubject({
+				name: data.assign_trainer.name || '',
+				trainer_id: data.assign_trainer.trainer_id || '',
+			})
+		} else {
+			setSubject({ name: '', trainer_id: '' })
+		}
 	}
 
 	const handleGenerateModal = (data: any) => {
@@ -124,6 +152,8 @@ const ManageCoupon: React.FC = () => {
 		const setData: any = {
 			ID: data._id,
 			CouponCode: data.coupon_code,
+			PasteURL: '',
+			GenerateLink: '',
 		}
 		setGenerateData(setData)
 	}
@@ -181,14 +211,14 @@ const ManageCoupon: React.FC = () => {
 					title: '',
 					coupon_code: '',
 					max_usage_count: '',
-					discount_type: '',
+					discount_type: 'percent',
 					discount: '',
 					expired_at: '',
 				})
 				toast.success('Coupon Added Successfully')
 			}
 		} catch (error: any) {
-			toast.error(error.message)
+			toast.error(error.message || 'Error saving coupon')
 			console.error(error)
 		}
 	}
@@ -197,60 +227,41 @@ const ManageCoupon: React.FC = () => {
 		setPagination({ ...pagination, page })
 	}
 
-	const filteredFoodTimeData = referenceData.filter((data: any) =>
-		data.title.toLowerCase().includes(searchTerm.toLowerCase())
+	const filteredCouponData = referenceData.filter((data: any) =>
+		(data.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+		(data.coupon_code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+		(data?.assign_trainer?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
 	)
-	const paginatedCouponData = filteredFoodTimeData.slice(
+
+	const paginatedCouponData = filteredCouponData.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
 		pagination.page * pagination.itemsPerPage
 	)
 
 	const generateUrl = () => {
-		generateData.PasteURL
-
 		if (!generateData.ID || !generateData.PasteURL)
-			return toast.error('Coupon ID and PasteURL is required')
+			return toast.error('Coupon ID and Paste URL are required')
 
 		let newURL: any = generateData.PasteURL
 
 		try {
 			newURL = new URL(newURL)
 		} catch (error) {
-			return toast.error('Invalid URL')
-		}
-
-		const FGGroupRegex = new RegExp(/.*\.fggroup\.in\/.*|localhost/)
-
-		if (!FGGroupRegex.test(newURL.hostname)) {
-			console.warn('Unsupported link provided.')
+			return toast.error('Please enter a valid URL')
 		}
 
 		try {
 			const params = new URLSearchParams(newURL.search)
-
 			params.set('coupon_id', generateData.ID)
-
 			newURL.search = params.toString()
 
 			setTimeout(() => {
 				setGenerateData((prevData) => ({ ...prevData, GenerateLink: newURL.toString() }))
-
-				return toast.success('URL generated successfully')
-			}, 200)
+				return toast.success('URL generated successfully!')
+			}, 150)
 		} catch (error) {
-			return toast.error('Invalid URL')
+			return toast.error('Failed to construct URL')
 		}
-	}
-
-	const handleCopyUrl = (couponUrl: any) => {
-		navigator.clipboard
-			.writeText(couponUrl)
-			.then(() => {
-				toast.success('Coupon link copied to clipboard!')
-			})
-			.catch((err) => {
-				toast.error('Failed to copy Coupon link!')
-			})
 	}
 
 	const handleSelectChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -260,494 +271,864 @@ const ManageCoupon: React.FC = () => {
 		)
 		if (selectedTrainer) {
 			setSubject({ name: selectedTrainer.full_name, trainer_id: selectedTrainer.trainer_id })
+		} else {
+			setSubject({ name: '', trainer_id: '' })
 		}
 	}
 
+	// KPI Stats calculation
+	const totalCoupons = referenceData.length
+	const activeCoupons = referenceData.filter(
+		(item: any) => !item.expired_at || new Date(item.expired_at).getTime() >= new Date().getTime()
+	).length
+	const assignedTrainers = referenceData.filter(
+		(item: any) => item?.assign_trainer?.name && item?.assign_trainer?.name !== 'N/A'
+	).length
+	const percentageCoupons = referenceData.filter(
+		(item: any) => item.discount_type === 'percent'
+	).length
+
 	return (
-		<>
+		<div className='gz-prod-container'>
 			<PageTitle breadcrumbs={[]}>Manage Coupon</PageTitle>
-			<KTCard>
-				<div className='row'>
-					<div className='col-12'>
-						<div className='d-flex align-items-center justify-content-between mt-5 px-8'>
+
+			{/* =========================================================================
+			    BREADCRUMBS
+			    ========================================================================= */}
+			<div className='gz-prod-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Manage Coupons</span>
+			</div>
+
+			{/* =========================================================================
+			    HEADER
+			    ========================================================================= */}
+			<div className='gz-prod-header'>
+				<div>
+					<h1 className='gz-prod-title'>Reference Coupons</h1>
+					<p className='gz-prod-subtitle'>
+						Create promotional coupon codes, link referral trainers, and track reference usage metrics.
+					</p>
+				</div>
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<button
+						type='button'
+						className='gz-prod-btn-primary'
+						onClick={() => {
+							setSubject({ name: '', trainer_id: '' })
+							setShowReferenceModal(true)
+						}}>
+						<FontAwesomeIcon icon={faPlus} />
+						<span>Add Coupon</span>
+					</button>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    SUMMARY STATS CARDS
+			    ========================================================================= */}
+			<div className='gz-prod-summary-grid mb-6'>
+				<div className='gz-prod-summary-card'>
+					<div className='title'>Total Coupons</div>
+					<div className='value'>
+						{loading ? <div className='gz-skeleton mt-1' style={{ width: '40px', height: '24px', borderRadius: '4px' }} /> : totalCoupons}
+					</div>
+					<div className='subtext'>Configured in database</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='title'>Active Coupons</div>
+					<div className='value' style={{ color: '#059669' }}>
+						{loading ? <div className='gz-skeleton mt-1' style={{ width: '40px', height: '24px', borderRadius: '4px' }} /> : activeCoupons}
+					</div>
+					<div className='subtext'>Currently valid & usable</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='title'>Assigned to Trainers</div>
+					<div className='value' style={{ color: '#2563EB' }}>
+						{loading ? <div className='gz-skeleton mt-1' style={{ width: '40px', height: '24px', borderRadius: '4px' }} /> : assignedTrainers}
+					</div>
+					<div className='subtext'>Referral partner linked</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='title'>Percent Discounts</div>
+					<div className='value' style={{ color: '#D97706' }}>
+						{loading ? <div className='gz-skeleton mt-1' style={{ width: '40px', height: '24px', borderRadius: '4px' }} /> : percentageCoupons}
+					</div>
+					<div className='subtext'>Percentage-based savings</div>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    TABLE CARD
+			    ========================================================================= */}
+			<div className='gz-prod-card'>
+				{/* Toolbar */}
+				<div className='gz-prod-toolbar'>
+					<div className='d-flex align-items-center gap-3 flex-wrap flex-grow-1'>
+						<div style={{ minWidth: '280px', maxWidth: '420px', flexGrow: 1 }}>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
 							/>
-							<div>
-								<TableButton
-									action='add'
-									onClick={() => setShowReferenceModal(true)}
-									text='Add Coupon'
-								/>
-							</div>
 						</div>
 					</div>
+					<div className='d-flex align-items-center gap-2'>
+						<span className='fs-8 fw-semibold text-muted'>
+							Showing {paginatedCouponData.length} of {filteredCouponData.length} coupons
+						</span>
+					</div>
 				</div>
-				<div className='py-4 card-body'>
-					<div className='table-responsive'>
-						<table
-							id='kt_table_users'
-							className='table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer table-row-dashed table-row-gray-300 align-middle'>
-							<thead>
-								<tr className='fw-bold text-muted bg-light border-bottom-0'>
-									<th className='ps-4 rounded-start'>No.</th>
-									<th>Title</th>
-									<th>Coupon Code</th>
-									<th>Assigned Trainer</th>
-									{/* <th>Last updated</th> */}
-									<th>Coupon Count</th>
-									<th>Discount</th>
-									<th>Discount Type</th>
-									<th>Expired At</th>
-									<th className='ps-4 rounded-end'>Action</th>
-								</tr>
-							</thead>
-							<tbody>
-								{loading ? (
-									<tr>
-										<td
-											colSpan={12}
-											className='text-center'>
-											<div className='d-flex justify-content-center align-items-center mb-4 my-7'>
-												<div
-													className='spinner-border text-primary'
-													role='status'>
-													<span className='visually-hidden'>Loading...</span>
-												</div>
+
+				{/* Table */}
+				<div className='table-responsive'>
+					<table className='gz-prod-table mb-0'>
+						<thead>
+							<tr>
+								<th style={{ width: '56px', textAlign: 'center' }}>No.</th>
+								<th style={{ minWidth: '180px' }}>Title</th>
+								<th style={{ minWidth: '160px' }}>Coupon Code</th>
+								<th style={{ minWidth: '170px' }}>Assigned Trainer</th>
+								<th style={{ minWidth: '120px' }}>Max Usage</th>
+								<th style={{ minWidth: '120px' }}>Discount</th>
+								<th style={{ minWidth: '130px' }}>Discount Type</th>
+								<th style={{ minWidth: '150px' }}>Expiry Date</th>
+								<th style={{ minWidth: '130px', textAlign: 'center' }}>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{loading ? (
+								[...Array(5)].map((_, idx) => (
+									<tr key={`cpn-skel-${idx}`} className='gz-skeleton-tr'>
+										<td style={{ textAlign: 'center' }}>
+											<div className='gz-skeleton rounded mx-auto' style={{ width: '22px', height: '16px' }} />
+										</td>
+										<td>
+											<div className='gz-skeleton rounded' style={{ width: '130px', height: '15px' }} />
+										</td>
+										<td>
+											<div className='d-inline-flex align-items-center gap-2'>
+												<div className='gz-skeleton rounded' style={{ width: '90px', height: '24px' }} />
+												<div className='gz-skeleton rounded' style={{ width: '24px', height: '24px' }} />
+											</div>
+										</td>
+										<td>
+											<div className='d-inline-flex align-items-center gap-2'>
+												<div className='gz-skeleton rounded-circle' style={{ width: '24px', height: '24px' }} />
+												<div className='gz-skeleton rounded' style={{ width: '95px', height: '14px' }} />
+											</div>
+										</td>
+										<td>
+											<div className='gz-skeleton rounded' style={{ width: '45px', height: '14px' }} />
+										</td>
+										<td>
+											<div className='gz-skeleton rounded' style={{ width: '50px', height: '16px' }} />
+										</td>
+										<td>
+											<div className='gz-skeleton rounded-pill' style={{ width: '65px', height: '20px' }} />
+										</td>
+										<td>
+											<div className='d-flex flex-column gap-1'>
+												<div className='gz-skeleton rounded' style={{ width: '85px', height: '13px' }} />
+												<div className='gz-skeleton rounded-pill' style={{ width: '45px', height: '15px' }} />
+											</div>
+										</td>
+										<td style={{ textAlign: 'center' }}>
+											<div className='d-flex align-items-center justify-content-center gap-2'>
+												<div className='gz-skeleton rounded' style={{ width: '32px', height: '32px' }} />
+												<div className='gz-skeleton rounded' style={{ width: '32px', height: '32px' }} />
+												<div className='gz-skeleton rounded' style={{ width: '32px', height: '32px' }} />
 											</div>
 										</td>
 									</tr>
-								) : (
-									paginatedCouponData.map((data: any, index: any) => {
-										const actualIndex = (pagination.page - 1) * pagination.itemsPerPage + index + 1
-										return (
-											<tr key={actualIndex}>
-												<td>
-													<span className='text-dark ms-6 fw-bold  d-block mb-1 fs-6'>
-														{actualIndex}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>{data.title}</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+								))
+							) : paginatedCouponData.length > 0 ? (
+								paginatedCouponData.map((data: any, index: number) => {
+									const actualIndex =
+										(pagination.page - 1) * pagination.itemsPerPage + index + 1
+									const isExpired =
+										data.expired_at && new Date(data.expired_at).getTime() < new Date().getTime()
+
+									return (
+										<tr key={data._id || actualIndex}>
+											<td style={{ textAlign: 'center', fontWeight: 700, color: '#71809A' }}>
+												{actualIndex}
+											</td>
+											<td>
+												<span
+													style={{
+														fontWeight: 700,
+														color: '#172B4D',
+														fontSize: '13.5px',
+													}}>
+													{data.title || '—'}
+												</span>
+											</td>
+											<td>
+												<div className='d-inline-flex align-items-center gap-2'>
+													<span
+														style={{
+															fontFamily: 'monospace',
+															fontWeight: 700,
+															fontSize: '13px',
+															background: '#EAF1FB',
+															color: '#172B4D',
+															padding: '3px 8px',
+															borderRadius: '6px',
+															border: '1px solid #D1D9E6',
+															letterSpacing: '0.04em',
+														}}>
 														{data.coupon_code}
 													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{data?.assign_trainer?.name || 'N/A'}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{data.max_usage_count ? data.max_usage_count : '0'}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{data.discount
-															? data.discount + (data?.discount_type !== 'rupees' && '%')
-															: '0'}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{data.discount_type ? data.discount_type : '-'}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{data.expired_at
-															? DayJS(data.expired_at).format('DD/MM/YYYY hh:mm:ss A')
-															: '-'}
-													</span>
-												</td>
-												<td>
-													<div className='d-flex'>
-														{/* <div>
-															<button
-																className='btn gap-2 d-block mt-2 mb-2 btn-light-primary mx-2 btn-sm me-1'
-																onClick={() =>
-																	handleCopyUrl(`https://fggroup.in?coupon_id=${data._id}`)
-																}>
-																<FontAwesomeIcon
-																	icon={faCopy}
-																	className='fs-3 me-2'
-																/>
-																Coupon Link
-															</button>
-														</div> */}
-														<div>
-															<TableButton
-																action='edit'
-																onClick={() => handleUpdateModal(data)}
-																className='my-2'
-															/>
-														</div>
-														{/* <div>
-															<button
-																onClick={() => handleGenerateModal(data)}
-																className='btn gap-2 d-block mt-2 mb-2 btn-light-warning mx-2 btn-sm me-1'>
-																<FontAwesomeIcon
-																	icon={faShare}
-																	className='fs-3'
-																/>
-															</button>
-														</div> */}
-														<div>
-															<TableButton
-																action='view'
-																to={
-																	'/rag/manage-coupon/reference?id=' +
-																	data._id +
-																	'&' +
-																	'coupon_discount=' +
-																	data.discount
-																}
-																className='my-2'
-															/>
-														</div>
+													{data.coupon_code && (
+														<CopyButton
+															text={data.coupon_code}
+															title='Copy Coupon Code'
+															customMessage='Code copied!'
+															className='gz-prod-btn-icon'
+															iconSize={13}
+														/>
+													)}
+												</div>
+											</td>
+											<td>
+												{data?.assign_trainer?.name && data.assign_trainer.name !== 'N/A' ? (
+													<div className='d-inline-flex align-items-center gap-2'>
+														<span
+															style={{
+																width: '24px',
+																height: '24px',
+																borderRadius: '50%',
+																background: '#EFF6FF',
+																color: '#2563EB',
+																display: 'inline-flex',
+																alignItems: 'center',
+																justifyContent: 'center',
+																fontSize: '11px',
+															}}>
+															<FontAwesomeIcon icon={faUserCheck} />
+														</span>
+														<span style={{ fontWeight: 600, color: '#172B4D', fontSize: '13px' }}>
+															{data.assign_trainer.name}
+														</span>
 													</div>
-												</td>
-											</tr>
-										)
-									})
-								)}
-							</tbody>
-						</table>
-					</div>
-					{referenceData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
-					{referenceData.length > 0 && (
+												) : (
+													<span style={{ color: '#A0ABC0', fontSize: '13px' }}>Unassigned</span>
+												)}
+											</td>
+											<td>
+												<span
+													style={{
+														fontWeight: 600,
+														color: '#172B4D',
+														fontSize: '13px',
+													}}>
+													{data.max_usage_count || '0'}
+												</span>
+											</td>
+											<td>
+												<span
+													style={{
+														fontWeight: 700,
+														color: '#059669',
+														fontSize: '13.5px',
+													}}>
+													{data.discount
+														? data.discount_type === 'rupees'
+															? `₹${data.discount}`
+															: `${data.discount}%`
+														: '0'}
+												</span>
+											</td>
+											<td>
+												<span
+													className={`gz-status-pill ${
+														data.discount_type === 'percent' ? 'primary' : 'secondary'
+													}`}>
+													{data.discount_type ? data.discount_type : 'percent'}
+												</span>
+											</td>
+											<td>
+												{data.expired_at ? (
+													<div>
+														<div
+															style={{
+																fontSize: '12.5px',
+																fontWeight: 600,
+																color: isExpired ? '#DC2626' : '#172B4D',
+															}}>
+															{DayJS(data.expired_at).format('DD MMM YYYY')}
+														</div>
+														<span
+															className={`gz-status-pill mt-1 ${
+																isExpired ? 'danger' : 'success'
+															}`}
+															style={{ fontSize: '10px', padding: '1px 6px' }}>
+															{isExpired ? 'Expired' : 'Active'}
+														</span>
+													</div>
+												) : (
+													<span style={{ color: '#A0ABC0', fontSize: '12.5px' }}>No Expiry</span>
+												)}
+											</td>
+											<td>
+												<div className='d-flex align-items-center justify-content-center gap-2'>
+													<button
+														type='button'
+														onClick={() => handleUpdateModal(data)}
+														className='gz-prod-btn-icon'
+														title='Edit Coupon'
+														style={{
+															width: '32px',
+															height: '32px',
+															borderRadius: '8px',
+															border: '1px solid #E4EAF2',
+															background: '#FFFFFF',
+															color: '#172B4D',
+															display: 'inline-flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+														}}>
+														<FontAwesomeIcon icon={faEdit} style={{ fontSize: '13px' }} />
+													</button>
+
+													<Link
+														to={`/rag/manage-coupon/reference?id=${data._id}&coupon_discount=${data.discount}`}
+														className='gz-prod-btn-icon text-decoration-none'
+														title='View Reference Orders'
+														style={{
+															width: '32px',
+															height: '32px',
+															borderRadius: '8px',
+															border: '1px solid #E4EAF2',
+															background: '#FFFFFF',
+															color: '#2563EB',
+															display: 'inline-flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+														}}>
+														<FontAwesomeIcon icon={faEye} style={{ fontSize: '13px' }} />
+													</Link>
+
+													<button
+														type='button'
+														onClick={() => handleGenerateModal(data)}
+														className='gz-prod-btn-icon'
+														title='Generate Coupon Link'
+														style={{
+															width: '32px',
+															height: '32px',
+															borderRadius: '8px',
+															border: '1px solid #E4EAF2',
+															background: '#FFFFFF',
+															color: '#D97706',
+															display: 'inline-flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+														}}>
+														<FontAwesomeIcon icon={faLink} style={{ fontSize: '12px' }} />
+													</button>
+												</div>
+											</td>
+										</tr>
+									)
+								})
+							) : (
+								<tr>
+									<td colSpan={9} className='text-center py-10'>
+										<div className='d-flex flex-column align-items-center justify-content-center my-6'>
+											<div
+												className='d-inline-flex align-items-center justify-content-center mb-3'
+												style={{
+													width: '48px',
+													height: '48px',
+													borderRadius: '50%',
+													background: '#F5F7FB',
+													color: '#71809A',
+												}}>
+												<FontAwesomeIcon icon={faTag} style={{ fontSize: '20px' }} />
+											</div>
+											<h4 className='fw-bold mb-1' style={{ color: '#172B4D' }}>
+												No Coupons Found
+											</h4>
+											<p className='text-muted fs-7 mb-0'>
+												{searchTerm
+													? 'No coupon records match your search criteria.'
+													: 'No reference coupons have been created yet.'}
+											</p>
+										</div>
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
+
+				{/* Pagination */}
+				{filteredCouponData.length > 0 && (
+					<div
+						className='px-6 py-4'
+						style={{ borderTop: '1px solid #EEF2F7', background: '#FFFFFF' }}>
 						<UsersListPagination
-							totalPages={Math.ceil(referenceData.length / pagination.itemsPerPage)}
+							totalPages={Math.ceil(filteredCouponData.length / pagination.itemsPerPage)}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
 						/>
-					)}
-				</div>
-			</KTCard>
+					</div>
+				)}
+			</div>
 
+			{/* =========================================================================
+			    MODAL 1: ADD COUPON
+			    ========================================================================= */}
 			<Modal
 				centered
 				show={showReferenceModal}
 				onHide={() => setShowReferenceModal(false)}
-				id='edit'>
-				<div className='modal-content'>
-					<div className='modal-header justify-content-between'>
-						<h2 className='fw-bolder'>Reference Coupon</h2>
+				size='lg'>
+				<div
+					className='modal-content'
+					style={{
+						borderRadius: '16px',
+						border: '1px solid #E4EAF2',
+						boxShadow: '0 10px 30px rgba(23, 43, 77, 0.12)',
+						overflow: 'hidden',
+					}}>
+					<div
+						className='modal-header d-flex justify-content-between align-items-center px-6 py-4'
+						style={{ borderBottom: '1px solid #EEF2F7', background: '#FFFFFF' }}>
+						<div>
+							<h3 className='fw-bold mb-0' style={{ color: '#172B4D', fontSize: '18px' }}>
+								Add Reference Coupon
+							</h3>
+							<p className='fs-8 text-muted mb-0'>
+								Create a new referral discount code with limits and trainer assignment
+							</p>
+						</div>
 						<button
+							type='button'
 							onClick={() => setShowReferenceModal(false)}
-							className='btn btn-sm btn-icon btn-active-color-primary'>
-							<FontAwesomeIcon
-								className='fs-1 position-absolute ms-3'
-								icon={faXmark}
-							/>
+							style={{
+								background: 'none',
+								border: 'none',
+								color: '#71809A',
+								fontSize: '18px',
+								cursor: 'pointer',
+								padding: '4px',
+							}}>
+							<FontAwesomeIcon icon={faXmark} />
 						</button>
 					</div>
-					<div className='modal-body scroll-y'>
-						<div className='row'>
-							<InputField
-								placeholder='Enter Title'
-								type='text'
-								className='col-12 fv-row mb-7'
-								name='title'
-								label='Title'
-								htmlFor='title'
-								value={couponAdd.title}
-								onChange={handleInputChange}
-							/>
-							<InputField
-								placeholder='Enter Coupon Code'
-								type='text'
-								className='col-12 fv-row mb-7'
-								name='coupon_code'
-								label='Coupon Code'
-								htmlFor='coupon_code'
-								value={couponAdd.coupon_code}
-								onChange={handleInputChange}
-							/>
-							<InputField
-								placeholder='Enter max Usage Count'
-								type='number'
-								className='col-12 fv-row mb-7'
-								name='max_usage_count'
-								label='max Usage Count'
-								htmlFor='max_usage_count'
-								value={couponAdd.max_usage_count}
-								onChange={handleInputChange}
-							/>
-							<SelectFieldManual
-								className='col-12 fv-row mb-7'
-								label='Discount Type'
-								name='discount_type'
-								value={couponAdd.discount_type}
-								onChange={handleInputChange}
-								htmlFor='discount_type'
-								marginRemove={true}
-								options={[
-									{
-										value: 'percent',
-										name: 'Percent',
-									},
-									{
-										value: 'rupees',
-										name: 'Rupees',
-									},
-								]}
-							/>
-							<InputField
-								placeholder='Enter Discount'
-								type='number'
-								className='col-12 fv-row mb-7'
-								name='discount'
-								label='Discount'
-								htmlFor='discount'
-								value={couponAdd.discount}
-								onChange={handleInputChange}
-							/>
-							<InputField
-								placeholder='Enter Expired At'
-								type='date'
-								className='col-12 fv-row mb-7'
-								name='expired_at'
-								label='Expired At'
-								htmlFor='expired_at'
-								value={DayJS(couponAdd.expired_at).format('YYYY-MM-DD')}
-								onChange={handleInputChange}
-							/>
-							<SelectFieldManual
-								className='col-12 fv-row'
-								label='Assign Trainer'
-								name='account_id'
-								value={subject.trainer_id}
-								onChange={handleSelectChange}
-								htmlFor='account_id'
-								marginRemove={true}
-								options={trainerData.map((data: any) => ({
-									value: data.trainer_id,
-									name: data.full_name,
-								}))}
-							/>
+
+					<div className='modal-body px-6 py-5 scroll-y' style={{ maxHeight: '70vh' }}>
+						<div className='row g-4'>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='e.g., Summer Fitness Special'
+									type='text'
+									name='title'
+									label='Coupon Title *'
+									htmlFor='title'
+									value={couponAdd.title}
+									onChange={handleInputChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='e.g., GZFIT20'
+									type='text'
+									name='coupon_code'
+									label='Coupon Code *'
+									htmlFor='coupon_code'
+									value={couponAdd.coupon_code}
+									onChange={handleInputChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='e.g., 100'
+									type='number'
+									name='max_usage_count'
+									label='Max Usage Count'
+									htmlFor='max_usage_count'
+									value={couponAdd.max_usage_count}
+									onChange={handleInputChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-md-6'>
+								<SelectFieldManual
+									label='Discount Type'
+									name='discount_type'
+									value={couponAdd.discount_type}
+									onChange={handleInputChange}
+									htmlFor='discount_type'
+									marginRemove={true}
+									options={[
+										{ value: 'percent', name: 'Percentage (%)' },
+										{ value: 'rupees', name: 'Fixed Amount (₹)' },
+									]}
+								/>
+							</div>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='e.g., 15'
+									type='number'
+									name='discount'
+									label='Discount Value *'
+									htmlFor='discount'
+									value={couponAdd.discount}
+									onChange={handleInputChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='Expiry Date'
+									type='date'
+									name='expired_at'
+									label='Expiry Date'
+									htmlFor='expired_at'
+									value={couponAdd.expired_at ? DayJS(couponAdd.expired_at).format('YYYY-MM-DD') : ''}
+									onChange={handleInputChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-12'>
+								<SelectFieldManual
+									label='Assign Referral Trainer'
+									name='account_id'
+									value={subject.trainer_id}
+									onChange={handleSelectChange}
+									htmlFor='account_id'
+									marginRemove={true}
+									options={[
+										{ value: '', name: 'Select Trainer (Optional)' },
+										...trainerData.map((data: any) => ({
+											value: data.trainer_id,
+											name: `${data.full_name} (${data.trainer_id || 'ID'})`,
+										})),
+									]}
+								/>
+							</div>
 						</div>
 					</div>
-					<div className='modal-footer justify-content-end'>
-						<TableButton
-							action='add'
-							onClick={() => handleAddUpdateCoupon()}
-							text='Add Coupon'
-						/>
+
+					<div
+						className='modal-footer d-flex justify-content-end gap-2 px-6 py-4'
+						style={{ borderTop: '1px solid #EEF2F7', background: '#F8FAFD' }}>
+						<button
+							type='button'
+							className='gz-prod-btn-cancel'
+							onClick={() => setShowReferenceModal(false)}>
+							Cancel
+						</button>
+						<button
+							type='button'
+							className='gz-prod-btn-primary'
+							onClick={() => handleAddUpdateCoupon()}>
+							<FontAwesomeIcon icon={faPlus} />
+							<span>Create Coupon</span>
+						</button>
 					</div>
 				</div>
 			</Modal>
 
+			{/* =========================================================================
+			    MODAL 2: EDIT COUPON
+			    ========================================================================= */}
 			<Modal
 				centered
 				show={showUpdateModal}
 				onHide={() => setShowUpdateModal(false)}
-				id='edit'>
-				<div className='modal-content'>
-					<div className='modal-header justify-content-between'>
-						<h2 className='fw-bolder'>Reference Coupon</h2>
+				size='lg'>
+				<div
+					className='modal-content'
+					style={{
+						borderRadius: '16px',
+						border: '1px solid #E4EAF2',
+						boxShadow: '0 10px 30px rgba(23, 43, 77, 0.12)',
+						overflow: 'hidden',
+					}}>
+					<div
+						className='modal-header d-flex justify-content-between align-items-center px-6 py-4'
+						style={{ borderBottom: '1px solid #EEF2F7', background: '#FFFFFF' }}>
+						<div>
+							<h3 className='fw-bold mb-0' style={{ color: '#172B4D', fontSize: '18px' }}>
+								Edit Reference Coupon
+							</h3>
+							<p className='fs-8 text-muted mb-0'>
+								Modify coupon code details, discount amounts, and trainer associations
+							</p>
+						</div>
 						<button
+							type='button'
 							onClick={() => setShowUpdateModal(false)}
-							className='btn btn-sm btn-icon btn-active-color-primary'>
-							<FontAwesomeIcon
-								className='fs-1 position-absolute ms-3'
-								icon={faXmark}
-							/>
+							style={{
+								background: 'none',
+								border: 'none',
+								color: '#71809A',
+								fontSize: '18px',
+								cursor: 'pointer',
+								padding: '4px',
+							}}>
+							<FontAwesomeIcon icon={faXmark} />
 						</button>
 					</div>
-					<div className='modal-body scroll-y'>
-						<div className='row'>
-							<InputField
-								placeholder='Enter Title'
-								type='text'
-								className='col-12 fv-row mb-7'
-								name='title'
-								label='Title'
-								htmlFor='title'
-								value={updateData.title}
-								onChange={handleInputUpdateChange}
-							/>
-							<InputField
-								placeholder='Enter Coupon Code'
-								type='text'
-								className='col-12 fv-row mb-7'
-								name='coupon_code'
-								label='Coupon Code'
-								htmlFor='coupon_code'
-								value={updateData.coupon_code}
-								onChange={handleInputUpdateChange}
-							/>
-							<InputField
-								placeholder='Enter max Usage Count'
-								type='number'
-								className='col-12 fv-row mb-7'
-								name='max_usage_count'
-								label='max Usage Count'
-								htmlFor='max_usage_count'
-								value={updateData.max_usage_count}
-								onChange={handleInputUpdateChange}
-							/>
-							<SelectFieldManual
-								className='col-12 fv-row mb-7'
-								label='Discount Type'
-								name='discount_type'
-								value={updateData.discount_type}
-								onChange={handleInputUpdateChange}
-								htmlFor='discount_type'
-								marginRemove={true}
-								options={[
-									{
-										value: 'percent',
-										name: 'Percent',
-									},
-									{
-										value: 'rupees',
-										name: 'Rupees',
-									},
-								]}
-							/>
-							<InputField
-								placeholder='Enter Discount'
-								type='number'
-								className='col-12 fv-row mb-7'
-								name='discount'
-								label='Discount'
-								htmlFor='discount'
-								value={updateData.discount}
-								onChange={handleInputUpdateChange}
-							/>
-							<InputField
-								placeholder='Enter Expired At'
-								type='date'
-								className='col-12 fv-row mb-7'
-								name='expired_at'
-								label='Expired At'
-								htmlFor='expired_at'
-								value={DayJS(updateData.expired_at).format('YYYY-MM-DD')}
-								onChange={handleInputUpdateChange}
-							/>
-							<SelectFieldManual
-								className='col-12 fv-row'
-								label='Assign Trainer'
-								name='trainer_id'
-								value={subject.trainer_id}
-								onChange={handleSelectChange}
-								htmlFor='trainer_id'
-								marginRemove={true}
-								options={trainerData.map((data: any) => ({
-									value: data.trainer_id,
-									name: data.full_name,
-								}))}
-							/>
+
+					<div className='modal-body px-6 py-5 scroll-y' style={{ maxHeight: '70vh' }}>
+						<div className='row g-4'>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='Enter Title'
+									type='text'
+									name='title'
+									label='Coupon Title *'
+									htmlFor='title'
+									value={updateData.title}
+									onChange={handleInputUpdateChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='Enter Coupon Code'
+									type='text'
+									name='coupon_code'
+									label='Coupon Code *'
+									htmlFor='coupon_code'
+									value={updateData.coupon_code}
+									onChange={handleInputUpdateChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='Enter Max Usage Count'
+									type='number'
+									name='max_usage_count'
+									label='Max Usage Count'
+									htmlFor='max_usage_count'
+									value={updateData.max_usage_count}
+									onChange={handleInputUpdateChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-md-6'>
+								<SelectFieldManual
+									label='Discount Type'
+									name='discount_type'
+									value={updateData.discount_type}
+									onChange={handleInputUpdateChange}
+									htmlFor='discount_type'
+									marginRemove={true}
+									options={[
+										{ value: 'percent', name: 'Percentage (%)' },
+										{ value: 'rupees', name: 'Fixed Amount (₹)' },
+									]}
+								/>
+							</div>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='Enter Discount Value'
+									type='number'
+									name='discount'
+									label='Discount Value *'
+									htmlFor='discount'
+									value={updateData.discount}
+									onChange={handleInputUpdateChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-md-6'>
+								<InputField
+									placeholder='Expiry Date'
+									type='date'
+									name='expired_at'
+									label='Expiry Date'
+									htmlFor='expired_at'
+									value={updateData.expired_at ? DayJS(updateData.expired_at).format('YYYY-MM-DD') : ''}
+									onChange={handleInputUpdateChange}
+									labelMarginRemove
+								/>
+							</div>
+							<div className='col-12'>
+								<SelectFieldManual
+									label='Assign Referral Trainer'
+									name='trainer_id'
+									value={subject.trainer_id}
+									onChange={handleSelectChange}
+									htmlFor='trainer_id'
+									marginRemove={true}
+									options={[
+										{ value: '', name: 'Select Trainer (Optional)' },
+										...trainerData.map((data: any) => ({
+											value: data.trainer_id,
+											name: `${data.full_name} (${data.trainer_id || 'ID'})`,
+										})),
+									]}
+								/>
+							</div>
 						</div>
 					</div>
-					<div className='modal-footer justify-content-end'>
-						<TableButton
-							action='edit'
-							onClick={() => handleAddUpdateCoupon(updateData._id)}
-							text='Save Changes'
-							backgroundDark={true}
-						/>
+
+					<div
+						className='modal-footer d-flex justify-content-end gap-2 px-6 py-4'
+						style={{ borderTop: '1px solid #EEF2F7', background: '#F8FAFD' }}>
+						<button
+							type='button'
+							className='gz-prod-btn-cancel'
+							onClick={() => setShowUpdateModal(false)}>
+							Cancel
+						</button>
+						<button
+							type='button'
+							className='gz-prod-btn-primary'
+							onClick={() => handleAddUpdateCoupon(updateData._id)}>
+							<FontAwesomeIcon icon={faEdit} />
+							<span>Save Changes</span>
+						</button>
 					</div>
 				</div>
 			</Modal>
 
+			{/* =========================================================================
+			    MODAL 3: GENERATE COUPON LINK
+			    ========================================================================= */}
 			<Modal
 				centered
 				show={showGenerateModal}
-				onHide={() => setShowGenerateModal(false)}
-				className='modal fade'
-				id='generate_link'>
-				<div className='modal-content'>
-					<div className='modal-header justify-content-between'>
-						<h2 className='fw-bolder'>Generate Link for Page</h2>
+				onHide={() => setShowGenerateModal(false)}>
+				<div
+					className='modal-content'
+					style={{
+						borderRadius: '16px',
+						border: '1px solid #E4EAF2',
+						boxShadow: '0 10px 30px rgba(23, 43, 77, 0.12)',
+						overflow: 'hidden',
+					}}>
+					<div
+						className='modal-header d-flex justify-content-between align-items-center px-6 py-4'
+						style={{ borderBottom: '1px solid #EEF2F7', background: '#FFFFFF' }}>
+						<div>
+							<h3 className='fw-bold mb-0' style={{ color: '#172B4D', fontSize: '18px' }}>
+								Generate Referral Page Link
+							</h3>
+							<p className='fs-8 text-muted mb-0'>
+								Attach coupon ID automatically to any target store or landing page URL
+							</p>
+						</div>
 						<button
+							type='button'
 							onClick={() => setShowGenerateModal(false)}
-							className='btn btn-sm btn-icon btn-active-color-primary'>
-							<FontAwesomeIcon
-								className='fs-1 position-absolute ms-3'
-								icon={faXmark}
-							/>
+							style={{
+								background: 'none',
+								border: 'none',
+								color: '#71809A',
+								fontSize: '18px',
+								cursor: 'pointer',
+								padding: '4px',
+							}}>
+							<FontAwesomeIcon icon={faXmark} />
 						</button>
 					</div>
-					<div className='modal-body scroll-y'>
-						<div className='row'>
+
+					<div className='modal-body px-6 py-5'>
+						<div className='d-flex flex-column gap-3'>
 							<InputField
-								placeholder='ID'
+								placeholder='Coupon ID'
 								type='text'
-								className='col-12 fv-row mb-7'
 								name='ID'
-								label='ID'
+								label='Coupon ID'
 								htmlFor='ID'
 								value={generateData.ID}
 								onChange={handleGenerateInputChange}
 								readOnly
+								labelMarginRemove
 							/>
 							<InputField
 								readOnly
 								placeholder='Coupon Code'
 								type='text'
-								className='col-12 fv-row mb-7'
 								name='CouponCode'
 								label='Coupon Code'
 								htmlFor='CouponCode'
 								value={generateData.CouponCode}
 								onChange={handleGenerateInputChange}
+								labelMarginRemove
 							/>
-							<InputField
-								placeholder='Paste Valid Link from FGGROUP'
-								type='text'
-								className='col-12 fv-row mb-7'
-								name='PasteURL'
-								label='Paste URL'
-								htmlFor='PasteURL'
-								value={generateData.PasteURL}
-								onChange={handleGenerateInputChange}
-							/>
-							<div>
-								<button
-									onClick={() => generateUrl()}
-									className='btn gap-2 my-1 btn-bg-primary btn-active-color-success m-2 btn-sm me-1 mb-5 text-white'>
-									<span>Generate</span>
-								</button>
+							<div className='d-flex flex-column gap-1'>
+								<InputField
+									placeholder='https://www.gomzilifesciences.in/store/...'
+									type='text'
+									name='PasteURL'
+									label='Target Page URL'
+									htmlFor='PasteURL'
+									value={generateData.PasteURL}
+									onChange={handleGenerateInputChange}
+									labelMarginRemove
+								/>
+								<div className='mt-2'>
+									<button
+										type='button'
+										onClick={generateUrl}
+										className='gz-prod-btn-primary w-100 justify-content-center'>
+										<FontAwesomeIcon icon={faLink} />
+										<span>Generate Tracking Link</span>
+									</button>
+								</div>
 							</div>
-							<InputField
-								placeholder='Paste Valid Link from FGGROUP'
-								type='text'
-								className='col-12 fv-row mb-7'
-								name='GenerateLink'
-								label='Paste URL'
-								htmlFor='GenerateLink'
-								value={generateData.GenerateLink}
-								readOnly
-							/>
-							<OverlayTrigger
-								key='copy-to-clipboard'
-								placement='top'
-								overlay={<p id='tooltip-copy-to-clipboard'>Copy Code</p>}>
-								<CopyToClipboard
-									text={generateData.GenerateLink}
-									onCopy={() => {
-										setCopied(true)
-										toast.success('URL copied to clipboard')
-									}}>
-									<button className='highlight-copy btn'>{copied ? 'Copied' : 'Copy'}</button>
-								</CopyToClipboard>
-							</OverlayTrigger>
+
+							{generateData.GenerateLink && (
+								<div className='mt-2'>
+									<label className='fs-8 fw-bold text-muted text-uppercase mb-1 d-block'>
+										Generated Referral URL
+									</label>
+									<div className='d-flex align-items-center gap-2'>
+										<input
+											type='text'
+											className='form-control form-control-solid bg-white pe-2'
+											value={generateData.GenerateLink}
+											readOnly
+											style={{
+												height: '42px',
+												backgroundColor: '#F8FAFD',
+												color: '#172B4D',
+												borderRadius: '10px',
+												border: '1px solid #E4EAF2',
+												fontSize: '12.5px',
+												fontFamily: 'monospace',
+											}}
+										/>
+										<CopyButton
+											text={generateData.GenerateLink}
+											title='Copy Generated Link'
+											customMessage='Generated URL copied!'
+											className='gz-prod-btn-icon'
+											iconSize={15}
+										/>
+									</div>
+								</div>
+							)}
 						</div>
+					</div>
+
+					<div
+						className='modal-footer d-flex justify-content-end px-6 py-4'
+						style={{ borderTop: '1px solid #EEF2F7', background: '#F8FAFD' }}>
+						<button
+							type='button'
+							className='gz-prod-btn-cancel'
+							onClick={() => setShowGenerateModal(false)}>
+							Close
+						</button>
 					</div>
 				</div>
 			</Modal>
-		</>
+		</div>
 	)
 }
+
 export default ManageCoupon

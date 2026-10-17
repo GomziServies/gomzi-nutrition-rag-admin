@@ -1,11 +1,28 @@
+/* eslint-disable */
 import React, { useEffect, useState } from 'react'
-import { KTCard } from '../../../../_metronic/helpers'
+import { Link } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faCheckCircle,
+	faCrown,
+	faEdit,
+	faEnvelope,
+	faExclamationTriangle,
+	faPhoneAlt,
+	faPlus,
+	faShieldAlt,
+	faUser,
+	faUsers,
+	faUserShield,
+} from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
-import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetAdminUsers } from '../../../Functions/FGGroup'
+import '../../gomzi-nutrition/common-management.css'
+import '../../gomzi-nutrition/products-theme.css'
+import '../../gomzi-nutrition/orders-theme.css'
 
 const AdminUserList: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -19,12 +36,12 @@ const AdminUserList: React.FC = () => {
 			const filterData = response.data.filter(
 				(admin: any) => admin.type !== 'Employee' && admin.type !== 'Trainer'
 			)
-
 			setAdminData(filterData)
 		} catch (error) {
-			console.error(error)
+			console.error('Error fetching admin users:', error)
+		} finally {
+			setLoading(false)
 		}
-		setLoading(false)
 	}
 
 	useEffect(() => {
@@ -35,150 +52,385 @@ const AdminUserList: React.FC = () => {
 		page: 1,
 		itemsPerPage: 10,
 	})
+
 	const handlePageChange = (page: number) => {
 		setPagination({ ...pagination, page })
 	}
+
 	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value })
+		setPagination({ ...pagination, itemsPerPage: value, page: 1 })
 	}
+
 	const filteredAdminData = adminData.filter((admin: any) =>
-		admin.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+		(admin.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+		(admin.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+		(admin.mobile || '').toString().includes(searchTerm) ||
+		(admin.type || '').toLowerCase().includes(searchTerm.toLowerCase())
 	)
+
 	const paginatedAdminData = filteredAdminData.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
 		pagination.page * pagination.itemsPerPage
 	)
+
+	// Summary KPI calculations
+	const totalAdmins = adminData.length
+	const masterAdmins = adminData.filter((a: any) => (a.type || '').toUpperCase() === 'MASTER').length
+	const mfaConfigured = adminData.filter((a: any) => a.MFA_enabled && a.MFA_enabled.length > 0).length
+	const standardAdmins = adminData.filter((a: any) => (a.type || '').toUpperCase() === 'ADMIN').length
+
+	const renderRoleBadge = (type: string) => {
+		const upper = (type || '').toUpperCase()
+		if (upper === 'MASTER') {
+			return (
+				<span className='gz-mgmt-pill purple' title='Highest privilege master account'>
+					<FontAwesomeIcon icon={faCrown} style={{ fontSize: '10px' }} />
+					<span>MASTER</span>
+				</span>
+			)
+		}
+		if (upper === 'ADMIN') {
+			return (
+				<span className='gz-mgmt-pill info' title='System Administrator'>
+					<FontAwesomeIcon icon={faShieldAlt} style={{ fontSize: '10px' }} />
+					<span>ADMIN</span>
+				</span>
+			)
+		}
+		if (upper === 'DISPATCH') {
+			return (
+				<span className='gz-mgmt-pill warning' title='Dispatch Coordinator'>
+					<span>DISPATCH</span>
+				</span>
+			)
+		}
+		if (upper === 'ACCOUNTS') {
+			return (
+				<span className='gz-mgmt-pill success' title='Accounts Manager'>
+					<span>ACCOUNTS</span>
+				</span>
+			)
+		}
+		return (
+			<span className='gz-mgmt-pill slate'>
+				<span>{type || 'ADMIN'}</span>
+			</span>
+		)
+	}
+
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Admin Users</PageTitle>
-			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title'>
+
+			{/* =========================================================================
+			    BREADCRUMBS
+			    ========================================================================= */}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Admin Users</span>
+			</div>
+
+			{/* =========================================================================
+			    PAGE HEADER
+			    ========================================================================= */}
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Admin Users Management</h1>
+					<p className='gz-mgmt-subtitle'>
+						Review provisioned administrators, privilege hierarchies, and multi-factor authentication security.
+					</p>
+				</div>
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<Link to='/rag/admin-user-add' className='gz-mgmt-btn-primary'>
+						<FontAwesomeIcon icon={faPlus} />
+						<span>Add Admin</span>
+					</Link>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    SUMMARY METRICS STRIP
+			    ========================================================================= */}
+			<div className='gz-mgmt-stats-grid'>
+				<div className='gz-mgmt-stat-card'>
+					<div className='gz-mgmt-stat-icon blue'>
+						<FontAwesomeIcon icon={faUserShield} />
+					</div>
+					<div className='gz-mgmt-stat-info'>
+						<span className='gz-mgmt-stat-label'>Total Admin Accounts</span>
+						{loading ? (
+							<div className='gz-skeleton mt-1' style={{ width: '38px', height: '22px', borderRadius: '4px' }} />
+						) : (
+							<span className='gz-mgmt-stat-value'>{totalAdmins}</span>
+						)}
+					</div>
+				</div>
+
+				<div className='gz-mgmt-stat-card'>
+					<div className='gz-mgmt-stat-icon purple'>
+						<FontAwesomeIcon icon={faCrown} />
+					</div>
+					<div className='gz-mgmt-stat-info'>
+						<span className='gz-mgmt-stat-label'>Master Operators</span>
+						{loading ? (
+							<div className='gz-skeleton mt-1' style={{ width: '38px', height: '22px', borderRadius: '4px' }} />
+						) : (
+							<span className='gz-mgmt-stat-value' style={{ color: '#9333EA' }}>
+								{masterAdmins}
+							</span>
+						)}
+					</div>
+				</div>
+
+				<div className='gz-mgmt-stat-card'>
+					<div className='gz-mgmt-stat-icon green'>
+						<FontAwesomeIcon icon={faShieldAlt} />
+					</div>
+					<div className='gz-mgmt-stat-info'>
+						<span className='gz-mgmt-stat-label'>MFA Protected</span>
+						{loading ? (
+							<div className='gz-skeleton mt-1' style={{ width: '38px', height: '22px', borderRadius: '4px' }} />
+						) : (
+							<span className='gz-mgmt-stat-value' style={{ color: '#16A34A' }}>
+								{mfaConfigured}
+							</span>
+						)}
+					</div>
+				</div>
+
+				<div className='gz-mgmt-stat-card'>
+					<div className='gz-mgmt-stat-icon amber'>
+						<FontAwesomeIcon icon={faUser} />
+					</div>
+					<div className='gz-mgmt-stat-info'>
+						<span className='gz-mgmt-stat-label'>Standard Admins</span>
+						{loading ? (
+							<div className='gz-skeleton mt-1' style={{ width: '38px', height: '22px', borderRadius: '4px' }} />
+						) : (
+							<span className='gz-mgmt-stat-value' style={{ color: '#D97706' }}>
+								{standardAdmins}
+							</span>
+						)}
+					</div>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    MAIN TABLE CARD
+			    ========================================================================= */}
+			<div className='gz-mgmt-card'>
+				{/* Toolbar */}
+				<div className='gz-mgmt-toolbar'>
+					<div className='gz-mgmt-toolbar-left'>
 						<SearchFilter
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
 						/>
-						<div className='mt-1'>
+						<div className='d-inline-block'>
 							<LengthMenu
 								expenseData={paginatedAdminData}
 								handleItemsPerPageChange={handleItemsPerPageChange}
 							/>
 						</div>
 					</div>
-					<div className='card-toolbar'>
-						<TableButton
-							action='add'
-							to='/rag/admin-user-add'
-							text='Add Admin'
-						/>
+					<div className='gz-mgmt-toolbar-right'>
+						<span className='fs-8 fw-semibold text-muted'>
+							Showing {paginatedAdminData.length} of {filteredAdminData.length} administrators
+						</span>
 					</div>
 				</div>
-				<div className='py-4 card-body'>
-					<div className='table-responsive'>
-						<table
-							id='kt_table_users'
-							className='table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer table-row-dashed table-row-gray-300 align-middle'>
-							<thead>
-								<tr className='fw-bold text-muted bg-light border-bottom-0'>
-									<th className='ps-4 rounded-start text-center'>No.</th>
-									<th>Name</th>
-									<th>Email</th>
-									<th>Mobile Number</th>
-									<th>Type</th>
-									<th>MFA Status</th>
-									<th className='ps-4 rounded-end'>Action</th>
-								</tr>
-							</thead>
-							<tbody className='text-gray-600 fw-bold'>
-								{loading ? (
-									<tr>
-										<td
-											colSpan={12}
-											className='text-center'>
-											<div className='d-flex justify-content-center align-items-center mb-4 my-7'>
-												<div
-													className='spinner-border text-primary'
-													role='status'>
-													<span className='visually-hidden'>Loading...</span>
+
+				{/* Table */}
+				<div className='gz-mgmt-table-wrap'>
+					<table className='table mb-0'>
+						<thead>
+							<tr>
+								<th style={{ width: '56px', textAlign: 'center' }}>No.</th>
+								<th style={{ minWidth: '220px' }}>Administrator</th>
+								<th style={{ minWidth: '200px' }}>Email Address</th>
+								<th style={{ minWidth: '150px' }}>Mobile Number</th>
+								<th style={{ minWidth: '130px' }}>Account Role</th>
+								<th style={{ minWidth: '150px' }}>MFA Security</th>
+								<th style={{ minWidth: '90px', textAlign: 'center' }}>Action</th>
+							</tr>
+						</thead>
+						<tbody>
+							{loading ? (
+								[...Array(5)].map((_, idx) => (
+									<tr key={`admin-skel-${idx}`} className='gz-skeleton-tr'>
+										<td style={{ textAlign: 'center' }}>
+											<div className='gz-skeleton rounded mx-auto' style={{ width: '22px', height: '16px' }} />
+										</td>
+										<td>
+											<div className='gz-mgmt-identity-cell'>
+												<div className='gz-skeleton rounded-circle' style={{ width: '38px', height: '38px', flexShrink: 0 }} />
+												<div className='d-flex flex-column gap-1.5'>
+													<div className='gz-skeleton rounded' style={{ width: '130px', height: '14px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '85px', height: '11px' }} />
 												</div>
 											</div>
 										</td>
+										<td>
+											<div className='gz-skeleton rounded' style={{ width: '160px', height: '14px' }} />
+										</td>
+										<td>
+											<div className='gz-skeleton rounded' style={{ width: '110px', height: '14px' }} />
+										</td>
+										<td>
+											<div className='gz-skeleton rounded-pill' style={{ width: '90px', height: '22px' }} />
+										</td>
+										<td>
+											<div className='gz-skeleton rounded-pill' style={{ width: '110px', height: '22px' }} />
+										</td>
+										<td style={{ textAlign: 'center' }}>
+											<div className='gz-skeleton rounded-circle mx-auto' style={{ width: '32px', height: '32px' }} />
+										</td>
 									</tr>
-								) : (
-									paginatedAdminData.map((admin: any, index: number) => {
-										const MFAStatusHTML =
-											admin.MFA_enabled?.length > 0 ? (
-												<span
-													className='badge badge-success'
-													title='Account is secured by Multi-Factor Authentication.'>
-													Enabled
-												</span>
-											) : (
-												<span
-													className='badge badge-danger'
-													title='This is account did not setup Multi-Factor Authentication. We highly recommended it for data security.'>
-													Not Configured
-												</span>
-											)
-										const actualIndex = (pagination.page - 1) * pagination.itemsPerPage + index + 1
-										return (
-											<tr key={admin.id}>
-												<td className='text-center'>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{actualIndex}
+								))
+							) : paginatedAdminData.length > 0 ? (
+								paginatedAdminData.map((admin: any, index: number) => {
+									const actualIndex =
+										(pagination.page - 1) * pagination.itemsPerPage + index + 1
+									const isMfaEnabled = admin.MFA_enabled && admin.MFA_enabled.length > 0
+									const initials = (admin.full_name || 'Admin')
+										.split(' ')
+										.map((part: string) => part[0])
+										.slice(0, 2)
+										.join('')
+										.toUpperCase()
+
+									return (
+										<tr key={admin._id || admin.id || actualIndex}>
+											<td style={{ textAlign: 'center', fontWeight: 700, color: '#71809A' }}>
+												{actualIndex}
+											</td>
+											<td>
+												<div className='gz-mgmt-identity-cell'>
+													<div className='gz-mgmt-avatar'>{initials}</div>
+													<div className='gz-mgmt-identity-info'>
+														<span className='gz-mgmt-identity-name'>
+															{admin.full_name || 'Unnamed Admin'}
+														</span>
+														<span className='gz-mgmt-identity-sub'>
+															{admin.type || 'Staff Account'}
+														</span>
+													</div>
+												</div>
+											</td>
+											<td>
+												{admin.email ? (
+													<a
+														href={`mailto:${admin.email}`}
+														style={{
+															color: '#172B4D',
+															textDecoration: 'none',
+															fontSize: '13px',
+															display: 'inline-flex',
+															alignItems: 'center',
+															gap: '6px',
+														}}>
+														<FontAwesomeIcon icon={faEnvelope} style={{ fontSize: '11px', color: '#71809A' }} />
+														<span>{admin.email}</span>
+													</a>
+												) : (
+													<span style={{ color: '#A0ABC0' }}>—</span>
+												)}
+											</td>
+											<td>
+												{admin.mobile ? (
+													<a
+														href={`tel:${admin.mobile}`}
+														style={{
+															color: '#172B4D',
+															textDecoration: 'none',
+															fontSize: '13px',
+															fontWeight: 500,
+															display: 'inline-flex',
+															alignItems: 'center',
+															gap: '6px',
+														}}>
+														<FontAwesomeIcon icon={faPhoneAlt} style={{ fontSize: '11px', color: '#71809A' }} />
+														<span>{admin.mobile}</span>
+													</a>
+												) : (
+													<span style={{ color: '#A0ABC0' }}>—</span>
+												)}
+											</td>
+											<td>{renderRoleBadge(admin.type)}</td>
+											<td>
+												{isMfaEnabled ? (
+													<span
+														className='gz-mgmt-pill success'
+														title='Account is secured by Multi-Factor Authentication.'>
+														<FontAwesomeIcon icon={faCheckCircle} style={{ fontSize: '10px' }} />
+														<span>MFA Active</span>
 													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{admin.full_name}
+												) : (
+													<span
+														className='gz-mgmt-pill warning'
+														title='This account has not set up Multi-Factor Authentication.'>
+														<FontAwesomeIcon icon={faExclamationTriangle} style={{ fontSize: '10px' }} />
+														<span>Not Setup</span>
 													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{admin.email}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{admin.mobile}
-													</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>{admin.type}</span>
-												</td>
-												<td>
-													<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-														{MFAStatusHTML}
-													</span>
-												</td>
-												<td>
-													<TableButton
-														action='edit'
-														to={'/rag/admin-user-edit?admin_id=' + admin._id}
-													/>
-												</td>
-											</tr>
-										)
-									})
-								)}
-							</tbody>
-						</table>
-					</div>
-					{paginatedAdminData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
-					{paginatedAdminData.length > 0 && (
+												)}
+											</td>
+											<td style={{ textAlign: 'center' }}>
+												<Link
+													to={`/rag/admin-user-edit?admin_id=${admin._id || admin.id}`}
+													className='gz-mgmt-action-btn'
+													title='Edit Admin'>
+													<FontAwesomeIcon icon={faEdit} />
+												</Link>
+											</td>
+										</tr>
+									)
+								})
+							) : (
+								<tr>
+									<td colSpan={7} className='text-center py-10'>
+										<div className='d-flex flex-column align-items-center justify-content-center my-6'>
+											<div
+												className='d-inline-flex align-items-center justify-content-center mb-3'
+												style={{
+													width: '48px',
+													height: '48px',
+													borderRadius: '50%',
+													background: '#F5F7FB',
+													color: '#71809A',
+												}}>
+												<FontAwesomeIcon icon={faUsers} style={{ fontSize: '20px' }} />
+											</div>
+											<h4 className='fw-bold mb-1' style={{ color: '#172B4D' }}>
+												No Administrators Found
+											</h4>
+											<p className='text-muted fs-7 mb-0'>
+												{searchTerm
+													? 'No administrator accounts matched your search keyword.'
+													: 'No administrator accounts are registered.'}
+											</p>
+										</div>
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
+
+				{/* Pagination */}
+				{filteredAdminData.length > 0 && (
+					<div
+						className='px-6 py-4'
+						style={{ borderTop: '1px solid #EEF2F7', background: '#FFFFFF' }}>
 						<UsersListPagination
-							totalPages={Math.ceil(adminData.length / pagination.itemsPerPage)}
+							totalPages={Math.ceil(filteredAdminData.length / pagination.itemsPerPage)}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
 						/>
-					)}
-				</div>
-			</KTCard>
-		</>
+					</div>
+				)}
+			</div>
+		</div>
 	)
 }
 

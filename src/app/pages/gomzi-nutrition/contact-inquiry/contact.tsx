@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { endOfMonth, startOfMonth } from 'date-fns'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -20,6 +21,9 @@ import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetContactInquiry } from '../../../Functions/FGGroup'
+import '../common-management.css'
+import '../products-theme.css'
+import '../orders-theme.css'
 
 const ContactInquiry: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -274,46 +278,113 @@ const ContactInquiry: React.FC = () => {
 		}
 	}
 
+	const stats = useMemo(() => {
+		const total = allContactInquiry.length
+		const unread = allContactInquiry.filter((i: any) => i.read_receipt === false).length
+		const read = total - unread
+		const partner = allContactInquiry.filter((i: any) => {
+			const sub = (i.subject || '').toLowerCase()
+			const src = (i.source || '').toLowerCase()
+			return sub.includes('partner') || src.includes('inquiry')
+		}).length
+		return { total, unread, read, partner }
+	}, [allContactInquiry])
+
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Contact Inquiry</PageTitle>
-			<KTCard>
-				<div className='card-header border-0 pt-6'>
-					<div className='card-title w-100 d-flex flex-wrap align-items-center gap-3'>
-						<div>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
-								className='me-0'
-							/>
-						</div>
 
-						<div>
-							<LengthMenu
-								expenseData={filteredContactInquiry}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-								value={pagination.itemsPerPage}
-								className='me-0'
-							/>
-						</div>
+			<style>{`
+				.contact-table .data-row {
+					cursor: pointer;
+					border-bottom: 1px solid #EEF2F7;
+					transition: background 0.15s ease;
+				}
+				.contact-table .data-row:hover {
+					background: #F8FAFD;
+				}
+				.contact-table .data-row td {
+					padding: 14px 12px;
+					vertical-align: middle;
+				}
+				.status-indicator-badge {
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+					width: 28px;
+					height: 28px;
+					border-radius: 8px;
+				}
+			`}</style>
 
-						<div>
-							<button
-								type='button'
-								className='btn btn-primary d-flex align-items-center justify-content-center'
-								onClick={downloadExcel}
-								disabled={loading || exporting || filteredContactInquiry.length === 0}
-								style={{
-									width: '38px',
-									height: '38px',
-									padding: 0,
-									borderRadius: '8px',
-									fontSize: '14px',
-								}}
-								title='Download Excel'>
-								<FontAwesomeIcon icon={faDownload} />
-							</button>
-						</div>
+			{/* Breadcrumb */}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Contact Inquiries</span>
+			</div>
+
+			{/* Header */}
+			<div className='gz-mgmt-header mb-6'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Contact Inquiries</h1>
+					<p className='gz-mgmt-subtitle'>
+						Review customer questions, partnership requests, and website contact form submissions.
+					</p>
+				</div>
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<button
+						type='button'
+						className='gz-mgmt-btn-secondary'
+						onClick={downloadExcel}
+						disabled={loading || exporting || filteredContactInquiry.length === 0}
+						title='Download Excel'>
+						<FontAwesomeIcon icon={faDownload} />
+						<span>{exporting ? 'Exporting...' : 'Export Excel'}</span>
+					</button>
+				</div>
+			</div>
+
+			{/* Summary KPI Cards */}
+			<div className='gz-prod-summary-grid mb-6'>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-label'>Total Inquiries</div>
+					<div className='gz-prod-summary-val'>{stats.total}</div>
+					<div className='gz-prod-summary-sub'>All submissions</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-label'>Unread Inquiries</div>
+					<div className='gz-prod-summary-val text-danger'>{stats.unread}</div>
+					<div className='gz-prod-summary-sub'>Awaiting review</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-label'>Reviewed Inquiries</div>
+					<div className='gz-prod-summary-val text-success'>{stats.read}</div>
+					<div className='gz-prod-summary-sub'>Marked as read</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-label'>Partner Program</div>
+					<div className='gz-prod-summary-val text-primary'>{stats.partner}</div>
+					<div className='gz-prod-summary-sub'>Applications received</div>
+				</div>
+			</div>
+
+			{/* Main Management Card */}
+			<div className='gz-mgmt-card mb-6'>
+				<div className='gz-mgmt-toolbar'>
+					<div className='d-flex flex-wrap align-items-center gap-3'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
+
+						<LengthMenu
+							expenseData={filteredContactInquiry}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
 
 						<div style={{ minWidth: '220px', maxWidth: '300px' }}>
 							<SelectField
@@ -339,7 +410,8 @@ const ContactInquiry: React.FC = () => {
 						</div>
 					</div>
 				</div>
-				<div className='py-4 card-body'>
+
+				<div className='p-6 pt-0 contact-table'>
 					<div className='table-responsive'>
 						<Table
 							data={paginatedContactInquiry}
@@ -485,8 +557,8 @@ const ContactInquiry: React.FC = () => {
 						/>
 					</div>
 					{filteredContactInquiry.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10'>
+							<span className='text-muted fw-bold'>No records found</span>
 						</div>
 					)}
 					{filteredContactInquiry.length > 0 && (
@@ -497,8 +569,8 @@ const ContactInquiry: React.FC = () => {
 						/>
 					)}
 				</div>
-			</KTCard>
-		</>
+			</div>
+		</div>
 	)
 }
 export default ContactInquiry

@@ -242,16 +242,18 @@ textarea:focus-visible,
 	body.aside-minimize .aside .menu-item .menu-link,
 	body.gz-aside-collapsed .aside .menu-item .menu-link,
 	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-link {
-		width: 42px !important;
-		height: 42px !important;
-		min-width: 42px !important;
-		max-width: 42px !important;
+		width: 44px !important;
+		height: 44px !important;
+		min-width: 44px !important;
+		max-width: 44px !important;
+		min-height: 44px !important;
+		max-height: 44px !important;
 		padding: 0 !important;
 		margin: 0 auto !important;
 		display: flex !important;
 		align-items: center !important;
 		justify-content: center !important;
-		border-radius: 10px !important;
+		border-radius: 12px !important;
 		position: relative !important;
 		background-color: transparent !important;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -261,27 +263,48 @@ textarea:focus-visible,
 	body.gz-aside-collapsed .aside .menu-item .menu-icon,
 	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-icon {
 		margin: 0 !important;
+		margin-right: 0 !important;
+		margin-left: 0 !important;
+		margin-top: 0 !important;
+		margin-bottom: 0 !important;
 		padding: 0 !important;
-		width: 22px !important;
-		height: 22px !important;
+		width: 44px !important;
+		height: 44px !important;
+		min-width: 44px !important;
+		max-width: 44px !important;
+		min-height: 44px !important;
+		max-height: 44px !important;
 		display: flex !important;
 		align-items: center !important;
 		justify-content: center !important;
+		text-align: center !important;
+		line-height: 1 !important;
+		flex-shrink: 0 !important;
 		opacity: 1 !important;
 		visibility: visible !important;
 	}
 
 	body.aside-minimize .aside .menu-item .menu-icon i,
 	body.aside-minimize .aside .menu-item .menu-icon svg,
+	body.aside-minimize .aside .menu-item .menu-icon .svg-inline--fa,
 	body.gz-aside-collapsed .aside .menu-item .menu-icon i,
 	body.gz-aside-collapsed .aside .menu-item .menu-icon svg,
+	body.gz-aside-collapsed .aside .menu-item .menu-icon .svg-inline--fa,
 	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-icon i,
-	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-icon svg {
-		font-size: 16px !important;
-		width: 16px !important;
-		height: 16px !important;
-		max-width: 16px !important;
-		max-height: 16px !important;
+	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-icon svg,
+	body[data-kt-aside-minimize='on'] .aside .menu-item .menu-icon .svg-inline--fa {
+		font-size: 18px !important;
+		width: 18px !important;
+		height: 18px !important;
+		max-width: 18px !important;
+		max-height: 18px !important;
+		margin: 0 auto !important;
+		margin-right: 0 !important;
+		margin-left: 0 !important;
+		display: block !important;
+		line-height: 1 !important;
+		text-align: center !important;
+		vertical-align: middle !important;
 		color: #64748B !important;
 		fill: #64748B !important;
 		opacity: 1 !important;
@@ -312,12 +335,13 @@ textarea:focus-visible,
 	body.aside-minimize .aside .menu-item.show > .menu-link,
 	body.gz-aside-collapsed .aside .menu-item.show > .menu-link,
 	body[data-kt-aside-minimize='on'] .aside .menu-item.show > .menu-link {
-		background-color: #EAF1FB !important;
+		background-color: #172B4D !important;
 
 		.menu-icon i,
-		.menu-icon svg {
-			color: #172B4D !important;
-			fill: #172B4D !important;
+		.menu-icon svg,
+		.menu-icon .svg-inline--fa {
+			color: #FFFFFF !important;
+			fill: #FFFFFF !important;
 		}
 	}
 
@@ -607,7 +631,8 @@ body:not(.aside-minimize):not(.gz-aside-collapsed):not([data-kt-aside-minimize='
 	padding: 14px 14px 6px !important;
 }
 
-/* --- ASIDE MENU LINKS: DEFAULT, HOVER, ACTIVE (UNIFIED NAVIGATION SHELL) --- */
+/* --- ASIDE MENU LINKS: DEFAULT, HOVER, ACTIVE (UNIFIED NAVIGATION SHELL - EXPANDED MODE ONLY) --- */
+body:not(.aside-minimize):not(.gz-aside-collapsed):not([data-kt-aside-minimize='on']) {
 .aside,
 .aside-menu,
 #kt_aside_menu_wrapper,
@@ -881,6 +906,7 @@ body:not(.aside-minimize):not(.gz-aside-collapsed):not([data-kt-aside-minimize='
 			}
 		}
 	}
+}
 }
 
 /* Explicit Aside Submenu Bullet Dot Overrides */
@@ -3865,9 +3891,9 @@ button.btn-outline-primary:hover {
 .gz-skeleton {
 	background: linear-gradient(
 		90deg,
-		rgba(241, 245, 249, 0.8) 25%,
-		rgba(255, 255, 255, 0.95) 50%,
-		rgba(241, 245, 249, 0.8) 75%
+		#edf2f7 25%,
+		#f8fafc 50%,
+		#edf2f7 75%
 	);
 	background-size: 200% 100%;
 	animation: gz-shimmer 1.6s infinite ease-in-out;

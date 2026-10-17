@@ -120,7 +120,7 @@
 .gz-prod-btn-primary:hover {
 	background-color: var(--gz-prod-navy-hover);
 	border-color: var(--gz-prod-navy-hover);
-	transform: translateY(-1px);
+	transform: none;
 	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.18);
 }
 

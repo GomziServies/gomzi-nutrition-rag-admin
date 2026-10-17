@@ -1,11 +1,29 @@
+/* eslint-disable */
 import React, { useEffect, useState } from 'react'
-import { Button, Modal } from 'react-bootstrap'
+import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
-import { KTCard } from '../../../../_metronic/helpers'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faArrowLeft,
+	faBullhorn,
+	faCalendarAlt,
+	faCalendarCheck,
+	faCheckCircle,
+	faCloudDownloadAlt,
+	faEye,
+	faLayerGroup,
+	faList,
+	faSyncAlt,
+	faTag,
+	faUserTie,
+} from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import TableButton from '../../../components/TableButton'
 import * as FGGroupAPIs from '../../../Functions/FGGroup'
+import '../common-management.css'
+import '../products-theme.css'
+import '../orders-theme.css'
+import './follow-up-report.css'
 
 const ACCOUNT_ID = 'act_2776739622489798'
 
@@ -139,610 +157,325 @@ const FollowUpReportDashboard: React.FC = () => {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Follow Up Report Dashboard</PageTitle>
 
-			{/* Stats Cards Row */}
-			<div className='row g-5 mb-5'>
-				<div className='col-xl-4'>
-					<div className='stats-card-new border-primary-left'>
-						<div className='stats-card-body-new'>
-							<div className='stats-icon-new bg-light-primary'>
-								<i className='bi bi-megaphone-fill text-primary'></i>
-							</div>
-							<div className='stats-content-new'>
-								<div className='stats-title-new'>Active Ads</div>
-								<div className='stats-subtitle-new'>{ads.length} Ads</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div className='col-xl-4'>
-					<div className='stats-card-new border-success-left'>
-						<div className='stats-card-body-new'>
-							<div className='stats-icon-new bg-light-success'>
-								<i className='bi bi-diagram-3-fill text-success'></i>
-							</div>
-							<div className='stats-content-new'>
-								<div className='stats-title-new'>Campaigns</div>
-								<div className='stats-subtitle-new'>{campaigns.length} Campaigns</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div className='col-xl-4'>
-					<div className='stats-card-new border-warning-left'>
-						<div className='stats-card-body-new'>
-							<div className='stats-icon-new bg-light-warning'>
-								<i className='bi bi-building text-warning'></i>
-							</div>
-							<div className='stats-content-new'>
-								<div className='stats-title-new'>Account</div>
-								<div className='stats-subtitle-new'>Gomzi Nutrition</div>
-							</div>
-						</div>
-					</div>
-				</div>
+			{/* =========================================================================
+			    BREADCRUMBS
+			    ========================================================================= */}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Follow-Up Ads Dashboard</span>
 			</div>
 
-			<KTCard className='tele-report-card'>
-				{/* Filter Bar */}
-				<div className='filter-bar'>
-					<div className='filter-group'>
-						<div className='filter-left'>
-							<h5
-								className='mb-0'
-								style={{ color: '#181c32', fontWeight: 600 }}>
-								Active Ads List
-							</h5>
-						</div>
-						<div className='filter-right'>
-							<Link
-								to='/rag/follow-up-report-list'
-								className='btn-add-lead me-2'>
-								<i className='bi bi-list-ul text-white'></i>
-								View All Saved Leads
-							</Link>
-							{isLoading && (
-								<div
-									className='spinner-border spinner-border-sm text-primary me-3'
-									role='status'>
-									<span className='visually-hidden'>Loading...</span>
-								</div>
-							)}
-							<button
-								className='btn-sync me-2'
-								onClick={() => setShowDateModal(true)}
-								disabled={isSavingLeads || ads.length === 0}
-								style={{ background: '#7239ea' }}>
-								<i className='bi bi-calendar-check-fill text-white'></i>
-								<span className='text-white'>Save by Date</span>
-							</button>
-							<button
-								className='btn-sync'
-								onClick={handleSaveTodaysLeads}
-								disabled={isSavingLeads || ads.length === 0}>
-								{isSavingLeads ? (
-									<>
-										<span className='spinner'></span>
-										<span className='text-white'>Saving Leads...</span>
-									</>
-								) : (
-									<>
-										<i className='bi bi-cloud-arrow-down-fill text-white'></i>
-										<span className='text-white'>Save Today's Leads</span>
-									</>
-								)}
-							</button>
-						</div>
-					</div>
-				</div>
-
-				{/* Table */}
-				<div className='card-body'>
-					<div className='table-responsive'>
-						<table className='table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer'>
-							<thead>
-								<tr className='text-start text-muted fw-bolder fs-7 text-uppercase gs-0 bg-light'>
-									<th
-										className='ps-4 rounded-start'
-										style={{ width: '60px' }}>
-										No.
-									</th>
-									<th className='min-w-150px'>Campaign</th>
-									<th className='min-w-150px'>Ad Set</th>
-									<th className='min-w-150px'>Ad Name</th>
-									<th className='min-w-80px'>Status</th>
-									<th className='min-w-100px text-center rounded-end'>Action</th>
-								</tr>
-							</thead>
-							<tbody className='text-gray-600 fw-bold'>
-								{isLoading ? (
-									<tr>
-										<td colSpan={6}>
-											<div className='d-flex justify-content-center align-items-center py-10'>
-												<div
-													className='spinner-border text-primary'
-													role='status'>
-													<span className='visually-hidden'>Loading...</span>
-												</div>
-											</div>
-										</td>
-									</tr>
-								) : ads.length > 0 ? (
-									ads.map((ad, index) => (
-										<tr
-											key={ad.id}
-											className='data-row'>
-											<td className='ps-4'>
-												<span className='table-common-text'>{index + 1}</span>
-											</td>
-											<td>
-												<div className='table-common-text'>{ad.campaignName || '-'}</div>
-											</td>
-											<td>
-												<div className='table-common-text'>{ad.adSetName || '-'}</div>
-											</td>
-											<td>
-												<div className='table-common-text'>{ad.name || '-'}</div>
-											</td>
-											<td>
-												<span
-													className={`badge badge-light-${
-														ad.status === 'ACTIVE'
-															? 'success'
-															: ad.status === 'PAUSED'
-															? 'warning'
-															: 'secondary'
-													}`}>
-													{ad.status || '-'}
-												</span>
-											</td>
-											<td className='text-center'>
-												<TableButton
-													action='view'
-													to={`/rag/follow-up-report-list?ad=${ad.id}&name=${encodeURIComponent(
-														ad.name || ''
-													)}`}
-												/>
-											</td>
-										</tr>
-									))
-								) : (
-									<tr>
-										<td colSpan={6}>
-											<div className='empty-state'>
-												<div className='empty-icon'>
-													<i className='bi bi-inbox'></i>
-												</div>
-												<div className='empty-title'>No Ads Found</div>
-												<div className='empty-subtitle'>
-													No active ads available for this account
-												</div>
-											</div>
-										</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</KTCard>
-
-			<Modal
-				show={showDateModal}
-				onHide={() => !isSavingLeads && setShowDateModal(false)}
-				centered>
-				<Modal.Header closeButton={!isSavingLeads}>
-					<Modal.Title>Select Date to Save Leads</Modal.Title>
-				</Modal.Header>
-				<Modal.Body>
-					<div className='mb-3'>
-						<label className='form-label fw-bold'>Date</label>
-						<input
-							type='date'
-							className='form-control'
-							value={selectedDate}
-							onChange={(e) => setSelectedDate(e.target.value)}
-							disabled={isSavingLeads}
-						/>
-					</div>
-					<p className='text-muted small'>
-						This will fetch and save leads created on the selected date for all active ads.
+			{/* =========================================================================
+			    PAGE HEADER
+			    ========================================================================= */}
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>Follow-Up Ads & Performance Dashboard</h1>
+					<p className='gz-mgmt-subtitle'>
+						Sync ad campaign leads from Meta (Facebook & Instagram), review active ad sets, and monitor distribution.
 					</p>
-				</Modal.Body>
-				<Modal.Footer>
-					<Button
-						variant='secondary'
-						onClick={() => setShowDateModal(false)}
-						disabled={isSavingLeads}>
-						Cancel
-					</Button>
-					<Button
-						variant='primary'
-						onClick={() => handleSaveLeads(selectedDate)}
-						disabled={isSavingLeads || !selectedDate}
-						style={{ background: '#7239ea', border: 'none' }}>
+				</div>
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<Link
+						to='/rag/follow-up-report-list'
+						className='gz-mgmt-btn-secondary'>
+						<FontAwesomeIcon icon={faList} />
+						<span>View All Saved Leads</span>
+					</Link>
+
+					<button
+						type='button'
+						className='gz-mgmt-btn-secondary'
+						onClick={() => setShowDateModal(true)}
+						disabled={isSavingLeads || ads.length === 0}
+						style={{ color: '#2563EB', borderColor: '#BFDBFE' }}>
+						<FontAwesomeIcon icon={faCalendarCheck} />
+						<span>Save by Date</span>
+					</button>
+
+					<button
+						type='button'
+						className='gz-mgmt-btn-primary'
+						onClick={handleSaveTodaysLeads}
+						disabled={isSavingLeads || ads.length === 0}>
 						{isSavingLeads ? (
 							<>
 								<span
 									className='spinner-border spinner-border-sm me-2'
 									role='status'
 									aria-hidden='true'></span>
-								Saving...
+								<span>Saving Leads...</span>
 							</>
 						) : (
-							'Save Leads'
+							<>
+								<FontAwesomeIcon icon={faCloudDownloadAlt} />
+								<span>Save Today's Leads</span>
+							</>
 						)}
-					</Button>
-				</Modal.Footer>
+					</button>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    STATS METRIC CARDS
+			    ========================================================================= */}
+			<div className='gz-mgmt-stats-grid mb-6'>
+				<div className='gz-mgmt-stat-card'>
+					<div className='gz-mgmt-stat-icon blue'>
+						<FontAwesomeIcon icon={faBullhorn} />
+					</div>
+					<div className='gz-mgmt-stat-info'>
+						<span className='gz-mgmt-stat-label'>Active Ads</span>
+						<span className='gz-mgmt-stat-value'>{ads.length}</span>
+					</div>
+				</div>
+
+				<div className='gz-mgmt-stat-card'>
+					<div className='gz-mgmt-stat-icon purple'>
+						<FontAwesomeIcon icon={faLayerGroup} />
+					</div>
+					<div className='gz-mgmt-stat-info'>
+						<span className='gz-mgmt-stat-label'>Campaigns Synced</span>
+						<span className='gz-mgmt-stat-value' style={{ color: '#9333EA' }}>
+							{campaigns.length}
+						</span>
+					</div>
+				</div>
+
+				<div className='gz-mgmt-stat-card'>
+					<div className='gz-mgmt-stat-icon green'>
+						<FontAwesomeIcon icon={faTag} />
+					</div>
+					<div className='gz-mgmt-stat-info'>
+						<span className='gz-mgmt-stat-label'>Ad Account</span>
+						<span className='gz-mgmt-stat-value' style={{ fontSize: '18px', color: '#16A34A' }}>
+							Gomzi Nutrition
+						</span>
+					</div>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    ACTIVE ADS TABLE CARD
+			    ========================================================================= */}
+			<div className='gz-mgmt-card'>
+				{/* Toolbar */}
+				<div className='gz-mgmt-toolbar'>
+					<div className='gz-mgmt-toolbar-left'>
+						<h3 className='fw-bold mb-0' style={{ color: '#172B4D', fontSize: '16px' }}>
+							Active Ads Directory
+						</h3>
+						<span className='fs-8 fw-semibold text-muted'>
+							{ads.length} advertising creative units synchronized
+						</span>
+					</div>
+					<div className='gz-mgmt-toolbar-right'>
+						{isLoading && (
+							<div className='d-flex align-items-center gap-2'>
+								<div
+									className='spinner-border spinner-border-sm'
+									style={{ color: '#172B4D' }}
+									role='status'>
+									<span className='visually-hidden'>Loading...</span>
+								</div>
+								<span className='fs-8 text-muted'>Syncing with Meta...</span>
+							</div>
+						)}
+					</div>
+				</div>
+
+				{/* Table */}
+				<div className='gz-mgmt-table-wrap'>
+					<table className='table mb-0'>
+						<thead>
+							<tr>
+								<th style={{ width: '56px', textAlign: 'center' }}>No.</th>
+								<th style={{ minWidth: '220px' }}>Campaign Name</th>
+								<th style={{ minWidth: '200px' }}>Ad Set</th>
+								<th style={{ minWidth: '220px' }}>Creative / Ad Name</th>
+								<th style={{ minWidth: '120px' }}>Status</th>
+								<th style={{ minWidth: '100px', textAlign: 'center' }}>Action</th>
+							</tr>
+						</thead>
+						<tbody>
+							{isLoading ? (
+								<tr>
+									<td colSpan={6} className='text-center py-10'>
+										<div className='d-flex justify-content-center align-items-center my-6'>
+											<div
+												className='spinner-border'
+												style={{ color: '#172B4D', width: '2.5rem', height: '2.5rem' }}
+												role='status'>
+												<span className='visually-hidden'>Loading...</span>
+											</div>
+										</div>
+									</td>
+								</tr>
+							) : ads.length > 0 ? (
+								ads.map((ad, index) => (
+									<tr key={ad.id || index}>
+										<td style={{ textAlign: 'center', fontWeight: 700, color: '#71809A' }}>
+											{index + 1}
+										</td>
+										<td>
+											<span style={{ fontWeight: 600, color: '#172B4D', fontSize: '13.5px' }}>
+												{ad.campaignName || '—'}
+											</span>
+										</td>
+										<td>
+											<span style={{ color: '#556987', fontSize: '13px' }}>
+												{ad.adSetName || '—'}
+											</span>
+										</td>
+										<td>
+											<span style={{ fontWeight: 600, color: '#172B4D', fontSize: '13px' }}>
+												{ad.name || '—'}
+											</span>
+										</td>
+										<td>
+											{ad.status === 'ACTIVE' ? (
+												<span className='gz-mgmt-pill success'>
+													<FontAwesomeIcon icon={faCheckCircle} style={{ fontSize: '9px' }} />
+													<span>ACTIVE</span>
+												</span>
+											) : ad.status === 'PAUSED' ? (
+												<span className='gz-mgmt-pill warning'>PAUSED</span>
+											) : (
+												<span className='gz-mgmt-pill slate'>{ad.status || '—'}</span>
+											)}
+										</td>
+										<td style={{ textAlign: 'center' }}>
+											<Link
+												to={`/rag/follow-up-report-list?ad=${ad.id}&name=${encodeURIComponent(
+													ad.name || ''
+												)}`}
+												className='gz-mgmt-action-btn'
+												title='View Leads for this Ad'>
+												<FontAwesomeIcon icon={faEye} />
+											</Link>
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td colSpan={6} className='text-center py-10'>
+										<div className='d-flex flex-column align-items-center justify-content-center my-6'>
+											<div
+												className='d-inline-flex align-items-center justify-content-center mb-3'
+												style={{
+													width: '48px',
+													height: '48px',
+													borderRadius: '50%',
+													background: '#F5F7FB',
+													color: '#71809A',
+												}}>
+												<FontAwesomeIcon icon={faBullhorn} style={{ fontSize: '20px' }} />
+											</div>
+											<h4 className='fw-bold mb-1' style={{ color: '#172B4D' }}>
+												No Ads Found
+											</h4>
+											<p className='text-muted fs-7 mb-0'>
+												No active Facebook or Instagram ads currently found for this account.
+											</p>
+										</div>
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    MODAL: SAVE LEADS BY DATE
+			    ========================================================================= */}
+			<Modal
+				show={showDateModal}
+				onHide={() => !isSavingLeads && setShowDateModal(false)}
+				centered>
+				<div
+					className='modal-content'
+					style={{
+						borderRadius: '16px',
+						border: '1px solid #E4EAF2',
+						boxShadow: '0 10px 30px rgba(23, 43, 77, 0.12)',
+						overflow: 'hidden',
+					}}>
+					<div
+						className='modal-header d-flex justify-content-between align-items-center px-6 py-4'
+						style={{ borderBottom: '1px solid #EEF2F7', background: '#FFFFFF' }}>
+						<h3 className='fw-bold mb-0' style={{ color: '#172B4D', fontSize: '18px' }}>
+							Select Date to Save Leads
+						</h3>
+						{!isSavingLeads && (
+							<button
+								type='button'
+								onClick={() => setShowDateModal(false)}
+								className='btn-close'></button>
+						)}
+					</div>
+					<div className='modal-body px-6 py-5'>
+						<div className='mb-3'>
+							<label className='fs-7 fw-bold mb-2 d-block' style={{ color: '#172B4D' }}>
+								Lead Creation Date
+							</label>
+							<input
+								type='date'
+								className='form-control form-control-solid'
+								value={selectedDate}
+								onChange={(e) => setSelectedDate(e.target.value)}
+								disabled={isSavingLeads}
+								style={{
+									height: '44px',
+									backgroundColor: '#F8FAFD',
+									borderColor: '#E4EAF2',
+									borderRadius: '10px',
+									color: '#172B4D',
+								}}
+							/>
+						</div>
+						<p className='fs-8 text-muted mb-0'>
+							This will query Meta for all leads generated on the selected date across active ads and persist them to the database.
+						</p>
+					</div>
+					<div
+						className='modal-footer d-flex justify-content-end gap-2 px-6 py-4'
+						style={{ borderTop: '1px solid #EEF2F7', background: '#F8FAFD' }}>
+						<button
+							type='button'
+							className='gz-mgmt-btn-secondary'
+							onClick={() => setShowDateModal(false)}
+							disabled={isSavingLeads}>
+							Cancel
+						</button>
+						<button
+							type='button'
+							className='gz-mgmt-btn-primary'
+							onClick={() => handleSaveLeads(selectedDate)}
+							disabled={isSavingLeads || !selectedDate}>
+							{isSavingLeads ? (
+								<>
+									<span
+										className='spinner-border spinner-border-sm me-2'
+										role='status'
+										aria-hidden='true'></span>
+									<span>Saving Leads...</span>
+								</>
+							) : (
+								<>
+									<FontAwesomeIcon icon={faCloudDownloadAlt} />
+									<span>Save Leads</span>
+								</>
+							)}
+						</button>
+					</div>
+				</div>
 			</Modal>
-
-			<style>{`
-        /* New Stats Cards UI */
-        .stats-card-new {
-          background: #fff;
-          border-radius: 12px;
-          box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-          transition: all 0.3s ease;
-          height: 100%;
-          border: 1px solid #f1f3f9;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .stats-card-new:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .stats-card-body-new {
-          padding: 24px;
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-
-        .border-primary-left { border-left: 5px solid #667eea; }
-        .border-success-left { border-left: 5px solid #50cd89; }
-        .border-warning-left { border-left: 5px solid #ffc700; }
-
-        .stats-icon-new {
-          width: 50px;
-          height: 50px;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .bg-light-primary { background-color: #f1f4ff; }
-        .bg-light-success { background-color: #e8fff3; }
-        .bg-light-warning { background-color: #fff8dd; }
-
-        .stats-icon-new i {
-          font-size: 22px;
-        }
-
-        .stats-content-new {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .stats-title-new {
-          font-size: 16px;
-          font-weight: 700;
-          color: #181c32;
-        }
-
-        .stats-subtitle-new {
-          font-size: 13px;
-          color: #7e8299;
-          font-weight: 500;
-        }
-
-        /* Card Table Styles */
-        .card-table-container {
-          margin-top: 16px;
-          max-height: 200px;
-          overflow-y: auto;
-        }
-
-        .card-table-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 12px;
-          background: #f9fafb;
-          border-radius: 6px;
-          margin-bottom: 8px;
-          transition: all 0.2s ease;
-        }
-
-        .card-table-item:hover {
-          background: #eef0f8;
-        }
-
-        .card-table-item:last-child {
-          margin-bottom: 0;
-        }
-
-        .card-table-name {
-          font-size: 13px;
-          font-weight: 600;
-          color: #181c32;
-        }
-
-        .card-table-platform {
-          font-size: 11px;
-          color: #a1a5b7;
-          margin-top: 2px;
-        }
-
-        .card-table-count {
-          font-size: 16px;
-          font-weight: 800;
-          color: #3699ff;
-        }
-
-        .city-card-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 12px;
-          background: #f9fafb;
-          border-radius: 6px;
-          margin-bottom: 8px;
-        }
-
-        .city-card-item:last-child {
-          margin-bottom: 0;
-        }
-
-        .city-card-name {
-          font-size: 13px;
-          font-weight: 600;
-          color: #181c32;
-        }
-
-        .city-card-stats {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .city-card-count {
-          font-size: 16px;
-          font-weight: 800;
-          color: #3699ff;
-        }
-
-        .city-card-percentage {
-          font-size: 11px;
-          font-weight: 600;
-          color: #a1a5b7;
-        }
-
-        .tele-report-card {
-          border: none;
-          border-radius: 12px;
-          overflow: hidden;
-          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-        }
-
-        .filter-bar {
-          background: linear-gradient(135deg, #f8f9fd 0%, #ffffff 100%);
-          border-bottom: 1px solid #eef0f8;
-          padding: 20px 24px;
-        }
-
-        .filter-group {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 12px;
-          width: 100%;
-          justify-content: space-between;
-        }
-
-        .filter-left,
-        .filter-right {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-
-        .custom-select {
-          border: 1px solid #e4e6ef;
-          border-radius: 8px;
-          padding: 8px 14px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #3f4254;
-          background-color: #fff;
-          min-width: 180px;
-          height: 40px;
-          transition: all 0.2s ease;
-          outline: none;
-          cursor: pointer;
-        }
-
-        .custom-select:focus {
-          border-color: #3699ff;
-          box-shadow: 0 0 0 3px rgba(54, 153, 255, 0.12);
-        }
-
-        .custom-select:hover {
-          border-color: #b5b5c3;
-        }
-
-        .search-input-wrapper {
-          position: relative;
-          min-width: 250px;
-        }
-
-        .search-input {
-          border: 1px solid #e4e6ef;
-          border-radius: 8px;
-          padding: 8px 14px 8px 38px;
-          font-size: 13px;
-          font-weight: 500;
-          color: #3f4254;
-          background-color: #fff;
-          width: 100%;
-          height: 40px;
-          transition: all 0.2s ease;
-          outline: none;
-        }
-
-        .search-input:focus {
-          border-color: #3699ff;
-          box-shadow: 0 0 0 3px rgba(54, 153, 255, 0.12);
-        }
-
-        .search-icon {
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #a1a5b7;
-          font-size: 14px;
-        }
-
-        .action-buttons {
-          display: flex;
-          gap: 12px;
-        }
-
-        .btn-sync {
-          background: #3699ff;
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          padding: 8px 20px;
-          font-size: 13px;
-          font-weight: 600;
-          height: 40px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .btn-sync:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(54, 153, 255, 0.4);
-        }
-
-        .btn-sync:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .btn-add-lead {
-          background: #50cd89;
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          padding: 8px 20px;
-          font-size: 13px;
-          font-weight: 600;
-          height: 40px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .btn-add-lead:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(80, 205, 137, 0.4);
-        }
-
-        .data-row {
-          transition: all 0.15s ease;
-          border-bottom: 1px solid #f4f4f8;
-        }
-
-        .data-row:hover {
-          background-color: transparent !important;
-          cursor: default !important;
-        }
-
-        .data-row td {
-          padding: 12px 10px;
-          vertical-align: middle;
-        }
-
-        .table thead th {
-          padding: 12px 10px !important;
-          font-size: 13px !important;
-        }
-
-        .table-common-text {
-          color: #3f4254;
-          font-weight: 500;
-          font-size: 13px;
-        }
-
-        .empty-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 60px 20px;
-        }
-
-        .empty-icon {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #f1f3f9 0%, #e8ecf7 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
-        }
-
-        .empty-icon i {
-          font-size: 32px;
-          color: #b5b5c3;
-        }
-
-        .empty-title {
-          font-size: 16px;
-          font-weight: 600;
-          color: #5e6278;
-          margin-bottom: 4px;
-        }
-
-        .empty-subtitle {
-          font-size: 13px;
-          color: #a1a5b7;
-        }
-
-        .spinner {
-          border: 3px solid rgba(255, 255, 255, 0.3);
-          border-radius: 50%;
-          border-top: 3px solid #fff;
-          width: 16px;
-          height: 16px;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-		</>
+		</div>
 	)
 }
 

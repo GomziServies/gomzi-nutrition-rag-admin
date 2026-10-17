@@ -325,9 +325,17 @@ export default function PromoBannerManage() {
 				<div className='card-header border-0 pt-6'>
 					<div className='card-title'>
 						<div className='d-flex align-items-center position-relative my-1'>
-							<h3 className='fw-bolder m-0 text-gray-800'>
+							<h3 className='fw-bolder m-0 text-gray-800 d-inline-flex align-items-center'>
 								<FontAwesomeIcon icon={faImages} className='text-primary me-2' />
-								Promotional Offer Banners ({banners.length})
+								Promotional Offer Banners{' '}
+								{loading ? (
+									<span
+										className='gz-skeleton rounded ms-2'
+										style={{ width: '36px', height: '22px', verticalAlign: 'middle' }}
+									/>
+								) : (
+									`(${banners.length})`
+								)}
 							</h3>
 						</div>
 					</div>
@@ -344,9 +352,66 @@ export default function PromoBannerManage() {
 
 				<div className='card-body py-4'>
 					{loading ? (
-						<div className='text-center py-10'>
-							<div className='spinner-border text-primary' role='status' />
-							<div className='text-gray-500 mt-2'>Loading promotional banners...</div>
+						<div className='table-responsive'>
+							<table className='table align-middle table-row-dashed fs-6 gy-5'>
+								<thead>
+									<tr className='text-start text-muted fw-bolder fs-7 text-uppercase gs-0'>
+										<th style={{ width: '70px' }}>Order</th>
+										<th style={{ width: '280px' }}>Offer Banner Image</th>
+										<th>Banner Title</th>
+										<th>Target URL</th>
+										<th style={{ width: '100px' }}>Status</th>
+										<th className='text-end' style={{ width: '120px' }}>Actions</th>
+									</tr>
+								</thead>
+								<tbody className='text-gray-600 fw-bold'>
+									{Array.from({ length: 5 }).map((_, idx) => (
+										<tr key={`promo-skeleton-${idx}`} className='gz-skeleton-tr'>
+											<td>
+												<div className='d-flex flex-column align-items-center gap-1'>
+													<div className='gz-skeleton rounded' style={{ width: '28px', height: '28px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '20px', height: '14px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '28px', height: '28px' }} />
+												</div>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton'
+													style={{
+														width: '240px',
+														height: '75px',
+														borderRadius: '10px',
+													}}
+												/>
+											</td>
+											<td>
+												<div className='d-flex flex-column gap-2'>
+													<div className='gz-skeleton' style={{ width: '70%', height: '16px' }} />
+													<div className='gz-skeleton' style={{ width: '40%', height: '12px' }} />
+												</div>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton rounded'
+													style={{ width: '140px', height: '16px' }}
+												/>
+											</td>
+											<td>
+												<div
+													className='gz-skeleton rounded'
+													style={{ width: '70px', height: '24px' }}
+												/>
+											</td>
+											<td className='text-end'>
+												<div className='d-inline-flex gap-2 justify-content-end'>
+													<div className='gz-skeleton rounded' style={{ width: '32px', height: '32px' }} />
+													<div className='gz-skeleton rounded' style={{ width: '32px', height: '32px' }} />
+												</div>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
 						</div>
 					) : banners.length === 0 ? (
 						<div className='text-center py-12 bg-light rounded'>

@@ -1,0 +1,876 @@
+/* =============================================================================
+   GOMZI PREMIUM ONE-TIME INTERNAL ANIMATED SVG ICON SYSTEM
+   Strictly Scoped | Zero Layout Shift | No Snapping | No Flashing Opacity
+   Brand Navy: #172B4D | Inactive: Slate Blue-Gray | Active/Hover: White
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   BASE ICON SYSTEM
+   ----------------------------------------------------------------------------- */
+.gz-anim-icon {
+	display: inline-block;
+	vertical-align: middle;
+	flex-shrink: 0;
+	overflow: visible;
+	pointer-events: none;
+	fill: none !important;
+	stroke: currentColor !important;
+}
+
+/* Specific elements that require solid fill instead of stroke */
+.gz-anim-icon [data-fill='true'],
+.gz-anim-icon .gz-headset-mictip,
+.gz-anim-icon .gz-slider-knob1,
+.gz-anim-icon .gz-slider-knob2,
+.gz-anim-icon .gz-strip-dot {
+	fill: currentColor !important;
+	stroke: none !important;
+}
+
+/* Sizing and alignment inside sidebar menu-icon wrapper */
+.menu-icon .gz-anim-icon {
+	width: 20px !important;
+	height: 20px !important;
+	min-width: 20px !important;
+	max-width: 20px !important;
+	min-height: 20px !important;
+	max-height: 20px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	margin: 0 auto !important;
+}
+
+/* Active State: Pure crisp white contrast on navy active background */
+.menu-link.active .gz-anim-icon,
+.menu-link.active .gz-anim-icon * {
+	color: #FFFFFF !important;
+	stroke: #FFFFFF !important;
+}
+
+.menu-link.active .gz-anim-icon [data-fill='true'] {
+	fill: #FFFFFF !important;
+}
+
+/* Navy Hover State: Bright white icon */
+.menu-link:hover .gz-anim-icon,
+.menu-link:hover .gz-anim-icon * {
+	color: #FFFFFF !important;
+	stroke: #FFFFFF !important;
+}
+
+.menu-link:hover .gz-anim-icon [data-fill='true'] {
+	fill: #FFFFFF !important;
+}
+
+/* -----------------------------------------------------------------------------
+   1. PLUS ICON (Add / Create Buttons)
+   Vertical stroke enters from above (780ms)
+   Horizontal stroke enters from left (510ms, delay 280ms)
+   Total sequence: ~800ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzPlusVerticalEnter {
+	0% {
+		transform: translateY(-16px);
+		opacity: 0;
+	}
+	25% {
+		opacity: 1;
+	}
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+@keyframes gzPlusHorizontalEnter {
+	0% {
+		transform: translateX(-16px);
+		opacity: 0;
+	}
+	25% {
+		opacity: 1;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, .gz-table-text-btn, .gz-prod-btn-primary, .gz-inv-btn-primary, .btn, a, button):hover .gz-anim-icon .gz-plus-v,
+:is(.menu-link, .gz-table-text-btn, .gz-prod-btn-primary, .gz-inv-btn-primary, .btn, a, button):focus-visible .gz-anim-icon .gz-plus-v,
+.gz-anim-icon.is-animating .gz-plus-v {
+	animation: gzPlusVerticalEnter 780ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+:is(.menu-link, .gz-table-text-btn, .gz-prod-btn-primary, .gz-inv-btn-primary, .btn, a, button):hover .gz-anim-icon .gz-plus-h,
+:is(.menu-link, .gz-table-text-btn, .gz-prod-btn-primary, .gz-inv-btn-primary, .btn, a, button):focus-visible .gz-anim-icon .gz-plus-h,
+.gz-anim-icon.is-animating .gz-plus-h {
+	animation: gzPlusHorizontalEnter 510ms cubic-bezier(0.4, 0, 0.2, 1) 280ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   2. DASHBOARD TILES (4-Tile Smooth Sequential Settling)
+   Offset: 1.5 SVG units, gentle staggered timing, duration ~850ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzDashTileTL {
+	0% {
+		transform: translateY(-1.8px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+@keyframes gzDashTileTR {
+	0% {
+		transform: translateY(-1.8px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+@keyframes gzDashTileBL {
+	0% {
+		transform: translateY(-1.8px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+@keyframes gzDashTileBR {
+	0% {
+		transform: translateY(-1.8px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-dash-tile-tl,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-dash-tile-tl,
+.gz-anim-icon.is-animating .gz-dash-tile-tl {
+	animation: gzDashTileTL 500ms cubic-bezier(0.25, 1, 0.5, 1) 0ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-dash-tile-tr,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-dash-tile-tr,
+.gz-anim-icon.is-animating .gz-dash-tile-tr {
+	animation: gzDashTileTR 500ms cubic-bezier(0.25, 1, 0.5, 1) 100ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-dash-tile-bl,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-dash-tile-bl,
+.gz-anim-icon.is-animating .gz-dash-tile-bl {
+	animation: gzDashTileBL 500ms cubic-bezier(0.25, 1, 0.5, 1) 200ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-dash-tile-br,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-dash-tile-br,
+.gz-anim-icon.is-animating .gz-dash-tile-br {
+	animation: gzDashTileBR 500ms cubic-bezier(0.25, 1, 0.5, 1) 300ms forwards;
+}
+
+/* 2b. DASHBOARD HOUSE (Approved Alternative) */
+@keyframes gzHouseDoorReveal {
+	0% {
+		transform: scaleY(0);
+		opacity: 0.3;
+	}
+	100% {
+		transform: scaleY(1);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-house-door,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-house-door,
+.gz-anim-icon.is-animating .gz-house-door {
+	transform-origin: center 21.5px;
+	animation: gzHouseDoorReveal 650ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   3. HERO BANNER (Image / Landscape)
+   Fixed frame, internal sun & mountain reveal smoothly (~800ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzHeroSunRise {
+	0% {
+		transform: translateY(2px);
+		opacity: 0.5;
+	}
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+@keyframes gzHeroMtnReveal {
+	0% {
+		transform: translateY(2.5px);
+		opacity: 0.4;
+	}
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-hero-sun,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-hero-sun,
+.gz-anim-icon.is-animating .gz-hero-sun {
+	animation: gzHeroSunRise 650ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-hero-mtn1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-hero-mtn1,
+.gz-anim-icon.is-animating .gz-hero-mtn1 {
+	animation: gzHeroMtnReveal 750ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-hero-mtn2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-hero-mtn2,
+.gz-anim-icon.is-animating .gz-hero-mtn2 {
+	animation: gzHeroMtnReveal 750ms cubic-bezier(0.25, 1, 0.5, 1) 120ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   4. BLOGS & JOURNAL (Open Book)
+   Fixed book outline, internal page lines reveal sequentially (~880ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzBlogLineDraw {
+	0% {
+		transform: scaleX(0);
+		opacity: 0;
+	}
+	100% {
+		transform: scaleX(1);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-blog-line1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-blog-line1,
+.gz-anim-icon.is-animating .gz-blog-line1 {
+	transform-origin: 6px center;
+	animation: gzBlogLineDraw 450ms cubic-bezier(0.25, 1, 0.5, 1) 0ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-blog-line2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-blog-line2,
+.gz-anim-icon.is-animating .gz-blog-line2 {
+	transform-origin: 6px center;
+	animation: gzBlogLineDraw 450ms cubic-bezier(0.25, 1, 0.5, 1) 120ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-blog-line3,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-blog-line3,
+.gz-anim-icon.is-animating .gz-blog-line3 {
+	transform-origin: 15px center;
+	animation: gzBlogLineDraw 450ms cubic-bezier(0.25, 1, 0.5, 1) 240ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-blog-line4,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-blog-line4,
+.gz-anim-icon.is-animating .gz-blog-line4 {
+	transform-origin: 15px center;
+	animation: gzBlogLineDraw 450ms cubic-bezier(0.25, 1, 0.5, 1) 360ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   5. TRENDING DEALS (Discount Price Tag)
+   Tiny, smooth tilt around attachment point (7px, 7px), duration ~850ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzDealTiltAnim {
+	0% {
+		transform: rotate(0deg);
+	}
+	30% {
+		transform: rotate(-7deg);
+	}
+	65% {
+		transform: rotate(4deg);
+	}
+	100% {
+		transform: rotate(0deg);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-deal-group,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-deal-group,
+.gz-anim-icon.is-animating .gz-deal-group {
+	transform-origin: 7px 7px;
+	animation: gzDealTiltAnim 850ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   6. PROMO SLIDERS (Controls / Settings Adjustments)
+   Tracks fixed, two knobs move smoothly along their tracks (~850ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzSliderKnob1Move {
+	0% {
+		transform: translateX(0);
+	}
+	40% {
+		transform: translateX(3px);
+	}
+	100% {
+		transform: translateX(0);
+	}
+}
+
+@keyframes gzSliderKnob2Move {
+	0% {
+		transform: translateX(0);
+	}
+	40% {
+		transform: translateX(-3px);
+	}
+	100% {
+		transform: translateX(0);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-slider-knob1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-slider-knob1,
+.gz-anim-icon.is-animating .gz-slider-knob1 {
+	animation: gzSliderKnob1Move 850ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-slider-knob2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-slider-knob2,
+.gz-anim-icon.is-animating .gz-slider-knob2 {
+	animation: gzSliderKnob2Move 850ms cubic-bezier(0.25, 1, 0.5, 1) 150ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   7. DISCOUNT STRIP BANNER (Banner Ribbon / Detail)
+   Fixed frame, internal ribbon badge reveals downwards (~800ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzStripBadgeReveal {
+	0% {
+		transform: translateY(-4px);
+		opacity: 0.3;
+	}
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-strip-badge,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-strip-badge,
+.gz-anim-icon.is-animating .gz-strip-badge {
+	animation: gzStripBadgeReveal 750ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   8. BANK OFFERS BANNER (Payment Card)
+   Card outline fixed, chip & line slide smoothly from left (~820ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzCardChipSlideIn {
+	0% {
+		transform: translateX(-4px);
+		opacity: 0.3;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-card-chip,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-card-chip,
+.gz-anim-icon.is-animating .gz-card-chip {
+	animation: gzCardChipSlideIn 780ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-card-line,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-card-line,
+.gz-anim-icon.is-animating .gz-card-line {
+	animation: gzCardChipSlideIn 780ms cubic-bezier(0.25, 1, 0.5, 1) 100ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   9. PRODUCTS & ORDERS (3D Box with Vertically Lifting Lid)
+   Lower box stationary. Top lid lifts STRAIGHT UPWARD, pauses, returns.
+   Zero horizontal movement, zero rotation. Duration ~1000ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzBoxLidVerticalLift {
+	0% {
+		transform: translateY(0);
+	}
+	35% {
+		transform: translateY(-4.5px);
+	}
+	55% {
+		transform: translateY(-4.5px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-pkg-lid-v3,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-pkg-lid-v3,
+.gz-anim-icon.is-animating .gz-pkg-lid-v3 {
+	animation: gzBoxLidVerticalLift 1000ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   10. INVOICES (Document with Sequential Text Lines)
+   Fixed document outline, two internal lines draw smoothly (~850ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzDocLineDraw {
+	0% {
+		transform: scaleX(0);
+		opacity: 0;
+	}
+	100% {
+		transform: scaleX(1);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-inv-line1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-inv-line1,
+.gz-anim-icon.is-animating .gz-inv-line1 {
+	transform-origin: 8px center;
+	animation: gzDocLineDraw 450ms cubic-bezier(0.25, 1, 0.5, 1) 0ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-inv-line2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-inv-line2,
+.gz-anim-icon.is-animating .gz-inv-line2 {
+	transform-origin: 8px center;
+	animation: gzDocLineDraw 450ms cubic-bezier(0.25, 1, 0.5, 1) 180ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   11. QUOTATIONS (Quotation Document)
+   Document fixed, quotation marks pop with subtle emphasis (~850ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzQuoteMarkPop {
+	0% {
+		transform: scale(0.6);
+		opacity: 0.4;
+	}
+	55% {
+		transform: scale(1.15);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-quote-mark1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-quote-mark1,
+.gz-anim-icon.is-animating .gz-quote-mark1 {
+	transform-origin: 8.8px 12.5px;
+	animation: gzQuoteMarkPop 750ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-quote-mark2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-quote-mark2,
+.gz-anim-icon.is-animating .gz-quote-mark2 {
+	transform-origin: 12.8px 12.5px;
+	animation: gzQuoteMarkPop 750ms cubic-bezier(0.25, 1, 0.5, 1) 120ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   12. INVENTORY & STOCK (3 Stacked Isometric Layers)
+   Lower two layers stay fixed. Top layer lifts straight upward and returns.
+   Duration ~880ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzStackTopLayerLift {
+	0% {
+		transform: translateY(0);
+	}
+	40% {
+		transform: translateY(-3px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-stack-top,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-stack-top,
+.gz-anim-icon.is-animating .gz-stack-top {
+	animation: gzStackTopLayerLift 880ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   13. RAW MATERIALS & SUPPLY (Factory with Chimney Smoke)
+   Factory stationary. Smoke puffs float upward and reveal (~880ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzFactorySmokeFloat1 {
+	0% {
+		transform: translateY(2px) scale(0.7);
+		opacity: 0.3;
+	}
+	50% {
+		opacity: 1;
+	}
+	100% {
+		transform: translateY(-1.5px) scale(1);
+		opacity: 1;
+	}
+}
+
+@keyframes gzFactorySmokeFloat2 {
+	0% {
+		transform: translateY(2px) scale(0.7);
+		opacity: 0.2;
+	}
+	50% {
+		opacity: 1;
+	}
+	100% {
+		transform: translateY(-2px) scale(1.1);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-fact-smoke1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-fact-smoke1,
+.gz-anim-icon.is-animating .gz-fact-smoke1 {
+	animation: gzFactorySmokeFloat1 880ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-fact-smoke2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-fact-smoke2,
+.gz-anim-icon.is-animating .gz-fact-smoke2 {
+	animation: gzFactorySmokeFloat2 880ms cubic-bezier(0.25, 1, 0.5, 1) 150ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   14. SAMPLE BOOKINGS (Calendar with Checkmark)
+   Calendar frame fixed. Checkmark draws smoothly into place (~850ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzCalCheckMarkDraw {
+	0% {
+		stroke-dashoffset: 12;
+		opacity: 0.3;
+	}
+	100% {
+		stroke-dashoffset: 0;
+		opacity: 1;
+	}
+}
+
+.gz-anim-icon .gz-cal-check {
+	stroke-dasharray: 12;
+	stroke-dashoffset: 0;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-cal-check,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-cal-check,
+.gz-anim-icon.is-animating .gz-cal-check {
+	animation: gzCalCheckMarkDraw 750ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   15. EXPENSES (3 Bars Growing Bottom to Top)
+   Strictly anchored at bottom edge (y=20).
+   Bars grow bottom -> top in sequence: shortest -> medium -> tallest.
+   Duration ~840ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzExpBarGrowUp {
+	0% {
+		transform: scaleY(0);
+	}
+	100% {
+		transform: scaleY(1);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-exp-bar1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-exp-bar1,
+.gz-anim-icon.is-animating .gz-exp-bar1 {
+	transform-origin: 0 20px;
+	animation: gzExpBarGrowUp 480ms cubic-bezier(0.25, 1, 0.5, 1) 0ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-exp-bar2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-exp-bar2,
+.gz-anim-icon.is-animating .gz-exp-bar2 {
+	transform-origin: 0 20px;
+	animation: gzExpBarGrowUp 480ms cubic-bezier(0.25, 1, 0.5, 1) 180ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-exp-bar3,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-exp-bar3,
+.gz-anim-icon.is-animating .gz-exp-bar3 {
+	transform-origin: 0 20px;
+	animation: gzExpBarGrowUp 480ms cubic-bezier(0.25, 1, 0.5, 1) 360ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   16. USERS (Single Profile Icon)
+   Outer frame fixed. Head settles, torso reveals smoothly.
+   Duration ~880ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzUserHeadSettle {
+	0% {
+		transform: translateY(-2.5px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+@keyframes gzUserBodyReveal {
+	0% {
+		transform: scaleY(0);
+		opacity: 0.3;
+	}
+	100% {
+		transform: scaleY(1);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-user-head,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-user-head,
+.gz-anim-icon.is-animating .gz-user-head {
+	animation: gzUserHeadSettle 650ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-user-body,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-user-body,
+.gz-anim-icon.is-animating .gz-user-body {
+	transform-origin: 12px 18.5px;
+	animation: gzUserBodyReveal 700ms cubic-bezier(0.25, 1, 0.5, 1) 150ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   17. STAFF MANAGEMENT (Executive Employee with Collar & Tie)
+   Head & shoulders stable. Collar reveals. Tie draws downward from knot.
+   Duration ~950ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzStaffCollarReveal {
+	0% {
+		opacity: 0.3;
+		transform: translateY(-1px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes gzStaffTieDraw {
+	0% {
+		transform: scaleY(0);
+		opacity: 0.2;
+	}
+	100% {
+		transform: scaleY(1);
+		opacity: 1;
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-staff-collar,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-staff-collar,
+.gz-anim-icon.is-animating .gz-staff-collar {
+	animation: gzStaffCollarReveal 450ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-staff-tie,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-staff-tie,
+.gz-anim-icon.is-animating .gz-staff-tie {
+	transform-origin: 12px 15.5px;
+	animation: gzStaffTieDraw 550ms cubic-bezier(0.25, 1, 0.5, 1) 220ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   18. TRAINERS (Dumbbell)
+   Central bar stable. Plates shift slightly inward and settle (~850ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzDumbbellPlatesInwardL {
+	0% {
+		transform: translateX(0);
+	}
+	40% {
+		transform: translateX(1.2px);
+	}
+	100% {
+		transform: translateX(0);
+	}
+}
+
+@keyframes gzDumbbellPlatesInwardR {
+	0% {
+		transform: translateX(0);
+	}
+	40% {
+		transform: translateX(-1.2px);
+	}
+	100% {
+		transform: translateX(0);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-dumb-l1,
+:is(.menu-link, a):hover .gz-anim-icon .gz-dumb-l2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-dumb-l1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-dumb-l2,
+.gz-anim-icon.is-animating .gz-dumb-l1,
+.gz-anim-icon.is-animating .gz-dumb-l2 {
+	animation: gzDumbbellPlatesInwardL 850ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-dumb-r1,
+:is(.menu-link, a):hover .gz-anim-icon .gz-dumb-r2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-dumb-r1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-dumb-r2,
+.gz-anim-icon.is-animating .gz-dumb-r1,
+.gz-anim-icon.is-animating .gz-dumb-r2 {
+	animation: gzDumbbellPlatesInwardR 850ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   19. REFERENCE COUPON (Coupon Ticket)
+   Subtle controlled tilt around center (12px, 12px), duration ~850ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzCouponTiltAnim {
+	0% {
+		transform: rotate(0deg);
+	}
+	30% {
+		transform: rotate(-3.5deg);
+	}
+	65% {
+		transform: rotate(2deg);
+	}
+	100% {
+		transform: rotate(0deg);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-coupon-group,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-coupon-group,
+.gz-anim-icon.is-animating .gz-coupon-group {
+	transform-origin: 12px 12px;
+	animation: gzCouponTiltAnim 850ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   20. FOLLOW UP & HELPDESK (Support Headset)
+   Headband & earcups stationary. Microphone boom rotates toward speaking position.
+   Duration ~800ms
+   ----------------------------------------------------------------------------- */
+@keyframes gzHeadsetMicSwing {
+	0% {
+		transform: rotate(-8deg);
+	}
+	100% {
+		transform: rotate(0deg);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-headset-mic,
+:is(.menu-link, a):hover .gz-anim-icon .gz-headset-mictip,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-headset-mic,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-headset-mictip,
+.gz-anim-icon.is-animating .gz-headset-mic,
+.gz-anim-icon.is-animating .gz-headset-mictip {
+	transform-origin: 20px 16px;
+	animation: gzHeadsetMicSwing 800ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   21. BROADCAST MARKETING (Megaphone)
+   Body stationary. Two soundwaves reveal sequentially (~900ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzMegaWaveReveal {
+	0% {
+		opacity: 0;
+		transform: scale(0.6);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-mega-wave1,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-mega-wave1,
+.gz-anim-icon.is-animating .gz-mega-wave1 {
+	transform-origin: 16px 12px;
+	animation: gzMegaWaveReveal 450ms cubic-bezier(0.25, 1, 0.5, 1) 0ms forwards;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-mega-wave2,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-mega-wave2,
+.gz-anim-icon.is-animating .gz-mega-wave2 {
+	transform-origin: 16px 12px;
+	animation: gzMegaWaveReveal 450ms cubic-bezier(0.25, 1, 0.5, 1) 200ms forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   22. ADMIN USER (Security Shield)
+   Shield checkmark draws smoothly (~750ms)
+   ----------------------------------------------------------------------------- */
+@keyframes gzAdminCheckDraw {
+	0% {
+		stroke-dashoffset: 10;
+		opacity: 0.3;
+	}
+	100% {
+		stroke-dashoffset: 0;
+		opacity: 1;
+	}
+}
+
+.gz-anim-icon .gz-admin-check {
+	stroke-dasharray: 10;
+	stroke-dashoffset: 0;
+}
+
+:is(.menu-link, a):hover .gz-anim-icon .gz-admin-check,
+:is(.menu-link, a):focus-visible .gz-anim-icon .gz-admin-check,
+.gz-anim-icon.is-animating .gz-admin-check {
+	animation: gzAdminCheckDraw 750ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   PRIMARY BUTTON PRESERVATION (NAVY #172B4D STAYS UNCHANGED)
+   ----------------------------------------------------------------------------- */
+.btn-primary.gz-table-text-btn,
+.gz-table-text-btn.btn-primary,
+.gz-prod-btn-primary,
+.gz-inv-btn-primary {
+	background-color: #172B4D !important;
+	border-color: #172B4D !important;
+	color: #FFFFFF !important;
+}
+
+.btn-primary.gz-table-text-btn:hover,
+.gz-table-text-btn.btn-primary:hover,
+.gz-prod-btn-primary:hover,
+.gz-inv-btn-primary:hover {
+	background-color: #172B4D !important;
+	border-color: #172B4D !important;
+	color: #FFFFFF !important;
+	transform: none !important;
+}
+
+/* -----------------------------------------------------------------------------
+   ACCESSIBILITY: RESPECT PREFERS-REDUCED-MOTION
+   ----------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+	.gz-anim-icon,
+	.gz-anim-icon * {
+		animation: none !important;
+		transition: none !important;
+		transform: none !important;
+		stroke-dashoffset: 0 !important;
+		opacity: 1 !important;
+	}
+}

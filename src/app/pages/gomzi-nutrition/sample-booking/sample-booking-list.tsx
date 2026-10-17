@@ -1,8 +1,20 @@
-import { faDownload } from '@fortawesome/free-solid-svg-icons'
+/* eslint-disable */
+import React, { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faDownload,
+	faEye,
+	faPenToSquare,
+	faTrash,
+	faBoxOpen,
+	faBoxesStacked,
+	faTruck,
+	faStar,
+	faClock,
+} from '@fortawesome/free-solid-svg-icons'
 import { endOfMonth, startOfMonth } from 'date-fns'
-import { CalendarDays, Copy, Star } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { CalendarDays, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import * as XLSX from 'xlsx'
@@ -10,11 +22,13 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
-import Table from '../../../components/Table'
-import TableButton from '../../../components/TableButton'
 import GomziTablePagination from '../../../components/GomziTablePagination'
 import CopyButton from '../../../components/motion/CopyButton'
+import { PlusIcon } from '../../../components/animated-icons'
+import NumberTicker from '../../../components/NumberTicker'
 import { GetGnSampleBooking, RemoveGnSampleBooking } from '../../../Functions/FGGroup'
+import '../products-theme.css'
+import '../orders-theme.css'
 import './sample-booking.css'
 
 const SampleBookingList: React.FC = () => {
@@ -24,7 +38,6 @@ const SampleBookingList: React.FC = () => {
 	const [exporting, setExporting] = useState(false)
 	const [sort, setSort] = useState('createdAt')
 	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
 	const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>([
 		startOfMonth(new Date()),
 		endOfMonth(new Date()),
@@ -104,11 +117,6 @@ const SampleBookingList: React.FC = () => {
 		setPagination((prev) => ({ ...prev, page }))
 	}
 
-	const handleSortChange = (newSort: string, newSortOrder: 'asc' | 'desc') => {
-		setSort(newSort)
-		setSortOrder(newSortOrder)
-	}
-
 	const downloadExcel = async () => {
 		try {
 			setExporting(true)
@@ -182,17 +190,17 @@ const SampleBookingList: React.FC = () => {
 				return {
 					'Sr No': index + 1,
 					'Customer Name': booking.customer_name || '---',
-					'Mobile': booking.mobile || '---',
+					Mobile: booking.mobile || '---',
 					'Order ID': booking.order_id || '---',
-					'Courier': booking.courier_name || booking.courier || '---',
-					'AWB': booking.awb || '---',
+					Courier: booking.courier_name || booking.courier || '---',
+					AWB: booking.awb || '---',
 					'Tracking ID': booking.tracking_id || '---',
 					'Tracking Link': booking.tracking_link || '---',
-					'Products': productsStr || '---',
+					Products: productsStr || '---',
 					'Average Rating': avgRating,
 					'Sample Update Link': sampleUpdateLink,
-					'Address': addressParts || '---',
-					'Date': booking.createdAt
+					Address: addressParts || '---',
+					Date: booking.createdAt
 						? new Date(booking.createdAt).toLocaleDateString('en-GB')
 						: '---',
 				}
@@ -227,13 +235,14 @@ const SampleBookingList: React.FC = () => {
 
 	const handleRemove = async (id: string) => {
 		Swal.fire({
-			title: 'Are you sure?',
-			text: "You won't be able to revert this!",
+			title: 'Delete Sample Booking?',
+			text: "Are you sure you want to delete this sample booking? You won't be able to revert this!",
 			icon: 'warning',
 			showCancelButton: true,
-			confirmButtonColor: '#d33',
-			cancelButtonColor: '#3085d6',
-			confirmButtonText: 'Yes, delete it!',
+			confirmButtonColor: '#DC2626',
+			cancelButtonColor: '#71809A',
+			confirmButtonText: 'Yes, delete',
+			cancelButtonText: 'Cancel',
 		}).then(async (result) => {
 			if (result.isConfirmed) {
 				try {
@@ -251,313 +260,453 @@ const SampleBookingList: React.FC = () => {
 		})
 	}
 
-	const columns = [
-		{ title: 'Customer', field: 'customer_name' },
-		{ title: 'Order ID', field: 'order_id' },
-		{ title: 'Tracking ID', field: 'tracking_id' },
-		{ title: 'Sample Update Link', field: 'link', disableSort: true },
-		{ title: 'Rating', field: 'rating' },
-		{ title: 'Date', field: 'createdAt' },
-	]
+	// Derived metrics for summary cards
+	const summaryStats = useMemo(() => {
+		const total = totalDocs || bookingData.length
+		let withTracking = 0
+		let withRating = 0
+		let withCourier = 0
+
+		bookingData.forEach((b: any) => {
+			if (b.tracking_id || b.awb) withTracking++
+			if (b.products?.some((p: any) => p.rating > 0)) withRating++
+			if (b.courier_name || b.courier) withCourier++
+		})
+
+		return { total, withTracking, withRating, withCourier }
+	}, [bookingData, totalDocs])
+
+	const currentStart = (pagination.page - 1) * pagination.itemsPerPage + 1
 
 	return (
-		<>
+		<div className='gz-prod-container'>
 			<PageTitle breadcrumbs={[]}>Sample Booking List</PageTitle>
 
-			{/* Page Heading */}
-			<div className='sb-page-header'>
+			{/* =========================================================================
+			    BREADCRUMBS
+			    ========================================================================= */}
+			<div className='gz-prod-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<span>Sample Bookings</span>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Booking Directory</span>
+			</div>
+
+			{/* =========================================================================
+			    PAGE HEADER
+			    ========================================================================= */}
+			<div className='gz-prod-header'>
 				<div>
-					<div className='sb-breadcrumb'>
-						<span>Sample Bookings</span>
-						<span className='sb-breadcrumb-separator'>/</span>
-						<span>Booking List</span>
-					</div>
-					<h1 className='sb-page-title'>Sample Bookings</h1>
-					<p className='sb-page-subtitle'>
-						Manage and track client product sample requests, dispatch status, and customer reviews.
+					<h1 className='gz-prod-title'>Sample Bookings</h1>
+					<p className='gz-prod-subtitle'>
+						Manage and track client product sample requests, dispatch status, and customer reviews
 					</p>
 				</div>
 				<div className='d-flex align-items-center gap-3'>
-					<TableButton
-						action='add'
+					<Link
 						to='/rag/sample-booking-add'
-						text='Add Sample'
-					/>
+						className='gz-prod-btn-primary'
+						title='Create New Sample Booking'>
+						<PlusIcon size={14} strokeWidth={3.6} />
+						<span>Add Sample</span>
+					</Link>
 				</div>
 			</div>
 
-			{/* Main List Surface */}
-			<div className='sb-main-card'>
-				{/* Filter Toolbar */}
-				<div className='sb-toolbar-wrap'>
-					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
-						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
-							<div>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-									className='me-0'
-								/>
-							</div>
-							<div>
-								<LengthMenu
-									expenseData={bookingData}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-									value={pagination.itemsPerPage}
-									className='me-0'
-								/>
-							</div>
-							<div>
-								<button
-									type='button'
-									className='btn btn-icon d-flex align-items-center justify-content-center'
-									onClick={downloadExcel}
-									disabled={exporting}
-									style={{
-										width: '38px',
-										height: '38px',
-										minWidth: '38px',
-										padding: 0,
-										borderRadius: '10px',
-										fontSize: '14px',
-										backgroundColor: '#FFFFFF',
-										border: '1px solid #E4EAF2',
-										color: '#172B4D',
-										boxShadow: '0 1px 2px rgba(23, 43, 77, 0.04)',
-										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-										cursor: exporting ? 'not-allowed' : 'pointer',
-									}}
-									onMouseEnter={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#172B4D'
-											e.currentTarget.style.borderColor = '#172B4D'
-											e.currentTarget.style.color = '#FFFFFF'
-											e.currentTarget.style.boxShadow = '0 4px 10px rgba(23, 43, 77, 0.2)'
-											e.currentTarget.style.transform = 'translateY(-1px)'
-										}
-									}}
-									onMouseLeave={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#FFFFFF'
-											e.currentTarget.style.borderColor = '#E4EAF2'
-											e.currentTarget.style.color = '#172B4D'
-											e.currentTarget.style.boxShadow = '0 1px 2px rgba(23, 43, 77, 0.04)'
-											e.currentTarget.style.transform = 'translateY(0)'
-										}
-									}}
-									title='Download Excel'>
-									{exporting ? (
-										<span
-											className='spinner-border spinner-border-sm'
-											role='status'
-											aria-hidden='true'></span>
-									) : (
-										<FontAwesomeIcon icon={faDownload} />
-									)}
-								</button>
-							</div>
-							<div className='d-flex align-items-center flex-shrink-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-									customIcon={<CalendarDays size={18} color='#172B4D' />}
-								/>
-							</div>
-						</div>
+			{/* =========================================================================
+			    SUMMARY METRICS CARDS
+			    ========================================================================= */}
+			<div className='gz-prod-summary-grid'>
+				<div className='gz-prod-summary-card blue'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faBoxesStacked} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Total Bookings</span>
+						<span className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
+							) : (
+								<NumberTicker value={summaryStats.total} />
+							)}
+						</span>
 					</div>
 				</div>
 
-				{/* Data Table */}
-				<div className='p-0'>
-					<div className='table-responsive'>
-						<Table
-							data={bookingData}
-							columns={columns}
-							sort={sort}
-							sortOrder={sortOrder}
-							onSortChange={handleSortChange}
-							visibleDetails={visibleDetails}
-							disableSortFields={['rating', 'mobile']}
-							renderRow={(booking: any, index: number, actualIndex: number) => {
-								const sampleUpdateLink =
-									window.location.hostname === 'localhost'
-										? `http://localhost:3001/rag/sample-booking-update?id=${booking._id}`
-										: `https://www.gomzilifesciences.in/rag/sample-booking-update?id=${booking._id}`
+				<div className='gz-prod-summary-card green'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faTruck} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Dispatched / Tracked</span>
+						<span className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
+							) : (
+								<NumberTicker value={summaryStats.withTracking} />
+							)}
+						</span>
+					</div>
+				</div>
 
-								return (
-									<tr key={booking._id}>
-										<td>
-											<span className='fw-bold ms-6 mb-1 fs-6' style={{ color: '#172B4D' }}>
-												{actualIndex}
-											</span>
+				<div className='gz-prod-summary-card amber'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faStar} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Rated Samples</span>
+						<span className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
+							) : (
+								<NumberTicker value={summaryStats.withRating} />
+							)}
+						</span>
+					</div>
+				</div>
+
+				<div className='gz-prod-summary-card red'>
+					<div className='gz-prod-summary-icon'>
+						<FontAwesomeIcon icon={faClock} />
+					</div>
+					<div className='gz-prod-summary-info'>
+						<span className='gz-prod-summary-label'>Courier Assigned</span>
+						<span className='gz-prod-summary-value'>
+							{loading ? (
+								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
+							) : (
+								<NumberTicker value={summaryStats.withCourier} />
+							)}
+						</span>
+					</div>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    TOOLBAR (SEARCH -> LENGTH -> DATE -> EXPORT)
+			    ========================================================================= */}
+			<div className='gz-prod-toolbar'>
+				<div className='gz-prod-toolbar-left'>
+					<SearchFilter
+						searchTerm={searchTerm}
+						setSearchTerm={setSearchTerm}
+						className='me-0'
+					/>
+					<LengthMenu
+						expenseData={bookingData}
+						handleItemsPerPageChange={handleItemsPerPageChange}
+						value={pagination.itemsPerPage}
+						className='me-0'
+					/>
+					<div className='d-flex align-items-center flex-shrink-0'>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							customIcon={<CalendarDays size={18} color='#172B4D' />}
+						/>
+					</div>
+				</div>
+
+				<div className='gz-prod-toolbar-right'>
+					<button
+						type='button'
+						className='gz-prod-btn-icon-export'
+						onClick={downloadExcel}
+						disabled={exporting || bookingData.length === 0}
+						title='Export Sample Bookings to Excel'>
+						{exporting ? (
+							<span className='spinner-border spinner-border-sm' role='status' aria-hidden='true'></span>
+						) : (
+							<FontAwesomeIcon icon={faDownload} />
+						)}
+					</button>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    BOOKINGS TABLE
+			    ========================================================================= */}
+			<div className='gz-prod-table-card'>
+				<div className='table-responsive'>
+					<table className='gz-prod-table'>
+						<thead>
+							<tr>
+								<th style={{ width: '48px', textAlign: 'center' }}>#</th>
+								<th>Customer</th>
+								<th>Order ID</th>
+								<th>Tracking ID</th>
+								<th>Review / Update Link</th>
+								<th style={{ textAlign: 'center' }}>Rating</th>
+								<th>Booking Date</th>
+								<th style={{ textAlign: 'center', width: '110px' }}>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{loading ? (
+								Array.from({ length: 5 }).map((_, sIdx) => (
+									<tr key={`skel-${sIdx}`} className='gz-prod-skeleton-row'>
+										<td style={{ textAlign: 'center' }}>
+											<span className='gz-prod-skeleton' style={{ width: '18px', height: '14px', borderRadius: '4px' }}></span>
 										</td>
 										<td>
-											<div className='d-flex flex-column'>
-												<span className='fw-bold mb-1 fs-6' style={{ color: '#172B4D' }}>
-													{booking.customer_name || '---'}
-												</span>
-												<span className='fw-semibold fs-7' style={{ color: '#71809A' }}>
-													{booking.mobile || '---'}
-												</span>
-											</div>
-										</td>
-										<td>
-											<div className='d-flex align-items-center gap-1.5'>
-												{booking.order_id && (
-													<CopyButton
-														text={booking.order_id}
-														title='Copy Order ID'
-														customMessage='Order ID copied!'
-														style={{
-															backgroundColor: '#F8FAFD',
-															border: '1px solid #E4EAF2',
-															borderRadius: '6px',
-															width: '26px',
-															height: '26px',
-															color: '#172B4D',
-															display: 'inline-flex',
-															alignItems: 'center',
-															justifyContent: 'center',
-														}}
-													/>
-												)}
-												<span className='fw-semibold mb-1 fs-6' style={{ color: '#172B4D' }}>
-													{booking.order_id || '---'}
-												</span>
-											</div>
-										</td>
-										<td>
-											<div className='d-flex align-items-center gap-1.5'>
-												{booking.tracking_id && (
-													<CopyButton
-														text={booking.tracking_id}
-														title='Copy Tracking ID'
-														customMessage='Tracking ID copied!'
-														style={{
-															backgroundColor: '#F8FAFD',
-															border: '1px solid #E4EAF2',
-															borderRadius: '6px',
-															width: '26px',
-															height: '26px',
-															color: '#172B4D',
-															display: 'inline-flex',
-															alignItems: 'center',
-															justifyContent: 'center',
-														}}
-													/>
-												)}
-												<span className='fw-semibold mb-1 fs-6' style={{ color: '#172B4D' }}>
-													{booking.tracking_id || '---'}
-												</span>
-											</div>
-										</td>
-										<td>
-											<div className='d-flex align-items-center gap-1.5'>
-												<CopyButton
-													text={sampleUpdateLink}
-													title='Copy Link'
-													customMessage='Link copied!'
-													style={{
-														backgroundColor: '#F8FAFD',
-														border: '1px solid #E4EAF2',
-														borderRadius: '6px',
-														width: '26px',
-														height: '26px',
-														color: '#172B4D',
-														display: 'inline-flex',
-														alignItems: 'center',
-														justifyContent: 'center',
-													}}
-												/>
-												<div
-													className='fw-medium mb-1 fs-6'
-													title={sampleUpdateLink}
-													style={{
-														maxWidth: '140px',
-														whiteSpace: 'nowrap',
-														overflow: 'hidden',
-														textOverflow: 'ellipsis',
-														cursor: 'pointer',
-														color: '#172B4D',
-													}}>
-													{sampleUpdateLink}
+											<div className='gz-prod-identity-cell'>
+												<span className='gz-prod-skeleton' style={{ width: '38px', height: '38px', borderRadius: '10px' }}></span>
+												<div className='d-flex flex-column gap-1'>
+													<span className='gz-prod-skeleton' style={{ width: '120px', height: '15px', borderRadius: '4px' }}></span>
+													<span className='gz-prod-skeleton' style={{ width: '85px', height: '12px', borderRadius: '4px' }}></span>
 												</div>
 											</div>
 										</td>
-
 										<td>
-											<span className='fw-bold d-block mb-1 fs-6'>
-												{(() => {
-													const ratedProducts =
-														booking.products?.filter((p: any) => p.rating > 0) || []
-													if (ratedProducts.length === 0) return <span style={{ color: '#71809A' }}>-</span>
-													const avgRating = (
-														ratedProducts.reduce(
-															(sum: number, p: any) => sum + (p.rating || 0),
-															0
-														) / ratedProducts.length
-													).toFixed(1)
-													return (
-														<div
-															className='d-inline-flex align-items-center gap-1.5 px-2 py-1'
-															style={{
-																background: '#FFFBEB',
-																border: '1px solid #FDE68A',
-																borderRadius: '6px',
-															}}>
-															<Star size={13} fill='#D97706' color='#D97706' />
-															<span style={{ color: '#92400E', fontSize: '12.5px', fontWeight: 600 }}>
-																{avgRating}
-															</span>
-														</div>
-													)
-												})()}
-											</span>
+											<span className='gz-prod-skeleton' style={{ width: '80px', height: '14px', borderRadius: '4px' }}></span>
 										</td>
 										<td>
-											<span className='fw-semibold d-block mb-1 fs-6' style={{ color: '#172B4D' }}>
-												{booking.createdAt
-													? new Date(booking.createdAt).toLocaleDateString('en-GB')
-													: '---'}
-											</span>
+											<span className='gz-prod-skeleton' style={{ width: '90px', height: '14px', borderRadius: '4px' }}></span>
 										</td>
 										<td>
-											<div className='d-flex align-items-center gap-1'>
-												<TableButton
-													action='view'
-													to={'/rag/sample-booking-view?id=' + booking._id}
-												/>
-												<TableButton
-													action='edit'
-													to={'/rag/sample-booking-update?id=' + booking._id}
-												/>
-												<TableButton
-													action='remove'
-													onClick={() => handleRemove(booking._id)}
-												/>
+											<span className='gz-prod-skeleton' style={{ width: '120px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td style={{ textAlign: 'center' }}>
+											<span className='gz-prod-skeleton' style={{ width: '50px', height: '22px', borderRadius: '6px' }}></span>
+										</td>
+										<td>
+											<span className='gz-prod-skeleton' style={{ width: '75px', height: '14px', borderRadius: '4px' }}></span>
+										</td>
+										<td style={{ textAlign: 'center' }}>
+											<div className='d-flex align-items-center justify-content-center gap-2'>
+												<span className='gz-prod-skeleton' style={{ width: '32px', height: '32px', borderRadius: '8px' }}></span>
+												<span className='gz-prod-skeleton' style={{ width: '32px', height: '32px', borderRadius: '8px' }}></span>
+												<span className='gz-prod-skeleton' style={{ width: '32px', height: '32px', borderRadius: '8px' }}></span>
 											</div>
 										</td>
 									</tr>
-								)
-							}}
-							pagination={pagination}
-							setPagination={setPagination}
-							loading={loading}
-						/>
-					</div>
-					{bookingData.length > 0 && (
-						<GomziTablePagination
-							totalRecords={totalDocs}
-							page={pagination.page}
-							itemsPerPage={pagination.itemsPerPage}
-							totalPages={totalPages}
-							onPageChange={handlePageChange}
-							entityName='sample bookings'
-						/>
-					)}
+								))
+							) : bookingData.length === 0 ? (
+								<tr>
+									<td colSpan={8} className='gz-table-empty-cell'>
+										<div className='gz-empty-state-wrap'>
+											<div className='gz-prod-empty-icon'>
+												<FontAwesomeIcon icon={faBoxOpen} />
+											</div>
+											<h4 className='gz-empty-state-title'>No sample bookings found</h4>
+											<p className='gz-empty-state-desc'>
+												{searchTerm
+													? 'No sample bookings matched your search query.'
+													: 'Create your first sample booking to start tracking dispatches and customer feedback.'}
+											</p>
+											{!searchTerm && (
+												<Link to='/rag/sample-booking-add' className='gz-prod-btn-primary'>
+													<PlusIcon size={14} strokeWidth={3.6} />
+													<span>Add First Sample</span>
+												</Link>
+											)}
+										</div>
+									</td>
+								</tr>
+							) : (
+								bookingData.map((booking: any, index: number) => {
+									const actualIndex = currentStart + index
+									const sampleUpdateLink =
+										window.location.hostname === 'localhost'
+											? `http://localhost:3001/rag/sample-booking-update?id=${booking._id}`
+											: `https://www.gomzilifesciences.in/rag/sample-booking-update?id=${booking._id}`
+
+									const initials = (booking.customer_name || 'C')
+										.split(' ')
+										.map((n: string) => n[0])
+										.slice(0, 2)
+										.join('')
+										.toUpperCase()
+
+									const ratedProducts = booking.products?.filter((p: any) => p.rating > 0) || []
+									const avgRating =
+										ratedProducts.length > 0
+											? (
+													ratedProducts.reduce((sum: number, p: any) => sum + (p.rating || 0), 0) /
+													ratedProducts.length
+											  ).toFixed(1)
+											: null
+
+									return (
+										<tr key={booking._id}>
+											<td style={{ textAlign: 'center', color: '#71809A', fontSize: '12.5px' }}>
+												{actualIndex}
+											</td>
+											<td>
+												<div className='gz-prod-identity-cell'>
+													<div
+														className='gz-order-item-thumb'
+														style={{
+															width: '38px',
+															height: '38px',
+															background: '#EAF1F8',
+															color: '#172B4D',
+															fontWeight: 700,
+															fontSize: '13px',
+														}}>
+														{initials}
+													</div>
+													<div className='gz-prod-identity-info'>
+														<span className='gz-prod-name'>
+															{booking.customer_name || '---'}
+														</span>
+														<span className='gz-prod-subtext'>
+															{booking.mobile || '---'}
+														</span>
+													</div>
+												</div>
+											</td>
+											<td>
+												<div className='d-flex align-items-center gap-1'>
+													{booking.order_id && (
+														<CopyButton
+															text={booking.order_id}
+															title='Copy Order ID'
+															customMessage='Order ID copied!'
+															style={{
+																backgroundColor: '#F8FAFD',
+																border: '1px solid #E4EAF2',
+																borderRadius: '6px',
+																width: '24px',
+																height: '24px',
+																color: '#172B4D',
+																display: 'inline-flex',
+																alignItems: 'center',
+																justifyContent: 'center',
+															}}
+														/>
+													)}
+													<span className='font-monospace' style={{ color: '#172B4D', fontWeight: 600 }}>
+														{booking.order_id || '---'}
+													</span>
+												</div>
+											</td>
+											<td>
+												<div className='d-flex align-items-center gap-1'>
+													{booking.tracking_id && (
+														<CopyButton
+															text={booking.tracking_id}
+															title='Copy Tracking ID'
+															customMessage='Tracking ID copied!'
+															style={{
+																backgroundColor: '#F8FAFD',
+																border: '1px solid #E4EAF2',
+																borderRadius: '6px',
+																width: '24px',
+																height: '24px',
+																color: '#172B4D',
+																display: 'inline-flex',
+																alignItems: 'center',
+																justifyContent: 'center',
+															}}
+														/>
+													)}
+													<span className='font-monospace' style={{ color: '#71809A', fontSize: '13px' }}>
+														{booking.tracking_id || '---'}
+													</span>
+												</div>
+											</td>
+											<td>
+												<div className='d-flex align-items-center gap-1'>
+													<CopyButton
+														text={sampleUpdateLink}
+														title='Copy Review Link'
+														customMessage='Review link copied!'
+														style={{
+															backgroundColor: '#F8FAFD',
+															border: '1px solid #E4EAF2',
+															borderRadius: '6px',
+															width: '24px',
+															height: '24px',
+															color: '#172B4D',
+															display: 'inline-flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+														}}
+													/>
+													<div
+														title={sampleUpdateLink}
+														style={{
+															maxWidth: '140px',
+															whiteSpace: 'nowrap',
+															overflow: 'hidden',
+															textOverflow: 'ellipsis',
+															color: '#2563EB',
+															fontSize: '12.5px',
+															fontWeight: 500,
+														}}>
+														{sampleUpdateLink}
+													</div>
+												</div>
+											</td>
+											<td style={{ textAlign: 'center' }}>
+												{avgRating ? (
+													<div
+														className='d-inline-flex align-items-center gap-1 px-2 py-0.5'
+														style={{
+															background: '#FFFBEB',
+															border: '1px solid #FDE68A',
+															borderRadius: '6px',
+														}}>
+														<Star size={12} fill='#D97706' color='#D97706' />
+														<span style={{ color: '#92400E', fontSize: '12.5px', fontWeight: 600 }}>
+															{avgRating}
+														</span>
+													</div>
+												) : (
+													<span style={{ color: '#94A3B8', fontSize: '13px' }}>-</span>
+												)}
+											</td>
+											<td style={{ color: '#71809A', fontSize: '12.5px' }}>
+												{booking.createdAt
+													? new Date(booking.createdAt).toLocaleDateString('en-GB')
+													: '---'}
+											</td>
+											<td style={{ textAlign: 'center' }}>
+												<div className='d-flex align-items-center justify-content-center gap-1'>
+													<Link
+														to={'/rag/sample-booking-view?id=' + booking._id}
+														className='gz-prod-action-btn view'
+														title='View Sample Booking'>
+														<FontAwesomeIcon icon={faEye} />
+													</Link>
+													<Link
+														to={'/rag/sample-booking-update?id=' + booking._id}
+														className='gz-prod-action-btn edit'
+														title='Edit Sample Booking'>
+														<FontAwesomeIcon icon={faPenToSquare} />
+													</Link>
+													<button
+														type='button'
+														className='gz-prod-action-btn delete'
+														title='Delete Sample Booking'
+														onClick={() => handleRemove(booking._id)}>
+														<FontAwesomeIcon icon={faTrash} />
+													</button>
+												</div>
+											</td>
+										</tr>
+									)
+								})
+							)}
+						</tbody>
+					</table>
 				</div>
+
+				{/* Pagination */}
+				{bookingData.length > 0 && (
+					<GomziTablePagination
+						totalRecords={totalDocs}
+						page={pagination.page}
+						itemsPerPage={pagination.itemsPerPage}
+						totalPages={totalPages}
+						onPageChange={handlePageChange}
+						entityName='sample bookings'
+					/>
+				)}
 			</div>
-		</>
+		</div>
 	)
 }
 

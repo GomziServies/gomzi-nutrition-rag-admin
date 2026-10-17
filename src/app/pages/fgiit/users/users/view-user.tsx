@@ -19,6 +19,7 @@ import {
 	UpdateUser,
 } from '../../../../Functions/FGGroup'
 import questionmark from './300-1.jpg'
+import '../../../gomzi-nutrition/common-management.css'
 
 type FitnessCourse = {
 	_id: string
@@ -561,35 +562,47 @@ const UserView = () => {
 	}
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>User Details</PageTitle>
-			<>
-				<div className='row'>
-					<div className='col-12 mt-3'>
-						<div
-							className='card border-0 shadow-xs mb-8'
-							style={{ borderRadius: '12px', backgroundColor: '#ffffff' }}>
-							<div className='card-header border-0 pt-6 px-8 d-flex justify-content-between align-items-center flex-wrap gap-3'>
-								<div>
-									<h2
-										className='fw-bolder text-gray-900 mb-1'
-										style={{ fontSize: '1.35rem' }}>
-										User Information
-									</h2>
-									<div className='text-muted fs-7'>
-										Manage profile details, contact information, and address records
-									</div>
-								</div>
-								{userResponseData._id && (
-									<span
-										className='badge badge-light-primary fw-bold px-3 py-2'
-										style={{ fontSize: '12.5px', borderRadius: '6px' }}>
-										User ID: {userResponseData._id}
-									</span>
-								)}
-							</div>
-							<div className='card-body px-8 pt-4 pb-8'>
-								<div className='row'>
+
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to='/rag/dashboard'>Dashboard</Link>
+				<span className='sep'>/</span>
+				<Link to='/rag/users'>Users</Link>
+				<span className='sep'>/</span>
+				<span className='current'>{userResponseData.first_name ? `${userResponseData.first_name} ${userResponseData.last_name || ''}` : 'User Profile'}</span>
+			</div>
+
+			<div className='gz-mgmt-header'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title'>User Profile & Records</h1>
+					<p className='gz-mgmt-subtitle'>View account profile, contact credentials, addresses, and order history</p>
+				</div>
+				<Link to='/rag/users' className='gz-mgmt-btn-secondary text-decoration-none'>
+					Back to Users
+				</Link>
+			</div>
+
+			<div className='gz-mgmt-form-card mb-8'>
+				<div className='d-flex justify-content-between align-items-center flex-wrap gap-3 pb-6 mb-6' style={{ borderBottom: '1px solid #F1F5F9' }}>
+					<div>
+						<h2 className='fw-bold mb-1' style={{ fontSize: '18px', color: '#172B4D' }}>
+							Personal & Contact Information
+						</h2>
+						<div className='text-muted fs-7'>
+							Manage profile photo, contact channels, address details, and system IDs
+						</div>
+					</div>
+					{userResponseData._id && (
+						<span
+							className='gz-mgmt-pill info'
+							style={{ fontSize: '12.5px', padding: '6px 12px' }}>
+							User ID: {userResponseData._id}
+						</span>
+					)}
+				</div>
+				<div>
+					<div className='row'>
 									<div className='col-md-2 text-center d-flex flex-column align-items-center mb-6 mb-md-0'>
 										<div className='mb-3'>
 											<label className='fw-bold fs-6 mb-3 d-block text-gray-800'>
@@ -814,19 +827,27 @@ const UserView = () => {
 												/>
 											</div>
 
-											<div className='col-md-12 fv-row mt-4 mb-2 d-flex justify-content-end align-items-center gap-3'>
+											<div className='col-md-12 fv-row mt-6 pt-4 d-flex justify-content-end align-items-center gap-3' style={{ borderTop: '1px solid #F1F5F9' }}>
 												<button
 													type='button'
-													className='btn btn-primary d-inline-flex align-items-center justify-content-center'
-													onClick={handleUpdateUser}
-													disabled={isSubmitting}
+													className='btn btn-light-danger d-inline-flex align-items-center justify-content-center'
+													data-bs-toggle='modal'
+													data-bs-target='#kt_modal_exercise'
 													style={{
-														height: '38px',
-														padding: '0 24px',
-														borderRadius: '8px',
+														height: '42px',
+														padding: '0 20px',
+														borderRadius: '10px',
 														fontSize: '13.5px',
 														fontWeight: 600,
 													}}>
+													<i className='bi bi-trash me-2'></i>
+													Remove User
+												</button>
+												<button
+													type='button'
+													className='gz-mgmt-btn-primary d-inline-flex align-items-center justify-content-center'
+													onClick={handleUpdateUser}
+													disabled={isSubmitting}>
 													{isSubmitting ? (
 														<>
 															<span
@@ -836,22 +857,11 @@ const UserView = () => {
 															Updating User...
 														</>
 													) : (
-														'Update User'
+														<>
+															<i className='bi bi-check2-circle me-2'></i>
+															Update User Profile
+														</>
 													)}
-												</button>
-												<button
-													type='button'
-													className='btn btn-light-danger d-inline-flex align-items-center justify-content-center'
-													data-bs-toggle='modal'
-													data-bs-target='#kt_modal_exercise'
-													style={{
-														height: '38px',
-														padding: '0 20px',
-														borderRadius: '8px',
-														fontSize: '13.5px',
-														fontWeight: 600,
-													}}>
-													Remove User
 												</button>
 											</div>
 										</div>
@@ -859,8 +869,6 @@ const UserView = () => {
 								</div>
 							</div>
 						</div>
-					</div>
-				</div>
 
 				<div
 					className='modal fade'
@@ -931,17 +939,13 @@ const UserView = () => {
 					</div>
 				</div>
 
-				<div
-					className='card border-0 shadow-xs mb-8'
-					style={{ borderRadius: '12px', backgroundColor: '#ffffff' }}>
-					<div className='card-header border-0 pt-6 px-8'>
-						<h3
-							className='fw-bolder text-gray-900 m-0'
-							style={{ fontSize: '1.2rem' }}>
+				<div className='gz-mgmt-card mb-8'>
+					<div className='p-6' style={{ borderBottom: '1px solid #F1F5F9' }}>
+						<h3 className='fw-bold m-0' style={{ fontSize: '16px', color: '#172B4D' }}>
 							User Records & Activity
 						</h3>
 					</div>
-					<div className='card-body px-8 py-6'>
+					<div className='card-body px-6 py-6'>
 						<div className='row'>
 							<div className='col-md-3 col-sm-6 my-2'>
 								<Link
@@ -952,7 +956,7 @@ const UserView = () => {
 										style={{
 											backgroundColor: '#F8FAFD',
 											border: '1px solid #DFE7F0',
-											borderRadius: '10px',
+											borderRadius: '12px',
 											transition: 'all 0.2s ease',
 											cursor: 'pointer',
 										}}
@@ -972,9 +976,9 @@ const UserView = () => {
 											style={{
 												width: '42px',
 												height: '42px',
-												borderRadius: '8px',
-												backgroundColor: '#E8F0F8',
-												color: '#1E3A5F',
+												borderRadius: '10px',
+												backgroundColor: '#EFF6FF',
+												color: '#2563EB',
 												fontSize: '18px',
 												flexShrink: 0,
 											}}>
@@ -982,8 +986,8 @@ const UserView = () => {
 										</div>
 										<div>
 											<div
-												className='fw-bold text-gray-900'
-												style={{ fontSize: '14px' }}>
+												className='fw-bold'
+												style={{ fontSize: '14px', color: '#172B4D' }}>
 												All Orders
 											</div>
 											<div className='text-muted fs-8'>View order history</div>
@@ -994,8 +998,7 @@ const UserView = () => {
 						</div>
 					</div>
 				</div>
-			</>
-		</>
+		</div>
 	)
 }
 export { UserView }

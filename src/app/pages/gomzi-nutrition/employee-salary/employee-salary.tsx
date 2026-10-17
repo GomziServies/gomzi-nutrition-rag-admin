@@ -14,6 +14,7 @@ import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetAdminUsers } from '../../../Functions/FGGroup/AdminUsers'
 import { GetGlsSalary } from '../../../Functions/FGGroup/GlsSalary'
+import '../common-management.css'
 
 const EmployeeSalary = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -253,103 +254,65 @@ const EmployeeSalary = () => {
 		: 'All Employees'
 
 	return (
-		<>
+		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>Employee Salary</PageTitle>
-			<div className='card'>
-				<div className='row justify-content-between mt-7 mx-6'>
-					<div className='col-md-9'>
-						<h3 className='card-title align-items-start flex-column'>
-							<span className='card-label fw-bold fs-3 mb-1'>Employee Salary Sheet</span>
-						</h3>
+
+			<nav className='gz-mgmt-breadcrumb'>
+				<a href='/rag/dashboard'>Dashboard</a>
+				<span>/</span>
+				<a href='/rag/employees'>Staff Management</a>
+				<span>/</span>
+				<span>Employee Salary</span>
+			</nav>
+
+			<div className='gz-mgmt-header mb-6'>
+				<div>
+					<h1 className='gz-mgmt-title'>Employee Salary Sheet</h1>
+					<p className='gz-mgmt-subtitle'>
+						Review monthly salary disbursements, attendance figures, deductions, and net payouts
+					</p>
+				</div>
+			</div>
+
+			<div className='gz-mgmt-card'>
+				<div className='gz-mgmt-toolbar flex-wrap gap-3'>
+					<div className='gz-mgmt-toolbar-left flex-wrap gap-3'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
+						<LengthMenu
+							expenseData={salaryData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							lastMonth={true}
+						/>
+					</div>
+
+					<div className='gz-mgmt-toolbar-right'>
+						<button
+							type='button'
+							className='gz-mgmt-export-btn'
+							onClick={downloadExcel}
+							disabled={exporting}
+						>
+							{exporting ? (
+								<span className='spinner-border spinner-border-sm me-2' role='status' />
+							) : (
+								<FontAwesomeIcon icon={faDownload} />
+							)}
+							Export Excel
+						</button>
 					</div>
 				</div>
 
-				<div className='card-header border-0 pt-6 px-6'>
-					<div className='d-flex align-items-center justify-content-between flex-wrap w-100 gap-3'>
-						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
-							{/* 1. Searchbar */}
-							<div>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-									className='me-0'
-								/>
-							</div>
-
-							{/* 2. Dropdown (show entries per page) */}
-							<div>
-								<LengthMenu
-									expenseData={salaryData}
-									handleItemsPerPageChange={handleItemsPerPageChange}
-									value={pagination.itemsPerPage}
-									className='me-0'
-								/>
-							</div>
-
-							{/* 3. Download Excel Button */}
-							<div>
-								<button
-									type='button'
-									className='btn btn-icon d-flex align-items-center justify-content-center'
-									onClick={downloadExcel}
-									disabled={exporting}
-									style={{
-										width: '38px',
-										height: '38px',
-										minWidth: '38px',
-										padding: 0,
-										borderRadius: '8px',
-										fontSize: '14px',
-										backgroundColor: '#ffffff',
-										border: '1px solid #DFE7F0',
-										color: '#1E3A5F',
-										boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-										transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-										cursor: exporting ? 'not-allowed' : 'pointer',
-									}}
-									onMouseEnter={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#1E3A5F'
-											e.currentTarget.style.borderColor = '#1E3A5F'
-											e.currentTarget.style.color = '#ffffff'
-											e.currentTarget.style.boxShadow = '0 4px 10px rgba(30, 58, 95, 0.25)'
-											e.currentTarget.style.transform = 'translateY(-1px)'
-										}
-									}}
-									onMouseLeave={(e) => {
-										if (!exporting) {
-											e.currentTarget.style.backgroundColor = '#ffffff'
-											e.currentTarget.style.borderColor = '#DFE7F0'
-											e.currentTarget.style.color = '#1E3A5F'
-											e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)'
-											e.currentTarget.style.transform = 'translateY(0)'
-										}
-									}}
-									title='Download Excel'>
-									{exporting ? (
-										<span
-											className='spinner-border spinner-border-sm'
-											role='status'
-											aria-hidden='true'></span>
-									) : (
-										<FontAwesomeIcon icon={faDownload} />
-									)}
-								</button>
-							</div>
-
-							{/* 4. Datefilter */}
-							<div className='d-flex align-items-center flex-shrink-0'>
-								<DateFilter
-									onDateRangeChange={handleDateRangeChange}
-									rightValue='0'
-									lastMonth={true}
-								/>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div className='card-body py-3'>
+				<div className='card-body p-0'>
 					<div className='table-responsive'>
 						<Table
 							data={paginatedAdminData}
@@ -361,71 +324,80 @@ const EmployeeSalary = () => {
 								<React.Fragment key={salary?._id}>
 									<tr
 										onClick={() => handleRowClick(salary?._id)}
-										className='data-row'>
+										className='data-row'
+									>
 										<td className='text-center'>
-											<div className='d-flex'>
+											<div className='d-flex justify-content-center align-items-center'>
 												<FontAwesomeIcon
 													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
+													className='me-2 d-md-none'
+													style={{ color: '#607D8B', fontSize: '14px' }}
 												/>
-												<span className='text-dark fw-bold  d-block mb-1 fs-6'>{actualIndex}</span>
+												<span className='fw-bold text-muted fs-7'>{actualIndex}</span>
 											</div>
 										</td>
 										<td>
-											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-45px me-5'>
-													<img
-														src={
-															salary?.employee_photo || salary?.photo
-																? `https://files.fggroup.in/${
-																		salary?.employee_photo || salary?.photo
-																  }`
-																: toAbsoluteUrl('/media/logos/fgiit-logo.png')
+											<div className='gz-mgmt-identity-cell'>
+												<img
+													src={
+														salary?.employee_photo || salary?.photo
+															? `https://files.fggroup.in/${salary?.employee_photo || salary?.photo}`
+															: toAbsoluteUrl('/media/logos/fgiit-logo.png')
+													}
+													alt={salary?.employee_name || salary?.full_name}
+													className='gz-mgmt-avatar'
+													onError={(e) => {
+														const target = e.currentTarget
+														target.style.display = 'none'
+														if (target.nextElementSibling) {
+															(target.nextElementSibling as HTMLElement).style.display = 'flex'
 														}
-														alt={salary?.employee_name || salary?.full_name}
-														style={{ width: '50px', height: '50px' }}
-													/>
+													}}
+												/>
+												<div
+													className='gz-mgmt-avatar-fallback'
+													style={{ display: 'none' }}
+												>
+													{(salary?.employee_name || salary?.full_name || 'E').charAt(0).toUpperCase()}
 												</div>
-												<div className='d-flex justify-content-start flex-column'>
-													<span className='text-dark fw-bold  fs-6'>
-														{salary?.employee_name || salary?.full_name}
+												<div className='gz-mgmt-identity-info'>
+													<span className='gz-mgmt-identity-name'>
+														{salary?.employee_name || salary?.full_name || 'Unnamed Employee'}
 													</span>
-													<span className='text-muted fw-semibold text-muted d-block fs-7'>
-														{salary?.mobile}
+													<span className='gz-mgmt-identity-sub'>
+														{salary?.mobile || salary?.employee_code || 'No contact'}
 													</span>
 												</div>
 											</div>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{salary?.total_salary ? salary?.total_salary : '-'}
+											<span className='fw-bold' style={{ color: '#0F172A' }}>
+												{salary?.total_salary ? `₹${Number(salary.total_salary).toLocaleString('en-IN')}` : '-'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{salary?.final_salary !== undefined ? salary?.final_salary : '-'}
+											<span className='fw-bold' style={{ color: '#16A34A' }}>
+												{salary?.final_salary !== undefined ? `₹${Number(salary.final_salary).toLocaleString('en-IN')}` : '-'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{salary?.total_present !== undefined ? salary?.total_present : '-'}
+											<span className='gz-mgmt-pill success'>
+												{salary?.total_present !== undefined ? `${salary.total_present} Days` : '-'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-												{salary?.total_absent !== undefined ? salary?.total_absent : '-'}
+											<span className='gz-mgmt-pill danger'>
+												{salary?.total_absent !== undefined ? `${salary.total_absent} Days` : '0 Days'}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold  d-block mb-1 fs-6'>
+											<span className='gz-mgmt-pill info'>
 												{salary?.period ? salary?.period : '-'}
 											</span>
 										</td>
 										<td>
 											<TableButton
 												action='view'
-												// to={`/hr/employee-salary-view?employee_id=${salary?.employee_id}`}
 												onClick={() => {
 													if (selectedDateRange) {
 														localStorage.setItem(
@@ -444,50 +416,13 @@ const EmployeeSalary = () => {
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12}>
-												<div>
-													<div className='d-flex align-items-center'>
-														<div className='symbol symbol-45px me-5'>
-															<img
-																src={
-																	salary?.photo
-																		? `https://files.fggroup.in/${salary?.photo}`
-																		: toAbsoluteUrl('/media/logos/fgiit-logo.png')
-																}
-																alt={salary?.full_name}
-																style={{ width: '50px', height: '50px' }}
-															/>
-														</div>
-														<div className='d-flex justify-content-start flex-column'>
-															<span className='text-dark fw-bold  fs-6'>{salary?.full_name}</span>
-															<span className='text-muted fw-semibold text-muted d-block fs-7'>
-																{salary?.mobile}
-															</span>
-														</div>
-													</div>
-													<strong>{sortableFields[1].title}:</strong>{' '}
-													{salary?.total_salary ? salary?.total_salary : '-'}
-													<br />
-													<strong>{sortableFields[2].title}:</strong>{' '}
-													{salary?.final_salary ? salary?.final_salary : '-'}
-													<br />
-													<strong>{sortableFields[3].title}:</strong>{' '}
-													{salary?.halfDay
-														? salary?.total_present
-															? 'Half Day / ' + salary?.total_present
-															: '-'
-														: salary?.total_present
-														? salary?.total_present
-														: '-'}
-													<br />
-													<strong>{sortableFields[4].title}:</strong>{' '}
-													{salary?.total_absent == 0
-														? 0
-														: salary?.total_absent
-														? salary?.total_absent
-														: '-'}
-													<br />
-													<strong>{sortableFields[5].title}:</strong>{' '}
-													{salary?.period ? salary?.period : '-'}
+												<div className='p-4' style={{ background: '#F8FAFC', borderRadius: '8px' }}>
+													<strong>Employee:</strong> {salary?.employee_name || salary?.full_name} ({salary?.mobile})<br />
+													<strong>Base Salary:</strong> ₹{salary?.total_salary || 0}<br />
+													<strong>Final Salary:</strong> ₹{salary?.final_salary || 0}<br />
+													<strong>Present:</strong> {salary?.total_present || 0} days<br />
+													<strong>Absent:</strong> {salary?.total_absent || 0} days<br />
+													<strong>Period:</strong> {salary?.period || '-'}
 												</div>
 											</td>
 										</tr>
@@ -501,20 +436,20 @@ const EmployeeSalary = () => {
 						/>
 					</div>
 					{paginatedAdminData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
+						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10 text-muted'>
+							<b>No salary records found</b>
 						</div>
 					)}
 					{paginatedAdminData.length > 0 && (
 						<UsersListPagination
-							totalPages={Math.ceil(filteredAdminData.length / pagination.itemsPerPage)}
+							totalPages={Math.ceil(filteredAdminData.length / pagination.itemsPerPage) || 1}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
 						/>
 					)}
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 

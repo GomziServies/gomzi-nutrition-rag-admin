@@ -325,8 +325,16 @@ export default function BankOfferManage() {
 				<div className="card-header border-0 pt-6 d-flex justify-content-between align-items-center flex-wrap gap-4">
 					<div>
 						<h3 className="card-title align-items-start flex-column mb-1">
-							<span className="card-label fw-bold fs-3 text-gray-900">
-								Homepage Bank Tie-Up Offers
+							<span className="card-label fw-bold fs-3 text-gray-900 d-inline-flex align-items-center">
+								Homepage Bank Tie-Up Offers{' '}
+								{loading ? (
+									<span
+										className="gz-skeleton rounded ms-2"
+										style={{ width: '36px', height: '22px', verticalAlign: 'middle' }}
+									/>
+								) : (
+									`(${offers.length})`
+								)}
 							</span>
 							<span className="text-muted mt-1 fw-semibold fs-7">
 								Manage card discounts, netbanking cashbacks, and instant UPI checkout perks on the homepage carousel.
@@ -353,10 +361,66 @@ export default function BankOfferManage() {
 
 				<div className="card-body pt-4">
 					{loading ? (
-						<div className="d-flex justify-content-center align-items-center py-16">
-							<div className="spinner-border" style={{ color: '#7c3aed' }} role="status">
-								<span className="visually-hidden">Loading...</span>
-							</div>
+						<div className="table-responsive">
+							<table className="table align-middle table-row-dashed fs-6 gy-5">
+								<thead>
+									<tr className="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+										<th style={{ width: '60px' }}>Order</th>
+										<th style={{ minWidth: '380px' }}>Live Banner Preview</th>
+										<th style={{ minWidth: '160px' }}>Bank / Partner</th>
+										<th style={{ minWidth: '160px' }}>Terms & Link</th>
+										<th style={{ width: '100px' }} className="text-center">Status</th>
+										<th style={{ width: '120px' }} className="text-end">Actions</th>
+									</tr>
+								</thead>
+								<tbody className="text-gray-600 fw-semibold">
+									{Array.from({ length: 5 }).map((_, idx) => (
+										<tr key={`bank-offer-skeleton-${idx}`} className="gz-skeleton-tr">
+											<td>
+												<div className="d-flex flex-column align-items-center gap-1">
+													<div className="gz-skeleton rounded" style={{ width: '28px', height: '28px' }} />
+													<div className="gz-skeleton rounded" style={{ width: '20px', height: '14px' }} />
+													<div className="gz-skeleton rounded" style={{ width: '28px', height: '28px' }} />
+												</div>
+											</td>
+											<td>
+												<div
+													className="gz-skeleton"
+													style={{
+														width: '350px',
+														height: '68px',
+														borderRadius: '12px',
+													}}
+												/>
+											</td>
+											<td>
+												<div className="d-flex align-items-center gap-2">
+													<div className="gz-skeleton rounded-circle" style={{ width: '28px', height: '28px' }} />
+													<div className="gz-skeleton" style={{ width: '90px', height: '16px' }} />
+												</div>
+											</td>
+											<td>
+												<div className="d-flex flex-column gap-2">
+													<div className="gz-skeleton" style={{ width: '150px', height: '14px' }} />
+													<div className="gz-skeleton" style={{ width: '100px', height: '12px' }} />
+												</div>
+											</td>
+											<td className="text-center">
+												<div
+													className="gz-skeleton rounded"
+													style={{ width: '70px', height: '24px', margin: '0 auto' }}
+												/>
+											</td>
+											<td className="text-end">
+												<div className="d-inline-flex gap-2 justify-content-end">
+													<div className="gz-skeleton rounded" style={{ width: '32px', height: '32px' }} />
+													<div className="gz-skeleton rounded" style={{ width: '32px', height: '32px' }} />
+												</div>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
 						</div>
 					) : offers.length === 0 ? (
 						<div className="text-center py-16">
