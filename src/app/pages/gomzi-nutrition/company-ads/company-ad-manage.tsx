@@ -21,6 +21,8 @@ import {
 	faBullhorn,
 	faImage,
 	faChevronDown,
+	faTable,
+	faThLarge,
 } from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import {
@@ -62,6 +64,8 @@ export const CompanyAdManage: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState<string>('')
 	const [companyFilter, setCompanyFilter] = useState<string>('All')
 	const [statusFilter, setStatusFilter] = useState<string>('All')
+	const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+	const [previewModalImg, setPreviewModalImg] = useState<{ url: string; title: string } | null>(null)
 
 	// Modal State
 	const [showModal, setShowModal] = useState<boolean>(false)
@@ -417,8 +421,8 @@ export const CompanyAdManage: React.FC = () => {
 			    ========================================================================= */}
 			<div className='card bg-body shadow-sm border-0 mb-6'>
 				<div className='card-body p-4'>
-					<div className='row g-3 align-items-center'>
-						<div className='col-12 col-md-5'>
+					<div className='row g-3 align-items-center justify-content-between'>
+						<div className='col-12 col-md-4'>
 							<div className='position-relative'>
 								<FontAwesomeIcon
 									icon={faSearch}
@@ -433,7 +437,7 @@ export const CompanyAdManage: React.FC = () => {
 								/>
 							</div>
 						</div>
-						<div className='col-6 col-md-4'>
+						<div className='col-6 col-md-3'>
 							<select
 								className='form-select form-select-solid fs-7'
 								value={companyFilter}
@@ -446,7 +450,7 @@ export const CompanyAdManage: React.FC = () => {
 								))}
 							</select>
 						</div>
-						<div className='col-6 col-md-3'>
+						<div className='col-6 col-md-2'>
 							<select
 								className='form-select form-select-solid fs-7'
 								value={statusFilter}
@@ -456,12 +460,36 @@ export const CompanyAdManage: React.FC = () => {
 								<option value='Inactive'>Inactive Only</option>
 							</select>
 						</div>
+						<div className='col-12 col-md-3 d-flex justify-content-md-end align-items-center gap-2'>
+							<div className='btn-group shadow-xs' role='group' aria-label='View layout'>
+								<button
+									type='button'
+									className={`btn btn-sm d-inline-flex align-items-center gap-2 px-3 ${
+										viewMode === 'table' ? 'btn-primary' : 'btn-light text-muted'
+									}`}
+									onClick={() => setViewMode('table')}
+									title='Table View'>
+									<FontAwesomeIcon icon={faTable} />
+									<span className='fw-bold'>Table</span>
+								</button>
+								<button
+									type='button'
+									className={`btn btn-sm d-inline-flex align-items-center gap-2 px-3 ${
+										viewMode === 'grid' ? 'btn-primary' : 'btn-light text-muted'
+									}`}
+									onClick={() => setViewMode('grid')}
+									title='Cards / Grid View'>
+									<FontAwesomeIcon icon={faThLarge} />
+									<span className='fw-bold'>Cards</span>
+								</button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* =========================================================================
-			    ADS LIST / CARDS VIEW
+			    ADS LIST (TABLE / CARDS VIEW)
 			    ========================================================================= */}
 			{loading ? (
 				<div className='card bg-body shadow-sm border-0 p-12 text-center'>
@@ -486,6 +514,166 @@ export const CompanyAdManage: React.FC = () => {
 						<FontAwesomeIcon icon={faPlus} />
 						<span>Upload Ad Banner</span>
 					</button>
+				</div>
+			) : viewMode === 'table' ? (
+				<div className='card bg-body shadow-sm border-0 mb-6'>
+					<div className='card-body p-0'>
+						<div className='table-responsive'>
+							<table className='table align-middle table-row-dashed fs-7 gy-3 gs-4 mb-0'>
+								<thead>
+									<tr className='text-start text-muted fw-bolder fs-8 text-uppercase gs-0 bg-light'>
+										<th style={{ width: '100px' }} className='text-center ps-4'>Order</th>
+										<th style={{ width: '200px' }}>Banner Preview</th>
+										<th style={{ minWidth: '180px' }}>Company / Brand</th>
+										<th style={{ minWidth: '220px' }}>Redirect URL</th>
+										<th style={{ width: '140px' }} className='text-center'>Status</th>
+										<th style={{ width: '130px' }} className='text-end pe-4'>Actions</th>
+									</tr>
+								</thead>
+								<tbody className='text-gray-700 fw-semibold'>
+									{filteredAds.map((ad, idx) => {
+										const targetId = ad._id || ad.id
+										const previewUrl = getPreviewUrl(ad.image)
+										return (
+											<tr key={targetId || idx}>
+												{/* Reorder / Index */}
+												<td className='text-center ps-4'>
+													<div className='d-flex align-items-center justify-content-center gap-1'>
+														<button
+															type='button'
+															className='btn btn-icon btn-sm btn-light btn-active-light-primary w-26px h-26px'
+															disabled={idx === 0}
+															onClick={() => handleMove(idx, 'up')}
+															title='Move Up'>
+															<FontAwesomeIcon icon={faArrowUp} style={{ fontSize: 10 }} />
+														</button>
+														<span className='badge badge-light-primary fw-bolder px-2 py-1 fs-9' style={{ minWidth: 26, textAlign: 'center' }}>
+															{idx + 1}
+														</span>
+														<button
+															type='button'
+															className='btn btn-icon btn-sm btn-light btn-active-light-primary w-26px h-26px'
+															disabled={idx === filteredAds.length - 1}
+															onClick={() => handleMove(idx, 'down')}
+															title='Move Down'>
+															<FontAwesomeIcon icon={faArrowDown} style={{ fontSize: 10 }} />
+														</button>
+													</div>
+												</td>
+
+												{/* Banner Preview Thumbnail */}
+												<td>
+													<div
+														className='position-relative rounded overflow-hidden border bg-light d-flex align-items-center justify-content-center shadow-xs'
+														style={{
+															width: 180,
+															height: 56,
+															cursor: previewUrl ? 'pointer' : 'default',
+															backgroundColor: '#f8fafc',
+															padding: 2,
+														}}
+														onClick={() =>
+															previewUrl &&
+															setPreviewModalImg({
+																url: previewUrl,
+																title: `${ad.company} - Advertisement Banner`,
+															})
+														}
+														title={previewUrl ? 'Click to preview full banner' : ''}>
+														{previewUrl ? (
+															<img
+																src={previewUrl}
+																alt={ad.company || 'Ad Banner'}
+																style={{
+																	maxWidth: '100%',
+																	maxHeight: '100%',
+																	objectFit: 'contain',
+																}}
+															/>
+														) : (
+															<div className='text-muted fs-8 d-flex align-items-center gap-1'>
+																<FontAwesomeIcon icon={faImage} />
+																<span>No Image</span>
+															</div>
+														)}
+													</div>
+												</td>
+
+												{/* Company / Brand & Title */}
+												<td>
+													<div className='d-flex flex-column'>
+														<div className='d-flex align-items-center gap-2 mb-1'>
+															<span className='badge bg-light-primary text-primary fw-bolder fs-8 px-2 py-1 border border-primary border-opacity-25'>
+																<FontAwesomeIcon icon={faBuilding} className='me-1' />
+																{ad.company}
+															</span>
+														</div>
+														{ad.title && ad.title !== '1' ? (
+															<span className='text-dark fw-bold fs-7 text-truncate' style={{ maxWidth: 260 }} title={ad.title}>
+																{ad.title}
+															</span>
+														) : (
+															<span className='text-muted fs-8 fst-italic'>No title specified</span>
+														)}
+													</div>
+												</td>
+
+												{/* Redirect URL */}
+												<td>
+													<div className='d-flex align-items-center gap-2'>
+														<a
+															href={ad.url || `/gomzi-supplement?brand=${encodeURIComponent(ad.company || '')}`}
+															target='_blank'
+															rel='noreferrer'
+															className='text-primary fw-semibold fs-7 text-hover-primary d-inline-flex align-items-center gap-1 text-truncate'
+															style={{ maxWidth: 280 }}
+															title={ad.url || '/gomzi-supplement'}>
+															<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-9 me-1 text-muted' />
+															<span className='text-truncate'>{ad.url || '/gomzi-supplement'}</span>
+														</a>
+													</div>
+												</td>
+
+												{/* Status toggle */}
+												<td className='text-center'>
+													<button
+														type='button'
+														onClick={() => handleToggleStatus(ad)}
+														className={`btn btn-sm py-1 px-3 fw-bold fs-8 d-inline-flex align-items-center gap-1 ${
+															ad.status ? 'btn-light-success' : 'btn-light-danger'
+														}`}
+														title={ad.status ? 'Live on website (Click to hide)' : 'Hidden (Click to make live)'}>
+														<FontAwesomeIcon icon={ad.status ? faCheck : faTimes} />
+														<span>{ad.status ? 'Live & Active' : 'Hidden'}</span>
+													</button>
+												</td>
+
+												{/* Actions */}
+												<td className='text-end pe-4'>
+													<div className='d-inline-flex align-items-center gap-2'>
+														<button
+															type='button'
+															className='btn btn-icon btn-sm btn-light-primary w-32px h-32px'
+															onClick={() => handleOpenEditModal(ad)}
+															title='Edit Advertisement'>
+															<FontAwesomeIcon icon={faEdit} />
+														</button>
+														<button
+															type='button'
+															className='btn btn-icon btn-sm btn-light-danger w-32px h-32px'
+															onClick={() => handleDelete(ad)}
+															title='Delete Advertisement'>
+															<FontAwesomeIcon icon={faTrash} />
+														</button>
+													</div>
+												</td>
+											</tr>
+										)
+									})}
+								</tbody>
+							</table>
+						</div>
+					</div>
 				</div>
 			) : (
 				<div className='row g-4'>
@@ -927,6 +1115,37 @@ export const CompanyAdManage: React.FC = () => {
 									</button>
 								</div>
 							</form>
+						</div>
+					</div>
+				</div>
+			)}
+			{/* Banner Lightbox Preview Modal */}
+			{previewModalImg && (
+				<div
+					className='modal fade show d-block'
+					style={{ backgroundColor: 'rgba(0,0,0,0.75)', zIndex: 1060 }}
+					tabIndex={-1}
+					onClick={() => setPreviewModalImg(null)}>
+					<div
+						className='modal-dialog modal-dialog-centered modal-xl'
+						onClick={(e) => e.stopPropagation()}>
+						<div className='modal-content border-0 shadow-lg rounded-3 overflow-hidden'>
+							<div className='modal-header py-3 px-6 bg-light border-bottom d-flex align-items-center justify-content-between'>
+								<h5 className='modal-title fw-bolder mb-0 text-dark'>{previewModalImg.title}</h5>
+								<button
+									type='button'
+									className='btn-close'
+									onClick={() => setPreviewModalImg(null)}
+								/>
+							</div>
+							<div className='modal-body p-4 text-center bg-dark'>
+								<img
+									src={previewModalImg.url}
+									alt={previewModalImg.title}
+									className='img-fluid rounded shadow-sm'
+									style={{ maxHeight: '80vh', objectFit: 'contain' }}
+								/>
+							</div>
 						</div>
 					</div>
 				</div>
