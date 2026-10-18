@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react'
 import { GetExpenses, GetInvoice } from '../../../Functions/FWG'
 import { GetOrdersInsights } from '../../../Functions/FGGroup'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
-var currencyFormatter = require('currency-formatter')
+import currencyFormatter from 'currency-formatter'
 
 const MasterFGGroup = () => {
 	const [totalIncomeData, setTotalIncomeData] = useState<any>({})

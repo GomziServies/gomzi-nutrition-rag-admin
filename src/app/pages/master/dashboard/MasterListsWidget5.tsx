@@ -1,7 +1,7 @@
 import React from 'react'
 import InputField from '../../../components/InputField'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
-var currencyFormatter = require('currency-formatter')
+import currencyFormatter from 'currency-formatter'
 
 type Props = {
 	className: string

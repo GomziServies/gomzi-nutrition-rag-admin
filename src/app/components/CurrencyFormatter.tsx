@@ -1,5 +1,5 @@
 import React from 'react';
-var currencyFormatter = require('currency-formatter')
+import currencyFormatter from 'currency-formatter';
 
 interface CurrencyFormatterProps {
   amount: any;
@@ -11,7 +11,11 @@ const formatCurrency = (amount: any): string => {
   } else if (amount >= 100000) {
     return '₹' + (amount / 100000).toFixed(1) + ' L';
   } else {
-    return currencyFormatter.format(amount, { code: 'INR' })
+    const formatter: any = (currencyFormatter as any)?.format ? currencyFormatter : (currencyFormatter as any)?.default;
+    if (formatter && typeof formatter.format === 'function') {
+      return formatter.format(amount, { code: 'INR' });
+    }
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(amount) || 0);
   }
 };
 

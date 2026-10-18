@@ -25,7 +25,7 @@ import { MasterChart } from './MasterChart'
 import { MasterListsWidget5 } from './MasterListsWidget5'
 import { MAsterOperation } from './MasterOperation'
 import { NutritionMasterChart } from './NutritionMasterChart'
-var currencyFormatter = require('currency-formatter')
+import currencyFormatter from 'currency-formatter'
 
 const DashboardPage = () => {
 	const [totalIncomeData, setTotalIncomeData] = useState<any>({})
