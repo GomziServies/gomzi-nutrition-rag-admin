@@ -10,6 +10,8 @@ import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
+import { generateMemoPdf, MemoDocument } from './MemoDocument'
+import './memo-letterhead.css'
 
 const CreateMemo = () => {
 	const navigate = useNavigate()
@@ -108,58 +110,20 @@ const CreateMemo = () => {
 
 	// Generate PDF
 	const generatePDF = async () => {
-		const memoContent = document.getElementById('memoContent')
-		
-		if (memoContent) {
-			try {
-				// Use html2canvas with optimized settings for text clarity
-				const canvas = await html2canvas(memoContent, {
-					scale: 2, // Reduced scale to decrease file size while maintaining readability
-					useCORS: true,
-					logging: false,
-					backgroundColor: '#ffffff',
-					allowTaint: true,
-					scrollX: 0,
-					scrollY: 0
-				})
-				const imgData = canvas.toDataURL('image/jpeg', 0.8) // Use JPEG with 80% quality to reduce file size
-				
-				// Create PDF with proper A4 dimensions
-				const pdf = new jsPDF('p', 'mm', 'a4')
-				const pdfWidth = pdf.internal.pageSize.getWidth()
-				const pdfHeight = pdf.internal.pageSize.getHeight()
-				
-				// Calculate dimensions with proper margins
-				const margin = 15
-				const imgWidth = pdfWidth - (margin * 2)
-				const imgHeight = (canvas.height * imgWidth) / canvas.width
-				const xOffset = margin
-				const yOffset = margin
-				
-				// Check if content fits on one page, otherwise adjust
-				if (imgHeight > (pdfHeight - (margin * 2))) {
-					// Scale down to fit page
-					const scaleFactor = (pdfHeight - (margin * 2)) / imgHeight
-					const scaledWidth = imgWidth * scaleFactor
-					const scaledHeight = imgHeight * scaleFactor
-					const scaledXOffset = (pdfWidth - scaledWidth) / 2
-					
-					pdf.addImage(imgData, 'JPEG', scaledXOffset, yOffset, scaledWidth, scaledHeight)
-				} else {
-					// Content fits, center it
-					const centerYOffset = (pdfHeight - imgHeight) / 2
-					pdf.addImage(imgData, 'JPEG', xOffset, centerYOffset, imgWidth, imgHeight)
-				}
-				
-				// Save the PDF with a meaningful name
-				pdf.save(`Unplanned_Leave_Memo_${selectedEmployee ? selectedEmployee.full_name : 'Employee'}.pdf`)
-			} catch (error) {
-				console.error('Error generating PDF:', error)
-				// Fallback to manual content if html2canvas fails
-				generatePDFFallback()
-			}
-		} else {
-			// Fallback to manual content if element not found
+		try {
+			const adminDetails = getLoggedInAdminDetails()
+			await generateMemoPdf(
+				selectedEmployee,
+				{
+					subject: subject || STATIC_SUBJECT,
+					date: selectedDate,
+				},
+				adminDetails?.full_name
+			)
+			successToast('Memo PDF downloaded successfully')
+		} catch (error) {
+			console.error('Error generating PDF:', error)
+			// Fallback to manual content if html2canvas fails
 			generatePDFFallback()
 		}
 	}
@@ -439,110 +403,24 @@ const CreateMemo = () => {
 									</span>
 								</div>
 								<div
-									className='p-4 p-md-6'
-									style={{ background: '#F8FAFD', borderRadius: '12px', border: '1px solid #EEF2F6' }}>
-									<div id='memoContent' className='p-4' style={{
-										border: '1px solid #000',
-										fontFamily: 'Arial, sans-serif',
-										maxWidth: '210mm',  // A4 width
-										margin: '0 auto',
-										backgroundColor: '#fff',
-										color: '#000',
-										lineHeight: '1.4',
-										fontSize: '11pt'
+									className='gz-memo-preview-container p-4'
+									style={{
+										background: '#F8FAFD',
+										borderRadius: '12px',
+										border: '1px solid #EEF2F6',
+										overflowX: 'auto',
 									}}>
-										<div className='text-center mb-5'>
-											<h3 className='fw-bold' style={{ fontSize: '14pt' }}>Notice Regarding {subject || STATIC_SUBJECT}</h3>
-										</div>
-									
-									{/* <div className='mb-3'>
-										<div className='row'>
-											<div className='col-6'>
-												<p className='mb-1'><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-											</div>
-										</div>
-										
-										{selectedEmployee && (
-											<>
-												<div className='row'>
-													<div className='col-6'>
-														<p className='mb-1'><strong>To:</strong> {selectedEmployee.full_name}</p>
-													</div>
-												</div>
-												<div className='row'>
-													<div className='col-6'>
-														<p className='mb-1'><strong>Employee ID:</strong> {selectedEmployee.employee?.employee_code || ''}</p>
-													</div>
-												</div>
-												<div className='row'>
-													<div className='col-12'>
-														<p className='mb-1'><strong>Department/Designation:</strong> {selectedEmployee.employee?.position || ''}</p>
-													</div>
-												</div>
-											</>
-										)}
-										
-										<div className='row'>
-											<div className='col-12'>
-												<p className='mb-1 mt-4'><strong>Subject:</strong> {STATIC_SUBJECT}</p>
-											</div>
-										</div>
-									</div> */}
-									
-									<div className='mt-4'>
-										<p>Dear<strong> {selectedEmployee ? selectedEmployee.full_name : 'Employee'},</strong></p>
-										
-										<p className='mt-3'>
-											This is to formally notify you regarding your <strong>{subject || STATIC_SUBJECT}{' '}
-											taken on {formatDate(selectedDate)}</strong>, during which no prior approval or timely communication was provided to 
-											either your Reporting Manager or the HR Department.
-										</p>
-										
-										<p className='mt-3'>
-											Your absence without authorization has caused disruption to workflow and has adversely 
-											impacted team operations. As per company policy, all employees are required to obtain 
-											prior approval for any leave of absence except in cases of genuine emergency, in which 
-											immediate intimation is mandatory.
-										</p>
-										
-										<p className='mt-3'>
-											You are hereby instructed to submit a written explanation for your unauthorized absence 
-											within <strong>24/48 hours</strong> of receiving this notice. Failure to provide a satisfactory explanation 
-											may result in disciplinary action as per company rules, which may include:
-										</p>
-										
-										<ul className='mt-3' style={{ paddingLeft: '20px' }}>
-											<li style={{ marginBottom: '8px' }}>
-												Deduction of salary for the unauthorized period of absence,
-											</li>
-											<li style={{ marginBottom: '8px' }}>
-												Issuance of a warning or show-cause notice,
-											</li>
-											<li style={{ marginBottom: '8px' }}>
-												Recording of misconduct in your employee file, and
-											</li>
-											<li style={{ marginBottom: '8px' }}>
-												Any further action as deemed appropriate under company policy.
-											</li>
-										</ul>
-										
-										<p className='mt-3'>
-											You are advised to ensure strict adherence to the leave policy henceforth to avoid further 
-											consequences.
-										</p>
-										
-										<div className='mt-5'>
-											<p className='mb-0'><strong>Sincerely,</strong></p>
-											<br />
-											<p className='mb-0'>Yash Sutariya</p>
-											<p className='mb-0'>HR Manager</p>
-											<p className='mb-0'>FG Group</p>
-										</div>
-									</div>
+									<MemoDocument
+										employee={selectedEmployee}
+										memo={{
+											subject: subject || STATIC_SUBJECT,
+											date: selectedDate,
+										}}
+										adminName={getLoggedInAdminDetails()?.full_name}
+									/>
 								</div>
 							</div>
 						</div>
-					</div>
 					) : (
 						<div
 							className='card shadow-sm border-0 mb-6'

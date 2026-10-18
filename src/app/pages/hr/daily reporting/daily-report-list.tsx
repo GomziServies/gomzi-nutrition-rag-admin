@@ -12,6 +12,7 @@ import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
+import { clampPage, resolvePaginationMeta, sanitizePaginationState } from '../../../components/paginationMeta'
 import { GetDailyReporting } from '../../../Functions/FGGroup/DailyTaskReporting'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 
@@ -60,25 +61,44 @@ const DailyReportList: React.FC = () => {
 	const [pagination, setPagination] = useState<PaginationState>(() => {
 		try {
 			const saved = localStorage.getItem('daily_report_pagination')
-			return saved ? JSON.parse(saved) : { page: 1, itemsPerPage: 10 }
+			return sanitizePaginationState(saved ? JSON.parse(saved) : null)
 		} catch (e) {
 			return { page: 1, itemsPerPage: 10 }
 		}
 	})
 
+	const { totalPages, totalRecords } = React.useMemo(
+		() => resolvePaginationMeta(metaData, assignTaskData.length, pagination.itemsPerPage),
+		[metaData, assignTaskData.length, pagination.itemsPerPage]
+	)
+
+	// Keep the current page inside the valid range so the list can never get stuck
+	// on an out-of-bounds page (after a filter change or restored session).
+	React.useEffect(() => {
+		if (!loading && totalPages > 0 && pagination.page > totalPages) {
+			setPagination((prev) => ({ ...prev, page: clampPage(prev.page, totalPages) }))
+		}
+	}, [loading, totalPages, pagination.page])
+
 	const fetchAssignTaskData = async (page?: number) => {
 		setLoading(true)
-		let startDate: Date | null = null
-		let endDate: Date | null = null
+
+		// Always work with local-time day boundaries so records created late on the
+		// last day of the range are not silently dropped by the secondary filter.
+		const toDayStart = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate())
+		const toDayEnd = (value: Date) =>
+			new Date(value.getFullYear(), value.getMonth(), value.getDate(), 23, 59, 59, 999)
+
+		let startDate: Date
+		let endDate: Date
 
 		if (selectedDateRange) {
-			startDate = new Date(selectedDateRange[0])
-			endDate = new Date(selectedDateRange[1])
-			endDate.setHours(23, 59, 59, 999)
+			startDate = toDayStart(new Date(selectedDateRange[0]))
+			endDate = toDayEnd(new Date(selectedDateRange[1]))
 		} else {
 			const now = new Date()
 			startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-			endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+			endDate = toDayEnd(new Date(now.getFullYear(), now.getMonth() + 1, 0))
 		}
 
 		try {
@@ -103,7 +123,8 @@ const DailyReportList: React.FC = () => {
 			// Secondary client-side filtering to ensure accuracy
 			filteredData = filteredData.filter((task: any) => {
 				const taskDate = new Date(task.createdAt)
-				return taskDate >= startDate! && taskDate <= endDate!
+				if (isNaN(taskDate.getTime())) return false
+				return taskDate >= startDate && taskDate <= endDate
 			})
 
 			filteredData.sort(
@@ -115,6 +136,8 @@ const DailyReportList: React.FC = () => {
 			const apiMetadata: any = response?.metadata
 			if (apiMetadata?.pagination) {
 				setMetaData(apiMetadata.pagination)
+			} else if (apiMetadata && typeof apiMetadata === 'object') {
+				setMetaData(apiMetadata)
 			} else {
 				// Fallback if metadata is missing
 				setMetaData({
@@ -193,6 +216,7 @@ const DailyReportList: React.FC = () => {
 	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
 		setSort(newSort)
 		setSortOrder(newSortOrder)
+		setPagination((prev) => (prev.page === 1 ? prev : { ...prev, page: 1 }))
 	}
 
 	const DownloadDocument = async (fileName: string) => {
@@ -284,25 +308,16 @@ const DailyReportList: React.FC = () => {
 
 	const paginatedTaskData = assignTaskData || []
 
-	const [expandedDescription, setExpandedDescription] = useState<{ [key: string]: boolean }>({})
-
-	const toggleDescription = (id: string) => {
-		setExpandedDescription((prevState) => ({
-			...prevState,
-			[id]: !prevState[id],
-		}))
-	}
-
-	const REMARKS_TRUNCATE_LENGTH = 80
-
-	const truncateString = (str: any, num: any) => {
-		if (!str || typeof str !== 'string') {
+	// Truncate remarks to a few words followed by ellipsis without inline toggle buttons
+	const truncateWords = (text: any, maxWords = 5) => {
+		if (!text || typeof text !== 'string' || text.trim() === '') {
 			return '-'
 		}
-		if (str.length <= num) {
-			return str
+		const words = text.trim().split(/\s+/)
+		if (words.length <= maxWords) {
+			return text.trim()
 		}
-		return str.slice(0, num) + '...'
+		return words.slice(0, maxWords).join(' ') + '...'
 	}
 
 	const handlenavigate = (ReportId: any, employeeId: any) => {
@@ -431,20 +446,15 @@ const DailyReportList: React.FC = () => {
 												{task.task_title}
 											</span>
 										</td>
-										<td style={{ maxWidth: '280px' }}>
+										<td style={{ maxWidth: '240px' }}>
 											<span
-												className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'
+												className='text-dark fw-bold text-hover-primary d-inline-block text-truncate mb-1 fs-6'
 												style={{
-													display: '-webkit-box',
-													WebkitLineClamp: 2,
-													WebkitBoxOrient: 'vertical',
-													overflow: 'hidden',
-													textOverflow: 'ellipsis',
-													maxWidth: '280px',
-													wordBreak: 'break-word',
+													maxWidth: '240px',
+													verticalAlign: 'middle',
 												}}
 												title={task.remarks || '-'}>
-												{task.remarks || '-'}
+												{truncateWords(task.remarks, 5)}
 											</span>
 										</td>
 										<td>
@@ -640,27 +650,20 @@ const DailyReportList: React.FC = () => {
 							setPagination={setPagination}
 							loading={loading}
 						/>
-				{paginatedTaskData.length === 0 && !loading && (
+				{paginatedTaskData.length === 0 && !loading && totalRecords === 0 && (
 					<div className='d-flex text-center w-100 align-content-center justify-content-center py-12'>
 						<b>No records found</b>
 					</div>
 				)}
 
-				{paginatedTaskData.length > 0 && (
+				{totalRecords > 0 && (
 					<UsersListPagination
-						totalPages={
-							metaData?.totalPages ||
-							metaData?.total_pages ||
-							Math.ceil(
-								(metaData?.totalItems || metaData?.total || metaData?.count || 0) /
-									pagination.itemsPerPage
-							) ||
-							1
-						}
+						totalPages={totalPages}
 						currentPage={pagination.page}
-						totalRecords={metaData?.totalItems || metaData?.total || metaData?.count || assignTaskData.length}
+						totalRecords={totalRecords}
 						itemsPerPage={pagination.itemsPerPage}
 						onPageChange={handlePageChange}
+						entityName='reports'
 					/>
 				)}
 			</div>

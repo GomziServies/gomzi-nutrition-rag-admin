@@ -1,11 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faChevronDown, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
+import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetEmployeeRating, GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { GetGlsEmployees } from '../../../Functions/FGGroup/GlsEmployee'
@@ -21,6 +25,617 @@ interface EmployeeOption {
 	mobile?: string
 	photo?: string
 	source?: 'Standard' | 'GLS'
+}
+
+/* ==========================================================================
+   Custom Dropdown 1: Employee Selector (Inspired by LengthMenu Dropdown UI)
+   ========================================================================== */
+interface EmployeeSelectDropdownProps {
+	selectedEmployee: EmployeeOption | null
+	employeeList: EmployeeOption[]
+	loading: boolean
+	onSelect: (emp: EmployeeOption | null) => void
+}
+
+const EmployeeSelectDropdown: React.FC<EmployeeSelectDropdownProps> = ({
+	selectedEmployee,
+	employeeList,
+	loading,
+	onSelect,
+}) => {
+	const [isOpen, setIsOpen] = useState(false)
+	const [searchTerm, setSearchTerm] = useState('')
+	const [coords, setCoords] = useState<{ top: number; left: number; width: number }>({
+		top: 0,
+		left: 0,
+		width: 340,
+	})
+	const buttonRef = useRef<HTMLButtonElement>(null)
+	const dropdownRef = useRef<HTMLDivElement>(null)
+	const searchInputRef = useRef<HTMLInputElement>(null)
+
+	const updateCoords = () => {
+		if (buttonRef.current) {
+			const rect = buttonRef.current.getBoundingClientRect()
+			const dropdownHeight = 360
+			const spaceBelow = window.innerHeight - rect.bottom
+			const openUp = spaceBelow < dropdownHeight && rect.top >= dropdownHeight
+			setCoords({
+				top: openUp ? Math.max(8, rect.top - dropdownHeight - 4) : rect.bottom + 6,
+				left: rect.left,
+				width: Math.max(rect.width, 340),
+			})
+		}
+	}
+
+	const toggleDropdown = (e: React.MouseEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		if (!isOpen) {
+			updateCoords()
+		}
+		setIsOpen((prev) => !prev)
+	}
+
+	useEffect(() => {
+		if (isOpen) {
+			setTimeout(() => {
+				searchInputRef.current?.focus()
+			}, 50)
+		} else {
+			setSearchTerm('')
+		}
+	}, [isOpen])
+
+	useEffect(() => {
+		if (!isOpen) return
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(event.target as Node) &&
+				buttonRef.current &&
+				!buttonRef.current.contains(event.target as Node)
+			) {
+				setIsOpen(false)
+			}
+		}
+		const handleScroll = () => {
+			if (isOpen) updateCoords()
+		}
+		window.addEventListener('scroll', handleScroll, true)
+		window.addEventListener('resize', handleScroll)
+		document.addEventListener('mousedown', handleClickOutside)
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside)
+			window.removeEventListener('scroll', handleScroll, true)
+			window.removeEventListener('resize', handleScroll)
+		}
+	}, [isOpen])
+
+	const filteredList = useMemo(() => {
+		if (!searchTerm.trim()) return employeeList
+		const term = searchTerm.toLowerCase().trim()
+		return employeeList.filter(
+			(emp) =>
+				emp.name.toLowerCase().includes(term) ||
+				(emp.employee_code || '').toLowerCase().includes(term) ||
+				(emp.position || '').toLowerCase().includes(term) ||
+				(emp.email || '').toLowerCase().includes(term) ||
+				(emp.mobile || '').toLowerCase().includes(term)
+		)
+	}, [employeeList, searchTerm])
+
+	return (
+		<div className='position-relative w-100'>
+			<button
+				ref={buttonRef}
+				type='button'
+				onClick={toggleDropdown}
+				disabled={loading}
+				style={{
+					width: '100%',
+					height: '40px',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'space-between',
+					gap: '10px',
+					backgroundColor: '#FFFFFF',
+					border: `1.5px solid ${isOpen ? '#172B4D' : '#DFE7F0'}`,
+					borderRadius: '10px',
+					padding: '6px 14px',
+					fontSize: '13px',
+					fontWeight: 600,
+					color: '#111827',
+					cursor: loading ? 'not-allowed' : 'pointer',
+					boxShadow: isOpen
+						? '0 0 0 0.22rem rgba(23, 43, 77, 0.14)'
+						: '0 1px 2px rgba(0, 0, 0, 0.04)',
+					transition: 'all 0.18s ease',
+					outline: 'none',
+				}}>
+				<div className='d-flex align-items-center gap-2 overflow-hidden text-truncate'>
+					{selectedEmployee ? (
+						<>
+							<div
+								style={{
+									width: '24px',
+									height: '24px',
+									minWidth: '24px',
+									borderRadius: '50%',
+									background: '#172B4D',
+									color: '#FFFFFF',
+									fontSize: '11px',
+									fontWeight: 700,
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+								}}>
+								{selectedEmployee.name ? selectedEmployee.name.charAt(0).toUpperCase() : 'E'}
+							</div>
+							{selectedEmployee.employee_code && (
+								<span
+									style={{
+										color: '#1D4ED8',
+										backgroundColor: '#EFF6FF',
+										border: '1px solid #BFDBFE',
+										borderRadius: '4px',
+										padding: '1px 5px',
+										fontSize: '11px',
+										fontWeight: 700,
+									}}>
+									#{selectedEmployee.employee_code}
+								</span>
+							)}
+							<span className='fw-bold text-truncate' style={{ color: '#172B4D' }}>
+								{selectedEmployee.name}
+							</span>
+							<span className='text-muted fs-8 text-truncate d-none d-sm-inline'>
+								— {selectedEmployee.position || 'Staff'} {selectedEmployee.source === 'GLS' ? '(GLS)' : ''}
+							</span>
+						</>
+					) : (
+						<span style={{ color: '#94A3B8', fontWeight: 500 }}>
+							Select an employee to audit...
+						</span>
+					)}
+				</div>
+
+				<FontAwesomeIcon
+					icon={faChevronDown}
+					style={{
+						fontSize: '11px',
+						color: '#172B4D',
+						transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+						transition: 'transform 0.2s ease',
+						flexShrink: 0,
+					}}
+				/>
+			</button>
+
+			{isOpen &&
+				createPortal(
+					<div
+						ref={dropdownRef}
+						onClick={(e) => e.stopPropagation()}
+						style={{
+							position: 'fixed',
+							top: coords.top,
+							left: coords.left,
+							width: coords.width,
+							backgroundColor: '#FFFFFF',
+							border: '1.5px solid #DFE7F0',
+							borderRadius: '12px',
+							boxShadow: '0 16px 40px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08)',
+							padding: '6px',
+							zIndex: 999999,
+							boxSizing: 'border-box',
+						}}>
+						{/* Search Input inside Dropdown */}
+						<div
+							style={{
+								padding: '4px 6px 8px 6px',
+								borderBottom: '1px solid #F1F5F9',
+								marginBottom: '4px',
+							}}>
+							<div
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									backgroundColor: '#F8FAFD',
+									border: '1px solid #E2E8F0',
+									borderRadius: '8px',
+									padding: '0 10px',
+									height: '34px',
+								}}>
+								<FontAwesomeIcon
+									icon={faSearch}
+									style={{ fontSize: '11px', color: '#94A3B8', marginRight: '8px' }}
+								/>
+								<input
+									ref={searchInputRef}
+									type='text'
+									value={searchTerm}
+									onChange={(e) => setSearchTerm(e.target.value)}
+									placeholder='Search by name, code, role...'
+									style={{
+										width: '100%',
+										border: 'none',
+										backgroundColor: 'transparent',
+										fontSize: '12.5px',
+										color: '#172B4D',
+										outline: 'none',
+									}}
+								/>
+								{searchTerm && (
+									<button
+										type='button'
+										onClick={() => setSearchTerm('')}
+										style={{
+											border: 'none',
+											background: 'transparent',
+											color: '#94A3B8',
+											cursor: 'pointer',
+											padding: 0,
+										}}>
+										<FontAwesomeIcon icon={faTimes} style={{ fontSize: '11px' }} />
+									</button>
+								)}
+							</div>
+						</div>
+
+						{/* Option to return to All Employees Directory Table */}
+						<button
+							type='button'
+							onClick={() => {
+								onSelect(null)
+								setIsOpen(false)
+							}}
+							style={{
+								width: '100%',
+								display: 'flex',
+								alignItems: 'center',
+								gap: '8px',
+								padding: '8px 12px',
+								border: 'none',
+								borderRadius: '8px',
+								backgroundColor: !selectedEmployee ? '#172B4D' : '#F8FAFC',
+								color: !selectedEmployee ? '#FFFFFF' : '#172B4D',
+								fontSize: '12.5px',
+								fontWeight: 600,
+								cursor: 'pointer',
+								marginBottom: '4px',
+								transition: 'all 0.15s ease',
+							}}
+							onMouseEnter={(e) => {
+								if (selectedEmployee) {
+									e.currentTarget.style.backgroundColor = '#E8F0F8'
+								}
+							}}
+							onMouseLeave={(e) => {
+								if (selectedEmployee) {
+									e.currentTarget.style.backgroundColor = '#F8FAFC'
+								}
+							}}>
+							<i className='bi bi-arrow-left-circle fs-6'></i>
+							<span>← Back to All Employees Table</span>
+						</button>
+
+						<div style={{ maxHeight: '260px', overflowY: 'auto' }}>
+							{filteredList.length === 0 ? (
+								<div
+									style={{
+										padding: '16px 12px',
+										textAlign: 'center',
+										color: '#94A3B8',
+										fontSize: '12.5px',
+									}}>
+									No employees matched "{searchTerm}"
+								</div>
+							) : (
+								filteredList.map((emp) => {
+									const isSelected = selectedEmployee?.id === emp.id
+									return (
+										<button
+											key={emp.id}
+											type='button'
+											onClick={() => {
+												onSelect(emp)
+												setIsOpen(false)
+											}}
+											style={{
+												width: '100%',
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'space-between',
+												gap: '8px',
+												padding: '8px 10px',
+												border: 'none',
+												borderRadius: '8px',
+												backgroundColor: isSelected ? '#172B4D' : 'transparent',
+												color: isSelected ? '#FFFFFF' : '#1E293B',
+												fontSize: '12.5px',
+												cursor: 'pointer',
+												marginBottom: '2px',
+												textAlign: 'left',
+												transition: 'all 0.12s ease',
+											}}
+											onMouseEnter={(e) => {
+												if (!isSelected) {
+													e.currentTarget.style.backgroundColor = '#E8F0F8'
+													e.currentTarget.style.color = '#172B4D'
+												}
+											}}
+											onMouseLeave={(e) => {
+												if (!isSelected) {
+													e.currentTarget.style.backgroundColor = 'transparent'
+													e.currentTarget.style.color = '#1E293B'
+												}
+											}}>
+											<div className='d-flex align-items-center gap-2 overflow-hidden text-truncate'>
+												<div
+													style={{
+														width: '24px',
+														height: '24px',
+														minWidth: '24px',
+														borderRadius: '50%',
+														background: isSelected ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
+														color: isSelected ? '#FFFFFF' : '#172B4D',
+														fontSize: '11px',
+														fontWeight: 700,
+														display: 'flex',
+														alignItems: 'center',
+														justifyContent: 'center',
+													}}>
+													{emp.name ? emp.name.charAt(0).toUpperCase() : 'E'}
+												</div>
+												<div className='overflow-hidden text-truncate'>
+													<div className='d-flex align-items-center gap-1.5'>
+														{emp.employee_code && (
+															<span
+																style={{
+																	fontSize: '10px',
+																	fontWeight: 700,
+																	color: isSelected ? '#93C5FD' : '#1D4ED8',
+																}}>
+																[{emp.employee_code}]
+															</span>
+														)}
+														<span className='fw-bold text-truncate'>{emp.name}</span>
+													</div>
+													<div
+														style={{
+															fontSize: '11px',
+															color: isSelected ? 'rgba(255,255,255,0.7)' : '#64748B',
+														}}>
+														{emp.position || 'Staff'} {emp.source === 'GLS' ? '• GLS' : ''}
+													</div>
+												</div>
+											</div>
+
+											{isSelected && (
+												<FontAwesomeIcon
+													icon={faCheck}
+													style={{ fontSize: '11px', color: '#10B981', flexShrink: 0 }}
+												/>
+											)}
+										</button>
+									)
+								})
+							)}
+						</div>
+					</div>,
+					document.body
+				)}
+		</div>
+	)
+}
+
+/* ==========================================================================
+   Custom Dropdown 2: Directory Filter (Inspired by LengthMenu Dropdown UI)
+   ========================================================================== */
+interface DirectoryFilterDropdownProps {
+	sourceFilter: 'All' | 'Standard' | 'GLS'
+	employeeList: EmployeeOption[]
+	onChange: (source: 'All' | 'Standard' | 'GLS') => void
+}
+
+const DirectoryFilterDropdown: React.FC<DirectoryFilterDropdownProps> = ({
+	sourceFilter,
+	employeeList,
+	onChange,
+}) => {
+	const [isOpen, setIsOpen] = useState(false)
+	const [coords, setCoords] = useState<{ top: number; left: number; width: number }>({
+		top: 0,
+		left: 0,
+		width: 180,
+	})
+	const buttonRef = useRef<HTMLButtonElement>(null)
+	const dropdownRef = useRef<HTMLDivElement>(null)
+
+	const updateCoords = () => {
+		if (buttonRef.current) {
+			const rect = buttonRef.current.getBoundingClientRect()
+			setCoords({
+				top: rect.bottom + 6,
+				left: rect.left,
+				width: Math.max(rect.width, 210),
+			})
+		}
+	}
+
+	const toggleDropdown = (e: React.MouseEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		if (!isOpen) {
+			updateCoords()
+		}
+		setIsOpen((prev) => !prev)
+	}
+
+	useEffect(() => {
+		if (!isOpen) return
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(event.target as Node) &&
+				buttonRef.current &&
+				!buttonRef.current.contains(event.target as Node)
+			) {
+				setIsOpen(false)
+			}
+		}
+		const handleScroll = () => {
+			if (isOpen) updateCoords()
+		}
+		window.addEventListener('scroll', handleScroll, true)
+		window.addEventListener('resize', handleScroll)
+		document.addEventListener('mousedown', handleClickOutside)
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside)
+			window.removeEventListener('scroll', handleScroll, true)
+			window.removeEventListener('resize', handleScroll)
+		}
+	}, [isOpen])
+
+	const directoryOptions: { label: string; value: 'All' | 'Standard' | 'GLS'; count: number }[] = [
+		{ label: 'All Directories', value: 'All', count: employeeList.length },
+		{
+			label: 'Standard HR',
+			value: 'Standard',
+			count: employeeList.filter((e) => e.source === 'Standard').length,
+		},
+		{
+			label: 'GLS Staff',
+			value: 'GLS',
+			count: employeeList.filter((e) => e.source === 'GLS').length,
+		},
+	]
+
+	const currentOption = directoryOptions.find((opt) => opt.value === sourceFilter) || directoryOptions[0]
+
+	return (
+		<div className='d-inline-block' style={{ minWidth: '180px' }}>
+			<button
+				ref={buttonRef}
+				type='button'
+				onClick={toggleDropdown}
+				style={{
+					width: '100%',
+					height: '38px',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'space-between',
+					gap: '8px',
+					backgroundColor: '#FFFFFF',
+					border: `1px solid ${isOpen ? '#172B4D' : '#DFE7F0'}`,
+					borderRadius: '8px',
+					padding: '6px 12px',
+					fontSize: '13px',
+					fontWeight: 600,
+					color: '#111827',
+					cursor: 'pointer',
+					boxShadow: isOpen
+						? '0 0 0 0.22rem rgba(23, 43, 77, 0.14)'
+						: '0 1px 2px rgba(0, 0, 0, 0.04)',
+					transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+					outline: 'none',
+				}}>
+				<div className='d-flex align-items-center gap-2'>
+					<i className='bi bi-folder2-open text-primary' style={{ fontSize: '13px' }}></i>
+					<span>
+						{currentOption.label} ({currentOption.count})
+					</span>
+				</div>
+				<FontAwesomeIcon
+					icon={faChevronDown}
+					style={{
+						fontSize: '11px',
+						color: '#1E3A5F',
+						transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+						transition: 'transform 0.2s ease',
+						pointerEvents: 'none',
+					}}
+				/>
+			</button>
+
+			{isOpen &&
+				createPortal(
+					<div
+						ref={dropdownRef}
+						onClick={(e) => e.stopPropagation()}
+						style={{
+							position: 'fixed',
+							top: coords.top,
+							left: coords.left,
+							width: coords.width,
+							backgroundColor: '#FFFFFF',
+							border: '1px solid #DFE7F0',
+							borderRadius: '10px',
+							boxShadow: '0 12px 30px rgba(15, 23, 42, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08)',
+							padding: '4px',
+							zIndex: 999999,
+						}}>
+						{directoryOptions.map((opt) => {
+							const isSelected = opt.value === sourceFilter
+							return (
+								<button
+									key={opt.value}
+									type='button'
+									onClick={(e) => {
+										e.preventDefault()
+										e.stopPropagation()
+										onChange(opt.value)
+										setIsOpen(false)
+									}}
+									style={{
+										width: '100%',
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'space-between',
+										padding: '8px 12px',
+										border: 'none',
+										borderRadius: '6px',
+										backgroundColor: isSelected ? '#172B4D' : 'transparent',
+										color: isSelected ? '#FFFFFF' : '#475569',
+										fontSize: '13px',
+										fontWeight: isSelected ? 700 : 500,
+										cursor: 'pointer',
+										transition: 'all 0.12s ease',
+										marginBottom: '2px',
+									}}
+									onMouseEnter={(e) => {
+										if (!isSelected) {
+											e.currentTarget.style.backgroundColor = '#E8F0F8'
+											e.currentTarget.style.color = '#172B4D'
+										}
+									}}
+									onMouseLeave={(e) => {
+										if (!isSelected) {
+											e.currentTarget.style.backgroundColor = 'transparent'
+											e.currentTarget.style.color = '#475569'
+										}
+									}}>
+									<span>{opt.label}</span>
+									<span
+										style={{
+											fontSize: '11px',
+											padding: '1px 6px',
+											borderRadius: '10px',
+											backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
+											color: isSelected ? '#FFFFFF' : '#64748B',
+											fontWeight: 600,
+										}}>
+										{opt.count}
+									</span>
+								</button>
+							)
+						})}
+					</div>,
+					document.body
+				)}
+		</div>
+	)
 }
 
 const HRReports: React.FC = () => {
@@ -387,12 +1002,14 @@ const HRReports: React.FC = () => {
 								type='button'
 								onClick={handleBackToAllEmployees}
 								className='gz-rep-back-btn'>
-								<i className='bi bi-arrow-left me-2'></i>
+								<i className='bi bi-arrow-left me-1'></i>
 								<span>All Employees</span>
 							</button>
-							<div className='vr h-25px my-auto d-none d-sm-block' style={{ color: '#E4EAF2' }}></div>
+							<div className='gz-rep-header-icon d-none d-sm-flex'>
+								<i className='bi bi-graph-up-arrow fs-5 text-white'></i>
+							</div>
 							<div>
-								<h2 className='fw-bold fs-2 m-0' style={{ color: '#142447' }}>
+								<h2 className='fw-bold fs-2 m-0' style={{ color: '#172B4D' }}>
 									Performance Report: {selectedEmployee.name}
 								</h2>
 								<span className='fs-7 fw-semibold' style={{ color: '#71809A' }}>
@@ -402,6 +1019,21 @@ const HRReports: React.FC = () => {
 						</div>
 
 						<div className='d-flex align-items-center gap-2'>
+							<button
+								type='button'
+								onClick={fetchRattingData}
+								className='gz-rep-secondary-btn'
+								title='Refresh Analytics'>
+								<i className='bi bi-arrow-clockwise text-primary'></i>
+								<span>Refresh</span>
+							</button>
+							<Link
+								to={backLink}
+								className='gz-rep-secondary-btn'
+								title='View Full Employee Profile'>
+								<i className='bi bi-person-badge text-primary'></i>
+								<span>Profile</span>
+							</Link>
 							<span className='gz-rep-badge is-neutral'>
 								<i className='bi bi-shield-check text-primary'></i>
 								{selectedEmployee.source === 'GLS' ? 'GLS Staff' : 'Standard HR'}
@@ -418,27 +1050,26 @@ const HRReports: React.FC = () => {
 					{/* Filter & Selector Toolbar Card for Detail View */}
 					<div className='gz-rep-card mb-6 px-4 py-3'>
 						<div className='row g-3 align-items-center'>
-							{/* Employee Selection Dropdown */}
+							{/* Employee Selection Dropdown (Custom LengthMenu-Style Portal Dropdown) */}
 							<div className='col-12 col-md-6 col-lg-5'>
 								<label
-									className='form-label fs-8 fw-bold text-uppercase mb-1'
+									className='form-label fs-8 fw-bold text-uppercase mb-1 d-flex align-items-center gap-1.5'
 									style={{ color: '#71809A', letterSpacing: '0.04em' }}>
+									<i className='bi bi-person-badge text-primary'></i>
 									Select Employee
 								</label>
-								<select
-									className='gz-rep-select w-100'
-									value={selectedEmployee?.id || ''}
-									onChange={handleEmployeeSelect}
-									disabled={loadingEmployees}>
-									<option value=''>← Back to All Employees Table</option>
-									{employeeList.map((emp) => (
-										<option key={emp.id} value={emp.id}>
-											{emp.employee_code ? `[${emp.employee_code}] ` : ''}
-											{emp.name} {emp.position ? `— ${emp.position}` : ''}{' '}
-											{emp.source === 'GLS' ? '(GLS)' : ''}
-										</option>
-									))}
-								</select>
+								<EmployeeSelectDropdown
+									selectedEmployee={selectedEmployee}
+									employeeList={employeeList}
+									loading={loadingEmployees}
+									onSelect={(emp) => {
+										if (!emp) {
+											handleBackToAllEmployees()
+										} else {
+											handleViewEmployeeReport(emp)
+										}
+									}}
+								/>
 							</div>
 
 							{/* Date Range Filter */}
@@ -534,24 +1165,16 @@ const HRReports: React.FC = () => {
 									/>
 								</div>
 
-								{/* 4. Directory Filter */}
-								<div style={{ minWidth: '160px' }}>
-									<select
-										className='gz-rep-select'
-										style={{ width: '100%', height: '38px', borderRadius: '8px' }}
-										value={sourceFilter}
-										onChange={(e) => {
-											setSourceFilter(e.target.value as any)
+								{/* 4. Directory Filter (Custom LengthMenu-Style Portal Dropdown) */}
+								<div>
+									<DirectoryFilterDropdown
+										sourceFilter={sourceFilter}
+										employeeList={employeeList}
+										onChange={(source) => {
+											setSourceFilter(source)
 											setPagination((prev) => ({ ...prev, page: 1 }))
-										}}>
-										<option value='All'>All Directories ({employeeList.length})</option>
-										<option value='Standard'>
-											Standard HR ({employeeList.filter((e) => e.source === 'Standard').length})
-										</option>
-										<option value='GLS'>
-											GLS Staff ({employeeList.filter((e) => e.source === 'GLS').length})
-										</option>
-									</select>
+										}}
+									/>
 								</div>
 							</div>
 						</div>
@@ -571,10 +1194,10 @@ const HRReports: React.FC = () => {
 			) : selectedEmployee ? (
 				<>
 					{/* 1. Executive Employee Profile Hero Card */}
-					<div className='gz-rep-card p-6 mb-6'>
+					<div className='gz-rep-hero-card mb-6'>
 						<div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
 							<div className='d-flex align-items-center gap-4'>
-								<div className='gz-rep-avatar'>
+								<div className='gz-rep-avatar-wrap'>
 									{selectedEmployee.photo ? (
 										<img
 											src={`https://files.fggroup.in/${selectedEmployee.photo}`}
@@ -595,46 +1218,39 @@ const HRReports: React.FC = () => {
 								</div>
 
 								<div>
-									<div className='d-flex align-items-center gap-2 mb-1'>
-										<h3 className='fw-bold fs-3 m-0' style={{ color: '#142447' }}>
+									<div className='d-flex align-items-center flex-wrap gap-2 mb-2'>
+										<h3 className='fw-bold fs-3 m-0' style={{ color: '#172B4D' }}>
 											{selectedEmployee.name}
 										</h3>
 										{selectedEmployee.employee_code && (
 											<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
-												{selectedEmployee.employee_code}
+												#{selectedEmployee.employee_code}
 											</span>
 										)}
+										<span className='gz-rep-badge is-neutral fs-8'>
+											{selectedEmployee.source === 'GLS' ? 'GLS Staff' : 'Standard HR'}
+										</span>
 									</div>
-									<div className='d-flex flex-wrap align-items-center gap-3 fs-7' style={{ color: '#71809A' }}>
-										<span>
-											<i className='bi bi-briefcase text-primary me-1'></i>
-											{selectedEmployee.position || 'Staff'}
+									<div className='d-flex flex-wrap align-items-center gap-2'>
+										<span className='gz-rep-meta-chip'>
+											<i className='bi bi-briefcase text-primary'></i>
+											<span>{selectedEmployee.position || 'Staff'}</span>
 										</span>
 										{selectedEmployee.mobile && (
-											<>
-												<span>•</span>
-												<span>
-													<i className='bi bi-telephone text-primary me-1'></i>
-													<a
-														href={`tel:${selectedEmployee.mobile}`}
-														className='text-muted text-hover-primary text-decoration-none'>
-														{selectedEmployee.mobile}
-													</a>
-												</span>
-											</>
+											<a
+												href={`tel:${selectedEmployee.mobile}`}
+												className='gz-rep-meta-chip'>
+												<i className='bi bi-telephone text-success'></i>
+												<span>{selectedEmployee.mobile}</span>
+											</a>
 										)}
 										{selectedEmployee.email && (
-											<>
-												<span>•</span>
-												<span>
-													<i className='bi bi-envelope text-primary me-1'></i>
-													<a
-														href={`mailto:${selectedEmployee.email}`}
-														className='text-muted text-hover-primary text-decoration-none'>
-														{selectedEmployee.email}
-													</a>
-												</span>
-											</>
+											<a
+												href={`mailto:${selectedEmployee.email}`}
+												className='gz-rep-meta-chip'>
+												<i className='bi bi-envelope text-info'></i>
+												<span>{selectedEmployee.email}</span>
+											</a>
 										)}
 									</div>
 								</div>
@@ -642,18 +1258,21 @@ const HRReports: React.FC = () => {
 
 							{/* Rating Score Box */}
 							<div className='gz-rep-rating-box'>
-								<div className='d-flex align-items-center justify-content-between mb-1'>
-									<span className='fs-8 fw-bold text-uppercase' style={{ color: '#71809A', letterSpacing: '0.04em' }}>
+								<div className='d-flex align-items-center justify-content-between mb-1 gap-2'>
+									<span
+										className='fs-8 fw-bold text-uppercase d-flex align-items-center gap-1.5'
+										style={{ color: '#71809A', letterSpacing: '0.04em' }}>
+										<i className='bi bi-star-half text-warning fs-7'></i>
 										Performance Rating
 									</span>
 									<span className={`gz-rep-badge ${ratingTier.class}`}>{ratingTier.label}</span>
 								</div>
 
 								<div className='d-flex align-items-baseline gap-2 mt-2'>
-									<span className='fs-2hx fw-bold' style={{ color: '#142447', lineHeight: 1 }}>
+									<span className='fs-2hx fw-bold' style={{ color: '#172B4D', lineHeight: 1 }}>
 										{ratingPercent > 0 ? `${ratingPercent}%` : 'N/A'}
 									</span>
-									{ratingPercent > 0 && (
+									{ratingPercent > 0 ? (
 										<div className='d-flex align-items-center gap-1 ms-1'>
 											{Array.from({ length: 5 }).map((_, idx) => (
 												<i
@@ -663,6 +1282,8 @@ const HRReports: React.FC = () => {
 													}`}></i>
 											))}
 										</div>
+									) : (
+										<span className='text-muted fs-8 fw-semibold ms-1'>Not Evaluated</span>
 									)}
 								</div>
 
@@ -672,7 +1293,7 @@ const HRReports: React.FC = () => {
 										style={{
 											width: `${Math.min(100, Math.max(0, ratingPercent))}%`,
 											backgroundColor:
-												ratingPercent >= 75 ? '#16a34a' : ratingPercent >= 50 ? '#f59e0b' : '#dc2626',
+												ratingPercent >= 75 ? '#10B981' : ratingPercent >= 50 ? '#F59E0B' : '#EF4444',
 										}}></div>
 								</div>
 							</div>
@@ -769,9 +1390,14 @@ const HRReports: React.FC = () => {
 									{totalTasks > 0 ? (
 										<Charts1 rattingData={rattingData} className='mb-2' />
 									) : (
-										<div className='d-flex flex-column align-items-center justify-content-center py-10 text-center'>
-											<i className='bi bi-pie-chart text-gray-400 fs-1 mb-2'></i>
-											<span className='text-muted fs-7'>No task records logged in this period</span>
+										<div className='gz-rep-empty-state my-3'>
+											<div className='gz-rep-empty-icon'>
+												<i className='bi bi-pie-chart'></i>
+											</div>
+											<h6 className='fw-bold text-gray-800 mb-1 fs-6'>No Tasks Logged</h6>
+											<span className='text-muted fs-8' style={{ maxWidth: '280px' }}>
+												Task analytics and completion ratios will automatically generate once tasks are assigned.
+											</span>
 										</div>
 									)}
 								</div>
@@ -1022,18 +1648,16 @@ const HRReports: React.FC = () => {
 									</span>
 								</td>
 								<td className='text-center pe-4'>
-									<button
-										type='button'
-										className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-1.5 px-3 py-2'
-										style={{ borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}
-										onClick={(e) => {
-											e.stopPropagation()
-											handleViewEmployeeReport(employee)
-										}}
-										title='View Performance Report'>
-										<i className='bi bi-eye-fill fs-6 text-primary'></i>
-										<span>View</span>
-									</button>
+									<div className='d-flex align-items-center justify-content-center'>
+										<TableButton
+											action='view'
+											onClick={(e) => {
+												e?.stopPropagation?.()
+												handleViewEmployeeReport(employee)
+											}}
+											title='View Performance Report'
+										/>
+									</div>
 								</td>
 							</tr>
 						)}

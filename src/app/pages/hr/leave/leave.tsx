@@ -1,22 +1,83 @@
-import { faCheck, faPlusCircle, faSort, faSortDown, faSortUp, faX } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCalendarAlt,
+	faCalendarCheck,
+	faCheck,
+	faCheckCircle,
+	faClock,
+	faInfoCircle,
+	faPlusCircle,
+	faQuoteLeft,
+	faSort,
+	faSortDown,
+	faSortUp,
+	faSpinner,
+	faTimes,
+	faTimesCircle,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import duration from 'dayjs/plugin/duration'
 import React, { useEffect, useState } from 'react'
-import { Button, Form, Modal } from 'react-bootstrap'
+import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
-import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
-import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import {
 	ActionEmployeeLeave,
 	GetEmployeeLeaves,
 } from '../../../Functions/FGGroup/EmployeeLeaveManagement'
+import './leave.css'
 DayJS.extend(duration)
+
+const calculateLeaveDuration = (from_date?: string, to_date?: string) => {
+	if (!from_date || !to_date) return '—'
+	const fromDate = DayJS(from_date)
+	let toDate = DayJS(to_date)
+
+	const diff = DayJS.duration(toDate.diff(fromDate))
+	let days = diff.days()
+	const hours = diff.hours()
+	const minutes = diff.minutes()
+
+	if (toDate.format('HH:mm') === '00:00') {
+		days += 1
+	}
+
+	if (days === 0 && hours === 0 && minutes === 0) {
+		return '0 hours'
+	} else if (days === 0) {
+		return `${hours}:${minutes < 10 ? '0' + minutes : minutes} hrs`
+	} else if (hours === 0 && minutes === 0) {
+		return `${days} day${days !== 1 ? 's' : ''}`
+	} else {
+		return `${days} day${days !== 1 ? 's' : ''} ${hours}:${minutes < 10 ? '0' + minutes : minutes} hrs`
+	}
+}
+
+const getInitials = (name?: string) => {
+	if (!name) return 'EM'
+	const parts = name.trim().split(/\s+/)
+	if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+	return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+const quickApprovalRemarks = [
+	'Approved as per leave policy',
+	'Approved with coverage arranged',
+	'Leave request granted',
+	'Half-day approved',
+]
+
+const quickRejectionRemarks = [
+	'High project workload during this period',
+	'Insufficient leave balance available',
+	'Team coverage unavailable; please reschedule',
+	'Please discuss dates with reporting manager',
+]
 
 const HRLeave: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -26,9 +87,11 @@ const HRLeave: React.FC = () => {
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
 	const [leaveData, setLeaveData] = useState<any[]>([])
 	const [showModal, setShowModal] = useState(false)
+	const [selectedLeave, setSelectedLeave] = useState<any | null>(null)
 	const [selectedLeaveId, setSelectedLeaveId] = useState<string | null>(null)
 	const [remarks, setRemarks] = useState('')
 	const [status, setStatus] = useState('')
+	const [submitting, setSubmitting] = useState(false)
 	const [expandedDescription, setExpandedDescription] = useState<{ [key: number]: boolean }>({})
 
 	const [pagination, setPagination] = useState({
@@ -65,38 +128,56 @@ const HRLeave: React.FC = () => {
 		fetchLeaveData()
 	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder])
 
-	const handleApproveAndRejectLeave = (id: string) => {
-		setSelectedLeaveId(id)
+	const handleApproveAndRejectLeave = (leave: any) => {
+		setSelectedLeave(leave)
+		setSelectedLeaveId(leave?._id || null)
+		const currentStatus = leave?.status?.toUpperCase()
+		setStatus(currentStatus === 'APPROVED' || currentStatus === 'REJECTED' ? currentStatus : '')
+		setRemarks(leave?.remarks || '')
 		setShowModal(true)
 	}
 
 	const handleModalClose = () => {
 		setShowModal(false)
+		setSelectedLeave(null)
 		setSelectedLeaveId(null)
 		setRemarks('')
 		setStatus('')
+		setSubmitting(false)
 	}
 
 	const handleModalSubmit = async () => {
 		if (!status) {
-			toast.error('Please select a status')
+			toast.error('Please choose a decision: Approve or Reject')
 			return
 		}
 
+		if (status === 'REJECTED' && !remarks.trim()) {
+			toast.error('Please specify a reason or remark for rejection')
+			return
+		}
+
+		setSubmitting(true)
 		try {
 			const payload: any = {
 				leave_id: selectedLeaveId,
 				status,
-				remarks,
+				remarks: remarks.trim(),
 			}
 			await ActionEmployeeLeave(payload)
-			toast.success(`Leave ${status === 'APPROVED' ? 'Approved' : 'Rejected'} Successfully`)
+			toast.success(`Leave request ${status === 'APPROVED' ? 'approved' : 'rejected'} successfully`)
 			fetchLeaveData()
+			handleModalClose()
 		} catch (error: any) {
-			toast.error(error.message)
+			toast.error(error?.message || 'Failed to update leave request')
 			console.error(error)
+		} finally {
+			setSubmitting(false)
 		}
-		handleModalClose()
+	}
+
+	const applyQuickRemark = (chip: string) => {
+		setRemarks((prev) => (prev ? `${prev.trim()} - ${chip}` : chip))
 	}
 
 	const sortableFields = [
@@ -343,41 +424,13 @@ const HRLeave: React.FC = () => {
 															</span>
 														</td>
 														<td>
-															<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-																{(() => {
-																	const fromDate = DayJS(leave.from_date)
-																	let toDate = DayJS(leave.to_date)
-
-																	const diff = DayJS.duration(toDate.diff(fromDate))
-
-																	let days = diff.days()
-																	const hours = diff.hours()
-																	const minutes = diff.minutes()
-
-																	// If the toDate was adjusted, count it as a full day
-																	if (toDate.format('HH:mm') === '00:00') {
-																		days += 1
-																	}
-
-																	if (days === 0 && hours === 0 && minutes === 0) {
-																		return '0 hours'
-																	} else if (days === 0) {
-																		return `${hours}:${
-																			minutes < 10 ? '0' + minutes : minutes
-																		} hours`
-																	} else if (hours === 0 && minutes === 0) {
-																		return `${days} day${days !== 1 ? 's' : ''}`
-																	} else {
-																		return `${days} day${days !== 1 ? 's' : ''} ${hours}:${
-																			minutes < 10 ? '0' + minutes : minutes
-																		} hours`
-																	}
-																})()}
+															<span className='text-dark fw-bold d-block mb-1 fs-6'>
+																{calculateLeaveDuration(leave.from_date, leave.to_date)}
 															</span>
 														</td>
 														<td>
 															<span
-																className='text-dark fw-bold  d-md-block d-none mb-1 fs-6'
+																className='text-dark fw-bold d-md-block d-none mb-1 fs-6'
 																onClick={() => toggleDescription(index)}
 																title={leave.reason}
 																style={{ cursor: 'pointer' }}>
@@ -386,7 +439,7 @@ const HRLeave: React.FC = () => {
 																	: truncateString(leave.reason, 100)}
 															</span>
 															<span
-																className='text-dark fw-bold  d-md-none d-block mb-1 fs-6'
+																className='text-dark fw-bold d-md-none d-block mb-1 fs-6'
 																style={{ cursor: 'pointer' }}
 																title={leave.reason}
 																onClick={() => toggleDescription(index)}>
@@ -396,33 +449,55 @@ const HRLeave: React.FC = () => {
 															</span>
 														</td>
 														<td>
-															<span className='text-dark fw-bold  d-block mb-1 fs-6'>
-																{leave.status?.toUpperCase() === 'APPROVED' ? (
-																	<span className='badge badge-light-success py-3 px-4 fs-7'>
-																		Approved
-																	</span>
-																) : leave.status?.toUpperCase() === 'REJECTED' ? (
-																	<span className='badge badge-light-danger py-3 px-4 fs-7'>
-																		Rejected
-																	</span>
-																) : (
-																	<span className='badge badge-light-warning py-3 px-4 fs-7'>
-																		Pending
-																	</span>
-																)}
-															</span>
-														</td>
-														<td>
-															{leave.status?.toUpperCase() === 'APPROVED' ||
-															leave.status?.toUpperCase() === 'REJECTED' ? (
-																'Decision Made'
+															{leave.status?.toUpperCase() === 'APPROVED' ? (
+																<span className='gz-leave-status-pill status-approved'>
+																	<span className='gz-leave-status-dot' />
+																	Approved
+																</span>
+															) : leave.status?.toUpperCase() === 'REJECTED' ? (
+																<span className='gz-leave-status-pill status-rejected'>
+																	<span className='gz-leave-status-dot' />
+																	Rejected
+																</span>
 															) : (
-																<TableButton
-																	action='edit'
-																	onClick={() => handleApproveAndRejectLeave(leave._id)}
-																	text='Action'
-																/>
+																<span className='gz-leave-status-pill status-pending'>
+																	<span className='gz-leave-status-dot' />
+																	Pending
+																</span>
 															)}
+														</td>
+														<td className='text-center'>
+															<div className='d-flex align-items-center justify-content-center gap-1.5'>
+																{leave.status?.toUpperCase() === 'PENDING' ? (
+																	<TableButton
+																		action='edit'
+																		onClick={(e) => {
+																			e?.stopPropagation?.()
+																			handleApproveAndRejectLeave(leave)
+																		}}
+																		title='Review Leave Request'
+																	/>
+																) : (
+																	<>
+																		<TableButton
+																			action='view'
+																			onClick={(e) => {
+																				e?.stopPropagation?.()
+																				handleApproveAndRejectLeave(leave)
+																			}}
+																			title='View Decision Details'
+																		/>
+																		<TableButton
+																			action='edit'
+																			onClick={(e) => {
+																				e?.stopPropagation?.()
+																				handleApproveAndRejectLeave(leave)
+																			}}
+																			title='Update Decision'
+																		/>
+																	</>
+																)}
+															</div>
 														</td>
 													</tr>
 													{/* {isVisible && (
@@ -515,88 +590,258 @@ const HRLeave: React.FC = () => {
 			<Modal
 				show={showModal}
 				centered
+				backdrop='static'
+				className='gz-leave-modal'
 				onHide={handleModalClose}>
-				<Modal.Header closeButton>
-					<Modal.Title>Approve/Reject Leave</Modal.Title>
-				</Modal.Header>
-				<Modal.Body>
-					<Form>
-						<Form.Group
-							className='mb-3'
-							controlId='status'>
-							<Form.Label>Status</Form.Label>
-							<div className='d-flex mt-3'>
-								<Form.Check
-									type='radio'
-									name='status'
-									id='approve'
-									value='APPROVED'
-									checked={status === 'APPROVED'}
-									onChange={(e) => setStatus(e.target.value)}
-									className='d-none'
-								/>
-								<label
-									htmlFor='approve'
-									className='d-flex align-items-center'>
-									<FontAwesomeIcon
-										icon={faCheck}
-										className={`fs-1 ${status === 'APPROVED' ? 'text-success' : 'text-muted'}`}
-									/>
-									<b
-										className={`ms-2 me-9 ${status === 'APPROVED' ? 'text-success' : 'text-dark'}`}>
-										{' '}
-										Approve
-									</b>
-								</label>
+				{/* Custom Header */}
+				<div className='gz-leave-modal-header'>
+					<div className='d-flex align-items-center gap-3'>
+						<div className='gz-leave-modal-header-icon'>
+							<FontAwesomeIcon icon={faCalendarCheck} />
+						</div>
+						<div>
+							<h4 className='gz-leave-modal-title'>Review Leave Request</h4>
+							<p className='gz-leave-modal-subtitle'>
+								Review employee request and record approval or rejection
+							</p>
+						</div>
+					</div>
+					<button
+						type='button'
+						className='gz-leave-modal-close'
+						onClick={handleModalClose}
+						title='Close Modal'
+						aria-label='Close'>
+						<FontAwesomeIcon icon={faTimes} />
+					</button>
+				</div>
 
-								<Form.Check
-									type='radio'
-									name='status'
-									id='reject'
-									value='REJECTED'
-									checked={status === 'REJECTED'}
-									onChange={(e) => setStatus(e.target.value)}
-									className='d-none'
-								/>
-								<label
-									htmlFor='reject'
-									className='d-flex align-items-center'>
-									<FontAwesomeIcon
-										icon={faX}
-										className={`fs-2 ${status === 'REJECTED' ? 'text-danger' : 'text-muted'}`}
-									/>
-									<b className={`ms-2 me-5 ${status === 'REJECTED' ? 'text-danger' : 'text-dark'}`}>
-										{' '}
-										Reject
-									</b>
-								</label>
+				{/* Modal Body */}
+				<div className='gz-leave-modal-body'>
+					{/* Employee & Leave Context Card */}
+					{selectedLeave && (
+						<div className='gz-leave-summary-card'>
+							<div className='d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2'>
+								<div className='d-flex align-items-center gap-3'>
+									<div className='gz-leave-summary-avatar'>
+										{getInitials(selectedLeave?.admin_id?.full_name)}
+									</div>
+									<div>
+										<div className='fw-bold text-dark fs-6'>
+											{selectedLeave?.admin_id?.full_name || 'Employee'}
+										</div>
+										<div className='text-muted fs-8'>
+											{selectedLeave?.admin_id?.email || 'Leave Applicant'}
+										</div>
+									</div>
+								</div>
+								<div>
+									{selectedLeave?.status?.toUpperCase() === 'APPROVED' ? (
+										<span className='gz-leave-status-pill status-approved'>
+											<span className='gz-leave-status-dot' />
+											Approved
+										</span>
+									) : selectedLeave?.status?.toUpperCase() === 'REJECTED' ? (
+										<span className='gz-leave-status-pill status-rejected'>
+											<span className='gz-leave-status-dot' />
+											Rejected
+										</span>
+									) : (
+										<span className='gz-leave-status-pill status-pending'>
+											<span className='gz-leave-status-dot' />
+											Pending Review
+										</span>
+									)}
+								</div>
 							</div>
-						</Form.Group>
-						<Form.Group
-							className='my-3'
-							controlId='remarks'>
-							<Form.Label className='mt-3'>Remarks</Form.Label>
-							<Form.Control
-								as='textarea'
-								rows={3}
-								value={remarks}
-								onChange={(e) => setRemarks(e.target.value)}
-							/>
-						</Form.Group>
-					</Form>
-				</Modal.Body>
-				<Modal.Footer>
-					<Button
-						variant='secondary'
-						onClick={handleModalClose}>
-						Close
-					</Button>
-					<Button
-						variant='primary'
-						onClick={handleModalSubmit}>
-						Submit
-					</Button>
-				</Modal.Footer>
+
+							<div className='d-flex align-items-center flex-wrap gap-2 mb-3'>
+								<div className='gz-leave-date-badge'>
+									<FontAwesomeIcon icon={faCalendarAlt} className='text-primary' />
+									<span>From: {DayJS(selectedLeave?.from_date).format('DD MMM YYYY, hh:mm A')}</span>
+								</div>
+								<div className='gz-leave-date-badge'>
+									<FontAwesomeIcon icon={faCalendarAlt} className='text-primary' />
+									<span>To: {DayJS(selectedLeave?.to_date).format('DD MMM YYYY, hh:mm A')}</span>
+								</div>
+								<div className='gz-leave-duration-badge'>
+									<FontAwesomeIcon icon={faClock} />
+									<span>Duration: {calculateLeaveDuration(selectedLeave?.from_date, selectedLeave?.to_date)}</span>
+								</div>
+							</div>
+
+							{selectedLeave?.reason && (
+								<div>
+									<div className='text-muted fs-8 fw-semibold mb-1'>Employee Reason</div>
+									<div className='gz-leave-reason-quote'>
+										<FontAwesomeIcon icon={faQuoteLeft} className='text-muted me-2' />
+										{selectedLeave.reason}
+									</div>
+								</div>
+							)}
+						</div>
+					)}
+
+					{/* Decision Selection */}
+					<div className='mb-4'>
+						<div className='d-flex align-items-center justify-content-between mb-2'>
+							<label className='fw-bold fs-7 text-dark mb-0'>
+								Select Decision <span className='text-danger'>*</span>
+							</label>
+							{status && (
+								<span
+									className={`fs-8 fw-semibold ${
+										status === 'APPROVED' ? 'text-success' : 'text-danger'
+									}`}>
+									{status === 'APPROVED' ? 'Marking as Approved' : 'Marking as Rejected'}
+								</span>
+							)}
+						</div>
+
+						<div className='gz-leave-decision-grid'>
+							{/* Approve Card */}
+							<div
+								className={`gz-leave-decision-card card-approve ${
+									status === 'APPROVED' ? 'is-active' : ''
+								}`}
+								onClick={() => setStatus('APPROVED')}>
+								<div className='gz-leave-card-icon'>
+									<FontAwesomeIcon icon={faCheck} />
+								</div>
+								<div className='gz-leave-card-text'>
+									<div className='gz-leave-card-title'>Approve</div>
+									<div className='gz-leave-card-desc'>Grant leave request</div>
+								</div>
+								<div className='gz-leave-radio-indicator'>
+									{status === 'APPROVED' && <span className='gz-leave-radio-dot' />}
+								</div>
+							</div>
+
+							{/* Reject Card */}
+							<div
+								className={`gz-leave-decision-card card-reject ${
+									status === 'REJECTED' ? 'is-active' : ''
+								}`}
+								onClick={() => setStatus('REJECTED')}>
+								<div className='gz-leave-card-icon'>
+									<FontAwesomeIcon icon={faTimes} />
+								</div>
+								<div className='gz-leave-card-text'>
+									<div className='gz-leave-card-title'>Reject</div>
+									<div className='gz-leave-card-desc'>Decline leave request</div>
+								</div>
+								<div className='gz-leave-radio-indicator'>
+									{status === 'REJECTED' && <span className='gz-leave-radio-dot' />}
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Remarks / Comments Field */}
+					<div className='mb-2'>
+						<div className='d-flex align-items-center justify-content-between mb-1.5'>
+							<label htmlFor='leaveRemarks' className='fw-bold fs-7 text-dark mb-0'>
+								Remarks & Notes
+								{status === 'REJECTED' ? (
+									<span className='ms-2 badge badge-light-danger fs-8 fw-semibold'>
+										Reason required for rejection
+									</span>
+								) : (
+									<span className='ms-2 text-muted fs-8 fw-normal'>(Optional)</span>
+								)}
+							</label>
+						</div>
+
+						<textarea
+							id='leaveRemarks'
+							rows={3}
+							className='form-control gz-leave-textarea w-100'
+							placeholder={
+								status === 'REJECTED'
+									? 'Please specify why this leave request is being rejected...'
+									: 'Add any remarks, approval conditions, or handover notes for the employee...'
+							}
+							value={remarks}
+							onChange={(e) => setRemarks(e.target.value)}
+						/>
+
+						{/* Quick Suggestion Chips */}
+						<div className='mt-2.5'>
+							<div className='text-muted fs-8 fw-semibold mb-1.5'>Quick Remarks:</div>
+							<div className='d-flex flex-wrap gap-1.5'>
+								{(status === 'REJECTED' ? quickRejectionRemarks : quickApprovalRemarks).map(
+									(chip, i) => (
+										<button
+											key={i}
+											type='button'
+											className='gz-leave-chip'
+											onClick={() => applyQuickRemark(chip)}>
+											+ {chip}
+										</button>
+									)
+								)}
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* Modal Footer */}
+				<div className='gz-leave-modal-footer'>
+					<div className='d-flex align-items-center'>
+						{status ? (
+							<span
+								className={`fs-8 fw-semibold d-inline-flex align-items-center gap-1.5 ${
+									status === 'APPROVED' ? 'text-success' : 'text-danger'
+								}`}>
+								<FontAwesomeIcon icon={status === 'APPROVED' ? faCheckCircle : faTimesCircle} />
+								{status === 'APPROVED' ? 'Approving Leave' : 'Rejecting Leave'}
+							</span>
+						) : (
+							<span className='text-muted fs-8 d-inline-flex align-items-center gap-1.5'>
+								<FontAwesomeIcon icon={faInfoCircle} />
+								Choose Approve or Reject above
+							</span>
+						)}
+					</div>
+
+					<div className='d-flex align-items-center gap-2'>
+						<button
+							type='button'
+							className='gz-leave-cancel-btn'
+							onClick={handleModalClose}
+							disabled={submitting}>
+							Cancel
+						</button>
+
+						<button
+							type='button'
+							className={`gz-leave-submit-btn ${
+								status === 'APPROVED'
+									? 'btn-approve'
+									: status === 'REJECTED'
+									? 'btn-reject'
+									: 'btn-neutral'
+							}`}
+							onClick={handleModalSubmit}
+							disabled={!status || submitting}>
+							{submitting ? (
+								<>
+									<FontAwesomeIcon icon={faSpinner} spin className='me-1' />
+									Processing...
+								</>
+							) : (
+								<>
+									<FontAwesomeIcon icon={status === 'REJECTED' ? faTimes : faCheck} className='me-1' />
+									{status === 'APPROVED'
+										? 'Confirm Approval'
+										: status === 'REJECTED'
+										? 'Confirm Rejection'
+										: 'Select Action'}
+								</>
+							)}
+						</button>
+					</div>
+				</div>
 			</Modal>
 		</>
 	)

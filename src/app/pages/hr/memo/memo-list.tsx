@@ -12,6 +12,8 @@ import SearchFilter from '../../../components/SearchFilter'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { DeleteEmployeeMemo, GetEmployees } from '../../../Functions/FGGroup/Employee'
+import { generateMemoPdf, MemoDocument } from './MemoDocument'
+import './memo-letterhead.css'
 
 function MemoList() {
 	const navigate = useNavigate()
@@ -125,133 +127,16 @@ function MemoList() {
 		return null
 	}
 
-	// Generate PDF for a memo - with larger text size and proper framing
+	// Generate PDF for a memo using the new corporate Navy Blue letterhead
 	const generatePDF = async (employee: any, memo: any) => {
 		const memoId = memo.id
 		// Add this memo ID to the downloading set
 		setDownloadingIds((prev) => new Set(prev).add(memoId))
 
 		try {
-			// Create a temporary HTML element for the PDF content
-			const tempContainer = document.createElement('div')
-			tempContainer.style.padding = '30px'
-			tempContainer.style.fontFamily = 'Arial, sans-serif'
-			tempContainer.style.maxWidth = '210mm'
-			tempContainer.style.backgroundColor = '#fff'
-			tempContainer.style.color = '#000'
-			tempContainer.style.lineHeight = '1.6'
-			tempContainer.style.fontSize = '14pt' // Increased text size
-			tempContainer.style.border = '2px solid #000' // Added frame/border
-			tempContainer.style.position = 'absolute'
-			tempContainer.style.left = '-9999px' // Hide off-screen
-			tempContainer.style.top = '-9999px' // Hide off-screen
-
-			tempContainer.innerHTML = `
-        <div class="text-center mb-4">
-          <h3 class="fw-bold" style="font-size: 18pt;">Notice Regarding ${memo.subject}</h3>
-        </div>
-        
-        <div class="mt-4">
-          <p>Dear<strong> ${employee.full_name},</strong></p>
-          
-          <p class="mt-3">
-            This is to formally notify you regarding your <strong>${memo.subject}${' '} 
-            taken on ${formatDate(
-							memo.date
-						)}</strong>, during which no prior approval or timely communication was provided to 
-            either your Reporting Manager or the HR Department.
-          </p>
-          
-          <p class="mt-3">
-            Your absence without authorization has caused disruption to workflow and has adversely 
-            impacted team operations. As per company policy, all employees are required to obtain 
-            prior approval for any leave of absence except in cases of genuine emergency, in which 
-            immediate intimation is mandatory.
-          </p>
-          
-          <p class="mt-3">
-            You are hereby instructed to submit a written explanation for your unauthorized absence 
-            within <strong>24/48 hours</strong> of receiving this notice. Failure to provide a satisfactory explanation 
-            may result in disciplinary action as per company rules, which may include:
-          </p>
-          
-          <ul class="mt-3" style="padding-left: 20px;">
-            <li style="margin-bottom: 8px;">
-              Deduction of salary for the unauthorized period of absence,
-            </li>
-            <li style="margin-bottom: 8px;">
-              Issuance of a warning or show-cause notice,
-            </li>
-            <li style="margin-bottom: 8px;">
-              Recording of misconduct in your employee file, and
-            </li>
-            <li style="margin-bottom: 8px;">
-              Any further action as deemed appropriate under company policy.
-            </li>
-          </ul>
-          
-          <p class="mt-3">
-            You are advised to ensure strict adherence to the leave policy henceforth to avoid further 
-            consequences.
-          </p>
-          
-          <div class="mt-5">
-            <p class="mb-0"><strong>Sincerely,</strong></p>
-            <br />
-            <p class="mb-0">Yash Sutariya</p>
-            <p class="mb-0">HR Manager</p>
-            <p class="mb-0">FG Group</p>
-          </div>
-        </div>
-      `
-
-			document.body.appendChild(tempContainer)
-
-			// Use html2canvas with optimized settings for text clarity
-			const canvas = await html2canvas(tempContainer, {
-				scale: 2, // Reduced scale to decrease file size while maintaining readability
-				useCORS: true,
-				logging: false,
-				backgroundColor: '#ffffff',
-				allowTaint: true,
-				scrollX: 0,
-				scrollY: 0,
-			})
-
-			const imgData = canvas.toDataURL('image/jpeg', 0.8) // Use JPEG with 80% quality to reduce file size
-
-			// Create PDF with proper A4 dimensions
-			const pdf = new jsPDF('p', 'mm', 'a4')
-			const pdfWidth = pdf.internal.pageSize.getWidth()
-			const pdfHeight = pdf.internal.pageSize.getHeight()
-
-			// Calculate dimensions with proper margins
-			const margin = 15
-			const imgWidth = pdfWidth - margin * 2
-			const imgHeight = (canvas.height * imgWidth) / canvas.width
-			const xOffset = margin
-			const yOffset = margin
-
-			// Check if content fits on one page, otherwise adjust
-			if (imgHeight > pdfHeight - margin * 2) {
-				// Scale down to fit page
-				const scaleFactor = (pdfHeight - margin * 2) / imgHeight
-				const scaledWidth = imgWidth * scaleFactor
-				const scaledHeight = imgHeight * scaleFactor
-				const scaledXOffset = (pdfWidth - scaledWidth) / 2
-
-				pdf.addImage(imgData, 'JPEG', scaledXOffset, yOffset, scaledWidth, scaledHeight)
-			} else {
-				// Content fits, center it
-				const centerYOffset = (pdfHeight - imgHeight) / 2
-				pdf.addImage(imgData, 'JPEG', xOffset, centerYOffset, imgWidth, imgHeight)
-			}
-
-			// Save the PDF with a meaningful name
-			pdf.save(`Unplanned_Leave_Memo_${employee.full_name}_${formatDate(memo.date)}.pdf`)
-
-			// Clean up
-			document.body.removeChild(tempContainer)
+			const adminDetails = getLoggedInAdminDetails()
+			await generateMemoPdf(employee, memo, adminDetails?.full_name)
+			successToast('Memo PDF downloaded successfully')
 		} catch (error) {
 			console.error('Error generating PDF:', error)
 			errorToast('Error generating PDF')
@@ -333,138 +218,102 @@ function MemoList() {
 		}
 	}
 
-	// Render PDF preview - with larger text size and proper framing
+	// Render PDF preview with modern Navy Blue corporate letterhead
 	const renderPdfPreview = () => {
 		if (!previewData) return null
 
 		const { employee, memo } = previewData
-
-		// Check if this specific memo is downloading
 		const isDownloading = downloadingIds.has(memo.id)
+		const adminDetails = getLoggedInAdminDetails()
 
 		return (
 			<div
 				className='modal fade show d-block'
 				tabIndex={-1}
 				role='dialog'
-				style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+				style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1050 }}>
 				<div
-					className='modal-dialog modal-dialog-centered modal-lg'
+					className='modal-dialog modal-dialog-centered gz-memo-modal-dialog'
 					role='document'>
-					<div className='modal-content'>
-						<div className='modal-header'>
-							<h5 className='modal-title'>Memo Preview</h5>
+					<div
+						className='modal-content'
+						style={{
+							borderRadius: '16px',
+							overflow: 'hidden',
+							border: 'none',
+							boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+						}}>
+						<div
+							className='modal-header py-4 px-6'
+							style={{ borderBottom: '1px solid #E4EAF2', background: '#FFFFFF' }}>
+							<div className='d-flex align-items-center gap-3'>
+								<div
+									style={{
+										width: '38px',
+										height: '38px',
+										borderRadius: '10px',
+										background: '#EAF1FB',
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										color: '#172B4D',
+									}}>
+									<i className='bi bi-file-earmark-text-fill fs-4'></i>
+								</div>
+								<div>
+									<h5 className='modal-title fw-bold text-gray-900 m-0 fs-5'>
+										Employee Memo Preview
+									</h5>
+									<span className='text-muted fs-7'>
+										Executive Corporate Format • A4 Portrait
+									</span>
+								</div>
+							</div>
 							<button
 								type='button'
 								className='btn-close'
 								onClick={() => setShowPreview(false)}></button>
 						</div>
-						<div className='modal-body'>
-							<div
-								id='memoContent'
-								className='p-4'
-								style={{
-									border: '2px solid #000', // Added frame/border
-									fontFamily: 'Arial, sans-serif',
-									maxWidth: '210mm', // A4 width
-									margin: '0 auto',
-									backgroundColor: '#fff',
-									color: '#000',
-									lineHeight: '1.6',
-									fontSize: '14pt', // Increased text size
-								}}>
-								<div className='text-center mb-4'>
-									<h3
-										className='fw-bold'
-										style={{ fontSize: '18pt' }}>
-										Notice Regarding {memo.subject}
-									</h3>
-								</div>
-
-								<div className='mt-4'>
-									<p>
-										Dear<strong> {employee.full_name},</strong>
-									</p>
-
-									<p className='mt-3'>
-										This is to formally notify you regarding your{' '}
-										<strong>
-											{memo.subject} taken on {formatDate(memo.date)}
-										</strong>
-										, during which no prior approval or timely communication was provided to either
-										your Reporting Manager or the HR Department.
-									</p>
-
-									<p className='mt-3'>
-										Your absence without authorization has caused disruption to workflow and has
-										adversely impacted team operations. As per company policy, all employees are
-										required to obtain prior approval for any leave of absence except in cases of
-										genuine emergency, in which immediate intimation is mandatory.
-									</p>
-
-									<p className='mt-3'>
-										You are hereby instructed to submit a written explanation for your unauthorized
-										absence within <strong>24/48 hours</strong> of receiving this notice. Failure to
-										provide a satisfactory explanation may result in disciplinary action as per
-										company rules, which may include:
-									</p>
-
-									<ul
-										className='mt-3'
-										style={{ paddingLeft: '20px' }}>
-										<li style={{ marginBottom: '8px' }}>
-											Deduction of salary for the unauthorized period of absence,
-										</li>
-										<li style={{ marginBottom: '8px' }}>
-											Issuance of a warning or show-cause notice,
-										</li>
-										<li style={{ marginBottom: '8px' }}>
-											Recording of misconduct in your employee file, and
-										</li>
-										<li style={{ marginBottom: '8px' }}>
-											Any further action as deemed appropriate under company policy.
-										</li>
-									</ul>
-
-									<p className='mt-3'>
-										You are advised to ensure strict adherence to the leave policy henceforth to
-										avoid further consequences.
-									</p>
-
-									<div className='mt-5'>
-										<p className='mb-0'>
-											<strong>Sincerely,</strong>
-										</p>
-										<br />
-										<p className='mb-0'>Yash Sutariya</p>
-										<p className='mb-0'>HR Manager</p>
-										<p className='mb-0'>FG Group</p>
-									</div>
-								</div>
+						<div className='modal-body gz-memo-modal-body p-4'>
+							<div className='gz-memo-preview-container'>
+								<MemoDocument
+									employee={employee}
+									memo={memo}
+									adminName={adminDetails?.full_name}
+								/>
 							</div>
 						</div>
-						<div className='modal-footer'>
+						<div
+							className='modal-footer py-3 px-6'
+							style={{ borderTop: '1px solid #E4EAF2', background: '#FFFFFF' }}>
 							<button
 								type='button'
-								className='btn btn-secondary'
+								className='btn btn-light'
+								style={{ borderRadius: '8px', fontWeight: 600 }}
 								onClick={() => setShowPreview(false)}>
 								Close
 							</button>
 							<button
 								type='button'
-								className='btn btn-primary'
-								onClick={() => {
-									setShowPreview(false)
-									generatePDF(employee, memo)
+								className='btn btn-primary d-flex align-items-center gap-2'
+								style={{
+									borderRadius: '8px',
+									fontWeight: 600,
+									background: '#172B4D',
+									borderColor: '#172B4D',
 								}}
+								onClick={() => generatePDF(employee, memo)}
 								disabled={isDownloading}>
 								{isDownloading ? (
 									<>
-										<span className='spinner-border spinner-border-sm me-2'></span>
-										Downloading...
+										<span className='spinner-border spinner-border-sm'></span>
+										<span>Generating PDF...</span>
 									</>
 								) : (
-									'Download PDF'
+									<>
+										<FontAwesomeIcon icon={faDownload} />
+										<span>Download PDF</span>
+									</>
 								)}
 							</button>
 						</div>

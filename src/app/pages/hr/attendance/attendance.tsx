@@ -1,5 +1,4 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-import { faEye, faPlusCircle, faSync } from '@fortawesome/free-solid-svg-icons'
+import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { toAbsoluteUrl } from '../../../../_metronic/helpers'
@@ -11,26 +10,26 @@ import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
+import { clampPage } from '../../../components/paginationMeta'
 import { GetEmployees } from '../../../Functions/FGGroup'
 import { GetSalary, GetSyncAttendance } from '../../../Functions/FGGroup/Attendance'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 
 const HRAttendance = () => {
 	const [searchTerm, setSearchTerm] = useState('')
-	const [attendanceData, setAttendanceData] = useState<any>([])
+	const [attendanceData, setAttendanceData] = useState<any[]>([])
 	const [isRotating, setIsRotating] = useState(false)
 	const [loading, setLoading] = useState(false)
-	const [sort, setSort] = useState('DateString')
-	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
+	const [sort, setSort] = useState('Name')
+	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('asc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
 	const [pagination, setPagination] = useState({
 		page: 1,
 		itemsPerPage: 10,
 	})
-	const [metaData, setMetaData] = useState<any>()
 	const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>(null)
 
-	const fetchAttendanceData = async (page?: number) => {
+	const fetchAttendanceData = async () => {
 		setLoading(true)
 		let startDate: any
 		let endDate: any
@@ -46,19 +45,17 @@ const HRAttendance = () => {
 			startDate = new Date(now.getFullYear(), now.getMonth(), 1)
 			endDate = new Date()
 		}
-		try {
-			const response: any = await GetSalary({
-				from_date: startDate,
-				to_date: endDate,
-			})
 
-			const employeeResponse: any = await GetEmployees({
-				page: page || pagination.page,
-				limit: pagination.itemsPerPage,
-				sort: sort === 'Name' ? 'full_name' : sort,
-				sortOrder,
-				search: searchTerm,
-			})
+		try {
+			const [response, employeeResponse]: [any, any] = await Promise.all([
+				GetSalary({
+					from_date: startDate,
+					to_date: endDate,
+				}),
+				GetEmployees({
+					limit: 1000,
+				}),
+			])
 
 			const salaryData = response?.data || []
 			const employeeData = employeeResponse?.data || []
@@ -69,6 +66,7 @@ const HRAttendance = () => {
 				)
 
 				return {
+					_id: emp?._id || emp?.employee?.employee_code,
 					mobile: emp?.mobile || '',
 					photo: emp?.employee?.photo || '',
 					total_present: employeeAttendance?.[0]?.total_present || 0,
@@ -80,43 +78,39 @@ const HRAttendance = () => {
 			})
 
 			setAttendanceData(mergedData)
-			const meta = employeeResponse?.metadata?.pagination || employeeResponse?.metadata || {}
-			setMetaData(meta)
 		} catch (error) {
-			console.error(error)
+			console.error('Error fetching attendance data:', error)
+		} finally {
+			setLoading(false)
 		}
-		setLoading(false)
 	}
 
-	const fetchSyncAttendance = async (page?: number) => {
+	const fetchSyncAttendance = async () => {
 		setIsRotating(true)
 		try {
-			const response: any = await GetSyncAttendance()
-			const syncFilteredData = response.data
-			fetchAttendanceData()
+			await GetSyncAttendance()
+			await fetchAttendanceData()
 		} catch (error) {
-			console.error(error)
+			console.error('Error syncing attendance:', error)
+		} finally {
+			setIsRotating(false)
 		}
-		setIsRotating(false)
 	}
 
 	useEffect(() => {
-		const timeout = setTimeout(() => {
-			fetchAttendanceData()
-		}, 300)
-		return () => clearTimeout(timeout)
-	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder, selectedDateRange, searchTerm])
+		fetchAttendanceData()
+	}, [selectedDateRange])
 
 	const handleSyncButton = () => {
 		fetchSyncAttendance()
 	}
 
 	const handlePageChange = (page: number) => {
-		setPagination({ ...pagination, page })
+		setPagination((prev) => ({ ...prev, page }))
 	}
 
 	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value })
+		setPagination({ page: 1, itemsPerPage: value })
 	}
 
 	const sortableFields = [
@@ -129,6 +123,7 @@ const HRAttendance = () => {
 	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
 		setSort(newSort)
 		setSortOrder(newSortOrder)
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
 	const handleRowClick = (id: string) => {
@@ -140,17 +135,74 @@ const HRAttendance = () => {
 	const handleSearchChange = (term: React.SetStateAction<string>) => {
 		setSearchTerm((prev) => {
 			const next = typeof term === 'function' ? term(prev) : term
-			if (next !== prev) {
-				setPagination((p) => (p.page === 1 ? p : { ...p, page: 1 }))
-			}
 			return next
 		})
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
 	const handleDateRangeChange = (dateRange: [Date, Date] | null) => {
 		setSelectedDateRange(dateRange)
-		setPagination({ ...pagination, page: 1 })
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
+
+	// 1. Filtered data across all records
+	const filteredAttendanceData = React.useMemo(() => {
+		if (!searchTerm.trim()) return attendanceData
+		const term = searchTerm.toLowerCase().trim()
+		return attendanceData.filter((item: any) =>
+			(item?.Name || '').toLowerCase().includes(term) ||
+			(item?.employee_code || '').toLowerCase().includes(term) ||
+			(item?.mobile || '').toLowerCase().includes(term)
+		)
+	}, [attendanceData, searchTerm])
+
+	// 2. Sorted data across all filtered records
+	const sortedAttendanceData = React.useMemo(() => {
+		if (!filteredAttendanceData || filteredAttendanceData.length === 0 || !sort) {
+			return filteredAttendanceData || []
+		}
+
+		return [...filteredAttendanceData].sort((a: any, b: any) => {
+			let aVal = a?.[sort]
+			let bVal = b?.[sort]
+
+			if (aVal === undefined || aVal === null) aVal = ''
+			if (bVal === undefined || bVal === null) bVal = ''
+
+			// Numeric fields (total_present, total_absent, half_day)
+			const aNum = Number(aVal)
+			const bNum = Number(bVal)
+			if (
+				!isNaN(aNum) &&
+				!isNaN(bNum) &&
+				aVal !== '' &&
+				bVal !== '' &&
+				typeof aVal !== 'boolean' &&
+				typeof bVal !== 'boolean'
+			) {
+				return sortOrder === 'asc' ? aNum - bNum : bNum - aNum
+			}
+
+			return sortOrder === 'asc'
+				? String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' })
+				: String(bVal).localeCompare(String(aVal), undefined, { numeric: true, sensitivity: 'base' })
+		})
+	}, [filteredAttendanceData, sort, sortOrder])
+
+	// 3. Paginated slice for current page
+	const paginatedAttendanceData = React.useMemo(() => {
+		const startIndex = (pagination.page - 1) * pagination.itemsPerPage
+		return sortedAttendanceData.slice(startIndex, startIndex + pagination.itemsPerPage)
+	}, [sortedAttendanceData, pagination.page, pagination.itemsPerPage])
+
+	const totalPages = Math.ceil(sortedAttendanceData.length / pagination.itemsPerPage) || 1
+
+	// Guard against page out of bounds if items change
+	useEffect(() => {
+		if (pagination.page > totalPages && totalPages > 0) {
+			setPagination((prev) => ({ ...prev, page: clampPage(prev.page, totalPages) }))
+		}
+	}, [totalPages, pagination.page])
 
 	return (
 		<>
@@ -161,9 +213,9 @@ const HRAttendance = () => {
 				<div className='d-flex flex-column'>
 					<div className='d-flex align-items-center gap-2'>
 						<h2 className='text-gray-900 fw-bold fs-2 m-0'>Employee Attendance</h2>
-						{attendanceData?.length > 0 && (
+						{sortedAttendanceData?.length > 0 && (
 							<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
-								{attendanceData.length} Employees
+								{sortedAttendanceData.length} Employees
 							</span>
 						)}
 					</div>
@@ -196,7 +248,7 @@ const HRAttendance = () => {
 					{/* 2. Page Size / Length Menu */}
 					<div>
 						<LengthMenu
-							data={attendanceData}
+							data={sortedAttendanceData}
 							itemsPerPage={pagination.itemsPerPage}
 							handleItemsPerPageChange={handleItemsPerPageChange}
 							className='me-0'
@@ -206,7 +258,7 @@ const HRAttendance = () => {
 					{/* 3. Download Excel Button */}
 					<div>
 						<DownloadExcelButton
-							data={attendanceData}
+							data={sortedAttendanceData}
 							columns={sortableFields}
 							filename='Attendance_List'
 						/>
@@ -244,7 +296,7 @@ const HRAttendance = () => {
 			{/* Main Table Card */}
 			<div className='gz-inv-table-card'>
 				<Table
-					data={attendanceData}
+					data={paginatedAttendanceData}
 					columns={sortableFields}
 					sort={sort}
 					sortOrder={sortOrder}
@@ -321,9 +373,8 @@ const HRAttendance = () => {
 								</td>
 
 								<td style={{ textAlign: 'center' }}>
-									<button
-										type='button'
-										className='gz-inv-action-btn view'
+									<TableButton
+										action='view'
 										title='View Details'
 										onClick={() => {
 											if (selectedDateRange) {
@@ -336,9 +387,8 @@ const HRAttendance = () => {
 												)
 											}
 											window.location.href = `/hr/attendance-view?employee_code=${attendance?.employee_code}`
-										}}>
-										<FontAwesomeIcon icon={faEye} />
-									</button>
+										}}
+									/>
 								</td>
 							</tr>
 							{isVisible && (
@@ -390,7 +440,7 @@ const HRAttendance = () => {
 					loading={loading}
 				/>
 
-				{attendanceData.length === 0 && !loading && (
+				{sortedAttendanceData.length === 0 && !loading && (
 					<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
 						<i className='bi bi-calendar-x text-muted fs-2x mb-2'></i>
 						<span className='text-gray-700 fw-bold fs-6'>No attendance records found</span>
@@ -398,20 +448,14 @@ const HRAttendance = () => {
 					</div>
 				)}
 
-				{attendanceData.length > 0 && (
+				{sortedAttendanceData.length > 0 && (
 					<UsersListPagination
-						totalPages={
-							metaData?.totalPages ||
-							metaData?.total_pages ||
-							Math.ceil(
-								(metaData?.totalEmployees || metaData?.totalDocs || attendanceData.length) /
-									pagination.itemsPerPage
-							)
-						}
+						totalPages={totalPages}
 						currentPage={pagination.page}
-						totalRecords={metaData?.totalEmployees || metaData?.totalDocs || attendanceData.length}
+						totalRecords={sortedAttendanceData.length}
 						itemsPerPage={pagination.itemsPerPage}
 						onPageChange={handlePageChange}
+						entityName='employees'
 					/>
 				)}
 			</div>

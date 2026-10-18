@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Button, Form } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import { GetDailyReporting } from '../../../Functions/FGGroup/DailyTaskReporting'
@@ -55,11 +54,39 @@ export function DailyReportView() {
 	}, [reportId, employeeId])
 
 	if (loading) {
-		return <div>Loading...</div>
+		return (
+			<div className='d-flex flex-column align-items-center justify-content-center py-20'>
+				<div
+					className='spinner-border text-primary mb-3'
+					role='status'
+					style={{ width: '3rem', height: '3rem' }}>
+					<span className='visually-hidden'>Loading...</span>
+				</div>
+				<span className='text-gray-700 fw-bold fs-6'>Loading report details...</span>
+			</div>
+		)
 	}
 
 	if (!dailyReport) {
-		return <div>Report not found</div>
+		return (
+			<div className='card shadow-sm border-0 p-10 text-center my-6' style={{ borderRadius: '16px' }}>
+				<i className='bi bi-exclamation-triangle text-warning fs-2x mb-3'></i>
+				<h4 className='fw-bold text-gray-800'>Daily Report Not Found</h4>
+				<p className='text-muted fs-7'>
+					The requested report could not be located or may have been removed.
+				</p>
+				<div>
+					<button
+						type='button'
+						onClick={() => navigate('/hr/daily-report')}
+						className='btn btn-primary btn-sm mt-2'
+						style={{ borderRadius: '8px' }}>
+						<i className='bi bi-arrow-left me-2'></i>
+						Back to Daily Reports
+					</button>
+				</div>
+			</div>
+		)
 	}
 
 	const DownloadDocument = async (fileName: string) => {
@@ -137,54 +164,116 @@ export function DailyReportView() {
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Daily Report Details</PageTitle>
-			<KTCard>
-				<div className='card-body'>
-					<div className='row mb-4'>
-						<div className='col-md-12'>
-							<div className='row'>
-								<div className='col-md-6'>
-									<Form.Group className='mb-3'>
-										<Form.Label>Employee Name</Form.Label>
-										<Form.Control
-											type='text'
-											value={employeeName || 'Unknown Employee'}
-											className='inputfield-bg'
-											readOnly
-										/>
-									</Form.Group>
-								</div>
-								<div className='col-md-6'>
-									<Form.Group className='mb-3'>
-										<Form.Label>Created Date</Form.Label>
-										<Form.Control
-											type='text'
-											value={DayJS(dailyReport?.createdAt).format('DD/MM/YYYY')}
-											className='inputfield-bg'
-											readOnly
-										/>
-									</Form.Group>
-								</div>
-								<div className='col-md-12'>
-									<Form.Group className='mb-3'>
-										<Form.Label>Task Title</Form.Label>
-										<Form.Control
-											type='text'
-											value={dailyReport.task_title}
-											className='inputfield-bg'
-											readOnly
-										/>
-									</Form.Group>
-								</div>
-							</div>
+
+			{/* Top Header with Back Button */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
+				<div className='d-flex align-items-center gap-3'>
+					<button
+						type='button'
+						onClick={() => navigate('/hr/daily-report')}
+						className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2 px-3 py-2'
+						style={{ borderRadius: '8px', fontWeight: 600 }}>
+						<i className='bi bi-arrow-left fs-5'></i>
+						<span>Back to Daily Reports</span>
+					</button>
+					<div className='vr h-25px my-auto d-none d-sm-block' style={{ color: '#E4EAF2' }}></div>
+					<div>
+						<h2 className='fw-bold fs-2 m-0' style={{ color: '#142447' }}>
+							Daily Report Details
+						</h2>
+						<span className='fs-7 fw-semibold' style={{ color: '#71809A' }}>
+							Task breakdown, detailed employee remarks, and attached deliverables
+						</span>
+					</div>
+				</div>
+
+				<div className='d-flex align-items-center gap-2'>
+					<span className='badge badge-light-primary fw-bold fs-7 px-3 py-2'>
+						<i className='bi bi-calendar-event me-1.5 text-primary'></i>
+						{DayJS(dailyReport?.createdAt).format('DD MMM YYYY')}
+					</span>
+				</div>
+			</div>
+
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '16px',
+					background: '#ffffff',
+					border: '1px solid #E4EAF2',
+					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+				}}>
+				<div className='card-body p-6'>
+					<div className='row g-4 mb-4'>
+						<div className='col-md-6'>
+							<Form.Group>
+								<Form.Label className='fw-bold text-gray-800 fs-7 mb-1'>
+									Employee Name
+								</Form.Label>
+								<Form.Control
+									type='text'
+									value={employeeName || 'Unknown Employee'}
+									className='form-control form-control-solid'
+									style={{ borderRadius: '8px', height: '42px', fontWeight: 600 }}
+									readOnly
+								/>
+							</Form.Group>
 						</div>
 
-						<div className='col-md-12'>
-							<Form.Group className='mb-3'>
-								<Form.Label>Remarks</Form.Label>
+						<div className='col-md-6'>
+							<Form.Group>
+								<Form.Label className='fw-bold text-gray-800 fs-7 mb-1'>
+									Submission Date & Time
+								</Form.Label>
+								<Form.Control
+									type='text'
+									value={DayJS(dailyReport?.createdAt).format('DD/MM/YYYY hh:mm A')}
+									className='form-control form-control-solid'
+									style={{ borderRadius: '8px', height: '42px' }}
+									readOnly
+								/>
+							</Form.Group>
+						</div>
+
+						<div className='col-12'>
+							<Form.Group>
+								<Form.Label className='fw-bold text-gray-800 fs-7 mb-1'>
+									Task Title
+								</Form.Label>
+								<Form.Control
+									type='text'
+									value={dailyReport.task_title || '-'}
+									className='form-control form-control-solid'
+									style={{ borderRadius: '8px', height: '42px', fontWeight: 600 }}
+									readOnly
+								/>
+							</Form.Group>
+						</div>
+
+						{/* Expanded Remarks Section */}
+						<div className='col-12'>
+							<Form.Group>
+								<div className='d-flex align-items-center justify-content-between mb-1'>
+									<Form.Label className='fw-bold text-gray-800 fs-7 m-0'>
+										Detailed Remarks & Activity Log
+									</Form.Label>
+									<span className='text-muted fs-8'>Full Unabridged Content</span>
+								</div>
 								<Form.Control
 									as='textarea'
-									rows={3}
+									rows={8}
 									value={dailyReport?.remarks || 'No remarks provided'}
+									style={{
+										minHeight: '220px',
+										borderRadius: '10px',
+										background: '#F8FAFD',
+										border: '1px solid #E4EAF2',
+										lineHeight: '1.65',
+										fontSize: '13.5px',
+										color: '#142447',
+										padding: '16px',
+										resize: 'vertical',
+									}}
 									readOnly
 								/>
 							</Form.Group>
@@ -346,7 +435,7 @@ export function DailyReportView() {
 						</div>
 					)}
 				</div>
-			</KTCard>
+			</div>
 		</>
 	)
 }

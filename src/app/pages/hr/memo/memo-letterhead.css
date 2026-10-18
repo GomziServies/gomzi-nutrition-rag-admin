@@ -1,0 +1,68 @@
+/* ==========================================================================
+   GOMZI HR ADMIN - CORPORATE MEMO LETTERHEAD STYLES
+   Theme: Executive Navy Blue (#172B4D / #101F38)
+   ========================================================================== */
+
+.gz-memo-preview-container {
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	width: 100%;
+	overflow-x: auto;
+	background: #EEF2F6;
+	padding: 24px 16px;
+	border-radius: 12px;
+	box-sizing: border-box;
+}
+
+.gz-memo-letterhead-sheet {
+	background-color: #FFFFFF !important;
+	box-shadow: 0 8px 32px rgba(16, 31, 56, 0.12) !important;
+	border: 1px solid #E4EAF2 !important;
+	border-radius: 2px !important;
+	user-select: text;
+	flex-shrink: 0;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gz-memo-letterhead-sheet p,
+.gz-memo-letterhead-sheet div,
+.gz-memo-letterhead-sheet span,
+.gz-memo-letterhead-sheet li {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Modal sizing adjustments */
+.gz-memo-modal-dialog {
+	max-width: 880px !important;
+	width: 95vw !important;
+	margin: 1.5rem auto !important;
+}
+
+.gz-memo-modal-body {
+	background-color: #F4F6FA !important;
+	padding: 24px !important;
+	max-height: 85vh !important;
+	overflow-y: auto !important;
+	overflow-x: auto !important;
+}
+
+/* Print optimizations */
+@media print {
+	body * {
+		visibility: hidden !important;
+	}
+	.gz-memo-letterhead-sheet,
+	.gz-memo-letterhead-sheet * {
+		visibility: visible !important;
+	}
+	.gz-memo-letterhead-sheet {
+		position: absolute !important;
+		left: 0 !important;
+		top: 0 !important;
+		width: 100% !important;
+		box-shadow: none !important;
+		border: none !important;
+	}
+}

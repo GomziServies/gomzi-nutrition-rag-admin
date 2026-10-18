@@ -19,7 +19,19 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 	itemsPerPage = 10,
 	entityName = 'records',
 }) => {
-	if (totalPages <= 0) return null
+	const safeItemsPerPage = Math.max(1, Math.floor(Number(itemsPerPage) || 10))
+	const safeTotalPages = Math.max(0, Math.floor(Number(totalPages) || 0))
+	const safePage = Math.min(
+		Math.max(1, Math.floor(Number(currentPage) || 1)),
+		Math.max(1, safeTotalPages)
+	)
+
+	if (safeTotalPages <= 0) return null
+
+	const changePage = (nextPage: number) => {
+		if (nextPage < 1 || nextPage > safeTotalPages || nextPage === safePage) return
+		onPageChange(nextPage)
+	}
 
 	const getPaginationItems = (page: number, total: number): (number | '...')[] => {
 		if (total <= 7) {
@@ -34,12 +46,15 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 		return [1, '...', page - 1, page, page + 1, '...', total]
 	}
 
-	const pageItems = getPaginationItems(currentPage, totalPages)
+	const pageItems = getPaginationItems(safePage, safeTotalPages)
 
-	const fallbackTotal = totalPages * itemsPerPage
-	const displayTotal = totalRecords !== undefined ? totalRecords : fallbackTotal
-	const displayStart = displayTotal === 0 ? 0 : Math.max(1, (currentPage - 1) * itemsPerPage + 1)
-	const displayEnd = Math.min(currentPage * itemsPerPage, displayTotal)
+	const parsedTotal = Number(totalRecords)
+	const displayTotal =
+		totalRecords !== undefined && isFinite(parsedTotal)
+			? Math.max(0, Math.floor(parsedTotal))
+			: safeTotalPages * safeItemsPerPage
+	const displayStart = displayTotal === 0 ? 0 : (safePage - 1) * safeItemsPerPage + 1
+	const displayEnd = Math.min(safePage * safeItemsPerPage, displayTotal)
 
 	return (
 		<div
@@ -73,8 +88,8 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 				<button
 					type='button'
 					className='gz-inv-page-num'
-					disabled={currentPage <= 1}
-					onClick={() => onPageChange(currentPage - 1)}
+					disabled={safePage <= 1}
+					onClick={() => changePage(safePage - 1)}
 					title='Previous page'
 					aria-label='Previous page'
 					style={{
@@ -87,8 +102,8 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 						display: 'inline-flex',
 						alignItems: 'center',
 						justifyContent: 'center',
-						cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
-						opacity: currentPage <= 1 ? 0.4 : 1,
+						cursor: safePage <= 1 ? 'not-allowed' : 'pointer',
+						opacity: safePage <= 1 ? 0.4 : 1,
 						transition: 'all 0.15s ease',
 					}}>
 					<FontAwesomeIcon icon={faAngleLeft} />
@@ -114,13 +129,13 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 							</span>
 						)
 					}
-					const isActive = currentPage === item
+					const isActive = safePage === item
 					return (
 						<button
 							key={item}
 							type='button'
 							className={`gz-inv-page-num ${isActive ? 'active' : ''}`}
-							onClick={() => onPageChange(item)}
+							onClick={() => changePage(item)}
 							style={{
 								width: '34px',
 								height: '34px',
@@ -145,8 +160,8 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 				<button
 					type='button'
 					className='gz-inv-page-num'
-					disabled={currentPage >= totalPages}
-					onClick={() => onPageChange(currentPage + 1)}
+					disabled={safePage >= safeTotalPages}
+					onClick={() => changePage(safePage + 1)}
 					title='Next page'
 					aria-label='Next page'
 					style={{
@@ -159,8 +174,8 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 						display: 'inline-flex',
 						alignItems: 'center',
 						justifyContent: 'center',
-						cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-						opacity: currentPage >= totalPages ? 0.4 : 1,
+						cursor: safePage >= safeTotalPages ? 'not-allowed' : 'pointer',
+						opacity: safePage >= safeTotalPages ? 0.4 : 1,
 						transition: 'all 0.15s ease',
 					}}>
 					<FontAwesomeIcon icon={faAngleRight} />
@@ -169,7 +184,7 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 
 			{/* Right: Page X of Y */}
 			<div style={{ flex: '1 1 0', minWidth: '160px', color: '#71809A', fontSize: '13px', fontWeight: 500, textAlign: 'right' }}>
-				Page {currentPage} of {totalPages}
+				Page {safePage} of {safeTotalPages}
 			</div>
 		</div>
 	)

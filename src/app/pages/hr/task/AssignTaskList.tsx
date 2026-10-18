@@ -17,6 +17,7 @@ import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
+import { clampPage, resolvePaginationMeta, sanitizePaginationState } from '../../../components/paginationMeta'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import {
@@ -126,11 +127,24 @@ const HRAssignTaskList: React.FC = () => {
 	const [pagination, setPagination] = useState(() => {
 		const savedPage = localStorage.getItem('hr_assign_task_page')
 		const savedLimit = localStorage.getItem('hr_assign_task_limit')
-		return {
+		return sanitizePaginationState({
 			page: savedPage ? parseInt(savedPage, 10) : 1,
 			itemsPerPage: savedLimit ? parseInt(savedLimit, 10) : 10,
-		}
+		})
 	})
+
+	const { totalPages, totalRecords } = React.useMemo(
+		() => resolvePaginationMeta(metaData, assignTaskData.length, pagination.itemsPerPage),
+		[metaData, assignTaskData.length, pagination.itemsPerPage]
+	)
+
+	// Keep the current page inside the valid range so the list can never get stuck
+	// on an out-of-bounds page (after a delete, filter change or restored session).
+	React.useEffect(() => {
+		if (!loading && totalPages > 0 && pagination.page > totalPages) {
+			setPagination((prev) => ({ ...prev, page: clampPage(prev.page, totalPages) }))
+		}
+	}, [loading, totalPages, pagination.page])
 
 	// State for bulk task operations
 	const [selectedTasks, setSelectedTasks] = useState<string[]>([])
@@ -647,6 +661,7 @@ const HRAssignTaskList: React.FC = () => {
 	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
 		setSort(newSort)
 		setSortOrder(newSortOrder)
+		setPagination((prev) => (prev.page === 1 ? prev : { ...prev, page: 1 }))
 	}
 
 	const handleRowClick = (id: string) => {
@@ -1154,28 +1169,22 @@ const HRAssignTaskList: React.FC = () => {
 							loading={loading}
 						/>
 					</div>
-					{paginatedTaskData.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
-							<b>No records found</b>
-						</div>
-					)}
+{paginatedTaskData.length === 0 && !loading && totalRecords === 0 && (
+					<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
+						<b>No records found</b>
+					</div>
+				)}
 
-					{paginatedTaskData.length > 0 && (
-						<UsersListPagination
-							totalPages={
-								(metaData as any)?.totalPages ||
-								(metaData as any)?.total_pages ||
-								Math.ceil(
-									((metaData as any)?.totalTasks || (metaData as any)?.totalDocs || assignTaskData.length) /
-										pagination.itemsPerPage
-								)
-							}
-							currentPage={pagination.page}
-							totalRecords={(metaData as any)?.totalTasks || (metaData as any)?.totalDocs || assignTaskData.length}
-							itemsPerPage={pagination.itemsPerPage}
-							onPageChange={handlePageChange}
-						/>
-					)}
+{paginatedTaskData.length > 0 && (
+					<UsersListPagination
+						totalPages={totalPages}
+						currentPage={pagination.page}
+						totalRecords={totalRecords}
+						itemsPerPage={pagination.itemsPerPage}
+						onPageChange={handlePageChange}
+						entityName='tasks'
+					/>
+				)}
 				</div>
 
 				<Modal

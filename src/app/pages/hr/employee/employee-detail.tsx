@@ -1,7 +1,23 @@
-import { faEye, faPlusCircle, faQrcode, faStar, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons'
+import {
+	faBuilding,
+	faCopy,
+	faCreditCard,
+	faEnvelope,
+	faEye,
+	faExternalLinkAlt,
+	faHashtag,
+	faLock,
+	faQrcode,
+	faStar,
+	faTimes,
+	faTrash,
+	faUserPlus,
+	faWallet,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
-import { Button, Modal } from 'react-bootstrap'
+import { Modal } from 'react-bootstrap'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
 import toast from 'react-hot-toast'
 import { useIntl } from 'react-intl'
 import { Link, useLocation } from 'react-router-dom'
@@ -15,7 +31,9 @@ import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
+import { clampPage, resolvePaginationMeta, sanitizePaginationState } from '../../../components/paginationMeta'
 import { GetEmployees, RemoveEmployee } from '../../../Functions/FGGroup/Employee'
+import './employee-bank.css'
 
 interface PaginationState {
 	page: number
@@ -60,11 +78,24 @@ const HREmployeeDetail: React.FC = () => {
 	const [pagination, setPagination] = useState<PaginationState>(() => {
 		try {
 			const saved = localStorage.getItem('hr_employee_pagination')
-			return saved ? JSON.parse(saved) : { page: 1, itemsPerPage: 10 }
+			return sanitizePaginationState(saved ? JSON.parse(saved) : null)
 		} catch (e) {
 			return { page: 1, itemsPerPage: 10 }
 		}
 	})
+
+	const { totalPages, totalRecords } = React.useMemo(
+		() => resolvePaginationMeta(metaData, employeeData.length, pagination.itemsPerPage),
+		[metaData, employeeData.length, pagination.itemsPerPage]
+	)
+
+	// Keep the current page inside the valid range so the list can never get stuck
+	// on an out-of-bounds page (after a delete, filter change or restored session).
+	React.useEffect(() => {
+		if (!loading && totalPages > 0 && pagination.page > totalPages) {
+			setPagination((prev) => ({ ...prev, page: clampPage(prev.page, totalPages) }))
+		}
+	}, [loading, totalPages, pagination.page])
 
 	const fetchEmployeeData = async (page?: number) => {
 		setLoading(true)
@@ -259,6 +290,7 @@ const HREmployeeDetail: React.FC = () => {
 	const handleSortChange = (newSort: string, newSortOrder: any) => {
 		setSort(newSort)
 		setSortOrder(newSortOrder)
+		setPagination((prev) => (prev.page === 1 ? prev : { ...prev, page: 1 }))
 	}
 
 	const handleRowClick = (id: string) => {
@@ -506,116 +538,233 @@ const HREmployeeDetail: React.FC = () => {
 							loading={loading}
 						/>
 
-					{employeeData.length === 0 && !loading && (
-						<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
-							<i className='bi bi-people text-muted fs-2x mb-2'></i>
-							<span className='text-gray-700 fw-bold fs-6'>No employees found</span>
-							<span className='text-muted fs-7'>Try refining your search keyword</span>
-						</div>
-					)}
-					{employeeData.length > 0 && (
-						<UsersListPagination
-							totalPages={
-								metaData?.totalPages ||
-								metaData?.total_pages ||
-								Math.ceil(
-									(metaData?.totalEmployees || metaData?.totalDocs || employeeData.length) /
-										pagination.itemsPerPage
-								)
-							}
-							currentPage={pagination.page}
-							totalRecords={metaData?.totalEmployees || metaData?.totalDocs || employeeData.length}
-							itemsPerPage={pagination.itemsPerPage}
-							onPageChange={handlePageChange}
-						/>
-					)}
+{employeeData.length === 0 && !loading && totalRecords === 0 && (
+					<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
+						<i className='bi bi-people text-muted fs-2x mb-2'></i>
+						<span className='text-gray-700 fw-bold fs-6'>No employees found</span>
+						<span className='text-muted fs-7'>Try refining your search keyword</span>
+					</div>
+				)}
+				{totalRecords > 0 && (
+					<UsersListPagination
+						totalPages={totalPages}
+						currentPage={pagination.page}
+						totalRecords={totalRecords}
+						itemsPerPage={pagination.itemsPerPage}
+						onPageChange={handlePageChange}
+						entityName='employees'
+					/>
+				)}
 				</div>
 
-				{/* member view modal */}
-
+				{/* Employee Bank Details Modal */}
 				<Modal
 					show={showModal}
 					onHide={() => setShowModal(false)}
-					centered>
-					<Modal.Header closeButton>
-						<Modal.Title>Employee Bank Details</Modal.Title>
-					</Modal.Header>
-					<Modal.Body>
-						<div className='row'>
-							<div className='col-md-12 fv-row'>
-								<CopyableInput
-									placeholder='Bank Name'
-									type='text'
-									className='col-12 fv-row mb-7'
-									name='bank_name'
-									label='Bank Name'
-									htmlFor='bank_name'
-									value={employeeViewData.bank_name}
-								/>
+					centered
+					className='gz-bank-modal'>
+					<div className='gz-bank-modal-header'>
+						<div className='gz-bank-modal-header-left'>
+							<div className='gz-bank-modal-header-icon'>
+								<FontAwesomeIcon icon={faWallet} />
 							</div>
-							<div className='col-md-12 fv-row'>
-								<CopyableInput
-									placeholder='Account No.'
-									type='text'
-									className='col-12 fv-row mb-7'
-									name='account_details'
-									label='Account No.'
-									htmlFor='account_details'
-									value={employeeViewData.account_details}
-								/>
-							</div>
-							<div className='col-md-12 fv-row'>
-								<CopyableInput
-									placeholder='IFSC Code'
-									type='text'
-									className='col-12 fv-row mb-7'
-									name='IFSC'
-									label='IFSC Code'
-									htmlFor='IFSC'
-									value={employeeViewData.IFSC}
-								/>
-							</div>
-							<div className='col-md-12'>
-								<div>
-									<label
-										htmlFor='qr'
-										className=' mb-2'>
-										<b>QR Code</b>
-									</label>
-								</div>
-
-								{employeeViewData?.document?.isPdf ? (
-									<a
-										href={employeeViewData?.document?.fileUrl}
-										target='_blank'
-										rel='noopener noreferrer'>
-										<embed
-											src={employeeViewData?.document?.fileUrl}
-											className='w-md-50 w-75'
-										/>
-									</a>
-								) : (
-									<a
-										href={employeeViewData?.document?.fileUrl}
-										target='_blank'
-										rel='noopener noreferrer'>
-										<img
-											src={employeeViewData?.document?.fileUrl}
-											className='w-md-50 w-75'
-											alt='Image preview'
-										/>
-									</a>
-								)}
+							<div>
+								<h4 className='gz-bank-modal-title'>Employee Bank Details</h4>
+								<p className='gz-bank-modal-subtitle'>
+									Settlement account &amp; UPI credentials for salary disbursement
+								</p>
 							</div>
 						</div>
-					</Modal.Body>
-					<Modal.Footer>
-						<Button
-							variant='secondary'
+						<button
+							type='button'
+							className='gz-bank-modal-close'
+							onClick={() => setShowModal(false)}
+							title='Close'
+							aria-label='Close'>
+							<FontAwesomeIcon icon={faTimes} />
+						</button>
+					</div>
+
+					<div className='gz-bank-modal-body'>
+						{/* Employee identity strip */}
+						<div className='gz-bank-identity'>
+							<div className='gz-bank-avatar'>
+								{employeeViewData?.name
+									? employeeViewData.name.trim().charAt(0).toUpperCase()
+									: 'E'}
+							</div>
+							<div className='gz-bank-identity-info'>
+								<span className='gz-bank-identity-name'>
+									{employeeViewData?.name || 'Unnamed Employee'}
+								</span>
+								<span className='gz-bank-identity-meta'>
+									{employeeViewData?.employee_code && (
+										<span className='gz-bank-code-pill'>
+											<FontAwesomeIcon icon={faHashtag} />
+											{employeeViewData.employee_code}
+										</span>
+									)}
+									{employeeViewData?.position && (
+										<span className='meta-item'>
+											<FontAwesomeIcon icon={faBuilding} />
+											{employeeViewData.position}
+										</span>
+									)}
+									{employeeViewData?.email && (
+										<span className='meta-item'>
+											<FontAwesomeIcon icon={faEnvelope} />
+											{employeeViewData.email}
+										</span>
+									)}
+								</span>
+							</div>
+						</div>
+
+						{/* Bank credential rows */}
+						<div className='gz-bank-fields'>
+							<div className='gz-bank-field'>
+								<span className='gz-bank-field-label'>
+									<span className='gz-bank-field-icon'>
+										<FontAwesomeIcon icon={faBuilding} />
+									</span>
+									Bank Name
+								</span>
+								<div className='gz-bank-field-value'>
+									<CopyableInput
+										placeholder='Not provided'
+										type='text'
+										className='col-12 fv-row'
+										name='bank_name'
+										label='Bank Name'
+										htmlFor='bank_name'
+										value={employeeViewData.bank_name}
+										readOnly
+										showLabel={false}
+									/>
+								</div>
+							</div>
+
+							<div className='gz-bank-field'>
+								<span className='gz-bank-field-label'>
+									<span className='gz-bank-field-icon'>
+										<FontAwesomeIcon icon={faCreditCard} />
+									</span>
+									Account No.
+								</span>
+								<div className='gz-bank-field-value'>
+									<CopyableInput
+										placeholder='Not provided'
+										type='text'
+										className='col-12 fv-row'
+										name='account_details'
+										label='Account No.'
+										htmlFor='account_details'
+										value={employeeViewData.account_details}
+										readOnly
+										showLabel={false}
+									/>
+								</div>
+							</div>
+
+							<div className='gz-bank-field'>
+								<span className='gz-bank-field-label'>
+									<span className='gz-bank-field-icon'>
+										<FontAwesomeIcon icon={faHashtag} />
+									</span>
+									IFSC Code
+								</span>
+								<div className='gz-bank-field-value'>
+									<CopyableInput
+										placeholder='Not provided'
+										type='text'
+										className='col-12 fv-row'
+										name='IFSC'
+										label='IFSC Code'
+										htmlFor='IFSC'
+										value={employeeViewData.IFSC}
+										readOnly
+										showLabel={false}
+									/>
+								</div>
+							</div>
+						</div>
+
+						{/* Google Pay / UPI QR block */}
+						<div className='gz-bank-qr-wrap'>
+							<div className='gz-bank-section-label'>
+								<FontAwesomeIcon icon={faQrcode} />
+								Google Pay / UPI QR Code
+							</div>
+
+							<div className='gz-bank-qr-layout'>
+								{employeeViewData?.document?.fileUrl ? (
+									<a
+										href={employeeViewData.document.fileUrl}
+										target='_blank'
+										rel='noopener noreferrer'
+										className='gz-bank-qr-frame'>
+										{employeeViewData?.document?.isPdf ? (
+											<embed
+												src={employeeViewData.document.fileUrl}
+												type='application/pdf'
+											/>
+										) : (
+											<img src={employeeViewData.document.fileUrl} alt='Payment QR code' />
+										)}
+									</a>
+								) : (
+									<div className='gz-bank-qr-empty'>
+										<FontAwesomeIcon icon={faQrcode} />
+										<span>No QR code uploaded</span>
+									</div>
+								)}
+
+								<div className='gz-bank-qr-meta'>
+									<h5 className='gz-bank-qr-title'>Scan to Pay</h5>
+									<p className='gz-bank-qr-desc'>
+										Use this QR code to transfer salary or reimbursements directly to the
+										employee&rsquo;s registered UPI handle. Always verify the IFSC code
+										before initiating a transfer.
+									</p>
+									<div className='gz-bank-qr-actions'>
+										{employeeViewData?.document?.fileUrl && (
+											<>
+												<a
+													href={employeeViewData.document.fileUrl}
+													target='_blank'
+													rel='noopener noreferrer'
+													className='gz-bank-qr-btn'>
+													<FontAwesomeIcon icon={faExternalLinkAlt} />
+													Open Full Size
+												</a>
+												<CopyToClipboard
+													text={employeeViewData.document.fileUrl}
+													onCopy={() => toast.success('QR link copied to clipboard!')}>
+													<button type='button' className='gz-bank-qr-btn secondary'>
+														<FontAwesomeIcon icon={faCopy} />
+														Copy Link
+													</button>
+												</CopyToClipboard>
+											</>
+										)}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div className='gz-bank-modal-footer'>
+						<span className='gz-bank-modal-hint'>
+							<FontAwesomeIcon icon={faLock} />
+							Bank credentials are confidential — handle with care
+						</span>
+						<button
+							type='button'
+							className='btn gz-bank-close-btn'
 							onClick={() => setShowModal(false)}>
 							Close
-						</Button>
-					</Modal.Footer>
+						</button>
+					</div>
 				</Modal>
 		</>
 	)
