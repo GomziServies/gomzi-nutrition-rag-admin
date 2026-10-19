@@ -2719,34 +2719,42 @@ select.gz-inv-select {
 .table td .btn.btn-icon.btn-light-primary,
 .gz-inv-table td .btn.btn-icon.btn-light-primary {
 	color: #1E4F8A !important;
-	background-color: transparent !important;
+	background-color: #EFF6FF !important;
+	border: 1.5px solid #2563EB !important;
 }
 .gz-inv-action-btn.view:hover,
 .gz-table-action-btn.is-view:hover,
 .table td .btn.btn-icon.btn-light-primary:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-primary:hover {
-	background-color: #EAF1F8 !important;
+	background-color: rgba(37, 99, 235, 0.14) !important;
 	color: #101F38 !important;
-	border-color: rgba(30, 79, 138, 0.15) !important;
+	border: 1.5px solid #2563EB !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
-/* Action button variants: Edit / Purple */
+/* Action button variants: Edit / Green */
 .gz-inv-action-btn.edit,
 .gz-table-action-btn.is-edit,
 .table td .btn.btn-icon.btn-light-info,
 .gz-inv-table td .btn.btn-icon.btn-light-info {
-	color: #4C3AB3 !important;
-	background-color: transparent !important;
+	color: #16A34A !important;
+	background-color: #F0FDF4 !important;
+	border: 1.5px solid #16A34A !important;
 }
 .gz-inv-action-btn.edit:hover,
 .gz-table-action-btn.is-edit:hover,
 .table td .btn.btn-icon.btn-light-info:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-info:hover {
-	background-color: #E8E6F8 !important;
-	color: #3B2E99 !important;
-	border-color: rgba(76, 58, 179, 0.15) !important;
+	background-color: rgba(22, 163, 74, 0.14) !important;
+	color: #15803D !important;
+	border: 1.5px solid #16A34A !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Action button variants: Delete / Red */
@@ -2754,17 +2762,21 @@ select.gz-inv-select {
 .gz-table-action-btn.is-remove,
 .table td .btn.btn-icon.btn-light-danger,
 .gz-inv-table td .btn.btn-icon.btn-light-danger {
-	color: #D94A62 !important;
-	background-color: transparent !important;
+	color: #DC2626 !important;
+	background-color: #FEF2F2 !important;
+	border: 1.5px solid #DC2626 !important;
 }
 .gz-inv-action-btn.delete:hover,
 .gz-table-action-btn.is-remove:hover,
 .table td .btn.btn-icon.btn-light-danger:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-danger:hover {
-	background-color: #FBECEF !important;
-	color: #B52F46 !important;
-	border-color: rgba(217, 74, 98, 0.2) !important;
+	background-color: rgba(220, 38, 38, 0.14) !important;
+	color: #B91C1C !important;
+	border: 1.5px solid #DC2626 !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Action button variants: Warning / Amber */
@@ -2773,38 +2785,46 @@ select.gz-inv-select {
 .gz-table-action-btn.is-assign,
 .table td .btn.btn-icon.btn-light-warning,
 .gz-inv-table td .btn.btn-icon.btn-light-warning {
-	color: #A46A13 !important;
-	background-color: transparent !important;
+	color: #EA580C !important;
+	background-color: #FFF7ED !important;
+	border: 1.5px solid #EA580C !important;
 }
 .gz-inv-action-btn.warning:hover,
 .gz-table-action-btn.is-star:hover,
 .gz-table-action-btn.is-assign:hover,
 .table td .btn.btn-icon.btn-light-warning:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-warning:hover {
-	background-color: #FEF4E6 !important;
-	color: #7D4E05 !important;
-	border-color: rgba(164, 106, 19, 0.2) !important;
+	background-color: rgba(234, 88, 12, 0.14) !important;
+	color: #C2410C !important;
+	border: 1.5px solid #EA580C !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
-/* Action button variants: Success / Mint */
+/* Action button variants: Success / Mint / Approve */
 .gz-inv-action-btn.success,
 .gz-table-action-btn.is-approve,
 .gz-table-action-btn.is-send,
 .table td .btn.btn-icon.btn-light-success,
 .gz-inv-table td .btn.btn-icon.btn-light-success {
-	color: #168064 !important;
-	background-color: transparent !important;
+	color: #059669 !important;
+	background-color: #ECFDF5 !important;
+	border: 1.5px solid #059669 !important;
 }
 .gz-inv-action-btn.success:hover,
 .gz-table-action-btn.is-approve:hover,
 .gz-table-action-btn.is-send:hover,
 .table td .btn.btn-icon.btn-light-success:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-success:hover {
-	background-color: #ECFDF5 !important;
-	color: #0E5A45 !important;
-	border-color: rgba(22, 128, 100, 0.2) !important;
+	background-color: rgba(5, 150, 105, 0.14) !important;
+	color: #047857 !important;
+	border: 1.5px solid #059669 !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Action button variants: Dark / QR */
@@ -2812,17 +2832,21 @@ select.gz-inv-select {
 .gz-table-action-btn.is-qr,
 .table td .btn.btn-icon.btn-light-dark,
 .gz-inv-table td .btn.btn-icon.btn-light-dark {
-	color: #475569 !important;
-	background-color: transparent !important;
+	color: #334155 !important;
+	background-color: #F1F5F9 !important;
+	border: 1.5px solid #334155 !important;
 }
 .gz-inv-action-btn.qr:hover,
 .gz-table-action-btn.is-qr:hover,
 .table td .btn.btn-icon.btn-light-dark:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-dark:hover {
-	background-color: #F1F5F9 !important;
-	color: #1E293B !important;
-	border-color: rgba(71, 85, 105, 0.2) !important;
+	background-color: rgba(51, 65, 85, 0.14) !important;
+	color: #0F172A !important;
+	border: 1.5px solid #334155 !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* 4. Table Cards across all pages */
@@ -3172,26 +3196,40 @@ select.gz-inv-select {
 	color: #94a3b8 !important;
 }
 
-/* Download Action Button in Table Rows (1:1 with DownloadExcelButton) */
+/* Download Action Button in Table Rows */
 .gz-table-action-btn.is-download {
-	background-color: #ffffff !important;
-	border: 1px solid #DFE7F0 !important;
-	color: #1E3A5F !important;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	background-color: #EFF6FF !important;
+	border: 1.5px solid #2563EB !important;
+	color: #1E4F8A !important;
+	box-shadow: none !important;
 }
 
 .gz-table-action-btn.is-download:hover {
-	background-color: #1E3A5F !important;
-	border-color: #1E3A5F !important;
-	color: #ffffff !important;
-	box-shadow: 0 4px 10px rgba(30, 58, 95, 0.25) !important;
+	background-color: rgba(37, 99, 235, 0.14) !important;
+	border: 1.5px solid #2563EB !important;
+	color: #101F38 !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 	transform: translateY(-1px) !important;
 }
 
 .gz-table-action-btn.is-download:hover i,
 .gz-table-action-btn.is-download:hover svg,
 .gz-table-action-btn.is-download:hover span {
-	color: #ffffff !important;
+	color: #1E3A5F !important;
+}
+
+/* Table Action Buttons: Guarantee no box shadow on hover, blur background and subtle border */
+.gz-table-action-btn:hover,
+.gz-inv-action-btn:hover,
+.table td .btn.btn-icon.btn-sm:hover,
+.gz-inv-table td .btn.btn-icon.btn-sm:hover,
+button.gz-table-action-btn:hover,
+a.gz-table-action-btn:hover {
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Global Unified Back Button (Exact match with http://localhost:3000/hr/employee-view) */

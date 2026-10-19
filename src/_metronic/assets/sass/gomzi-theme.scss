@@ -99,10 +99,8 @@ input[type='date'],
 
 /* visible keyboard focus everywhere */
 a:focus-visible,
-button:focus-visible,
-input:focus-visible,
+button:not(.gz-emp-send-btn):not(.gz-msg-dropdown-trigger):not(.gz-msg-action-trigger):not(.gz-staged-emoji-toggle):focus-visible,
 select:focus-visible,
-textarea:focus-visible,
 .menu-link:focus-visible,
 .page-link:focus-visible {
 	outline: 2px solid var(--gz-brand);
@@ -1393,7 +1391,7 @@ a.text-hover-primary:hover {
 .form-select,
 .inputfield-bg,
 .inputfield-bg1,
-input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.selectfield-search-input),
+input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.selectfield-search-input):not(.gz-staged-caption-input):not(.gz-emp-composer-input),
 input[type='email'],
 input[type='password'],
 input[type='number'],
@@ -1734,12 +1732,12 @@ input.gz-top-search-input,
 .form-select-solid,
 .select2-container .select2-selection,
 .rsuite-picker,
-input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.selectfield-search-input),
+input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.selectfield-search-input):not(.gz-staged-caption-input):not(.gz-emp-composer-input),
 input[type='number'],
 input[type='email'],
 input[type='password'],
 input[type='date'],
-textarea {
+textarea:not(.gz-emp-composer-input) {
 	border-radius: var(--gz-radius-sm) !important;
 	font-size: 13px !important;
 	border: 1px solid var(--gz-border) !important;
@@ -1751,8 +1749,8 @@ textarea {
 .form-select:focus,
 .form-control-solid:not(.gz-top-search-input):not(.gz-search-filter-input):focus,
 .form-select-solid:focus,
-textarea:focus,
-input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):focus {
+textarea:not(.gz-emp-composer-input):focus,
+input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.gz-staged-caption-input):not(.gz-emp-composer-input):focus {
 	border-color: #2563eb !important;
 	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 	background-color: #ffffff !important;
@@ -5357,69 +5355,134 @@ select.form-control {
 	font-size: 14px !important;
 	transition: all 0.18s ease !important;
 	border: 1px solid transparent !important;
+	box-shadow: none !important;
 
 	&:hover:not(:disabled) {
 		transform: translateY(-1px);
-		box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+		box-shadow: none !important;
+		backdrop-filter: blur(8px) !important;
+		-webkit-backdrop-filter: blur(8px) !important;
 	}
 
 	&.is-view {
 		background: #eff6ff !important;
 		color: #2563eb !important;
-		border-color: #dbeafe !important;
+		border: 1.5px solid #2563eb !important;
 
 		&:hover {
-			background: #2563eb !important;
-			color: #ffffff !important;
-			border-color: #2563eb !important;
+			background: rgba(37, 99, 235, 0.14) !important;
+			color: #1d4ed8 !important;
+			border: 1.5px solid #2563eb !important;
+			box-shadow: none !important;
+			backdrop-filter: blur(8px) !important;
+			-webkit-backdrop-filter: blur(8px) !important;
 		}
 	}
 
 	&.is-edit {
 		background: #f0fdf4 !important;
 		color: #16a34a !important;
-		border-color: #dcfce7 !important;
+		border: 1.5px solid #16a34a !important;
 
 		&:hover {
-			background: #16a34a !important;
-			color: #ffffff !important;
-			border-color: #16a34a !important;
+			background: rgba(22, 163, 74, 0.14) !important;
+			color: #15803d !important;
+			border: 1.5px solid #16a34a !important;
+			box-shadow: none !important;
+			backdrop-filter: blur(8px) !important;
+			-webkit-backdrop-filter: blur(8px) !important;
 		}
 	}
 
 	&.is-remove {
 		background: #fef2f2 !important;
 		color: #dc2626 !important;
-		border-color: #fee2e2 !important;
+		border: 1.5px solid #dc2626 !important;
 
 		&:hover {
-			background: #dc2626 !important;
-			color: #ffffff !important;
-			border-color: #dc2626 !important;
+			background: rgba(220, 38, 38, 0.14) !important;
+			color: #b91c1c !important;
+			border: 1.5px solid #dc2626 !important;
+			box-shadow: none !important;
+			backdrop-filter: blur(8px) !important;
+			-webkit-backdrop-filter: blur(8px) !important;
 		}
 	}
 
-	&.is-assign {
+	&.is-assign,
+	&.is-warning,
+	&.is-star {
 		background: #fff7ed !important;
 		color: #ea580c !important;
-		border-color: #ffedd5 !important;
+		border: 1.5px solid #ea580c !important;
 
 		&:hover {
-			background: #ea580c !important;
-			color: #ffffff !important;
-			border-color: #ea580c !important;
+			background: rgba(234, 88, 12, 0.14) !important;
+			color: #c2410c !important;
+			border: 1.5px solid #ea580c !important;
+			box-shadow: none !important;
+			backdrop-filter: blur(8px) !important;
+			-webkit-backdrop-filter: blur(8px) !important;
 		}
 	}
 
 	&.is-approve {
 		background: #ecfdf5 !important;
 		color: #059669 !important;
-		border-color: #d1fae5 !important;
+		border: 1.5px solid #059669 !important;
 
 		&:hover {
-			background: #059669 !important;
-			color: #ffffff !important;
-			border-color: #059669 !important;
+			background: rgba(5, 150, 105, 0.14) !important;
+			color: #047857 !important;
+			border: 1.5px solid #059669 !important;
+			box-shadow: none !important;
+			backdrop-filter: blur(8px) !important;
+			-webkit-backdrop-filter: blur(8px) !important;
+		}
+	}
+
+	&.is-download {
+		background: #eff6ff !important;
+		color: #2563eb !important;
+		border: 1.5px solid #2563eb !important;
+
+		&:hover {
+			background: rgba(37, 99, 235, 0.14) !important;
+			color: #1d4ed8 !important;
+			border: 1.5px solid #2563eb !important;
+			box-shadow: none !important;
+			backdrop-filter: blur(8px) !important;
+			-webkit-backdrop-filter: blur(8px) !important;
+		}
+	}
+
+	&.is-qr {
+		background: #f1f5f9 !important;
+		color: #334155 !important;
+		border: 1.5px solid #334155 !important;
+
+		&:hover {
+			background: rgba(51, 65, 85, 0.14) !important;
+			color: #0f172a !important;
+			border: 1.5px solid #334155 !important;
+			box-shadow: none !important;
+			backdrop-filter: blur(8px) !important;
+			-webkit-backdrop-filter: blur(8px) !important;
+		}
+	}
+
+	&.is-explore {
+		background: #f0fdfa !important;
+		color: #0d9488 !important;
+		border: 1.5px solid #0d9488 !important;
+
+		&:hover {
+			background: rgba(13, 148, 136, 0.14) !important;
+			color: #0f766e !important;
+			border: 1.5px solid #0d9488 !important;
+			box-shadow: none !important;
+			backdrop-filter: blur(8px) !important;
+			-webkit-backdrop-filter: blur(8px) !important;
 		}
 	}
 }

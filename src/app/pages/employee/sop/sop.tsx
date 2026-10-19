@@ -1,4 +1,4 @@
-import { faCheck, faDownload, faFileAlt, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faDownload, faFileAlt, faRotateLeft, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import { Modal } from 'react-bootstrap'
@@ -8,15 +8,17 @@ import InputField from '../../../components/InputField'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
+import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
 import { CompleteSOP, GetSOP } from '../../../Functions/FGGroup/SOP'
 
 const EmployeeSOP: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
+	const [statusFilter, setStatusFilter] = useState('all')
 	const [loading, setLoading] = useState(true)
-	const [sort, setSort] = useState('createdAt')
-	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
+	const [sort, setSort] = useState('title')
+	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('asc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
 	const [targetData, setTargetData] = useState<any[]>([])
 	const [showModal, setShowModal] = useState(false)
@@ -61,7 +63,10 @@ const EmployeeSOP: React.FC = () => {
 			const combinedData: any[] = []
 
 			filteredData.forEach((el: any) => {
-				const isAssigned = !el.employee_ids || el.employee_ids.length === 0 || (empId && el.employee_ids.includes(empId))
+				const isAssigned =
+					!el.employee_ids ||
+					el.employee_ids.length === 0 ||
+					(empId && el.employee_ids.includes(empId))
 				if (!isAssigned) return
 
 				const serviceDetails = (el.service_details || []).map((row: any) => ({
@@ -91,7 +96,7 @@ const EmployeeSOP: React.FC = () => {
 
 	useEffect(() => {
 		fetchAssignSOPsData()
-	}, [searchTerm])
+	}, [])
 
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { id, name, value } = event.target
@@ -114,11 +119,24 @@ const EmployeeSOP: React.FC = () => {
 		setPagination({ ...pagination, page })
 	}
 
-	const filteredtargetData = targetData.filter((item) =>
-		(item.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-		(item.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-		(item.service_name || '').toLowerCase().includes(searchTerm.toLowerCase())
-	)
+	const filteredtargetData = targetData.filter((item) => {
+		const isCompleted =
+			(item.completed_by && item.completed_by.length > 0) ||
+			item.status === 'Completed' ||
+			item.status === 'COMPLETED'
+		const itemStatus = isCompleted ? 'completed' : 'pending'
+
+		const matchesStatus =
+			statusFilter === 'all' || itemStatus === statusFilter.toLowerCase()
+
+		const matchesSearch =
+			(item.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(item.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(item.service_name || '').toLowerCase().includes(searchTerm.toLowerCase())
+
+		return matchesStatus && matchesSearch
+	})
+
 	const paginatedtargetData = filteredtargetData.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
 		pagination.page * pagination.itemsPerPage
@@ -126,8 +144,9 @@ const EmployeeSOP: React.FC = () => {
 
 	const sortableFields = [
 		{ title: 'Title', field: 'title' },
+		{ title: 'Service Name', field: 'service_name' },
 		{ title: 'Description', field: 'description' },
-		{ title: 'Status & Completion', field: 'completed_by' },
+		{ title: 'Status', field: 'completed_by' },
 	]
 
 	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
@@ -136,9 +155,7 @@ const EmployeeSOP: React.FC = () => {
 	}
 
 	const handleRowClick = (id: string) => {
-		if (window.innerWidth <= 1024) {
-			setVisibleDetails(visibleDetails === id ? null : id)
-		}
+		setVisibleDetails(visibleDetails === id ? null : id)
 	}
 
 	const handleOpenModal = (services_id: string, sop_id: string) => {
@@ -192,24 +209,79 @@ const EmployeeSOP: React.FC = () => {
 			<PageTitle breadcrumbs={[]}>Standard Operating Procedures (SOP)</PageTitle>
 
 			<div className='card shadow-sm border-0' style={{ borderRadius: '14px', background: '#ffffff' }}>
-				<div className='card-header border-0 pt-6 pb-4 px-6 d-flex flex-wrap align-items-center justify-content-between gap-3'>
-					<div className='d-flex align-items-center gap-3 flex-wrap'>
-						<div className='d-flex align-items-center position-relative'>
+				{/* Modern Header */}
+				<div className='card-header border-0 pt-6 d-flex flex-column gap-4'>
+					{/* Header Top: Title & Right Actions */}
+					<div className='d-flex align-items-center justify-content-between flex-wrap gap-3 w-100'>
+						<div>
+							<div className='d-flex align-items-center gap-2'>
+								<h2 className='fw-bolder text-gray-900 mb-0'>Standard Operating Procedures (SOP)</h2>
+								<span className='badge badge-light-primary fw-bold fs-8'>
+									{filteredtargetData.length} records
+								</span>
+							</div>
+							<span className='text-muted fs-7 fw-semibold mt-1'>
+								Review operational guidelines, execute assigned procedure checklists, and upload proof of completion
+							</span>
+						</div>
+
+						<div className='d-flex align-items-center gap-2'>
+							<button
+								type='button'
+								className='btn btn-sm btn-light d-flex align-items-center gap-2 px-3'
+								style={{ height: '38px', borderRadius: '10px' }}
+								onClick={fetchAssignSOPsData}
+								disabled={loading}>
+								<FontAwesomeIcon icon={faRotateLeft} className={loading ? 'fa-spin' : ''} />
+								<span>Refresh</span>
+							</button>
+						</div>
+					</div>
+
+					{/* Header Bottom: Filter Bar */}
+					<div className='d-flex align-items-center flex-wrap gap-3 w-100 pb-2'>
+						<div style={{ minWidth: '220px' }}>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
+								placeholder='Search SOPs by title, service or description...'
 							/>
 						</div>
-					</div>
-					<div className='d-flex align-items-center gap-3'>
+
 						<LengthMenu
 							expenseData={targetData}
-							handleItemsPerPageChange={handlePageChange}
+							handleItemsPerPageChange={(val) =>
+								setPagination((prev) => ({ ...prev, itemsPerPage: val, page: 1 }))
+							}
 						/>
+
+						<div style={{ minWidth: '160px' }}>
+							<select
+								className='form-select form-select-sm'
+								style={{
+									height: '38px',
+									borderRadius: '10px',
+									border: '1px solid #E4EAF2',
+									backgroundColor: '#ffffff',
+									fontSize: '13px',
+									fontWeight: 500,
+									color: '#172b4d',
+									cursor: 'pointer',
+								}}
+								value={statusFilter}
+								onChange={(e) => {
+									setStatusFilter(e.target.value)
+									setPagination((prev) => ({ ...prev, page: 1 }))
+								}}>
+								<option value='all'>All Status</option>
+								<option value='pending'>Pending</option>
+								<option value='completed'>Completed</option>
+							</select>
+						</div>
 					</div>
 				</div>
 
-				<div className='card-body py-4 px-6'>
+				<div className='py-4 card-body'>
 					<div className='table-responsive'>
 						<Table
 							data={paginatedtargetData}
@@ -230,85 +302,137 @@ const EmployeeSOP: React.FC = () => {
 									<React.Fragment key={item.services_id || index}>
 										<tr
 											onClick={() => handleRowClick(item.services_id)}
-											className='data-row'
-											style={{ verticalAlign: 'middle', borderBottom: '1px solid #f1f1f4' }}>
-											<td className='text-center py-3' style={{ width: '60px' }}>
-												<span className='badge badge-light-secondary fw-bolder px-2 py-1' style={{ borderRadius: '6px' }}>
+											className='data-row'>
+											<td>
+												<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
 													{actualIndex}
 												</span>
 											</td>
-											<td className='py-3'>
-												<span className='text-gray-900 fw-bold fs-6 d-block'>
+											<td>
+												<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
 													{item.title}
 												</span>
-												{item.service_name && (
-													<span className='badge badge-light-primary fw-semibold px-2 py-1 mt-1' style={{ fontSize: '11px', borderRadius: '4px' }}>
+											</td>
+											<td>
+												{item.service_name ? (
+													<span className='badge badge-light-primary fw-semibold px-3 py-1 fs-7'>
 														{item.service_name}
 													</span>
+												) : (
+													<span className='text-muted fs-7'>General</span>
 												)}
 											</td>
-											<td className='py-3'>
+											<td>
 												<span className='text-gray-700 fs-7'>
 													{item.description}
 												</span>
 											</td>
-											<td className='py-3 text-end pe-4'>
+											<td>
 												{isCompleted ? (
-													<div className='d-inline-flex flex-column align-items-end'>
-														<span className='badge badge-light-success fw-bold px-3 py-1 mb-1' style={{ borderRadius: '6px' }}>
-															<FontAwesomeIcon icon={faCheck} className='me-1' /> Completed
-														</span>
-														{completionInfo?.remarks && (
-															<span className='text-muted fs-8 text-end' style={{ maxWidth: '220px' }}>
-																{completionInfo.remarks}
-															</span>
-														)}
-														{completionInfo?.file_url && (
-															<a
-																href={completionInfo.file_url}
-																target='_blank'
-																rel='noopener noreferrer'
-																className='btn btn-link btn-color-primary btn-active-color-primary p-0 fs-8 fw-semibold mt-1'>
-																<FontAwesomeIcon icon={faFileAlt} className='me-1' /> View Proof
-															</a>
-														)}
-													</div>
+													<span className='badge badge-light-success px-3 py-2 fs-7 fw-semibold'>
+														<FontAwesomeIcon icon={faCheck} className='me-1' /> Completed
+													</span>
 												) : (
-													<button
-														className='btn btn-sm btn-light-success fw-semibold px-3 py-2 d-inline-flex align-items-center gap-2'
-														style={{ borderRadius: '8px' }}
+													<span className='badge badge-light-warning px-3 py-2 fs-7 fw-semibold'>
+														Pending
+													</span>
+												)}
+											</td>
+											<td className='text-center py-4'>
+												<div className='d-flex align-items-center justify-content-center gap-2'>
+													<TableButton
+														action='view'
+														title='View SOP Details'
 														onClick={(e) => {
 															e.stopPropagation()
-															handleOpenModal(item.services_id, item.sop_id)
-														}}>
-														<FontAwesomeIcon icon={faCheck} />
-														<span>Mark Complete</span>
-													</button>
-												)}
+															handleRowClick(item.services_id)
+														}}
+													/>
+													{isCompleted ? (
+														completionInfo?.file_url && (
+															<TableButton
+																action='download'
+																title='View Supporting Proof Document'
+																onClick={(e) => {
+																	e.stopPropagation()
+																	window.open(completionInfo.file_url, '_blank', 'noopener,noreferrer')
+																}}
+															/>
+														)
+													) : (
+														<TableButton
+															action='approve'
+															title='Mark Procedure as Completed'
+															onClick={(e) => {
+																e.stopPropagation()
+																handleOpenModal(item.services_id, item.sop_id)
+															}}
+														/>
+													)}
+												</div>
 											</td>
 										</tr>
 										{isVisible && (
 											<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
-												<td colSpan={12} className='p-4 bg-light-primary rounded-3'>
-													<div className='fs-7'>
-														<div><strong>Title:</strong> {item.title}</div>
-														<div><strong>Description:</strong> {item.description}</div>
-														{isCompleted && (
-															<div className='mt-2'>
-																<strong>Remark:</strong> {completionInfo?.remarks}
-																{completionInfo?.file_url && (
-																	<div className='mt-1'>
-																		<a
-																			href={completionInfo.file_url}
-																			target='_blank'
-																			rel='noopener noreferrer'
-																			className='btn btn-sm btn-light-primary'>
-																			<FontAwesomeIcon icon={faDownload} className='me-1' /> Download File
-																		</a>
-																	</div>
-																)}
+												<td colSpan={12}>
+													<div className='p-3 bg-light rounded-3'>
+														<div className='row g-3'>
+															<div className='col-md-4'>
+																<strong className='text-gray-700'>Procedure Title:</strong>
+																<div className='text-gray-900 fw-bold'>{item.title}</div>
 															</div>
-														)}
+															<div className='col-md-4'>
+																<strong className='text-gray-700'>Service Category:</strong>
+																<div>
+																	<span className='badge badge-light-primary fw-semibold px-2 py-1 mt-1'>
+																		{item.service_name || 'General'}
+																	</span>
+																</div>
+															</div>
+															<div className='col-md-4'>
+																<strong className='text-gray-700'>Status:</strong>
+																<div>
+																	{isCompleted ? (
+																		<span className='badge badge-light-success px-3 py-1 fs-7 fw-semibold'>
+																			<FontAwesomeIcon icon={faCheck} className='me-1' /> Completed
+																		</span>
+																	) : (
+																		<span className='badge badge-light-warning px-3 py-1 fs-7 fw-semibold'>
+																			Pending Completion
+																		</span>
+																	)}
+																</div>
+															</div>
+															<div className='col-12'>
+																<strong className='text-gray-700'>Description:</strong>
+																<div className='text-gray-800'>{item.description}</div>
+															</div>
+															{isCompleted && completionInfo && (
+																<>
+																	{completionInfo.remarks && (
+																		<div className='col-md-8'>
+																			<strong className='text-gray-700'>Completion Remarks:</strong>
+																			<div className='text-gray-800'>{completionInfo.remarks}</div>
+																		</div>
+																	)}
+																	{completionInfo.file_url && (
+																		<div className='col-md-4'>
+																			<strong className='text-gray-700'>Proof Attachment:</strong>
+																			<div className='mt-1'>
+																				<a
+																					href={completionInfo.file_url}
+																					target='_blank'
+																					rel='noopener noreferrer'
+																					className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2'>
+																					<FontAwesomeIcon icon={faDownload} />
+																					<span>Download Proof</span>
+																				</a>
+																			</div>
+																		</div>
+																	)}
+																</>
+															)}
+														</div>
 													</div>
 												</td>
 											</tr>
@@ -324,28 +448,30 @@ const EmployeeSOP: React.FC = () => {
 					</div>
 
 					{filteredtargetData.length === 0 && !loading && (
-						<div className='d-flex flex-column align-items-center justify-content-center py-12 text-center'>
-							<div className='symbol symbol-60px mb-4'>
-								<span className='symbol-label bg-light-primary text-primary fs-2'>📋</span>
+						<div className='d-flex flex-column align-items-center justify-content-center text-center py-10 w-100'>
+							<div
+								className='rounded-circle d-flex align-items-center justify-content-center mb-3'
+								style={{ width: '56px', height: '56px', background: '#eff6ff' }}>
+								<i className='bi bi-journal-check fs-2' style={{ color: '#2563EB' }}></i>
 							</div>
-							<h5 className='fw-bold text-gray-800 mb-1'>No SOPs Found</h5>
-							<p className='text-muted fs-7 mb-0'>Operating procedures assigned to your role will appear here.</p>
+							<span className='fw-bold text-gray-700 fs-6'>No SOPs found</span>
+							<span className='text-muted fs-7'>Standard Operating Procedures assigned to your role will appear here.</span>
 						</div>
 					)}
 
-					<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
-						<div className='text-muted fs-7 fw-semibold'>
-							Showing {filteredtargetData.length === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
-							{Math.min(pagination.page * pagination.itemsPerPage, filteredtargetData.length)} of {filteredtargetData.length} records
-						</div>
-						{filteredtargetData.length > 0 && (
+					{filteredtargetData.length > 0 && (
+						<div className='d-flex flex-wrap align-items-center justify-content-between pt-4 pb-2 border-top border-gray-200 mt-3'>
+							<div className='text-muted fs-7 fw-semibold'>
+								Showing {filteredtargetData.length === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1} to{' '}
+								{Math.min(pagination.page * pagination.itemsPerPage, filteredtargetData.length)} of {filteredtargetData.length} records
+							</div>
 							<UsersListPagination
 								totalPages={Math.ceil(filteredtargetData.length / pagination.itemsPerPage) || 1}
 								currentPage={pagination.page}
 								onPageChange={handlePageChange}
 							/>
-						)}
-					</div>
+						</div>
+					)}
 				</div>
 			</div>
 

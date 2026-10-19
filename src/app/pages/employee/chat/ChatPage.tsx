@@ -313,7 +313,7 @@ const EmployeeChatPage = () => {
 													{isSelected ? (
 														<span
 															style={{
-																color: '#7C3AED',
+																color: '#172b4d',
 																fontSize: '13px',
 																marginBottom: '2px',
 															}}
@@ -429,7 +429,7 @@ const EmployeeChatPage = () => {
 
 						{/* Messages and Input Bar */}
 						<div className='flex-grow-1' style={{ position: 'relative', overflow: 'hidden' }}>
-							<EmployeeChatInner id={userId} />
+							<EmployeeChatInner id={userId} userName={currentUser.name} />
 						</div>
 					</div>
 				) : (
