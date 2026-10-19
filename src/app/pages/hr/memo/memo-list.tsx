@@ -9,6 +9,7 @@ import { errorToast, successToast } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import SelectField from '../../../components/SelectField'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { DeleteEmployeeMemo, GetEmployees } from '../../../Functions/FGGroup/Employee'
@@ -59,9 +60,14 @@ function MemoList() {
 			try {
 				const response: any = await GetEmployees({ limit: 1000 })
 				if (response.status === 200 && response.data) {
-					// Filter employees who have memos
+					// Filter employees who have valid memos
 					const employeesWithMemos = response.data.filter(
-						(emp: any) => emp.employee?.memo && emp.employee.memo.length > 0
+						(emp: any) =>
+							emp.employee?.memo &&
+							Array.isArray(emp.employee.memo) &&
+							emp.employee.memo.some(
+								(m: any) => m && typeof m === 'object' && !Array.isArray(m)
+							)
 					)
 					setEmployees(employeesWithMemos)
 					setFilteredEmployees(employeesWithMemos)
@@ -84,13 +90,19 @@ function MemoList() {
 		if (!selectedEmployee) {
 			// Sort employees by latest memo date when no filter is applied
 			const sortedEmployees = [...employees].sort((a, b) => {
+				const aMemos = (a.employee?.memo || []).filter(
+					(m: any) => m && typeof m === 'object' && !Array.isArray(m)
+				)
+				const bMemos = (b.employee?.memo || []).filter(
+					(m: any) => m && typeof m === 'object' && !Array.isArray(m)
+				)
 				const aLatestMemo =
-					a.employee?.memo?.length > 0
-						? new Date(a.employee.memo[a.employee.memo.length - 1].created_date).getTime()
+					aMemos.length > 0
+						? new Date(aMemos[aMemos.length - 1].created_date).getTime()
 						: 0
 				const bLatestMemo =
-					b.employee?.memo?.length > 0
-						? new Date(b.employee.memo[b.employee.memo.length - 1].created_date).getTime()
+					bMemos.length > 0
+						? new Date(bMemos[bMemos.length - 1].created_date).getTime()
 						: 0
 				return bLatestMemo - aLatestMemo
 			})
@@ -105,8 +117,10 @@ function MemoList() {
 	}, [selectedEmployee, employees])
 
 	// Format date as dd-mm-yyyy
-	const formatDate = (dateString: string) => {
+	const formatDate = (dateString?: string) => {
+		if (!dateString) return '-'
 		const date = new Date(dateString)
+		if (isNaN(date.getTime())) return '-'
 		const day = String(date.getDate()).padStart(2, '0')
 		const month = String(date.getMonth() + 1).padStart(2, '0')
 		const year = date.getFullYear()
@@ -201,7 +215,12 @@ function MemoList() {
 					const responseRefresh: any = await GetEmployees()
 					if (responseRefresh.status === 200 && responseRefresh.data) {
 						const employeesWithMemos = responseRefresh.data.filter(
-							(emp: any) => emp.employee?.memo && emp.employee.memo.length > 0
+							(emp: any) =>
+								emp.employee?.memo &&
+								Array.isArray(emp.employee.memo) &&
+								emp.employee.memo.some(
+									(m: any) => m && typeof m === 'object' && !Array.isArray(m)
+								)
 						)
 						setEmployees(employeesWithMemos)
 						setFilteredEmployees(employeesWithMemos)
@@ -330,6 +349,11 @@ function MemoList() {
 		filteredEmployees.forEach((employee) => {
 			if (employee.employee?.memo?.length > 0) {
 				employee.employee.memo.forEach((memo: any) => {
+					// Guard against malformed or legacy string entries
+					if (!memo || typeof memo !== 'object' || Array.isArray(memo)) {
+						return
+					}
+
 					allMemos.push({
 						employee,
 						memo,
@@ -469,20 +493,23 @@ function MemoList() {
 
 						{/* 4. Employee Select Dropdown */}
 						<div style={{ minWidth: '220px' }}>
-							<select
-								className='gz-inv-select'
-								style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+							<SelectField
+								showLabel={false}
+								marginRemove={true}
+								className='mb-0'
+								height='38px'
+								name='employee'
 								value={selectedEmployee}
-								onChange={(e) => setSelectedEmployee(e.target.value)}>
-								<option value=''>All Employees</option>
-								{employees.map((employee) => (
-									<option
-										key={employee.employee_id}
-										value={employee.employee_id}>
-										{employee.full_name} ({employee.employee?.employee_code})
-									</option>
-								))}
-							</select>
+								defaultLabel='All Employees'
+								options={employees.map((employee) => ({
+									label: `${employee.full_name} (${employee.employee?.employee_code || ''})`,
+									value: employee.employee_id,
+								}))}
+								onChange={(e: any) => {
+									const val = e?.target?.value ?? e
+									setSelectedEmployee(val || '')
+								}}
+							/>
 						</div>
 					</div>
 
@@ -559,8 +586,8 @@ function MemoList() {
 											</td>
 										</tr>
 									) : (
-										currentMemos.map(({ employee, memo }) => (
-											<tr key={`${employee.employee_id}-${memo.id}`}>
+										currentMemos.map(({ employee, memo }, idx) => (
+											<tr key={`${employee.employee_id}-${memo?.id || `idx-${idx}`}`}>
 												<td>
 													<div className='d-flex align-items-center'>
 														<div className='d-flex justify-content-start flex-column'>

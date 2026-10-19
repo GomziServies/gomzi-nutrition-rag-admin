@@ -292,21 +292,25 @@ const DailyReportList: React.FC = () => {
 		}
 	}
 
-	const handleEmployeeSelect = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-		if (event.target instanceof HTMLSelectElement) {
-			const selectedName = event.target.value
+	const handleEmployeeSelect = (event: any) => {
+		const selectedName = typeof event === 'object' && event?.target ? event.target.value : event
 
-			if (selectedName === 'Select') {
-				setSelectedEmployee(null)
-			} else {
-				const selectedEmployeeObj = employeeDataList.find((el: any) => el.name === selectedName)
-				setSelectedEmployee(selectedEmployeeObj)
-			}
-			setPagination((prev) => ({ ...prev, page: 1 }))
+		if (selectedName === 'Select' || !selectedName) {
+			setSelectedEmployee(null)
+		} else {
+			const selectedEmployeeObj = employeeDataList.find((el: any) => el.name === selectedName)
+			setSelectedEmployee(selectedEmployeeObj)
 		}
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
-	const paginatedTaskData = assignTaskData || []
+	const paginatedTaskData = React.useMemo(() => {
+		if (assignTaskData && assignTaskData.length > pagination.itemsPerPage) {
+			const startIndex = (pagination.page - 1) * pagination.itemsPerPage
+			return assignTaskData.slice(startIndex, startIndex + pagination.itemsPerPage)
+		}
+		return assignTaskData || []
+	}, [assignTaskData, pagination.page, pagination.itemsPerPage])
 
 	// Truncate remarks to a few words followed by ellipsis without inline toggle buttons
 	const truncateWords = (text: any, maxWords = 5) => {
@@ -382,18 +386,17 @@ const DailyReportList: React.FC = () => {
 
 					{/* 4. Employee Select */}
 					<div style={{ minWidth: '180px' }}>
-						<select
-							className='gz-inv-select'
-							style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+						<SelectField
 							value={selectedEmployee?.name || 'Select'}
-							onChange={handleEmployeeSelect}>
-							<option value='Select'>All Employees</option>
-							{employeeDataList.map((el: any) => (
-								<option key={el.id} value={el.name}>
-									{el.name}
-								</option>
-							))}
-						</select>
+							onChange={handleEmployeeSelect}
+							options={[
+								{ value: 'Select', label: 'All Employees' },
+								...employeeDataList.map((el: any) => ({
+									value: el.name,
+									label: el.name,
+								})),
+							]}
+						/>
 					</div>
 
 					{/* Spacer */}

@@ -135,11 +135,35 @@ const HRManualLeave: React.FC = () => {
 			await CreateEmployeeLeave(payload)
 			toast.success('Leave Added Successfully')
 			fetchLeaveData()
-			setShowModal(false)
+			handleCloseAddModal()
 		} catch (error: any) {
 			toast.error(error.message)
 			console.error(error)
 		}
+	}
+
+	const resetFormFields = () => {
+		setFromDate('')
+		setToDate('')
+		setReason('')
+		setNotes('')
+		setLeaveType('full')
+		setHalfDayPeriod('')
+	}
+
+	const handleShowAddModal = () => {
+		resetFormFields()
+		setShowModal(true)
+	}
+
+	const handleCloseAddModal = () => {
+		resetFormFields()
+		setShowModal(false)
+	}
+
+	const handleCloseUpdateModal = () => {
+		resetFormFields()
+		setShowUpdateModal(false)
 	}
 
 	const handleUpdateLeave = async (leave_id?: string) => {
@@ -184,7 +208,7 @@ const HRManualLeave: React.FC = () => {
 			await ActionEmployeeLeave(payload)
 			toast.success('Leave Updated Successfully')
 			fetchLeaveData()
-			setShowUpdateModal(false)
+			handleCloseUpdateModal()
 		} catch (error: any) {
 			toast.error(error.message)
 			console.error(error)
@@ -195,14 +219,14 @@ const HRManualLeave: React.FC = () => {
 		setUpdateLeaveData(data)
 		setShowUpdateModal(true)
 
-		setLeaveType(data.leave_type)
+		setLeaveType(data.leave_type || 'full')
 		setHalfDayPeriod(data.half_day_period || '')
 
-		setFromDate(data.from_date)
-		setToDate(data.to_date)
+		setFromDate(data.from_date || '')
+		setToDate(data.to_date || '')
 
-		setReason(data.reason)
-		setNotes(data.notes)
+		setReason(data.reason || '')
+		setNotes(data.notes || '')
 	}
 
 	const sortableFields = [
@@ -376,7 +400,7 @@ const HRManualLeave: React.FC = () => {
 						<TableButton
 							action='add'
 							text='Add Leave'
-							onClick={() => setShowModal(true)}
+							onClick={handleShowAddModal}
 						/>
 					</div>
 				</div>
@@ -384,8 +408,7 @@ const HRManualLeave: React.FC = () => {
 
 			{/* Main Table Card */}
 			<div className='gz-inv-table-card'>
-				<div className='table-responsive'>
-								<Table
+				<Table
 									data={paginatedAdminData}
 									columns={sortableFields}
 									sort={sort}
@@ -538,7 +561,6 @@ const HRManualLeave: React.FC = () => {
 									setPagination={setPagination}
 									loading={loading}
 								/>
-							</div>
 				{paginatedAdminData.length === 0 && !loading && (
 					<div className='d-flex text-center w-100 align-content-center justify-content-center py-12'>
 						<b>No records found</b>
@@ -558,7 +580,7 @@ const HRManualLeave: React.FC = () => {
 			<Modal
 				show={showModal}
 				centered
-				onHide={() => setShowModal(false)}>
+				onHide={handleCloseAddModal}>
 				<Modal.Header closeButton>
 					<Modal.Title>Add Leave</Modal.Title>
 				</Modal.Header>
@@ -737,7 +759,7 @@ const HRManualLeave: React.FC = () => {
 				<Modal.Footer>
 					<Button
 						variant='secondary'
-						onClick={() => setShowModal(false)}>
+						onClick={handleCloseAddModal}>
 						Close
 					</Button>
 					<Button
@@ -751,7 +773,7 @@ const HRManualLeave: React.FC = () => {
 			<Modal
 				show={showUpdateModal}
 				centered
-				onHide={() => setShowUpdateModal(false)}>
+				onHide={handleCloseUpdateModal}>
 				<Modal.Header closeButton>
 					<Modal.Title>Update Leave</Modal.Title>
 				</Modal.Header>
@@ -812,7 +834,7 @@ const HRManualLeave: React.FC = () => {
 				<Modal.Footer>
 					<Button
 						variant='secondary'
-						onClick={() => setShowUpdateModal(false)}>
+						onClick={handleCloseUpdateModal}>
 						Close
 					</Button>
 					<Button

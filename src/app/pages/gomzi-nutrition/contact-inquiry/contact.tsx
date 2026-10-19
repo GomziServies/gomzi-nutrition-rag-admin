@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { endOfMonth, startOfMonth } from 'date-fns'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -26,6 +26,8 @@ import '../products-theme.css'
 import '../orders-theme.css'
 
 const ContactInquiry: React.FC = () => {
+	const location = useLocation()
+	const basePath = location.pathname.startsWith('/hr') ? '/hr' : '/rag'
 	const [searchTerm, setSearchTerm] = useState('')
 	const [metaData, setMetaData] = useState<any>()
 	const [contactInquiry, setContactInquiry] = useState<any>([])
@@ -319,7 +321,7 @@ const ContactInquiry: React.FC = () => {
 
 			{/* Breadcrumb */}
 			<div className='gz-mgmt-breadcrumb'>
-				<Link to='/rag/dashboard'>Dashboard</Link>
+				<Link to={`${basePath}/dashboard`}>Dashboard</Link>
 				<span className='sep'>&gt;</span>
 				<span className='current'>Contact Inquiries</span>
 			</div>
@@ -506,7 +508,7 @@ const ContactInquiry: React.FC = () => {
 										<td>
 											<TableButton
 												action='view'
-												to={`/rag/contact-inquiry/contact-inquiry-view?contactInquiry_id=${item._id}`}
+												to={`${basePath}/contact-inquiry/contact-inquiry-view?contactInquiry_id=${item._id}`}
 											/>
 										</td>
 									</tr>

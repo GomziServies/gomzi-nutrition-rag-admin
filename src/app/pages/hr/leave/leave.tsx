@@ -1,18 +1,10 @@
 import {
-	faCalendarAlt,
 	faCalendarCheck,
-	faCheck,
 	faCheckCircle,
-	faClock,
-	faInfoCircle,
 	faPlusCircle,
-	faQuoteLeft,
 	faSort,
 	faSortDown,
 	faSortUp,
-	faSpinner,
-	faTimes,
-	faTimesCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import duration from 'dayjs/plugin/duration'
@@ -25,6 +17,7 @@ import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import TableButton from '../../../components/TableButton'
+import SelectField from '../../../components/SelectField'
 import UsersListPagination from '../../../components/TablePagination'
 import {
 	ActionEmployeeLeave,
@@ -57,27 +50,6 @@ const calculateLeaveDuration = (from_date?: string, to_date?: string) => {
 		return `${days} day${days !== 1 ? 's' : ''} ${hours}:${minutes < 10 ? '0' + minutes : minutes} hrs`
 	}
 }
-
-const getInitials = (name?: string) => {
-	if (!name) return 'EM'
-	const parts = name.trim().split(/\s+/)
-	if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-	return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-}
-
-const quickApprovalRemarks = [
-	'Approved as per leave policy',
-	'Approved with coverage arranged',
-	'Leave request granted',
-	'Half-day approved',
-]
-
-const quickRejectionRemarks = [
-	'High project workload during this period',
-	'Insufficient leave balance available',
-	'Team coverage unavailable; please reschedule',
-	'Please discuss dates with reporting manager',
-]
 
 const HRLeave: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -348,42 +320,43 @@ const HRLeave: React.FC = () => {
 				<div className='table-responsive'>
 								<table
 									id='kt_table_users'
-									className='table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer table-row-dashed table-row-gray-300 align-middle'>
+									className='gz-inv-table table-hover align-middle mb-0'
+									style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
 									<thead>
-										<tr className='fw-bold text-muted bg-light border-bottom-0'>
-											<th className='ps-4 rounded-start' style={{ width: '60px' }}>No.</th>
+										<tr style={{ background: '#F8FAFD', borderBottom: '1px solid #E4EAF2' }}>
+											<th className='text-center ps-4' style={{ width: '60px' }}>#</th>
 											<th onClick={() => handleSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>
 												<div className='d-flex align-items-center gap-2'>
-													<span>Name</span>
+													<span>NAME</span>
 													<FontAwesomeIcon icon={sort === 'name' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'name' ? 1 : 0.35, fontSize: '11px' }} />
 												</div>
 											</th>
 											<th onClick={() => handleSort('from_date')} style={{ cursor: 'pointer', userSelect: 'none' }}>
 												<div className='d-flex align-items-center gap-2'>
-													<span>Start Date</span>
+													<span>START DATE</span>
 													<FontAwesomeIcon icon={sort === 'from_date' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'from_date' ? 1 : 0.35, fontSize: '11px' }} />
 												</div>
 											</th>
 											<th onClick={() => handleSort('to_date')} style={{ cursor: 'pointer', userSelect: 'none' }}>
 												<div className='d-flex align-items-center gap-2'>
-													<span>End Date</span>
+													<span>END DATE</span>
 													<FontAwesomeIcon icon={sort === 'to_date' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'to_date' ? 1 : 0.35, fontSize: '11px' }} />
 												</div>
 											</th>
-											<th>Time</th>
+											<th>TIME</th>
 											<th onClick={() => handleSort('reason')} style={{ cursor: 'pointer', userSelect: 'none' }}>
 												<div className='d-flex align-items-center gap-2'>
-													<span>Reason</span>
+													<span>REASON</span>
 													<FontAwesomeIcon icon={sort === 'reason' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'reason' ? 1 : 0.35, fontSize: '11px' }} />
 												</div>
 											</th>
 											<th onClick={() => handleSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
 												<div className='d-flex align-items-center gap-2'>
-													<span>Status</span>
+													<span>STATUS</span>
 													<FontAwesomeIcon icon={sort === 'status' ? (sortOrder === 'asc' ? faSortUp : faSortDown) : faSort} style={{ opacity: sort === 'status' ? 1 : 0.35, fontSize: '11px' }} />
 												</div>
 											</th>
-											<th className='ps-4 rounded-end text-center'>Action</th>
+											<th className='text-center pe-4'>ACTIONS</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -590,253 +563,199 @@ const HRLeave: React.FC = () => {
 			<Modal
 				show={showModal}
 				centered
-				backdrop='static'
-				className='gz-leave-modal'
-				onHide={handleModalClose}>
-				{/* Custom Header */}
-				<div className='gz-leave-modal-header'>
-					<div className='d-flex align-items-center gap-3'>
-						<div className='gz-leave-modal-header-icon'>
-							<FontAwesomeIcon icon={faCalendarCheck} />
-						</div>
-						<div>
-							<h4 className='gz-leave-modal-title'>Review Leave Request</h4>
-							<p className='gz-leave-modal-subtitle'>
-								Review employee request and record approval or rejection
-							</p>
-						</div>
-					</div>
-					<button
-						type='button'
-						className='gz-leave-modal-close'
-						onClick={handleModalClose}
-						title='Close Modal'
-						aria-label='Close'>
-						<FontAwesomeIcon icon={faTimes} />
-					</button>
-				</div>
-
-				{/* Modal Body */}
-				<div className='gz-leave-modal-body'>
-					{/* Employee & Leave Context Card */}
-					{selectedLeave && (
-						<div className='gz-leave-summary-card'>
-							<div className='d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2'>
-								<div className='d-flex align-items-center gap-3'>
-									<div className='gz-leave-summary-avatar'>
-										{getInitials(selectedLeave?.admin_id?.full_name)}
-									</div>
-									<div>
-										<div className='fw-bold text-dark fs-6'>
-											{selectedLeave?.admin_id?.full_name || 'Employee'}
-										</div>
-										<div className='text-muted fs-8'>
-											{selectedLeave?.admin_id?.email || 'Leave Applicant'}
-										</div>
-									</div>
-								</div>
-								<div>
-									{selectedLeave?.status?.toUpperCase() === 'APPROVED' ? (
-										<span className='gz-leave-status-pill status-approved'>
-											<span className='gz-leave-status-dot' />
-											Approved
-										</span>
-									) : selectedLeave?.status?.toUpperCase() === 'REJECTED' ? (
-										<span className='gz-leave-status-pill status-rejected'>
-											<span className='gz-leave-status-dot' />
-											Rejected
-										</span>
-									) : (
-										<span className='gz-leave-status-pill status-pending'>
-											<span className='gz-leave-status-dot' />
-											Pending Review
-										</span>
-									)}
-								</div>
+				onHide={handleModalClose}
+				className='modal fade'>
+				<div className='modal-content' style={{ borderRadius: '16px', overflow: 'hidden' }}>
+					{/* Modal Header */}
+					<div
+						className='modal-header py-4 px-6'
+						style={{ borderBottom: '1px solid #E4EAF2', background: '#FFFFFF' }}>
+						<div className='d-flex align-items-center gap-3'>
+							<div
+								style={{
+									width: '38px',
+									height: '38px',
+									borderRadius: '10px',
+									background: '#EAF1FB',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									color: '#172B4D',
+								}}>
+								<FontAwesomeIcon icon={faCalendarCheck} className='fs-5' />
 							</div>
-
-							<div className='d-flex align-items-center flex-wrap gap-2 mb-3'>
-								<div className='gz-leave-date-badge'>
-									<FontAwesomeIcon icon={faCalendarAlt} className='text-primary' />
-									<span>From: {DayJS(selectedLeave?.from_date).format('DD MMM YYYY, hh:mm A')}</span>
-								</div>
-								<div className='gz-leave-date-badge'>
-									<FontAwesomeIcon icon={faCalendarAlt} className='text-primary' />
-									<span>To: {DayJS(selectedLeave?.to_date).format('DD MMM YYYY, hh:mm A')}</span>
-								</div>
-								<div className='gz-leave-duration-badge'>
-									<FontAwesomeIcon icon={faClock} />
-									<span>Duration: {calculateLeaveDuration(selectedLeave?.from_date, selectedLeave?.to_date)}</span>
-								</div>
-							</div>
-
-							{selectedLeave?.reason && (
-								<div>
-									<div className='text-muted fs-8 fw-semibold mb-1'>Employee Reason</div>
-									<div className='gz-leave-reason-quote'>
-										<FontAwesomeIcon icon={faQuoteLeft} className='text-muted me-2' />
-										{selectedLeave.reason}
-									</div>
-								</div>
-							)}
-						</div>
-					)}
-
-					{/* Decision Selection */}
-					<div className='mb-4'>
-						<div className='d-flex align-items-center justify-content-between mb-2'>
-							<label className='fw-bold fs-7 text-dark mb-0'>
-								Select Decision <span className='text-danger'>*</span>
-							</label>
-							{status && (
-								<span
-									className={`fs-8 fw-semibold ${
-										status === 'APPROVED' ? 'text-success' : 'text-danger'
-									}`}>
-									{status === 'APPROVED' ? 'Marking as Approved' : 'Marking as Rejected'}
+							<div>
+								<h5 className='modal-title fw-bold text-gray-900 m-0 fs-5'>
+									Review Leave Request
+								</h5>
+								<span className='text-muted fs-7'>
+									Review employee request and record approval or rejection
 								</span>
-							)}
-						</div>
-
-						<div className='gz-leave-decision-grid'>
-							{/* Approve Card */}
-							<div
-								className={`gz-leave-decision-card card-approve ${
-									status === 'APPROVED' ? 'is-active' : ''
-								}`}
-								onClick={() => setStatus('APPROVED')}>
-								<div className='gz-leave-card-icon'>
-									<FontAwesomeIcon icon={faCheck} />
-								</div>
-								<div className='gz-leave-card-text'>
-									<div className='gz-leave-card-title'>Approve</div>
-									<div className='gz-leave-card-desc'>Grant leave request</div>
-								</div>
-								<div className='gz-leave-radio-indicator'>
-									{status === 'APPROVED' && <span className='gz-leave-radio-dot' />}
-								</div>
-							</div>
-
-							{/* Reject Card */}
-							<div
-								className={`gz-leave-decision-card card-reject ${
-									status === 'REJECTED' ? 'is-active' : ''
-								}`}
-								onClick={() => setStatus('REJECTED')}>
-								<div className='gz-leave-card-icon'>
-									<FontAwesomeIcon icon={faTimes} />
-								</div>
-								<div className='gz-leave-card-text'>
-									<div className='gz-leave-card-title'>Reject</div>
-									<div className='gz-leave-card-desc'>Decline leave request</div>
-								</div>
-								<div className='gz-leave-radio-indicator'>
-									{status === 'REJECTED' && <span className='gz-leave-radio-dot' />}
-								</div>
 							</div>
 						</div>
-					</div>
-
-					{/* Remarks / Comments Field */}
-					<div className='mb-2'>
-						<div className='d-flex align-items-center justify-content-between mb-1.5'>
-							<label htmlFor='leaveRemarks' className='fw-bold fs-7 text-dark mb-0'>
-								Remarks & Notes
-								{status === 'REJECTED' ? (
-									<span className='ms-2 badge badge-light-danger fs-8 fw-semibold'>
-										Reason required for rejection
-									</span>
-								) : (
-									<span className='ms-2 text-muted fs-8 fw-normal'>(Optional)</span>
-								)}
-							</label>
-						</div>
-
-						<textarea
-							id='leaveRemarks'
-							rows={3}
-							className='form-control gz-leave-textarea w-100'
-							placeholder={
-								status === 'REJECTED'
-									? 'Please specify why this leave request is being rejected...'
-									: 'Add any remarks, approval conditions, or handover notes for the employee...'
-							}
-							value={remarks}
-							onChange={(e) => setRemarks(e.target.value)}
-						/>
-
-						{/* Quick Suggestion Chips */}
-						<div className='mt-2.5'>
-							<div className='text-muted fs-8 fw-semibold mb-1.5'>Quick Remarks:</div>
-							<div className='d-flex flex-wrap gap-1.5'>
-								{(status === 'REJECTED' ? quickRejectionRemarks : quickApprovalRemarks).map(
-									(chip, i) => (
-										<button
-											key={i}
-											type='button'
-											className='gz-leave-chip'
-											onClick={() => applyQuickRemark(chip)}>
-											+ {chip}
-										</button>
-									)
-								)}
-							</div>
-						</div>
-					</div>
-				</div>
-
-				{/* Modal Footer */}
-				<div className='gz-leave-modal-footer'>
-					<div className='d-flex align-items-center'>
-						{status ? (
-							<span
-								className={`fs-8 fw-semibold d-inline-flex align-items-center gap-1.5 ${
-									status === 'APPROVED' ? 'text-success' : 'text-danger'
-								}`}>
-								<FontAwesomeIcon icon={status === 'APPROVED' ? faCheckCircle : faTimesCircle} />
-								{status === 'APPROVED' ? 'Approving Leave' : 'Rejecting Leave'}
-							</span>
-						) : (
-							<span className='text-muted fs-8 d-inline-flex align-items-center gap-1.5'>
-								<FontAwesomeIcon icon={faInfoCircle} />
-								Choose Approve or Reject above
-							</span>
-						)}
-					</div>
-
-					<div className='d-flex align-items-center gap-2'>
 						<button
 							type='button'
-							className='gz-leave-cancel-btn'
+							className='btn-close'
+							onClick={handleModalClose}></button>
+					</div>
+
+					{/* Modal Body */}
+					<div className='modal-body p-6'>
+						{/* Employee Name */}
+						<div className='mb-4'>
+							<label className='form-label fw-bold text-gray-800 fs-7 mb-1'>
+								Employee Name
+							</label>
+							<input
+								type='text'
+								readOnly
+								className='form-control form-control-solid'
+								style={{ borderRadius: '8px' }}
+								value={
+									selectedLeave?.admin_id?.full_name
+										? `${selectedLeave.admin_id.full_name} (${selectedLeave.admin_id.email || ''})`
+										: '—'
+								}
+							/>
+						</div>
+
+						{/* Leave Duration */}
+						<div className='mb-4'>
+							<label className='form-label fw-bold text-gray-800 fs-7 mb-1'>
+								Leave Duration
+							</label>
+							<input
+								type='text'
+								readOnly
+								className='form-control form-control-solid'
+								style={{ borderRadius: '8px' }}
+								value={
+									selectedLeave
+										? `${DayJS(selectedLeave?.from_date).format('DD MMM YYYY, hh:mm A')} to ${DayJS(selectedLeave?.to_date).format('DD MMM YYYY, hh:mm A')} (${calculateLeaveDuration(selectedLeave?.from_date, selectedLeave?.to_date)})`
+										: '—'
+								}
+							/>
+						</div>
+
+						{/* Employee Reason */}
+						<div className='mb-4'>
+							<label className='form-label fw-bold text-gray-800 fs-7 mb-1'>
+								Employee Reason
+							</label>
+							<textarea
+								rows={2}
+								readOnly
+								className='form-control form-control-solid'
+								style={{ borderRadius: '8px', resize: 'vertical' }}
+								value={
+									selectedLeave?.reason
+										? selectedLeave.reason.replace(/\[Proof:\s*[^\]]+\]/gi, '').trim()
+										: 'No reason provided'
+								}
+							/>
+							{(() => {
+								const proofMatch = selectedLeave?.reason?.match(/\[Proof:\s*([^\]]+)\]/i)
+								const proofUrl = proofMatch
+									? proofMatch[1].trim()
+									: selectedLeave?.document || selectedLeave?.proof || ''
+								if (!proofUrl) return null
+								const fullFileUrl = proofUrl.startsWith('http')
+									? proofUrl
+									: `https://files.fggroup.in/${proofUrl.replace(/^\/+/, '')}`
+								return (
+									<div className='mt-2'>
+										<a
+											href={fullFileUrl}
+											target='_blank'
+											rel='noopener noreferrer'
+											className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-1.5'
+											style={{ borderRadius: '6px', fontWeight: 600 }}>
+											<i className='bi bi-paperclip fs-6'></i>
+											<span>View Attached Proof</span>
+										</a>
+									</div>
+								)
+							})()}
+						</div>
+
+						{/* Decision */}
+						<div className='mb-4'>
+							<label className='form-label fw-bold text-gray-800 fs-7 mb-1'>
+								Decision <span className='text-danger'>*</span>
+							</label>
+							<SelectField
+								value={status}
+								onChange={(val: any) => {
+									const value = typeof val === 'object' && val?.target ? val.target.value : val
+									setStatus(value)
+								}}
+								options={[
+									{ value: '', label: 'Select Decision...' },
+									{ value: 'APPROVED', label: 'Approve' },
+									{ value: 'REJECTED', label: 'Reject' },
+								]}
+							/>
+						</div>
+
+						{/* Remarks & Notes */}
+						<div className='mb-2'>
+							<label className='form-label fw-bold text-gray-800 fs-7 mb-1'>
+								Remarks / Notes{' '}
+								{status === 'REJECTED' && <span className='text-danger'>*</span>}
+							</label>
+							<textarea
+								rows={3}
+								className='form-control form-control-solid'
+								style={{ borderRadius: '8px', resize: 'vertical' }}
+								placeholder={
+									status === 'REJECTED'
+										? 'Reason required for rejection...'
+										: 'Add remarks or notes (optional)...'
+								}
+								value={remarks}
+								onChange={(e) => setRemarks(e.target.value)}
+							/>
+						</div>
+					</div>
+
+					{/* Modal Footer */}
+					<div
+						className='modal-footer py-3 px-6'
+						style={{ borderTop: '1px solid #E4EAF2', background: '#FFFFFF' }}>
+						<button
+							type='button'
+							className='btn btn-light'
+							style={{ borderRadius: '8px', fontWeight: 600 }}
 							onClick={handleModalClose}
 							disabled={submitting}>
 							Cancel
 						</button>
-
 						<button
 							type='button'
-							className={`gz-leave-submit-btn ${
-								status === 'APPROVED'
-									? 'btn-approve'
-									: status === 'REJECTED'
-									? 'btn-reject'
-									: 'btn-neutral'
-							}`}
+							className='btn btn-primary d-flex align-items-center gap-2'
+							style={{
+								borderRadius: '8px',
+								fontWeight: 600,
+								background: '#172B4D',
+								borderColor: '#172B4D',
+							}}
 							onClick={handleModalSubmit}
 							disabled={!status || submitting}>
 							{submitting ? (
 								<>
-									<FontAwesomeIcon icon={faSpinner} spin className='me-1' />
-									Processing...
+									<span className='spinner-border spinner-border-sm'></span>
+									<span>Processing...</span>
 								</>
 							) : (
 								<>
-									<FontAwesomeIcon icon={status === 'REJECTED' ? faTimes : faCheck} className='me-1' />
-									{status === 'APPROVED'
-										? 'Confirm Approval'
-										: status === 'REJECTED'
-										? 'Confirm Rejection'
-										: 'Select Action'}
+									<FontAwesomeIcon icon={faCheckCircle} />
+									<span>
+										{status === 'REJECTED'
+											? 'Reject Leave'
+											: status === 'APPROVED'
+											? 'Approve Leave'
+											: 'Save Changes'}
+									</span>
 								</>
 							)}
 						</button>

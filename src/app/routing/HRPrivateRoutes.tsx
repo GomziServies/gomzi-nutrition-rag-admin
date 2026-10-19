@@ -49,6 +49,8 @@ import TaskAdd from '../pages/hr/team-management/TaskAdd'
 import TeamManagement from '../pages/hr/team-management/TeamManagement'
 import TeamRatingView from '../pages/hr/team-management/TeamRatingView'
 import TeamTasksView from '../pages/hr/team-management/TeamTasksView'
+import ContactInquiry from '../pages/gomzi-nutrition/contact-inquiry/contact'
+import ContactInquiryView from '../pages/gomzi-nutrition/contact-inquiry/contact-inquiry-view'
 
 const HRPrivateRoutes = () => {
 	return (
@@ -162,6 +164,16 @@ const HRPrivateRoutes = () => {
 				<Route
 					path='memo-list'
 					element={<MemoList />}
+				/>
+
+				{/* contact-inquiry */}
+				<Route
+					path='contact-inquiry/contact'
+					element={<ContactInquiry />}
+				/>
+				<Route
+					path='contact-inquiry/contact-inquiry-view'
+					element={<ContactInquiryView />}
 				/>
 
 				{/* Page Not Found */}

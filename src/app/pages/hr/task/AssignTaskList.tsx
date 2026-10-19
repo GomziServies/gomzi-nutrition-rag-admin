@@ -133,9 +133,17 @@ const HRAssignTaskList: React.FC = () => {
 		})
 	})
 
+	const filteredTaskData = React.useMemo(() => {
+		if (!assignTaskData) return []
+		if (!searchTerm) return assignTaskData
+		return assignTaskData.filter((data: any) =>
+			data?.task_title?.toLowerCase().includes(searchTerm.toLowerCase())
+		)
+	}, [assignTaskData, searchTerm])
+
 	const { totalPages, totalRecords } = React.useMemo(
-		() => resolvePaginationMeta(metaData, assignTaskData.length, pagination.itemsPerPage),
-		[metaData, assignTaskData.length, pagination.itemsPerPage]
+		() => resolvePaginationMeta(metaData, filteredTaskData.length, pagination.itemsPerPage),
+		[metaData, filteredTaskData.length, pagination.itemsPerPage]
 	)
 
 	// Keep the current page inside the valid range so the list can never get stuck
@@ -437,34 +445,35 @@ const HRAssignTaskList: React.FC = () => {
 		}
 	}
 
-	const handleAllDataClick = () => {
-		setSelectedDateRange(null)
-		localStorage.removeItem('selectedDateRange')
+	// const handleAllDataClick = () => {
+	// 	setSelectedDateRange(null)
+	// 	localStorage.removeItem('selectedDateRange')
+	// 	setPagination((prev) => ({ ...prev, page: 1 }))
+	// }
+
+	const handleEmployeeSelect = (event: any) => {
+		const selectedName = typeof event === 'object' && event?.target ? event.target.value : event
+
+		if (!selectedName || selectedName === 'Select Employee' || selectedName === 'Select') {
+			setSelectedEmployee(null)
+			localStorage.removeItem('hr_assign_task_employee')
+		} else {
+			const selectedEmployeeObj = employeeData.find((el: any) => el.name === selectedName)
+			setSelectedEmployee(selectedEmployeeObj)
+			localStorage.setItem('hr_assign_task_employee', JSON.stringify(selectedEmployeeObj))
+		}
 		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
-	const handleEmployeeSelect = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-		if (event.target instanceof HTMLSelectElement) {
-			const selectedName = event.target.value
-
-			if (selectedName === 'Select Employee') {
-				setSelectedEmployee(null)
-				localStorage.removeItem('hr_assign_task_employee')
-			} else {
-				const selectedEmployeeObj = employeeData.find((el: any) => el.name === selectedName)
-				setSelectedEmployee(selectedEmployeeObj)
-				localStorage.setItem('hr_assign_task_employee', JSON.stringify(selectedEmployeeObj))
-			}
-		}
-	}
-
-	const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-		if (event.target instanceof HTMLSelectElement) {
-			const status = event.target.value as 'Select' | 'Pending' | 'Employee Done' | 'HR Done'
-			setHrStatus(status)
-			localStorage.setItem('hr_assign_task_status', status)
-			setPagination((prev) => ({ ...prev, page: 1 }))
-		}
+	const handleStatusChange = (event: any) => {
+		const status = (typeof event === 'object' && event?.target ? event.target.value : event) as
+			| 'Select'
+			| 'Pending'
+			| 'Employee Done'
+			| 'HR Done'
+		setHrStatus(status)
+		localStorage.setItem('hr_assign_task_status', status)
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
 	// Persist search term and pagination to localStorage
@@ -694,9 +703,6 @@ const HRAssignTaskList: React.FC = () => {
 		})
 	}
 
-	const filteredTaskData = assignTaskData.filter((data: any) =>
-		data?.task_title?.toLowerCase().includes(searchTerm.toLowerCase())
-	)
 
 	// Group tasks by priority
 	const groupTasksByPriority = () => {
@@ -713,7 +719,13 @@ const HRAssignTaskList: React.FC = () => {
 
 	const groupedTasks = groupTasksByPriority()
 
-	const paginatedTaskData = filteredTaskData
+	const paginatedTaskData = React.useMemo(() => {
+		if (filteredTaskData && filteredTaskData.length > pagination.itemsPerPage) {
+			const startIndex = (pagination.page - 1) * pagination.itemsPerPage
+			return filteredTaskData.slice(startIndex, startIndex + pagination.itemsPerPage)
+		}
+		return filteredTaskData || []
+	}, [filteredTaskData, pagination.page, pagination.itemsPerPage])
 
 	const [expandedDescription, setExpandedDescription] = useState<{ [key: number]: boolean }>({})
 
@@ -822,33 +834,38 @@ const HRAssignTaskList: React.FC = () => {
 						</div>
 
 						{/* 4. Employee Dropdown */}
-						<div style={{ minWidth: '180px' }}>
-							<select
-								className='gz-inv-select'
-								style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+						<div style={{ minWidth: '190px' }}>
+							<SelectField
+								showLabel={false}
+								marginRemove={true}
+								className='mb-0'
+								height='38px'
+								name='employee'
 								value={selectedEmployee?.name || ''}
-								onChange={handleEmployeeSelect}>
-								<option value=''>All Employees</option>
-								{employeeData.map((el: any) => (
-									<option key={el._id || el.id || el.name} value={el.name}>
-										{el.name}
-									</option>
-								))}
-							</select>
+								defaultLabel='All Employees'
+								options={employeeData.map((el: any) => ({ label: el.name, value: el.name }))}
+								onChange={handleEmployeeSelect}
+							/>
 						</div>
 
 						{/* 5. Status Dropdown */}
-						<div style={{ minWidth: '150px' }}>
-							<select
-								className='gz-inv-select'
-								style={{ width: '100%', height: '38px', borderRadius: '8px' }}
-								value={hrStatus || 'Select'}
-								onChange={handleStatusChange}>
-								<option value='Select'>All Statuses</option>
-								<option value='Pending'>Pending</option>
-								<option value='Employee Done'>Employee Done</option>
-								<option value='HR Done'>HR Done</option>
-							</select>
+						<div style={{ minWidth: '160px' }}>
+							<SelectField
+								showLabel={false}
+								marginRemove={true}
+								className='mb-0'
+								height='38px'
+								name='status'
+								value={hrStatus === 'Select' ? '' : hrStatus}
+								defaultLabel='All Statuses'
+								options={[
+									{ label: 'All Statuses', value: '' },
+									{ label: 'Pending', value: 'Pending' },
+									{ label: 'Employee Done', value: 'Employee Done' },
+									{ label: 'HR Done', value: 'HR Done' },
+								]}
+								onChange={handleStatusChange}
+							/>
 						</div>
 
 						{/* 6. Date Filter */}
@@ -862,13 +879,13 @@ const HRAssignTaskList: React.FC = () => {
 
 					{/* 7. End me right side Action Buttons */}
 					<div className='d-flex align-items-center gap-2 flex-shrink-0 ms-auto'>
-						<button
+						{/* <button
 							type='button'
 							onClick={handleAllDataClick}
 							className='btn btn-light-primary btn-sm text-nowrap'
 							style={{ height: '38px', borderRadius: '8px' }}>
 							All Data
-						</button>
+						</button> */}
 						{selectedEmployee && (
 							<button
 								onClick={() => handleNavigate('add')}

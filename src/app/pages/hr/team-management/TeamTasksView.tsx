@@ -212,25 +212,21 @@ const HRTeamTasksView: React.FC = () => {
 		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
-	const handleEmployeeSelect = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-		if (event.target instanceof HTMLSelectElement) {
-			const selectedName = event.target.value
-			if (selectedName === 'Select Employee') {
-				setSelectedEmployee(null)
-			} else {
-				const emp = employeeData.find((el: any) => el.name === selectedName)
-				setSelectedEmployee(emp)
-			}
-			setPagination((prev) => ({ ...prev, page: 1 }))
+	const handleEmployeeSelect = (event: any) => {
+		const selectedName = typeof event === 'object' && event?.target ? event.target.value : event
+		if (!selectedName || selectedName === 'Select Employee' || selectedName === 'Select') {
+			setSelectedEmployee(null)
+		} else {
+			const emp = employeeData.find((el: any) => el.name === selectedName)
+			setSelectedEmployee(emp)
 		}
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
-	const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-		if (event.target instanceof HTMLSelectElement) {
-			const status = event.target.value as any
-			setHrStatus(status)
-			setPagination((prev) => ({ ...prev, page: 1 }))
-		}
+	const handleStatusChange = (event: any) => {
+		const status = (typeof event === 'object' && event?.target ? event.target.value : event) as any
+		setHrStatus(status || 'Select')
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -555,31 +551,38 @@ const HRTeamTasksView: React.FC = () => {
 					</div>
 
 					{/* 4. Employee Select */}
-					<div style={{ minWidth: '180px' }}>
-						<select
-							className='form-select form-select-sm gz-inv-select'
-							value={selectedEmployee?.name || 'Select Employee'}
-							onChange={handleEmployeeSelect}>
-							<option value='Select Employee'>All Employees</option>
-							{employeeData.map((el: any) => (
-								<option key={el.id} value={el.name}>
-									{el.name}
-								</option>
-							))}
-						</select>
+					<div style={{ minWidth: '190px' }}>
+						<SelectField
+							showLabel={false}
+							marginRemove={true}
+							className='mb-0'
+							height='38px'
+							name='employee'
+							value={selectedEmployee?.name || ''}
+							defaultLabel='All Employees'
+							options={employeeData.map((el: any) => ({ label: el.name, value: el.name }))}
+							onChange={handleEmployeeSelect}
+						/>
 					</div>
 
 					{/* 5. Status Select */}
 					<div style={{ minWidth: '160px' }}>
-						<select
-							className='form-select form-select-sm gz-inv-select'
-							value={hrStatus}
-							onChange={handleStatusChange}>
-							<option value='Select'>All Statuses</option>
-							<option value='Pending'>Pending</option>
-							<option value='Employee Done'>Employee Done</option>
-							<option value='HR Done'>HR Done</option>
-						</select>
+						<SelectField
+							showLabel={false}
+							marginRemove={true}
+							className='mb-0'
+							height='38px'
+							name='status'
+							value={hrStatus === 'Select' ? '' : hrStatus}
+							defaultLabel='All Statuses'
+							options={[
+								{ label: 'All Statuses', value: '' },
+								{ label: 'Pending', value: 'Pending' },
+								{ label: 'Employee Done', value: 'Employee Done' },
+								{ label: 'HR Done', value: 'HR Done' },
+							]}
+							onChange={handleStatusChange}
+						/>
 					</div>
 
 					{/* 6. Date Filter */}

@@ -111,7 +111,7 @@ export function HRAsideMenuItems() {
 				title='Daily Report'
 			/>
 			<AsideMenuItem
-				to='/rag/contact-inquiry/contact'
+				to='/hr/contact-inquiry/contact'
 				Icon={faEnvelope}
 				title='Contact Inquiry'
 			/>

@@ -116,16 +116,20 @@ body {
    ========================================================================== */
 #kt_aside,
 .aside {
-	background: #F3F7FC !important;
+	background: #FFFFFF !important;
 	backdrop-filter: none !important;
 	-webkit-backdrop-filter: none !important;
 	border: none !important;
 	border-right: 1px solid #DFE7F0 !important;
-	box-shadow: 6px 0 20px -3px rgba(15, 23, 42, 0.06) !important;
+	box-shadow: 2px 0 12px 0 rgba(15, 23, 42, 0.04) !important;
 	width: 265px !important;
 	min-width: 265px !important;
 	max-width: 265px !important;
 	z-index: 104 !important;
+	display: flex !important;
+	flex-direction: column !important;
+	height: 100vh !important;
+	overflow: hidden !important;
 	transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -153,10 +157,35 @@ body {
 .aside-toolbar {
 	display: block !important;
 	height: auto !important;
-	background: #F3F7FC !important;
+	background: #FFFFFF !important;
 	border-bottom: 1px solid #DFE7F0 !important;
 	margin: 0 !important;
 	padding: 0 !important;
+	flex-shrink: 0 !important;
+}
+
+.aside-menu {
+	flex: 1 1 auto !important;
+	display: flex !important;
+	flex-direction: column !important;
+	min-height: 0 !important;
+	height: 100% !important;
+	background: #FFFFFF !important;
+	overflow: hidden !important;
+}
+
+#kt_aside_menu_wrapper {
+	flex: 1 1 auto !important;
+	margin: 0 !important;
+	padding-top: 8px !important;
+	padding-bottom: 24px !important;
+	min-height: 100% !important;
+	background: #FFFFFF !important;
+}
+
+#kt_aside_menu,
+[id="#kt_aside_menu"] {
+	background: #FFFFFF !important;
 }
 
 .aside-search {
@@ -1497,7 +1526,7 @@ div[class*='-option'] {
 
 .react-select__option:hover,
 div[class*='-option']:hover {
-	background-color: rgba(30, 58, 95, 0.1) !important;
+	/* background-color: rgba(30, 58, 95, 0.1) !important; */
 	color: #1E3A5F !important;
 }
 
@@ -2989,62 +3018,95 @@ select.gz-inv-select {
 	box-sizing: border-box !important;
 }
 
+@keyframes gzDropdownRevealUp {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.gz-custom-select-dropdown.is-open-up {
+	top: auto !important;
+	bottom: calc(100% + 4px) !important;
+	box-shadow: 0 -12px 30px rgba(15, 23, 42, 0.18), 0 -2px 6px rgba(0, 0, 0, 0.08) !important;
+	animation: gzDropdownRevealUp 180ms ease-out forwards !important;
+}
+
 .gz-select-search-box {
-	padding: 6px !important;
-	border-bottom: 1px solid #F1F5F9 !important;
 	position: relative !important;
-	display: flex !important;
-	align-items: center !important;
+	padding: 6px 8px 8px 8px !important;
+	border-bottom: 1px solid #F1F5F9 !important;
+	background: #ffffff !important;
 	box-sizing: border-box !important;
 }
 
-.gz-select-search-box .gz-select-search-icon,
-.gz-select-search-box svg,
-.gz-select-search-box i {
-	position: absolute !important;
-	left: 17px !important;
-	top: 50% !important;
-	transform: translateY(-50%) !important;
-	font-size: 12px !important;
-	color: #1E3A5F !important;
-	pointer-events: none !important;
-	z-index: 5 !important;
-}
-
-.gz-select-search-box input,
-.gz-select-search-box input[type='text'] {
+.gz-select-search-box .selectfield-search-wrapper {
+	display: flex !important;
+	align-items: center !important;
 	width: 100% !important;
 	height: 34px !important;
 	min-height: 34px !important;
-	line-height: normal !important;
-	background-color: #F8FAFD !important;
 	border: 1px solid #DFE7F0 !important;
 	border-radius: 6px !important;
-	padding: 0 10px 0 36px !important; /* 36px ensures search icon and text NEVER overlap */
+	background-color: #F8FAFD !important;
+	padding: 0 10px !important;
+	gap: 8px !important;
+	box-sizing: border-box !important;
+	transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.gz-select-search-box .selectfield-search-wrapper:focus-within {
+	border-color: #1E3A5F !important;
+	background-color: #FFFFFF !important;
+	box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.12) !important;
+}
+
+.gz-select-search-box .selectfield-search-wrapper .gz-select-search-icon,
+.gz-select-search-box .selectfield-search-wrapper svg {
+	position: static !important;
+	transform: none !important;
+	left: auto !important;
+	top: auto !important;
+	font-size: 12px !important;
+	color: #71809A !important;
+	flex-shrink: 0 !important;
+	pointer-events: none !important;
+	margin: 0 !important;
+}
+
+.gz-select-search-box .selectfield-search-wrapper input.selectfield-search-input,
+.gz-select-search-box .selectfield-search-wrapper input {
+	flex: 1 1 auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	min-height: 0 !important;
+	line-height: normal !important;
+	background-color: transparent !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+	margin: 0 !important;
 	font-size: 12.5px !important;
 	font-weight: 500 !important;
-	color: #172B4D !important;
+	color: #142447 !important;
 	outline: none !important;
 	box-sizing: border-box !important;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
 }
 
-.gz-select-search-box input:focus,
-.gz-select-search-box input[type='text']:focus {
-	background-color: #ffffff !important;
-	border-color: #1E3A5F !important;
-	box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.15) !important;
-}
-
-.gz-select-search-box input::placeholder,
-.gz-select-search-box input[type='text']::placeholder {
+.gz-select-search-box .selectfield-search-wrapper input::placeholder {
 	color: #94A3B8 !important;
 	font-size: 12.5px !important;
 	font-weight: 400 !important;
 }
 
+
 .gz-select-options-list {
-	max-height: 220px !important;
+	max-height: var(--gz-options-max-height, 220px) !important;
 	overflow-y: auto !important;
 	padding: 4px 2px !important;
 }
@@ -3065,6 +3127,7 @@ select.gz-inv-select {
 	font-size: 13px !important;
 	font-weight: 500 !important;
 	color: #475569 !important;
+	background-color: transparent !important;
 	border-radius: 6px !important;
 	margin-bottom: 2px !important;
 	display: flex !important;
@@ -3075,19 +3138,28 @@ select.gz-inv-select {
 	user-select: none !important;
 }
 
-.gz-select-option:hover {
-	background-color: rgba(30, 58, 95, 0.08) !important;
+/* Hover light background ONLY applies to the unselected option currently hovered */
+.gz-select-option:not(.is-selected):hover {
+	background-color: #E8F0F8 !important;
 	color: #1E3A5F !important;
+	font-weight: 600 !important;
 }
 
-.gz-select-option.is-selected {
+/* Selected option ALWAYS keeps solid #1E3A5F background and white text, even when other items are hovered */
+.gz-select-option.is-selected,
+.gz-select-options-list .gz-select-option.is-selected,
+.gz-select-options-list:hover .gz-select-option.is-selected,
+.gz-select-options-list:hover .gz-select-option.is-selected:not(:hover),
+.gz-select-option.is-selected:hover {
 	background-color: #1E3A5F !important;
 	color: #ffffff !important;
 	font-weight: 700 !important;
 }
 
 .gz-select-option.is-selected .gz-select-check-icon,
-.gz-select-option.is-selected svg {
+.gz-select-option.is-selected svg,
+.gz-select-options-list:hover .gz-select-option.is-selected .gz-select-check-icon,
+.gz-select-options-list:hover .gz-select-option.is-selected:not(:hover) .gz-select-check-icon {
 	font-size: 12px !important;
 	color: #ffffff !important;
 	font-weight: bold !important;
@@ -3182,5 +3254,204 @@ select.gz-inv-select {
 	background-color: #e8f0f8 !important;
 	color: #1e3a5f !important;
 	font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   13. UNIFIED TABLE UI (EXACT MATCH WITH http://localhost:3000/hr/employee-detail)
+   Theme: Header #F8FAFD, border #E4EAF2, uppercase text #71809A, hover #F9FBFE,
+   seamless 16px radius card, row divider #EEF2F6, no inner card-body padding.
+   ========================================================================== */
+
+/* Universal Table Card Container */
+.gz-inv-table-card {
+	background: #ffffff !important;
+	border: 1px solid #E4EAF2 !important;
+	border-radius: 16px !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+	overflow: hidden !important;
+}
+
+/* Eliminate nested card wrappers and card-body padding if wrapped around tables */
+.gz-inv-table-card .gz-inv-table-card {
+	border: none !important;
+	box-shadow: none !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+}
+
+.gz-inv-table-card > .card-body,
+.gz-inv-table-card > .py-4.card-body,
+.gz-inv-table-card > .card-body.py-4 {
+	padding: 0 !important;
+	background: transparent !important;
+}
+
+/* Universal Table Base */
+.gz-inv-table,
+.gz-inv-table-card table,
+#kt_table_users {
+	width: 100% !important;
+	border-collapse: separate !important;
+	border-spacing: 0 !important;
+}
+
+/* Universal Table Header */
+.gz-inv-table thead tr,
+.gz-inv-table-card table thead tr,
+#kt_table_users thead tr {
+	background-color: #F8FAFD !important;
+	border-bottom: 1px solid #E4EAF2 !important;
+}
+
+.gz-inv-table thead th,
+.gz-inv-table-card table thead th,
+#kt_table_users thead th {
+	background-color: #F8FAFD !important;
+	color: #71809A !important;
+	font-size: 12px !important;
+	font-weight: 650 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.02em !important;
+	padding: 16px 20px !important;
+	border-bottom: 1px solid #E4EAF2 !important;
+	border-top: none !important;
+	border-left: none !important;
+	border-right: none !important;
+	white-space: nowrap !important;
+	vertical-align: middle !important;
+}
+
+/* Universal Table Body Rows */
+.gz-inv-table tbody tr,
+.gz-inv-table-card table tbody tr,
+#kt_table_users tbody tr {
+	transition: background-color 0.15s ease !important;
+	background-color: #ffffff !important;
+}
+
+.gz-inv-table tbody tr:hover,
+.gz-inv-table-card table tbody tr:hover,
+#kt_table_users tbody tr:hover {
+	background-color: #F9FBFE !important;
+}
+
+.gz-inv-table tbody td,
+.gz-inv-table-card table tbody td,
+#kt_table_users tbody td {
+	padding: 16px 20px !important;
+	border-bottom: 1px solid #EEF2F6 !important;
+	border-top: none !important;
+	border-left: none !important;
+	border-right: none !important;
+	font-size: 13.5px !important;
+	vertical-align: middle !important;
+	color: #172B4D !important;
+}
+
+.gz-inv-table tbody tr:last-child td,
+.gz-inv-table-card table tbody tr:last-child td,
+#kt_table_users tbody tr:last-child td {
+	border-bottom: none !important;
+}
+
+.gz-inv-table-card > .table-responsive {
+	margin-bottom: 0 !important;
+}
+
+
+
+
+/* ==========================================================================
+   14. TARGET MODAL DROPDOWN STACKING & OVERFLOW FIX
+   Prevents dropdown from expanding scrollbars inside modal; floats with high z-index
+   ========================================================================== */
+#kt_modal_target_add,
+#kt_modal_target_update {
+	overflow: visible !important;
+}
+
+#kt_modal_target_add .modal-dialog,
+#kt_modal_target_update .modal-dialog {
+	overflow: visible !important;
+}
+
+#kt_modal_target_add .modal-content,
+#kt_modal_target_update .modal-content {
+	overflow: visible !important;
+}
+
+#kt_modal_target_add .modal-body,
+#kt_modal_target_update .modal-body {
+	overflow: visible !important;
+	position: relative !important;
+	z-index: 1055 !important;
+	max-height: none !important;
+}
+
+#kt_modal_target_add .modal-footer,
+#kt_modal_target_update .modal-footer {
+	position: relative !important;
+	z-index: 1 !important;
+}
+
+.modal .gz-custom-select-wrap.is-open {
+	z-index: 1075 !important;
+	position: relative !important;
+}
+
+.modal .gz-custom-select-dropdown {
+	z-index: 1085 !important;
+	min-width: 100% !important;
+	box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22), 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+.modal .gz-custom-select-dropdown.is-open-up {
+	top: auto !important;
+	bottom: calc(100% + 4px) !important;
+	box-shadow: 0 -16px 36px rgba(15, 23, 42, 0.22), 0 -4px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Global native select fallbacks so any remaining/external select matches theme */
+.form-select,
+.gz-inv-select,
+select.form-control {
+	min-height: 38px !important;
+	height: 38px !important;
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	padding: 6px 36px 6px 12px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: #142447 !important;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%231E3A5F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 12px center !important;
+	background-size: 14px 10px !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.form-select:hover:not(:disabled),
+.gz-inv-select:hover:not(:disabled),
+select.form-control:hover:not(:disabled) {
+	border-color: #1E3A5F !important;
+}
+
+.form-select:focus,
+.gz-inv-select:focus,
+select.form-control:focus {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+	outline: none !important;
+}
+
+.form-select:disabled,
+.gz-inv-select:disabled,
+select.form-control:disabled {
+	background-color: #f1f5f9 !important;
+	color: #94a3b8 !important;
+	cursor: not-allowed !important;
+	border-color: #DFE7F0 !important;
 }
 

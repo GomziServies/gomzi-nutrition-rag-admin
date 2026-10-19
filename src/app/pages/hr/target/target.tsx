@@ -239,9 +239,7 @@ const HRTarget: React.FC = () => {
 
 			{/* Main Table Card */}
 			<div className='gz-inv-table-card'>
-				<div className='py-4 card-body'>
-							<div className='table-responsive'>
-								<Table
+				<Table
 									data={paginatedtargetData}
 									columns={sortableFields}
 									sort={sort}
@@ -385,7 +383,6 @@ const HRTarget: React.FC = () => {
 									setPagination={setPagination}
 									loading={loading}
 								/>
-							</div>
 							{targetData.length === 0 && !loading && (
 								<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
 									<b>No records found</b>
@@ -400,8 +397,7 @@ const HRTarget: React.FC = () => {
 									onPageChange={handlePageChange}
 								/>
 							)}
-						</div>
-					</div>
+			</div>
 
 					{/* target add modal */}
 					<div
@@ -409,7 +405,7 @@ const HRTarget: React.FC = () => {
 						id='kt_modal_target_add'
 						aria-hidden='true'>
 						<div className='modal-dialog modal-dialog-centered mw-650px'>
-							<div className='modal-content'>
+							<div className='modal-content' style={{ overflow: 'visible' }}>
 								<div className='modal-header justify-content-between'>
 									<h2 className='fw-bolder'>Add New Target</h2>
 									<div
@@ -421,7 +417,7 @@ const HRTarget: React.FC = () => {
 										/>
 									</div>
 								</div>
-								<div className='modal-body scroll-y'>
+								<div className='modal-body' style={{ overflow: 'visible', position: 'relative', zIndex: 1055 }}>
 									<div className='col-md-12'>
 										<div className='row'>
 											<div className='col-md-6 fv-row mb-7'>
@@ -472,7 +468,7 @@ const HRTarget: React.FC = () => {
 													onChange={(e) => handleInputChange(e)}
 												/>
 											</div>
-											<div className='col-md-6 fv-row mb-7'>
+											<div className='col-md-6 fv-row mb-7' style={{ position: 'relative', zIndex: 1060 }}>
 												<SelectField
 													className='col-12 fv-row'
 													name='position'
@@ -503,7 +499,7 @@ const HRTarget: React.FC = () => {
 										</div>
 									</div>
 								</div>
-								<div className='modal-footer justify-content-end'>
+								<div className='modal-footer justify-content-end' style={{ position: 'relative', zIndex: 1 }}>
 									<button
 										className='btn btn-primary'
 										data-bs-dismiss='modal'
@@ -521,7 +517,7 @@ const HRTarget: React.FC = () => {
 						id='kt_modal_target_update'
 						aria-hidden='true'>
 						<div className='modal-dialog modal-dialog-centered mw-650px'>
-							<div className='modal-content'>
+							<div className='modal-content' style={{ overflow: 'visible' }}>
 								<div className='modal-header justify-content-between'>
 									<h2 className='fw-bolder'>Update Target</h2>
 									<div
@@ -533,7 +529,7 @@ const HRTarget: React.FC = () => {
 										/>
 									</div>
 								</div>
-								<div className='modal-body scroll-y'>
+								<div className='modal-body' style={{ overflow: 'visible', position: 'relative', zIndex: 1055 }}>
 									<div className='col-md-12'>
 										<div className='row'>
 											<div className='col-md-6 fv-row mb-7'>
@@ -584,7 +580,7 @@ const HRTarget: React.FC = () => {
 													onChange={(e) => handleUpdateInputChange(e)}
 												/>
 											</div>
-											<div className='col-md-6 fv-row mb-7'>
+											<div className='col-md-6 fv-row mb-7' style={{ position: 'relative', zIndex: 1060 }}>
 												<SelectField
 													className='col-12 fv-row'
 													name='position'
@@ -615,7 +611,7 @@ const HRTarget: React.FC = () => {
 										</div>
 									</div>
 								</div>
-								<div className='modal-footer justify-content-end'>
+								<div className='modal-footer justify-content-end' style={{ position: 'relative', zIndex: 1 }}>
 									<button
 										className='btn btn-primary'
 										data-bs-dismiss='modal'

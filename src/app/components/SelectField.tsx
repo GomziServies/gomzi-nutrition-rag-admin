@@ -21,6 +21,7 @@ type Props = {
 	hideDefaultOption?: boolean
 	defaultLabel?: string
 	height?: string
+	placement?: 'auto' | 'top' | 'bottom'
 }
 
 const SelectField: React.FC<Props> = ({
@@ -41,10 +42,14 @@ const SelectField: React.FC<Props> = ({
 	hideDefaultOption = false,
 	defaultLabel,
 	height,
+	placement = 'auto',
 }) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const [searchTerm, setSearchTerm] = useState('')
+	const [openUpwards, setOpenUpwards] = useState(false)
+	const [optionsMaxHeight, setOptionsMaxHeight] = useState<number>(220)
 	const dropdownRef = useRef<HTMLDivElement>(null)
+	const searchInputRef = useRef<HTMLInputElement>(null)
 
 	const rawOptions = Array.isArray(options) ? options : []
 	const formattedOptions: { label: string; value: string }[] = rawOptions.map((option) => {
@@ -79,7 +84,33 @@ const SelectField: React.FC<Props> = ({
 	const selectedValues = typeof value === 'string' ? value.split(',').map((v) => v.trim()) : []
 	const selectedOptions = formattedOptions.filter((option) => selectedValues.includes(option.value))
 
-	// Close on click outside
+	// Check placement direction (flip upwards if space below is limited)
+	const checkPlacement = () => {
+		if (placement === 'top') {
+			setOpenUpwards(true)
+			return
+		}
+		if (placement === 'bottom') {
+			setOpenUpwards(false)
+			return
+		}
+
+		if (dropdownRef.current) {
+			const rect = dropdownRef.current.getBoundingClientRect()
+			const spaceBelow = window.innerHeight - rect.bottom
+			const spaceAbove = rect.top
+			const estimatedDropdownHeight = 280
+
+			const shouldOpenUp = spaceBelow < estimatedDropdownHeight && spaceAbove > spaceBelow
+			setOpenUpwards(shouldOpenUp)
+
+			const availableSpace = shouldOpenUp ? spaceAbove : spaceBelow
+			const calculatedMaxHeight = Math.max(120, Math.min(220, availableSpace - 70))
+			setOptionsMaxHeight(calculatedMaxHeight)
+		}
+	}
+
+	// Close on click outside and listen to resize/scroll while open
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -87,12 +118,25 @@ const SelectField: React.FC<Props> = ({
 			}
 		}
 		if (isOpen) {
+			checkPlacement()
+			const handleScrollOrResize = () => checkPlacement()
+			window.addEventListener('resize', handleScrollOrResize)
+			window.addEventListener('scroll', handleScrollOrResize, true)
 			document.addEventListener('mousedown', handleClickOutside)
+
+			setTimeout(() => {
+				searchInputRef.current?.focus()
+			}, 30)
+
+			return () => {
+				document.removeEventListener('mousedown', handleClickOutside)
+				window.removeEventListener('resize', handleScrollOrResize)
+				window.removeEventListener('scroll', handleScrollOrResize, true)
+			}
+		} else {
+			setSearchTerm('')
 		}
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside)
-		}
-	}, [isOpen])
+	}, [isOpen, placement])
 
 	const handleMultiSelectChange = (selected: Option[]) => {
 		const selectedValues = selected.map((option) => option.value).join(',')
@@ -166,7 +210,8 @@ const SelectField: React.FC<Props> = ({
 			) : (
 				<div
 					ref={dropdownRef}
-					className='gz-custom-select-wrap selectfield-bg mb-3 mb-lg-0'>
+					className={`gz-custom-select-wrap selectfield-bg mb-3 mb-lg-0 ${isOpen ? 'is-open' : ''}`}
+					style={{ position: 'relative', zIndex: isOpen ? 1075 : 1 }}>
 					{/* Hidden native input for form compatibility */}
 					<input
 						type='hidden'
@@ -181,7 +226,12 @@ const SelectField: React.FC<Props> = ({
 						}`}
 						style={triggerStyle}
 						onClick={() => {
-							if (!disabled) setIsOpen(!isOpen)
+							if (!disabled) {
+								if (!isOpen) {
+									checkPlacement()
+								}
+								setIsOpen(!isOpen)
+							}
 						}}
 						role='button'
 						tabIndex={0}>
@@ -201,65 +251,115 @@ const SelectField: React.FC<Props> = ({
 
 					{/* Custom Dropdown Popup Menu */}
 					{isOpen && !disabled && (
-						<div className='gz-custom-select-dropdown'>
+						<div
+							className={`gz-custom-select-dropdown ${openUpwards ? 'is-open-up' : ''}`}
+							style={openUpwards ? { top: 'auto', bottom: 'calc(100% + 4px)' } : {}}>
 							{showSearch && (
 								<div
 									className='gz-select-search-box'
 									style={{
-										padding: '6px 8px',
+										padding: '6px 8px 8px 8px',
 										borderBottom: '1px solid #F1F5F9',
-										position: 'relative',
-										display: 'flex',
-										alignItems: 'center',
-										boxSizing: 'border-box',
 									}}>
-									<FontAwesomeIcon
-										icon={faSearch}
-										className='gz-select-search-icon'
+									<div
+										className='selectfield-search-wrapper'
 										style={{
-											position: 'absolute',
-											left: '18px',
-											top: '50%',
-											transform: 'translateY(-50%)',
-											fontSize: '12px',
-											color: '#71809A',
-											pointerEvents: 'none',
-											zIndex: 5,
-										}}
-									/>
-									<input
-										type='text'
-										placeholder='Search...'
-										value={searchTerm}
-										autoFocus
-										onChange={(e) => setSearchTerm(e.target.value)}
-										onClick={(e) => e.stopPropagation()}
-										style={{
+											display: 'flex',
+											alignItems: 'center',
 											width: '100%',
 											height: '34px',
 											minHeight: '34px',
-											lineHeight: 'normal',
-											backgroundColor: '#F8FAFD',
 											border: '1px solid #DFE7F0',
 											borderRadius: '6px',
-											padding: '0 10px 0 34px',
-											fontSize: '12.5px',
-											fontWeight: 500,
-											color: '#142447',
-											outline: 'none',
+											backgroundColor: '#F8FAFD',
+											padding: '0 10px',
+											gap: '8px',
 											boxSizing: 'border-box',
-										}}
-									/>
+										}}>
+										<FontAwesomeIcon
+											icon={faSearch}
+											className='gz-select-search-icon'
+											style={{
+												fontSize: '12px',
+												color: '#71809A',
+												flexShrink: 0,
+												pointerEvents: 'none',
+											}}
+										/>
+										<input
+											ref={searchInputRef}
+											type='text'
+											className='selectfield-search-input'
+											placeholder='Search...'
+											value={searchTerm}
+											autoFocus
+											onChange={(e) => setSearchTerm(e.target.value)}
+											onClick={(e) => e.stopPropagation()}
+											onMouseDown={(e) => e.stopPropagation()}
+											autoComplete='off'
+											spellCheck={false}
+											style={{
+												width: '100%',
+												height: '100%',
+												minHeight: '0',
+												fontSize: '12.5px',
+												fontWeight: 500,
+												border: 'none',
+												borderRadius: '0',
+												outline: 'none',
+												backgroundColor: 'transparent',
+												color: '#142447',
+												margin: 0,
+												padding: 0,
+												boxShadow: 'none',
+											}}
+										/>
+									</div>
 								</div>
 							)}
-							<div className='gz-select-options-list'>
+							<div
+								className='gz-select-options-list'
+								style={{
+									maxHeight: `${optionsMaxHeight}px`,
+									['--gz-options-max-height' as any]: `${optionsMaxHeight}px`,
+								}}>
 								{filteredOptions.length > 0 ? (
 									filteredOptions.map((opt, idx) => {
-										const isSelected = opt.value === currentVal
+										const isSelected =
+											(!currentVal || currentVal === '' || currentVal === 'Select')
+												? (opt.value === '' || opt.value === 'Select' || opt.label === placeholderText)
+												: opt.value === currentVal
 										return (
 											<div
 												key={opt.value + idx}
 												className={`gz-select-option ${isSelected ? 'is-selected' : ''}`}
+												style={{
+													backgroundColor: isSelected ? '#1E3A5F' : 'transparent',
+													color: isSelected ? '#ffffff' : '#475569',
+													fontWeight: isSelected ? 700 : 500,
+													borderRadius: '6px',
+													padding: '7px 10px',
+													cursor: 'pointer',
+													transition: 'background-color 0.12s ease, color 0.12s ease',
+													marginBottom: '2px',
+													display: 'flex',
+													alignItems: 'center',
+													justifyContent: 'space-between',
+												}}
+												onMouseEnter={(e) => {
+													if (!isSelected) {
+														e.currentTarget.style.backgroundColor = '#E8F0F8'
+														e.currentTarget.style.color = '#1E3A5F'
+														e.currentTarget.style.fontWeight = '600'
+													}
+												}}
+												onMouseLeave={(e) => {
+													if (!isSelected) {
+														e.currentTarget.style.backgroundColor = 'transparent'
+														e.currentTarget.style.color = '#475569'
+														e.currentTarget.style.fontWeight = '500'
+													}
+												}}
 												onClick={(e) => {
 													e.stopPropagation()
 													handleOptionSelect(opt.value)
@@ -269,6 +369,10 @@ const SelectField: React.FC<Props> = ({
 													<FontAwesomeIcon
 														icon={faCheck}
 														className='gz-select-check-icon'
+														style={{
+															fontSize: '11px',
+															color: '#ffffff',
+														}}
 													/>
 												)}
 											</div>

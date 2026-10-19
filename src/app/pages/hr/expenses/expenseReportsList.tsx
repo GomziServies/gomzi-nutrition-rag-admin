@@ -138,12 +138,14 @@ const ExpenseReportsList: React.FC = () => {
 		}
 	}
 
-	const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-		if (event.target instanceof HTMLSelectElement) {
-			const status = event.target.value as 'Select' | 'Pending' | 'Approved' | 'Rejected'
-			setSelectedStatus(status)
-			setPagination((prev) => ({ ...prev, page: 1 }))
-		}
+	const handleStatusChange = (event: any) => {
+		const status = (typeof event === 'object' && event?.target ? event.target.value : event) as
+			| 'Select'
+			| 'Pending'
+			| 'Approved'
+			| 'Rejected'
+		setSelectedStatus(status || 'Select')
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
 	const fetchExpenseReports = async (page?: number) => {
@@ -212,8 +214,11 @@ const ExpenseReportsList: React.FC = () => {
 	}
 
 	useEffect(() => {
-		fetchExpenseReports()
 		fetchEmployeeData()
+	}, [])
+
+	useEffect(() => {
+		fetchExpenseReports()
 	}, [
 		pagination.itemsPerPage,
 		pagination.page,
@@ -294,18 +299,16 @@ const ExpenseReportsList: React.FC = () => {
 		}
 	}
 
-	const handleEmployeeSelect = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-		if (event.target instanceof HTMLSelectElement) {
-			const selectedName = event.target.value
+	const handleEmployeeSelect = (event: any) => {
+		const selectedName = typeof event === 'object' && event?.target ? event.target.value : event
 
-			if (selectedName === 'Select') {
-				setSelectedEmployee(null)
-			} else {
-				const selectedEmployeeObj = employeeDataList.find((el: any) => el.name === selectedName)
-				setSelectedEmployee(selectedEmployeeObj)
-			}
-			setPagination((prev) => ({ ...prev, page: 1 }))
+		if (!selectedName || selectedName === 'Select') {
+			setSelectedEmployee(null)
+		} else {
+			const selectedEmployeeObj = employeeDataList.find((el: any) => el.name === selectedName)
+			setSelectedEmployee(selectedEmployeeObj)
 		}
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
 
 	const handleViewReport = (reportId: string) => {
@@ -338,13 +341,13 @@ const ExpenseReportsList: React.FC = () => {
 	const getStatusBadgeClass = (status: string) => {
 		switch (status) {
 			case 'Approved':
-				return 'badge badge-success'
+				return 'badge badge-light-success text-success fw-bold px-3 py-1.5 fs-7'
 			case 'Rejected':
-				return 'badge badge-danger'
+				return 'badge badge-light-danger text-danger fw-bold px-3 py-1.5 fs-7'
 			case 'Pending':
-				return 'badge badge-warning'
+				return 'badge badge-light-warning text-warning fw-bold px-3 py-1.5 fs-7'
 			default:
-				return 'badge badge-secondary'
+				return 'badge badge-light-secondary text-dark fw-bold px-3 py-1.5 fs-7'
 		}
 	}
 
@@ -352,13 +355,37 @@ const ExpenseReportsList: React.FC = () => {
 		<>
 			<PageTitle breadcrumbs={[]}>Expense Reports</PageTitle>
 
-			{/* Page Header */}
-			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
-				<div className='d-flex flex-column'>
-					<h2 className='text-gray-900 fw-bold fs-2 m-0'>Expense Reports</h2>
-					<span className='text-muted fs-7 fw-semibold mt-1'>
-						Manage employee expense submissions, receipts, and disbursement approvals
-					</span>
+			{/* Page Header Card */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '14px',
+					border: '1px solid #E4EAF2',
+					background: '#ffffff',
+					boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+				}}>
+				<div className='card-body p-6 d-flex flex-wrap align-items-center justify-content-between gap-4'>
+					<div className='d-flex align-items-center gap-4'>
+						<div
+							className='d-flex align-items-center justify-content-center flex-shrink-0'
+							style={{
+								width: '52px',
+								height: '52px',
+								borderRadius: '12px',
+								background: '#EAF1FB',
+								border: '1px solid #DCE8F8',
+							}}>
+							<i className='bi bi-receipt-cutoff fs-2' style={{ color: '#172B4D' }}></i>
+						</div>
+						<div>
+							<h2 className='fw-bold fs-3 m-0' style={{ color: '#142447' }}>
+								Expense Reports
+							</h2>
+							<span className='fs-7' style={{ color: '#71809A' }}>
+								Manage employee expense submissions, receipts, and disbursement approvals
+							</span>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -377,7 +404,7 @@ const ExpenseReportsList: React.FC = () => {
 						<SearchFilter
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
-							placeholder='Search expense reports...'
+							placeholder='Search by employee, purpose, description...'
 							className='me-0'
 						/>
 					</div>
@@ -404,33 +431,38 @@ const ExpenseReportsList: React.FC = () => {
 					</div>
 
 					{/* 4. Employee Select */}
-					<div style={{ minWidth: '180px' }}>
-						<select
-							className='gz-inv-select'
-							style={{ width: '100%', height: '38px', borderRadius: '8px' }}
-							value={selectedEmployee?.name || 'Select'}
-							onChange={handleEmployeeSelect}>
-							<option value='Select'>All Employees</option>
-							{employeeDataList.map((el: any) => (
-								<option key={el.id} value={el.name}>
-									{el.name}
-								</option>
-							))}
-						</select>
+					<div style={{ minWidth: '190px' }}>
+						<SelectField
+							showLabel={false}
+							marginRemove={true}
+							className='mb-0'
+							height='38px'
+							name='employee'
+							value={selectedEmployee?.name || ''}
+							defaultLabel='All Employees'
+							options={employeeDataList.map((el: any) => ({ label: el.name, value: el.name }))}
+							onChange={handleEmployeeSelect}
+						/>
 					</div>
 
 					{/* 5. Status Select */}
-					<div style={{ minWidth: '150px' }}>
-						<select
-							className='gz-inv-select'
-							style={{ width: '100%', height: '38px', borderRadius: '8px' }}
-							value={selectedStatus || 'Select'}
-							onChange={handleStatusChange}>
-							<option value='Select'>All Statuses</option>
-							<option value='Pending'>Pending</option>
-							<option value='Approved'>Approved</option>
-							<option value='Rejected'>Rejected</option>
-						</select>
+					<div style={{ minWidth: '160px' }}>
+						<SelectField
+							showLabel={false}
+							marginRemove={true}
+							className='mb-0'
+							height='38px'
+							name='status'
+							value={selectedStatus === 'Select' ? '' : selectedStatus}
+							defaultLabel='All Statuses'
+							options={[
+								{ label: 'All Statuses', value: '' },
+								{ label: 'Pending', value: 'Pending' },
+								{ label: 'Approved', value: 'Approved' },
+								{ label: 'Rejected', value: 'Rejected' },
+							]}
+							onChange={handleStatusChange}
+						/>
 					</div>
 
 					{/* Spacer */}
@@ -459,42 +491,47 @@ const ExpenseReportsList: React.FC = () => {
 					</div>
 				)}
 				{expenseReports.some((report) => report.status === 'Pending') && (
-					<div className='row align-items-center ms-0 mx-md-6 p-0 my-6'>
-						<div className='col-md-6'>
-							<div className='d-flex align-items-center mt-3'>
-								<div className='form-check form-check-custom form-check-solid me-3'>
-									<input
-										className='form-check-input'
-										type='checkbox'
-										id='selectAll'
-										checked={selectAll}
-										onChange={(e) => handleSelectAll(e.target.checked)}
-									/>
-									<label
-										className='form-check-label fw-bold'
-										htmlFor='selectAll'>
-										Select All Pending Reports (
-										{expenseReports.filter((report) => report.status === 'Pending').length})
-									</label>
-								</div>
+					<div
+						className='d-flex align-items-center justify-content-between flex-wrap gap-3 mx-4 my-4 p-3 rounded-3'
+						style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+						<div className='d-flex align-items-center gap-3'>
+							<div className='form-check form-check-custom form-check-solid m-0'>
+								<input
+									className='form-check-input'
+									type='checkbox'
+									id='selectAll'
+									checked={selectAll}
+									onChange={(e) => handleSelectAll(e.target.checked)}
+								/>
+								<label
+									className='form-check-label fw-bold text-dark fs-7 ms-2'
+									htmlFor='selectAll'>
+									Select All Pending Reports (
+									{expenseReports.filter((report) => report.status === 'Pending').length})
+								</label>
 							</div>
 						</div>
-						<div className='col-md-6 text-end'>
+						<div>
 							<button
 								onClick={handleBulkApproval}
-								className={`btn btn-success btn-sm ${
+								className={`btn btn-sm d-inline-flex align-items-center gap-1.5 fw-bold ${
 									selectedReports.length > 0 ? '' : 'invisible'
 								}`}
+								style={{
+									background: '#059669',
+									color: '#FFFFFF',
+									border: 'none',
+									borderRadius: '8px',
+									padding: '6px 14px',
+								}}
 								disabled={submitLoading}>
-								<i className='fas fa-check-circle me-1'></i>
+								<i className='bi bi-check2-circle text-white'></i>
 								Approve {selectedReports.length} Report{selectedReports.length !== 1 ? 's' : ''}
 							</button>
 						</div>
 					</div>
 				)}
-				<div className='py-4 card-body'>
-					<div className='table-responsive'>
-						<Table
+				<Table
 							data={expenseReports}
 							columns={sortableFields}
 							sort={sort}
@@ -534,13 +571,13 @@ const ExpenseReportsList: React.FC = () => {
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+											<span className='text-gray-800 fw-semibold d-block mb-1 fs-7'>
 												{report.purpose}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-												₹{report.total_amount?.toFixed(2) || '0.00'}
+											<span className='fw-bold d-block mb-1 fs-6' style={{ color: '#142447' }}>
+												₹{report.total_amount?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
 											</span>
 										</td>
 										<td>
@@ -549,7 +586,7 @@ const ExpenseReportsList: React.FC = () => {
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+											<span className='text-muted fw-semibold d-block mb-1 fs-7'>
 												{DayJS(report.createdAt).format('DD/MM/YYYY')}
 											</span>
 										</td>
@@ -615,7 +652,6 @@ const ExpenseReportsList: React.FC = () => {
 							setPagination={setPagination}
 							loading={loading}
 						/>
-					</div>
 					{expenseReports.length === 0 && !loading && (
 						<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
 							<b>No expense reports found</b>
@@ -639,7 +675,6 @@ const ExpenseReportsList: React.FC = () => {
 							onPageChange={handlePageChange}
 						/>
 					)}
-				</div>
 			</div>
 		</>
 	)

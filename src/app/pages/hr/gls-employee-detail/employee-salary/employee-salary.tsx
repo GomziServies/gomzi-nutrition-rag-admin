@@ -11,6 +11,7 @@ import SearchFilter from '../../../../components/SearchFilter'
 import Table from '../../../../components/Table'
 import TableButton from '../../../../components/TableButton'
 import DownloadExcelButton from '../../../../components/DownloadExcelButton'
+import SelectField from '../../../../components/SelectField'
 import UsersListPagination from '../../../../components/TablePagination'
 import { GetAdminUsers } from '../../../../Functions/FGGroup/AdminUsers'
 import { GetGlsSalary } from '../../../../Functions/FGGroup/GlsSalary'
@@ -227,13 +228,9 @@ const GlsEmployeeSalary = () => {
 		}
 	}
 
-	const handleEmployeeChange = (event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-		const selectedLabel = event.target.value
-
-		const selectedEmployee = employeeOptions.find((emp) => emp.label === selectedLabel)
-		const employeeId = selectedEmployee ? selectedEmployee.value : ''
-
-		setSelectedEmployee(employeeId)
+	const handleEmployeeChange = (event: any) => {
+		const val = typeof event === 'object' && event?.target ? event.target.value : event
+		setSelectedEmployee(val || '')
 		setPagination({ ...pagination, page: 1 })
 	}
 
@@ -307,16 +304,17 @@ const GlsEmployeeSalary = () => {
 					{/* 4. Employee Dropdown */}
 					{employeeOptions.length > 0 && (
 						<div style={{ minWidth: '220px' }}>
-							<select
-								className='form-select form-select-sm gz-inv-select'
-								value={selectedEmployeeLabel}
-								onChange={handleEmployeeChange}>
-								{selectOptions.map((opt) => (
-									<option key={opt} value={opt}>
-										{opt}
-									</option>
-								))}
-							</select>
+							<SelectField
+								value={selectedEmployee || ''}
+								onChange={handleEmployeeChange}
+								options={[
+									{ value: '', label: 'All Employees' },
+									...employeeOptions.map((emp) => ({
+										value: emp.value,
+										label: emp.label,
+									})),
+								]}
+							/>
 						</div>
 					)}
 

@@ -12,6 +12,7 @@ import toast from 'react-hot-toast'
 import UsersListPagination from '../../../components/TablePagination'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import SelectField from '../../../components/SelectField'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
 
 const HiringRequest: React.FC = () => {
@@ -217,36 +218,35 @@ const HiringRequest: React.FC = () => {
 					</div>
 
 					{/* 4. Status Filter */}
-					<div style={{ minWidth: '150px' }}>
-						<select
+					<div style={{ minWidth: '160px' }}>
+						<SelectField
+							showLabel={false}
+							marginRemove={true}
+							className='mb-0'
+							height='38px'
+							name='status'
 							value={requestStatus}
-							onChange={(e) => {
-								setRequestStatus(e.target.value)
+							defaultLabel='All Statuses'
+							options={[
+								{ label: 'All Statuses', value: '' },
+								{ label: 'Pending', value: 'Pending' },
+								{ label: 'Approved', value: 'Approved' },
+								{ label: 'Rejected', value: 'Rejected' },
+								{ label: 'Completed', value: 'Completed' },
+							]}
+							onChange={(e: any) => {
+								const val = e?.target?.value ?? e
+								setRequestStatus(val || '')
 								setPagination((prev) => ({ ...prev, page: 1 }))
 							}}
-							className='gz-inv-select'
-							style={{ width: '100%', height: '38px', borderRadius: '8px' }}>
-							<option value=''>All Statuses</option>
-							<option value='Pending'>Pending</option>
-							<option value='Approved'>Approved</option>
-							<option value='Rejected'>Rejected</option>
-							<option value='Completed'>Completed</option>
-						</select>
+						/>
 					</div>
 				</div>
 			</div>
 
 			{/* Main Table Card */}
 			<div className='gz-inv-table-card'>
-				<div className='py-4 card-body'>
-					<style>{`
-						.hiring-request-table thead tr th {
-							vertical-align: middle !important;
-							white-space: nowrap !important;
-						}
-					`}</style>
-					<div className='table-responsive hiring-request-table'>
-						<Table
+				<Table
 							data={requests}
 							columns={sortableFields}
 							sort={sort}
@@ -321,7 +321,6 @@ const HiringRequest: React.FC = () => {
 							pagination={pagination}
 							setPagination={setPagination}
 						/>
-					</div>
 					{requests.length > 0 && (
 						<UsersListPagination
 							totalPages={Math.ceil(totalItems / pagination.itemsPerPage) || 1}
@@ -331,7 +330,6 @@ const HiringRequest: React.FC = () => {
 							onPageChange={handlePageChange}
 						/>
 					)}
-				</div>
 			</div>
 
 			{/* Modal for Approve/Reject Hiring Request */}

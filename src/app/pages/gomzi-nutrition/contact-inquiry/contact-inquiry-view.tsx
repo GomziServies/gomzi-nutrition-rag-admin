@@ -2,50 +2,66 @@ import {
 	faArrowLeft,
 	faAward,
 	faBriefcase,
+	faCalendarAlt,
 	faCertificate,
 	faCheck,
 	faCheckCircle,
+	faClock,
+	faCopy,
 	faDownload,
+	faDumbbell,
 	faEnvelope,
 	faExternalLinkAlt,
+	faEye,
 	faFileAlt,
 	faFilePdf,
+	faGlobe,
+	faGraduationCap,
 	faIdCard,
+	faMapMarkerAlt,
 	faPhone,
+	faRotateLeft,
 	faShareAlt,
+	faShareNodes,
 	faUser,
 	faUserCheck,
 } from '@fortawesome/free-solid-svg-icons'
+import {
+	faFacebook,
+	faInstagram,
+	faLinkedin,
+	faWhatsapp,
+	faYoutube,
+} from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Link, useLocation } from 'react-router-dom'
-import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import { FG_GROUP_FILE_BASE_URL } from '../../../constants/base_URL'
-import CopyableInput from '../../../components/CopyableInput'
-import InputField from '../../../components/InputField'
-import TableButton from '../../../components/TableButton'
-import TextareaField from '../../../components/TextareaField'
 import { GetContactInquiry, UpdateReadReceipt } from '../../../Functions/FGGroup'
 import '../common-management.css'
-import '../products-theme.css'
-import '../orders-theme.css'
+import './contact-inquiry.css'
 
 const ContactInquiryView: React.FC = () => {
 	const location = useLocation()
+	const basePath = location.pathname.startsWith('/hr') ? '/hr' : '/rag'
 	const searchParams = new URLSearchParams(location.search)
 	const contactInquiry_id: any = searchParams.get('contactInquiry_id')!
 	const [contactInquiry, setContactInquiry] = useState<any>(null)
+	const [loading, setLoading] = useState(true)
 
 	const fetchData = async () => {
 		try {
+			setLoading(true)
 			const response: any = await GetContactInquiry({ inquiry_id: contactInquiry_id })
 			setContactInquiry(response?.data)
 		} catch (error: any) {
 			console.error(error)
 			toast.error('Failed to fetch inquiry details')
+		} finally {
+			setLoading(false)
 		}
 	}
 
@@ -80,24 +96,10 @@ const ContactInquiryView: React.FC = () => {
 		)
 	}
 
-	const handleNotesChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-		const { name, value } = event.target
-		if (Array.isArray(contactInquiry)) {
-			setContactInquiry([{ ...contactInquiry[0], [name]: value }])
-		} else {
-			setContactInquiry({ ...contactInquiry, [name]: value })
-		}
-	}
-
-	const handleInputChange = (
-		event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-	) => {
-		const { name, value } = event.target
-		if (Array.isArray(contactInquiry)) {
-			setContactInquiry([{ ...contactInquiry[0], [name]: value }])
-		} else {
-			setContactInquiry({ ...contactInquiry, [name]: value })
-		}
+	const copyToClipboard = (text?: string, label = 'Copied to clipboard!') => {
+		if (!text) return
+		navigator.clipboard.writeText(text)
+		toast.success(label)
 	}
 
 	const handleMarkAsRead = async () => {
@@ -108,7 +110,7 @@ const ContactInquiryView: React.FC = () => {
 			} else {
 				setContactInquiry({ ...contactInquiry, read_receipt: true })
 			}
-			toast.success('Message marked as read')
+			toast.success('Inquiry marked as read')
 			fetchData()
 		} catch (error: any) {
 			console.error(error)
@@ -124,7 +126,7 @@ const ContactInquiryView: React.FC = () => {
 			} else {
 				setContactInquiry({ ...contactInquiry, read_receipt: false })
 			}
-			toast.success('Message marked as unread')
+			toast.success('Inquiry marked as unread')
 			fetchData()
 		} catch (error: any) {
 			console.error(error)
@@ -132,60 +134,136 @@ const ContactInquiryView: React.FC = () => {
 		}
 	}
 
+	const copyFullSummary = () => {
+		const lines: string[] = []
+		lines.push(`CONTACT INQUIRY DETAILS`)
+		lines.push(`================================`)
+		lines.push(`Name: ${inquiryItem?.name || details?.full_name || 'N/A'}`)
+		lines.push(`Email: ${inquiryItem?.email || details?.email || 'N/A'}`)
+		lines.push(`Mobile: ${inquiryItem?.mobile || details?.mobile || 'N/A'}`)
+		lines.push(`Subject: ${inquiryItem?.subject || 'N/A'}`)
+		if (inquiryItem?.source) lines.push(`Origin URL: ${inquiryItem.source}`)
+		if (inquiryItem?.createdAt) {
+			lines.push(`Submitted: ${DayJS(inquiryItem.createdAt).format('DD/MM/YYYY hh:mm:ss A')}`)
+		}
+		if (inquiryItem?.message) {
+			lines.push(`\nMessage:\n${inquiryItem.message}`)
+		}
+		copyToClipboard(lines.join('\n'), 'Full inquiry details copied!')
+	}
+
+	const renderInfoTile = (
+		label: string,
+		value?: any,
+		options?: {
+			copyable?: boolean
+			href?: string
+			isMonospace?: boolean
+			span?: 1 | 2 | 3
+			badgeClass?: string
+		}
+	) => {
+		const valStr = value !== undefined && value !== null && value !== '' ? String(value) : 'N/A'
+		const isNA = valStr === 'N/A' || valStr === 'None specified' || valStr === 'None'
+		const spanClass = options?.span === 3 ? 'span-3' : options?.span === 2 ? 'span-2' : ''
+
+		return (
+			<div className={`gz-inq-tile ${spanClass}`}>
+				<div className='gz-inq-tile-label'>
+					<span>{label}</span>
+					{options?.copyable && !isNA && (
+						<button
+							type='button'
+							className='gz-copy-btn'
+							title={`Copy ${label}`}
+							onClick={() => copyToClipboard(valStr, `${label} copied!`)}>
+							<FontAwesomeIcon icon={faCopy} />
+						</button>
+					)}
+				</div>
+				{options?.badgeClass ? (
+					<div>
+						<span className={options.badgeClass}>{valStr}</span>
+					</div>
+				) : options?.href && !isNA ? (
+					<a
+						href={options.href}
+						target={options.href.startsWith('http') ? '_blank' : undefined}
+						rel='noreferrer'
+						className={`gz-inq-tile-value text-primary ${options?.isMonospace ? 'monospace' : ''}`}
+						style={{ textDecoration: 'none' }}>
+						{valStr}
+						{options.href.startsWith('http') && (
+							<FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
+						)}
+					</a>
+				) : (
+					<span className={`gz-inq-tile-value ${options?.isMonospace ? 'monospace' : ''} ${isNA ? 'text-muted fw-normal' : ''}`}>
+						{valStr}
+					</span>
+				)}
+			</div>
+		)
+	}
+
 	const renderFileAttachment = (label: string, fileUrl?: string, icon = faFileAlt) => {
 		if (!fileUrl) {
 			return (
-				<div className='col-md-6 mb-4'>
-					<label className='fw-bold fs-7 text-muted d-block mb-1'>{label}</label>
-					<span className='badge badge-light-secondary py-2 px-3'>Not Provided</span>
+				<div className='gz-inq-attachment-card'>
+					<div
+						className='gz-inq-attachment-icon-box'
+						style={{ background: '#F1F5F9', color: '#94A3B8', borderColor: '#E2E8F0' }}>
+						<FontAwesomeIcon icon={icon} />
+					</div>
+					<div className='gz-inq-attachment-meta'>
+						<span className='gz-inq-attachment-label'>{label}</span>
+						<span className='text-muted fs-8'>Not Provided</span>
+					</div>
 				</div>
 			)
 		}
 
 		const fullUrl = getFileUrl(fileUrl)
 		const isImg = isImageFile(fullUrl)
+		const fileName = fileUrl.split('/').pop() || 'document'
 
 		return (
-			<div className='col-md-6 mb-4'>
-				<label className='fw-bold fs-7 text-gray-700 d-block mb-2'>{label}</label>
-				<div className='d-flex align-items-center gap-3 p-3 border rounded bg-light'>
-					{isImg ? (
-						<a href={fullUrl} target='_blank' rel='noreferrer'>
-							<img
-								src={fullUrl}
-								alt={label}
-								className='rounded shadow-sm'
-								style={{ width: '56px', height: '56px', objectFit: 'cover' }}
-							/>
-						</a>
-					) : (
-						<div
-							className='d-flex align-items-center justify-content-center bg-white border rounded'
-							style={{ width: '56px', height: '56px' }}>
-							<FontAwesomeIcon icon={icon} className='fs-2 text-primary' />
-						</div>
-					)}
-					<div className='flex-grow-1 overflow-hidden'>
-						<div
-							className='fw-bold text-truncate text-gray-800'
-							style={{ maxWidth: '200px' }}
-							title={fileUrl}>
-							{fileUrl.split('/').pop()}
-						</div>
-						<a
-							href={fullUrl}
-							target='_blank'
-							rel='noreferrer'
-							className='btn btn-sm btn-link p-0 text-primary fw-semibold'>
-							<FontAwesomeIcon icon={faExternalLinkAlt} className='me-1' /> View File
-						</a>
+			<div className='gz-inq-attachment-card'>
+				{isImg ? (
+					<a href={fullUrl} target='_blank' rel='noreferrer' title='View Full Image'>
+						<img
+							src={fullUrl}
+							alt={label}
+							className='gz-inq-attachment-thumb'
+						/>
+					</a>
+				) : (
+					<div className='gz-inq-attachment-icon-box'>
+						<FontAwesomeIcon icon={icon} />
 					</div>
+				)}
+				<div className='gz-inq-attachment-meta'>
+					<span className='gz-inq-attachment-label'>{label}</span>
+					<span className='gz-inq-attachment-name' title={fileName}>
+						{fileName}
+					</span>
+				</div>
+				<div className='gz-inq-attachment-actions'>
+					<a
+						href={fullUrl}
+						target='_blank'
+						rel='noreferrer'
+						className='gz-inq-action-btn'
+						title='View File'>
+						<FontAwesomeIcon icon={faEye} />
+					</a>
 					<a
 						href={fullUrl}
 						target='_blank'
 						rel='noreferrer'
 						download
-						className='btn btn-sm btn-icon btn-light-primary'>
+						className='gz-inq-action-btn'
+						title='Download'>
 						<FontAwesomeIcon icon={faDownload} />
 					</a>
 				</div>
@@ -193,64 +271,103 @@ const ContactInquiryView: React.FC = () => {
 		)
 	}
 
+	const applicantName = inquiryItem?.name || details?.full_name || 'Guest User'
+	const initials = applicantName
+		.split(' ')
+		.map((n: string) => n[0])
+		.filter(Boolean)
+		.join('')
+		.substring(0, 2)
+		.toUpperCase() || 'CI'
+
+	const formattedDate = inquiryItem?.createdAt
+		? DayJS(inquiryItem.createdAt).format('DD MMM YYYY, hh:mm A')
+		: 'N/A'
+
+	const primaryMobile = inquiryItem?.mobile || details?.mobile || ''
+	const primaryEmail = inquiryItem?.email || details?.email || ''
+	const whatsappNumber = details?.whatsapp || primaryMobile
+
 	return (
-		<div className='gz-mgmt-container'>
+		<div className='gz-inq-container'>
 			<PageTitle breadcrumbs={[]}>
 				{isPartnerProgram ? 'RAG Pro Partner Application' : 'Contact Inquiry'}
 			</PageTitle>
 
-			{/* Breadcrumb */}
+			{/* Breadcrumb Navigation */}
 			<div className='gz-mgmt-breadcrumb'>
-				<Link to='/rag/dashboard'>Dashboard</Link>
+				<Link to={`${basePath}/dashboard`}>Dashboard</Link>
 				<span className='sep'>&gt;</span>
-				<Link to='/rag/contact-inquiry/contact'>Contact Inquiries</Link>
+				<Link to={`${basePath}/contact-inquiry/contact`}>Contact Inquiries</Link>
 				<span className='sep'>&gt;</span>
-				<span className='current'>{inquiryItem?.name || details?.full_name || 'Inquiry Details'}</span>
+				<span className='current'>{applicantName}</span>
 			</div>
 
-			{/* Header */}
-			<div className='gz-mgmt-header mb-6'>
-				<div className='gz-mgmt-title-wrap'>
-					<div className='d-flex align-items-center gap-3'>
-						<h1 className='gz-mgmt-title'>
-							{isPartnerProgram ? 'RAG Pro Partner Application' : 'Contact Inquiry Details'}
-						</h1>
-						{inquiryItem?.read_receipt ? (
-							<span className='badge bg-light-success text-success fw-bold px-3 py-1'>Read</span>
-						) : (
-							<span className='badge bg-light-danger text-danger fw-bold px-3 py-1'>Unread</span>
-						)}
+			{/* Hero / Header Card */}
+			<div className='gz-inq-hero-card'>
+				<div className='gz-inq-hero-left'>
+					<div className='gz-inq-avatar'>{initials}</div>
+					<div className='gz-inq-hero-meta'>
+						<div className='gz-inq-hero-title-row'>
+							<h1 className='gz-inq-hero-name'>{applicantName}</h1>
+							{inquiryItem?.read_receipt ? (
+								<span className='gz-inq-badge-read'>
+									<FontAwesomeIcon icon={faCheckCircle} />
+									Read
+								</span>
+							) : (
+								<span className='gz-inq-badge-unread'>
+									<FontAwesomeIcon icon={faClock} />
+									Unread
+								</span>
+							)}
+							{isPartnerProgram && (
+								<span className='gz-inq-badge-type'>
+									<FontAwesomeIcon icon={faAward} className='me-1' />
+									Partner Program
+								</span>
+							)}
+						</div>
+						<p className='gz-inq-hero-subtitle'>
+							<FontAwesomeIcon icon={faCalendarAlt} className='text-muted' />
+							Submitted on <strong>{formattedDate}</strong>
+							{inquiryItem?.source && (
+								<>
+									<span className='mx-1'>•</span>
+									<span className='text-muted'>via website form</span>
+								</>
+							)}
+						</p>
 					</div>
-					<p className='gz-mgmt-subtitle'>
-						Submitted on{' '}
-						<span className='fw-bold text-dark'>
-							{inquiryItem?.createdAt
-								? DayJS(inquiryItem.createdAt).format('DD/MM/YYYY hh:mm:ss A')
-								: 'N/A'}
-						</span>
-					</p>
 				</div>
 
-				<div className='d-flex align-items-center gap-3 flex-wrap'>
-					<Link to='/rag/contact-inquiry/contact' className='gz-mgmt-btn-secondary'>
+				<div className='gz-inq-hero-actions'>
+					<Link to={`${basePath}/contact-inquiry/contact`} className='gz-mgmt-btn-secondary'>
 						<FontAwesomeIcon icon={faArrowLeft} />
 						<span>Back to Inquiries</span>
 					</Link>
 
+					<button
+						type='button'
+						className='gz-mgmt-btn-secondary'
+						onClick={copyFullSummary}
+						title='Copy all details to clipboard'>
+						<FontAwesomeIcon icon={faCopy} />
+						<span>Copy Info</span>
+					</button>
+
 					{inquiryItem?.read_receipt ? (
 						<button
 							type='button'
-							className='btn btn-light-danger text-danger fw-bold d-flex align-items-center gap-2'
-							style={{ borderRadius: '10px', height: '40px', padding: '0 18px', border: '1px solid #FECACA' }}
+							className='btn-gz-mark-unread'
 							onClick={handleMarkAsUnread}>
-							<FontAwesomeIcon icon={faCheck} />
+							<FontAwesomeIcon icon={faRotateLeft} />
 							<span>Mark as Unread</span>
 						</button>
 					) : (
 						<button
 							type='button'
-							className='btn text-white fw-bold d-flex align-items-center gap-2'
-							style={{ borderRadius: '10px', height: '40px', padding: '0 18px', backgroundColor: '#D97706', border: 'none' }}
+							className='btn-gz-mark-read'
 							onClick={handleMarkAsRead}>
 							<FontAwesomeIcon icon={faCheck} />
 							<span>Mark as Read</span>
@@ -259,756 +376,550 @@ const ContactInquiryView: React.FC = () => {
 				</div>
 			</div>
 
-			<div>
-				{/* Primary Summary Overview */}
-				<div className='gz-mgmt-card mb-6'>
-					<div className='p-6'>
-						<div className='row g-4'>
-							<div className='col-md-3 col-sm-6'>
-								<div
-									className='p-4 rounded-3 h-100'
-									style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
-									<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>
-										Applicant Name
-									</span>
-									<span className='fs-6 fw-bold text-dark'>
-										{inquiryItem?.name || details?.full_name || 'N/A'}
-									</span>
-								</div>
-							</div>
-							<div className='col-md-3 col-sm-6'>
-								<div
-									className='p-4 rounded-3 h-100'
-									style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
-									<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>
-										Email Address
-									</span>
-									<a
-										href={`mailto:${inquiryItem?.email || details?.email}`}
-										className='fs-6 fw-bold text-primary text-truncate d-block'>
-										{inquiryItem?.email || details?.email || 'N/A'}
-									</a>
-								</div>
-							</div>
-							<div className='col-md-3 col-sm-6'>
-								<div
-									className='p-4 rounded-3 h-100'
-									style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
-									<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>
-										Mobile Number
-									</span>
-									<a
-										href={`tel:${inquiryItem?.mobile || details?.mobile}`}
-										className='fs-6 fw-bold text-dark d-block font-monospace'>
-										{inquiryItem?.mobile || details?.mobile || 'N/A'}
-									</a>
-								</div>
-							</div>
-							<div className='col-md-3 col-sm-6'>
-								<div
-									className='p-4 rounded-3 h-100'
-									style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
-									<span className='text-muted fs-8 text-uppercase fw-bolder d-block mb-1'>
-										Subject / Program
-									</span>
-									<span className='fs-6 fw-bold text-dark'>
-										{inquiryItem?.subject || 'RAG Pro Partner Program'}
-									</span>
-								</div>
-							</div>
+			{/* 4-Column Overview Quick Contact Cards */}
+			<div className='gz-inq-overview-grid'>
+				<div className='gz-inq-overview-card'>
+					<div className='gz-inq-card-icon blue'>
+						<FontAwesomeIcon icon={faUser} />
+					</div>
+					<div className='gz-inq-card-content'>
+						<span className='gz-inq-card-label'>Applicant Name</span>
+						<div className='gz-inq-card-val-row'>
+							<span className='gz-inq-card-val' title={applicantName}>
+								{applicantName}
+							</span>
+							<button
+								type='button'
+								className='gz-copy-btn'
+								title='Copy Name'
+								onClick={() => copyToClipboard(applicantName, 'Name copied!')}>
+								<FontAwesomeIcon icon={faCopy} />
+							</button>
 						</div>
 					</div>
 				</div>
 
-				{/* RAG Pro Partner Program Sections */}
-				{isPartnerProgram && details ? (
-					<div className='partner-program-details'>
-						{/* SECTION 1: Personal Information */}
-						<div className='card card-bordered mb-6 shadow-xs'>
-							<div className='card-header bg-white min-h-50px py-3'>
-								<h5 className='card-title fw-bold text-gray-800 m-0'>
-									<FontAwesomeIcon icon={faUser} className='text-primary me-2' />
-									Section 1: Personal Information
-								</h5>
-							</div>
-							<div className='card-body'>
-								<div className='row'>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Full Name'
-										placeholder='Full Name'
-										type='text'
-										name='name'
-										htmlFor='name'
-										value={details?.full_name || inquiryItem?.name || ''}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Date of Birth'
-										placeholder='Date of Birth'
-										type='text'
-										name='dob'
-										htmlFor='dob'
-										value={details?.dob || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Gender'
-										placeholder='Gender'
-										type='text'
-										name='gender'
-										htmlFor='gender'
-										value={details?.gender || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<CopyableInput
-										className='col-md-4 fv-row'
-										label='Mobile Number'
-										placeholder='Mobile'
-										type='text'
-										name='mobile'
-										htmlFor='mobile'
-										value={details?.mobile || inquiryItem?.mobile || ''}
-										onChange={() => {}}
-										disabled
-									/>
-									<CopyableInput
-										className='col-md-4 fv-row'
-										label='WhatsApp Number'
-										placeholder='WhatsApp'
-										type='text'
-										name='whatsapp'
-										htmlFor='whatsapp'
-										value={details?.whatsapp || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<CopyableInput
-										className='col-md-4 fv-row'
-										label='Email Address'
-										placeholder='Email'
-										type='email'
-										name='email'
-										htmlFor='email'
-										value={details?.email || inquiryItem?.email || ''}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-6 fv-row'
-										label='Complete Residential Address'
-										placeholder='Address'
-										type='text'
-										name='address'
-										htmlFor='address'
-										value={details?.address || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-2 fv-row'
-										label='City'
-										placeholder='City'
-										type='text'
-										name='city'
-										htmlFor='city'
-										value={details?.city || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-2 fv-row'
-										label='State'
-										placeholder='State'
-										type='text'
-										name='state'
-										htmlFor='state'
-										value={details?.state || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-2 fv-row'
-										label='PIN Code'
-										placeholder='PIN'
-										type='text'
-										name='pincode'
-										htmlFor='pincode'
-										value={details?.pincode || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-								</div>
+				<div className='gz-inq-overview-card'>
+					<div className='gz-inq-card-icon purple'>
+						<FontAwesomeIcon icon={faEnvelope} />
+					</div>
+					<div className='gz-inq-card-content'>
+						<span className='gz-inq-card-label'>Email Address</span>
+						<div className='gz-inq-card-val-row'>
+							{primaryEmail ? (
+								<>
+									<a
+										href={`mailto:${primaryEmail}`}
+										className='gz-inq-card-val text-primary'
+										title={primaryEmail}>
+										{primaryEmail}
+									</a>
+									<button
+										type='button'
+										className='gz-copy-btn'
+										title='Copy Email'
+										onClick={() => copyToClipboard(primaryEmail, 'Email copied!')}>
+										<FontAwesomeIcon icon={faCopy} />
+									</button>
+								</>
+							) : (
+								<span className='text-muted fs-7'>N/A</span>
+							)}
+						</div>
+					</div>
+				</div>
 
-								<div className='row mt-4 pt-3 border-top'>
+				<div className='gz-inq-overview-card'>
+					<div className='gz-inq-card-icon green'>
+						<FontAwesomeIcon icon={faPhone} />
+					</div>
+					<div className='gz-inq-card-content'>
+						<span className='gz-inq-card-label'>Contact Phone</span>
+						<div className='gz-inq-card-val-row'>
+							{primaryMobile ? (
+								<>
+									<a
+										href={`tel:${primaryMobile}`}
+										className='gz-inq-card-val'
+										title={primaryMobile}>
+										{primaryMobile}
+									</a>
+									<button
+										type='button'
+										className='gz-copy-btn'
+										title='Copy Phone'
+										onClick={() => copyToClipboard(primaryMobile, 'Phone copied!')}>
+										<FontAwesomeIcon icon={faCopy} />
+									</button>
+									{whatsappNumber && (
+										<a
+											href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`}
+											target='_blank'
+											rel='noreferrer'
+											className='gz-copy-btn text-success'
+											title='Open WhatsApp'>
+											<FontAwesomeIcon icon={faWhatsapp} />
+										</a>
+									)}
+								</>
+							) : (
+								<span className='text-muted fs-7'>N/A</span>
+							)}
+						</div>
+					</div>
+				</div>
+
+				<div className='gz-inq-overview-card'>
+					<div className='gz-inq-card-icon amber'>
+						<FontAwesomeIcon icon={faBriefcase} />
+					</div>
+					<div className='gz-inq-card-content'>
+						<span className='gz-inq-card-label'>Inquiry Subject / Topic</span>
+						<div className='gz-inq-card-val-row'>
+							<span
+								className='gz-inq-card-val text-dark fw-bold'
+								title={inquiryItem?.subject || 'General Inquiry'}>
+								{inquiryItem?.subject || (isPartnerProgram ? 'RAG Pro Partner Program' : 'General Inquiry')}
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* RAG Pro Partner Program Detailed Sections */}
+			{isPartnerProgram && details ? (
+				<div className='partner-program-sections'>
+					{/* SECTION 1: Personal Information */}
+					<div className='gz-inq-card'>
+						<div className='gz-inq-card-header'>
+							<h5 className='gz-inq-card-title'>
+								<span className='gz-inq-card-title-icon blue'>
+									<FontAwesomeIcon icon={faUser} />
+								</span>
+								Section 1: Personal Information
+							</h5>
+							<span className='gz-inq-badge-type'>Identity &amp; Address</span>
+						</div>
+						<div className='gz-inq-card-body'>
+							<div className='gz-inq-tiles-grid'>
+								{renderInfoTile('Full Legal Name', details?.full_name || inquiryItem?.name, { copyable: true })}
+								{renderInfoTile('Date of Birth', details?.dob)}
+								{renderInfoTile('Gender', details?.gender)}
+								{renderInfoTile('Mobile Number', details?.mobile || inquiryItem?.mobile, {
+									copyable: true,
+									href: (details?.mobile || inquiryItem?.mobile) ? `tel:${details?.mobile || inquiryItem?.mobile}` : undefined,
+									isMonospace: true,
+								})}
+								{renderInfoTile('WhatsApp Number', details?.whatsapp, {
+									copyable: true,
+									href: details?.whatsapp ? `https://wa.me/${String(details.whatsapp).replace(/[^0-9]/g, '')}` : undefined,
+									isMonospace: true,
+								})}
+								{renderInfoTile('Email Address', details?.email || inquiryItem?.email, {
+									copyable: true,
+									href: (details?.email || inquiryItem?.email) ? `mailto:${details?.email || inquiryItem?.email}` : undefined,
+								})}
+								{renderInfoTile('Residential Address', details?.address, { span: 2, copyable: true })}
+								{renderInfoTile('City', details?.city)}
+								{renderInfoTile('State', details?.state)}
+								{renderInfoTile('PIN Code', details?.pincode, { isMonospace: true })}
+							</div>
+
+							{(details?.photo_url || details?.photo || details?.id_proof_url || details?.id_proof) && (
+								<div className='gz-inq-attachments-grid'>
 									{renderFileAttachment(
 										'Passport-Size Photograph',
 										details?.photo_url || details?.photo,
 										faIdCard
 									)}
 									{renderFileAttachment(
-										'Aadhaar Card / Valid Government-Issued ID Proof',
+										'Aadhaar / Government ID Proof',
 										details?.id_proof_url || details?.id_proof,
 										faIdCard
 									)}
 								</div>
-							</div>
+							)}
 						</div>
+					</div>
 
-						{/* SECTION 2: Fitness & Professional Certifications */}
-						<div className='card card-bordered mb-6 shadow-xs'>
-							<div className='card-header bg-white min-h-50px py-3'>
-								<h5 className='card-title fw-bold text-gray-800 m-0'>
-									<FontAwesomeIcon icon={faCertificate} className='text-success me-2' />
-									Section 2: Fitness & Professional Certifications
-								</h5>
+					{/* SECTION 2: Fitness & Professional Certifications */}
+					<div className='gz-inq-card'>
+						<div className='gz-inq-card-header'>
+							<h5 className='gz-inq-card-title'>
+								<span className='gz-inq-card-title-icon green'>
+									<FontAwesomeIcon icon={faCertificate} />
+								</span>
+								Section 2: Fitness &amp; Professional Certifications
+							</h5>
+							<span className='gz-inq-badge-type'>Qualifications</span>
+						</div>
+						<div className='gz-inq-card-body'>
+							<div className='gz-inq-tiles-grid'>
+								{renderInfoTile('Higher Education Qualification', details?.higher_education)}
+								{renderInfoTile('Nutrition / Sports Science Specialization', details?.additional_qualifications)}
+								{renderInfoTile('Additional Fitness Certifications', details?.additional_certifications, { span: 3 })}
 							</div>
-							<div className='card-body'>
-								<div className='row'>
-									<InputField
-										className='col-md-6 fv-row'
-										label='Higher Education Qualification'
-										placeholder='Higher Education'
-										type='text'
-										name='higher_education'
-										htmlFor='higher_education'
-										value={details?.higher_education || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-6 fv-row'
-										label='Additional Qualifications in Nutrition, Sports Science, etc.'
-										placeholder='Qualifications'
-										type='text'
-										name='additional_qualifications'
-										htmlFor='additional_qualifications'
-										value={details?.additional_qualifications || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<div className='col-md-12 mb-3'>
-										<label className='fw-bold fs-6 mb-2'>
-											Additional Fitness Certifications (if any)
-										</label>
-										<div className='form-control bg-light'>
-											{details?.additional_certifications || 'None specified'}
-										</div>
-									</div>
-								</div>
 
-								<div className='row mt-4 pt-3 border-top'>
+							{(details?.certification_url || details?.certification_file) && (
+								<div className='gz-inq-attachments-grid'>
 									{renderFileAttachment(
-										'Fitness Certification Certificate',
+										'Fitness Certification Document / Certificate',
 										details?.certification_url || details?.certification_file,
 										faCertificate
 									)}
 								</div>
-							</div>
+							)}
 						</div>
+					</div>
 
-						{/* SECTION 3: Professional Details */}
-						<div className='card card-bordered mb-6 shadow-xs'>
-							<div className='card-header bg-white min-h-50px py-3'>
-								<h5 className='card-title fw-bold text-gray-800 m-0'>
-									<FontAwesomeIcon icon={faBriefcase} className='text-warning me-2' />
-									Section 3: Professional Details
-								</h5>
-							</div>
-							<div className='card-body'>
-								<div className='row'>
-									<div className='col-md-4 mb-4'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											Employment Type
-										</label>
-										<span className='badge badge-light-primary fs-7 px-3 py-2'>
-											{details?.employment_type || 'N/A'}
-										</span>
-									</div>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Total Years of Experience'
-										placeholder='Experience'
-										type='text'
-										name='experience_years'
-										htmlFor='experience_years'
-										value={details?.experience_years ? `${details.experience_years} Years` : 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Number of Active Clients Currently'
-										placeholder='Clients'
-										type='text'
-										name='active_clients'
-										htmlFor='active_clients'
-										value={details?.active_clients || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<div className='col-md-4 mb-4'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											Currently Recommend / Sell Supplements?
-										</label>
-										<span
-											className={`badge fs-7 px-3 py-2 ${
-												details?.recommend_supplements === 'Yes' ||
-												details?.recommend_supplements === true
-													? 'badge-light-success'
-													: 'badge-light-danger'
-											}`}>
-											{details?.recommend_supplements || 'No'}
-										</span>
-									</div>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Supplement Brands Currently Recommended/Sold'
-										placeholder='Brands'
-										type='text'
-										name='supplement_brands'
-										htmlFor='supplement_brands'
-										value={details?.supplement_brands || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Monthly Client Purchases Through Recommendations'
-										placeholder='Purchases'
-										type='text'
-										name='monthly_supplement_purchases'
-										htmlFor='monthly_supplement_purchases'
-										value={details?.monthly_supplement_purchases || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<div className='col-md-6 mb-3'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											Primary Client Category
-										</label>
-										<span className='badge badge-light-info fs-7 px-3 py-2'>
-											{details?.client_category || 'N/A'}
-										</span>
-									</div>
-								</div>
-							</div>
+					{/* SECTION 3: Professional Details */}
+					<div className='gz-inq-card'>
+						<div className='gz-inq-card-header'>
+							<h5 className='gz-inq-card-title'>
+								<span className='gz-inq-card-title-icon amber'>
+									<FontAwesomeIcon icon={faBriefcase} />
+								</span>
+								Section 3: Professional Experience &amp; Practice
+							</h5>
+							<span className='gz-inq-badge-type'>Track Record</span>
 						</div>
-
-						{/* SECTION 4: Social Media & Online Presence */}
-						<div className='card card-bordered mb-6 shadow-xs'>
-							<div className='card-header bg-white min-h-50px py-3'>
-								<h5 className='card-title fw-bold text-gray-800 m-0'>
-									<FontAwesomeIcon icon={faShareAlt} className='text-info me-2' />
-									Section 4: Social Media & Online Presence
-								</h5>
-							</div>
-							<div className='card-body'>
-								<div className='row'>
-									{details?.social_platform ? (
-										<div className='col-md-6 mb-3'>
-											<label className='fw-bold fs-7 text-muted d-block mb-1'>
-												Selected Social Platform & Link
-											</label>
-											<div className='d-flex align-items-center gap-2 flex-wrap'>
-												<span className='badge badge-light-primary fw-bolder fs-7 px-3 py-2'>
-													{details.social_platform}
-												</span>
-												{details?.social_link ? (
-													<a
-														href={
-															details.social_link.startsWith('http')
-																? details.social_link
-																: details.social_platform === 'Instagram'
-																? `https://instagram.com/${details.social_link.replace('@', '')}`
-																: `https://${details.social_link}`
-														}
-														target='_blank'
-														rel='noreferrer'
-														className='fw-bold text-primary text-truncate d-block'>
-														{details.social_link}{' '}
-														<FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-													</a>
-												) : (
-													<span className='text-muted'>No link provided</span>
-												)}
-											</div>
-										</div>
-									) : (
-										<>
-											<div className='col-md-4 mb-3'>
-												<label className='fw-bold fs-7 text-muted d-block mb-1'>
-													Instagram Profile
-												</label>
-												{details?.instagram ? (
-													<a
-														href={
-															details.instagram.startsWith('http')
-																? details.instagram
-																: `https://instagram.com/${details.instagram.replace('@', '')}`
-														}
-														target='_blank'
-														rel='noreferrer'
-														className='fw-bold text-primary text-truncate d-block'>
-														{details.instagram} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-													</a>
-												) : (
-													<span className='text-muted'>N/A</span>
-												)}
-											</div>
-											<div className='col-md-4 mb-3'>
-												<label className='fw-bold fs-7 text-muted d-block mb-1'>
-													Facebook Profile / Page
-												</label>
-												{details?.facebook ? (
-													<a
-														href={
-															details.facebook.startsWith('http')
-																? details.facebook
-																: `https://${details.facebook}`
-														}
-														target='_blank'
-														rel='noreferrer'
-														className='fw-bold text-primary text-truncate d-block'>
-														{details.facebook} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-													</a>
-												) : (
-													<span className='text-muted'>N/A</span>
-												)}
-											</div>
-											<div className='col-md-4 mb-3'>
-												<label className='fw-bold fs-7 text-muted d-block mb-1'>
-													YouTube Channel
-												</label>
-												{details?.youtube ? (
-													<a
-														href={
-															details.youtube.startsWith('http')
-																? details.youtube
-																: `https://${details.youtube}`
-														}
-														target='_blank'
-														rel='noreferrer'
-														className='fw-bold text-primary text-truncate d-block'>
-														{details.youtube} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-													</a>
-												) : (
-													<span className='text-muted'>N/A</span>
-												)}
-											</div>
-											<div className='col-md-4 mb-3'>
-												<label className='fw-bold fs-7 text-muted d-block mb-1'>
-													LinkedIn Profile
-												</label>
-												{details?.linkedin ? (
-													<a
-														href={
-															details.linkedin.startsWith('http')
-																? details.linkedin
-																: `https://${details.linkedin}`
-														}
-														target='_blank'
-														rel='noreferrer'
-														className='fw-bold text-primary text-truncate d-block'>
-														{details.linkedin} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-													</a>
-												) : (
-													<span className='text-muted'>N/A</span>
-												)}
-											</div>
-										</>
-									)}
-									<div className='col-md-4 mb-3'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											Website / Online Coaching Profile
-										</label>
-										{details?.website ? (
-											<a
-												href={
-													details.website.startsWith('http')
-														? details.website
-														: `https://${details.website}`
-												}
-												target='_blank'
-												rel='noreferrer'
-												className='fw-bold text-primary text-truncate d-block'>
-												{details.website} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-											</a>
-										) : (
-											<span className='text-muted'>N/A</span>
-										)}
-									</div>
-									<div className='col-md-4 mb-3'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											Other Professional Link
-										</label>
-										{details?.other_social ? (
-											<a
-												href={
-													details.other_social.startsWith('http')
-														? details.other_social
-														: `https://${details.other_social}`
-												}
-												target='_blank'
-												rel='noreferrer'
-												className='fw-bold text-primary text-truncate d-block'>
-												{details.other_social} <FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
-											</a>
-										) : (
-											<span className='text-muted'>N/A</span>
-										)}
-									</div>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Instagram Followers (Approx)'
-										placeholder='Followers'
-										type='text'
-										name='instagram_followers'
-										htmlFor='instagram_followers'
-										value={details?.instagram_followers || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Monthly Reach / Engagement'
-										placeholder='Reach'
-										type='text'
-										name='monthly_reach'
-										htmlFor='monthly_reach'
-										value={details?.monthly_reach || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<div className='col-md-4 mb-3'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											Regularly Post Fitness/Nutrition Content?
-										</label>
-										<span
-											className={`badge fs-7 px-3 py-2 ${
-												details?.regular_posts === 'Yes' || details?.regular_posts === true
-													? 'badge-light-success'
-													: 'badge-light-danger'
-											}`}>
-											{details?.regular_posts || 'No'}
-										</span>
-									</div>
-								</div>
-
-								{(details?.portfolio_url || details?.portfolio_file) && (
-									<div className='row mt-4 pt-3 border-top'>
-										{renderFileAttachment(
-											'Professional Portfolio or Client Transformation Work',
-											details?.portfolio_url || details?.portfolio_file,
-											faFilePdf
-										)}
-									</div>
-								)}
-							</div>
-						</div>
-
-						{/* SECTION 5: Business Potential & Supplement Sales */}
-						<div className='card card-bordered mb-6 shadow-xs'>
-							<div className='card-header bg-white min-h-50px py-3'>
-								<h5 className='card-title fw-bold text-gray-800 m-0'>
-									<FontAwesomeIcon icon={faAward} className='text-danger me-2' />
-									Section 5: Business Potential & Supplement Sales
-								</h5>
-							</div>
-							<div className='card-body'>
-								<div className='row'>
-									<div className='col-md-12 mb-4'>
-										<label className='fw-bold fs-7 text-muted d-block mb-2'>
-											How Do You Currently Acquire Clients?
-										</label>
-										<div className='d-flex flex-wrap gap-2'>
-											{Array.isArray(details?.client_acquisition) ? (
-												details.client_acquisition.map((item: string, idx: number) => (
-													<span
-														key={idx}
-														className='badge badge-light-primary fs-7 py-2 px-3'>
-														{item}
-													</span>
-												))
-											) : details?.client_acquisition ? (
-												<span className='badge badge-light-primary fs-7 py-2 px-3'>
-													{details.client_acquisition}
-												</span>
-											) : (
-												<span className='text-muted'>N/A</span>
-											)}
-										</div>
-									</div>
-
-									<InputField
-										className='col-md-4 fv-row'
-										label='Clients Interacted With Monthly'
-										placeholder='Interactions'
-										type='text'
-										name='monthly_client_interactions'
-										htmlFor='monthly_client_interactions'
-										value={details?.monthly_client_interactions || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Clients Currently Using Supplements'
-										placeholder='Supplement users'
-										type='text'
-										name='clients_using_supplements'
-										htmlFor='clients_using_supplements'
-										value={details?.clients_using_supplements || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<InputField
-										className='col-md-4 fv-row'
-										label='Most Common Supplement Purchased'
-										placeholder='Common supplement'
-										type='text'
-										name='common_supplement_purchased'
-										htmlFor='common_supplement_purchased'
-										value={details?.common_supplement_purchased || 'N/A'}
-										onChange={() => {}}
-										disabled
-									/>
-									<div className='col-md-12 mb-3'>
-										<label className='fw-bold fs-7 text-muted d-block mb-1'>
-											Estimated Monthly Supplement Sales Potential
-										</label>
-										<span className='badge badge-success fs-6 py-2 px-4'>
-											{details?.sales_potential || 'N/A'}
-										</span>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						{/* SECTION 6: Verification & Declaration */}
-						<div className='card card-bordered mb-6 shadow-xs'>
-							<div className='card-header bg-white min-h-50px py-3'>
-								<h5 className='card-title fw-bold text-gray-800 m-0'>
-									<FontAwesomeIcon icon={faCheckCircle} className='text-primary me-2' />
-									Section 6: Verification & Declaration
-								</h5>
-							</div>
-							<div className='card-body'>
-								<div className='d-flex flex-column gap-3'>
-									<div className='d-flex align-items-center gap-2'>
-										<FontAwesomeIcon
-											icon={details?.declaration_accurate ? faCheckCircle : faCheck}
-											className={
-												details?.declaration_accurate
-													? 'text-success fs-5'
-													: 'text-muted fs-5'
-											}
-										/>
-										<span className='fs-6 text-gray-800'>
-											Confirmed that the submitted information is accurate
-										</span>
-										<span className='badge badge-light-success ms-auto'>Agreed</span>
-									</div>
-									<div className='d-flex align-items-center gap-2'>
-										<FontAwesomeIcon
-											icon={details?.declaration_verify ? faCheckCircle : faCheck}
-											className={
-												details?.declaration_verify
-													? 'text-success fs-5'
-													: 'text-muted fs-5'
-											}
-										/>
-										<span className='fs-6 text-gray-800'>
-											Authorized RAG Nutrition to verify professional certifications & profile
-										</span>
-										<span className='badge badge-light-success ms-auto'>Agreed</span>
-									</div>
-									<div className='d-flex align-items-center gap-2'>
-										<FontAwesomeIcon
-											icon={details?.declaration_privacy ? faCheckCircle : faCheck}
-											className={
-												details?.declaration_privacy
-													? 'text-success fs-5'
-													: 'text-muted fs-5'
-											}
-										/>
-										<span className='fs-6 text-gray-800'>
-											Consented to information handling in accordance with privacy policy
-										</span>
-										<span className='badge badge-light-success ms-auto'>Agreed</span>
-									</div>
-								</div>
+						<div className='gz-inq-card-body'>
+							<div className='gz-inq-tiles-grid'>
+								{renderInfoTile('Employment Type', details?.employment_type, {
+									badgeClass: 'gz-inq-badge-type',
+								})}
+								{renderInfoTile('Total Experience', details?.experience_years ? `${details.experience_years} Years` : 'N/A')}
+								{renderInfoTile('Active Clients Count', details?.active_clients, { isMonospace: true })}
+								{renderInfoTile('Recommends Supplements Currently?', details?.recommend_supplements ? 'Yes' : 'No', {
+									badgeClass: (details?.recommend_supplements === 'Yes' || details?.recommend_supplements === true)
+										? 'gz-inq-badge-read'
+										: 'gz-inq-badge-unread',
+								})}
+								{renderInfoTile('Recommended Supplement Brands', details?.supplement_brands)}
+								{renderInfoTile('Monthly Supplement Purchases', details?.monthly_supplement_purchases)}
+								{renderInfoTile('Primary Client Category', details?.client_category, {
+									badgeClass: 'gz-inq-badge-type',
+								})}
 							</div>
 						</div>
 					</div>
-				) : null}
 
-				{/* Standard Message and Source Section */}
-				<div className='card card-bordered mb-6 shadow-xs'>
-					<div className='card-header bg-white min-h-50px py-3'>
-						<h5 className='card-title fw-bold text-gray-800 m-0'>
-							<FontAwesomeIcon icon={faEnvelope} className='text-primary me-2' />
-							Submission Source & Raw Overview
-						</h5>
-					</div>
-					<div className='card-body'>
-						<div className='row'>
-							<div className='col-md-12 mb-4'>
-								<label htmlFor='source' className='fw-bold fs-6 mb-2 text-gray-700'>
-									Source / Origin Page
-								</label>
-								<div className='form-control bg-light'>
+					{/* SECTION 4: Social Media & Online Presence */}
+					<div className='gz-inq-card'>
+						<div className='gz-inq-card-header'>
+							<h5 className='gz-inq-card-title'>
+								<span className='gz-inq-card-title-icon purple'>
+									<FontAwesomeIcon icon={faShareNodes} />
+								</span>
+								Section 4: Social Media &amp; Online Footprint
+							</h5>
+							<span className='gz-inq-badge-type'>Audience Reach</span>
+						</div>
+						<div className='gz-inq-card-body'>
+							<div className='gz-inq-tiles-grid mb-4'>
+								{renderInfoTile('Instagram Followers (Approx)', details?.instagram_followers, { isMonospace: true })}
+								{renderInfoTile('Monthly Reach / Engagement', details?.monthly_reach, { isMonospace: true })}
+								{renderInfoTile('Regularly Posts Fitness/Nutrition Content?', details?.regular_posts ? 'Yes' : 'No', {
+									badgeClass: (details?.regular_posts === 'Yes' || details?.regular_posts === true)
+										? 'gz-inq-badge-read'
+										: 'gz-inq-badge-unread',
+								})}
+							</div>
+
+							{/* Social Profiles Grid */}
+							<div className='gz-inq-social-grid'>
+								{details?.social_platform && details?.social_link && (
 									<a
+										href={
+											details.social_link.startsWith('http')
+												? details.social_link
+												: `https://${details.social_link.replace('@', '')}`
+										}
 										target='_blank'
 										rel='noreferrer'
-										href={inquiryItem?.source}
-										className='text-primary fw-semibold'>
-										{inquiryItem?.source || 'N/A'}{' '}
-										<FontAwesomeIcon icon={faExternalLinkAlt} className='ms-1 fs-8' />
+										className='gz-inq-social-pill'>
+										<FontAwesomeIcon icon={faGlobe} className='text-primary' />
+										<span>{details.social_platform}: {details.social_link}</span>
+										<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-8 ms-1' />
 									</a>
+								)}
+
+								{details?.instagram && (
+									<a
+										href={
+											details.instagram.startsWith('http')
+												? details.instagram
+												: `https://instagram.com/${details.instagram.replace('@', '')}`
+										}
+										target='_blank'
+										rel='noreferrer'
+										className='gz-inq-social-pill'>
+										<FontAwesomeIcon icon={faInstagram} style={{ color: '#E1306C' }} />
+										<span>Instagram: {details.instagram}</span>
+										<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-8 ms-1' />
+									</a>
+								)}
+
+								{details?.facebook && (
+									<a
+										href={details.facebook.startsWith('http') ? details.facebook : `https://${details.facebook}`}
+										target='_blank'
+										rel='noreferrer'
+										className='gz-inq-social-pill'>
+										<FontAwesomeIcon icon={faFacebook} style={{ color: '#1877F2' }} />
+										<span>Facebook: {details.facebook}</span>
+										<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-8 ms-1' />
+									</a>
+								)}
+
+								{details?.youtube && (
+									<a
+										href={details.youtube.startsWith('http') ? details.youtube : `https://${details.youtube}`}
+										target='_blank'
+										rel='noreferrer'
+										className='gz-inq-social-pill'>
+										<FontAwesomeIcon icon={faYoutube} style={{ color: '#FF0000' }} />
+										<span>YouTube Channel</span>
+										<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-8 ms-1' />
+									</a>
+								)}
+
+								{details?.linkedin && (
+									<a
+										href={details.linkedin.startsWith('http') ? details.linkedin : `https://${details.linkedin}`}
+										target='_blank'
+										rel='noreferrer'
+										className='gz-inq-social-pill'>
+										<FontAwesomeIcon icon={faLinkedin} style={{ color: '#0A66C2' }} />
+										<span>LinkedIn Profile</span>
+										<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-8 ms-1' />
+									</a>
+								)}
+
+								{details?.website && (
+									<a
+										href={details.website.startsWith('http') ? details.website : `https://${details.website}`}
+										target='_blank'
+										rel='noreferrer'
+										className='gz-inq-social-pill'>
+										<FontAwesomeIcon icon={faGlobe} className='text-success' />
+										<span>Personal Website</span>
+										<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-8 ms-1' />
+									</a>
+								)}
+
+								{details?.other_social && (
+									<a
+										href={details.other_social.startsWith('http') ? details.other_social : `https://${details.other_social}`}
+										target='_blank'
+										rel='noreferrer'
+										className='gz-inq-social-pill'>
+										<FontAwesomeIcon icon={faShareAlt} className='text-muted' />
+										<span>Other Link: {details.other_social}</span>
+										<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-8 ms-1' />
+									</a>
+								)}
+							</div>
+
+							{(details?.portfolio_url || details?.portfolio_file) && (
+								<div className='gz-inq-attachments-grid mt-4'>
+									{renderFileAttachment(
+										'Professional Portfolio / Client Transformation Proof',
+										details?.portfolio_url || details?.portfolio_file,
+										faFilePdf
+									)}
+								</div>
+							)}
+						</div>
+					</div>
+
+					{/* SECTION 5: Business Potential & Supplement Sales */}
+					<div className='gz-inq-card'>
+						<div className='gz-inq-card-header'>
+							<h5 className='gz-inq-card-title'>
+								<span className='gz-inq-card-title-icon teal'>
+									<FontAwesomeIcon icon={faAward} />
+								</span>
+								Section 5: Business Potential &amp; Supplement Sales
+							</h5>
+							<span className='gz-inq-badge-type'>Revenue Projections</span>
+						</div>
+						<div className='gz-inq-card-body'>
+							<div className='mb-4'>
+								<label className='gz-inq-card-label d-block mb-2'>
+									How Do You Currently Acquire Clients?
+								</label>
+								<div className='d-flex flex-wrap gap-2'>
+									{Array.isArray(details?.client_acquisition) ? (
+										details.client_acquisition.map((item: string, idx: number) => (
+											<span key={idx} className='gz-inq-badge-type'>
+												{item}
+											</span>
+										))
+									) : details?.client_acquisition ? (
+										<span className='gz-inq-badge-type'>
+											{details.client_acquisition}
+										</span>
+									) : (
+										<span className='text-muted fs-7'>None specified</span>
+									)}
 								</div>
 							</div>
-							<TextareaField
-								className='col-md-12 fv-row'
-								label='Complete Summary Message'
-								placeholder='Message'
-								name='message'
-								htmlFor='message'
-								rows={12}
-								value={inquiryItem?.message || ''}
-								onChange={handleNotesChange}
-							/>
+
+							<div className='gz-inq-tiles-grid'>
+								{renderInfoTile('Clients Interacted With Monthly', details?.monthly_client_interactions, { isMonospace: true })}
+								{renderInfoTile('Clients Currently Using Supplements', details?.clients_using_supplements, { isMonospace: true })}
+								{renderInfoTile('Most Common Supplement Purchased', details?.common_supplement_purchased)}
+							</div>
+
+							{details?.sales_potential && (
+								<div className='gz-inq-sales-highlight'>
+									<div>
+										<div className='gz-inq-sales-label'>
+											Estimated Monthly Supplement Sales Potential
+										</div>
+										<div className='gz-inq-sales-val'>
+											{details.sales_potential}
+										</div>
+									</div>
+									<span className='gz-inq-badge-read py-2 px-3 fs-7'>
+										<FontAwesomeIcon icon={faAward} />
+										High Potential Tier
+									</span>
+								</div>
+							)}
+						</div>
+					</div>
+
+					{/* SECTION 6: Verification & Declaration */}
+					<div className='gz-inq-card'>
+						<div className='gz-inq-card-header'>
+							<h5 className='gz-inq-card-title'>
+								<span className='gz-inq-card-title-icon rose'>
+									<FontAwesomeIcon icon={faCheckCircle} />
+								</span>
+								Section 6: Verification &amp; Declaration
+							</h5>
+							<span className='gz-inq-badge-read'>
+								<FontAwesomeIcon icon={faUserCheck} />
+								Applicant Confirmed
+							</span>
+						</div>
+						<div className='gz-inq-card-body'>
+							<div className='gz-inq-declaration-row'>
+								<div className='gz-inq-check-icon'>
+									<FontAwesomeIcon icon={faCheck} />
+								</div>
+								<span className='gz-inq-check-text'>
+									Confirmed that the submitted professional and personal information is completely accurate
+								</span>
+								<span className='gz-inq-badge-read ms-auto'>Agreed</span>
+							</div>
+
+							<div className='gz-inq-declaration-row'>
+								<div className='gz-inq-check-icon'>
+									<FontAwesomeIcon icon={faCheck} />
+								</div>
+								<span className='gz-inq-check-text'>
+									Authorized RAG Nutrition to verify fitness credentials, certifications &amp; online presence
+								</span>
+								<span className='gz-inq-badge-read ms-auto'>Agreed</span>
+							</div>
+
+							<div className='gz-inq-declaration-row'>
+								<div className='gz-inq-check-icon'>
+									<FontAwesomeIcon icon={faCheck} />
+								</div>
+								<span className='gz-inq-check-text'>
+									Consented to application data processing in accordance with Gomzi / RAG privacy policies
+								</span>
+								<span className='gz-inq-badge-read ms-auto'>Agreed</span>
+							</div>
 						</div>
 					</div>
 				</div>
+			) : null}
 
-				{/* Bottom Action Footer */}
-				<div className='d-flex align-items-center gap-3 pt-6 border-top mt-6'>
-					<Link
-						to='/rag/contact-inquiry/contact'
-						className='gz-mgmt-btn-secondary'>
-						<FontAwesomeIcon icon={faArrowLeft} />
-						<span>Go Back to Inquiries</span>
-					</Link>
+			{/* Primary Message & Origin Source Section */}
+			<div className='gz-inq-card'>
+				<div className='gz-inq-card-header'>
+					<h5 className='gz-inq-card-title'>
+						<span className='gz-inq-card-title-icon blue'>
+							<FontAwesomeIcon icon={faEnvelope} />
+						</span>
+						Inquiry Message &amp; Origin Source
+					</h5>
+					{inquiryItem?.message && (
+						<button
+							type='button'
+							className='gz-mgmt-btn-secondary'
+							style={{ height: '34px', padding: '0 12px', fontSize: '12.5px' }}
+							onClick={() => copyToClipboard(inquiryItem.message, 'Message copied!')}>
+							<FontAwesomeIcon icon={faCopy} />
+							<span>Copy Message</span>
+						</button>
+					)}
+				</div>
+				<div className='gz-inq-card-body'>
+					{inquiryItem?.source && (
+						<div className='gz-inq-source-banner'>
+							<span>
+								<strong>Origin Form / Page:</strong>
+							</span>
+							<a
+								href={inquiryItem.source}
+								target='_blank'
+								rel='noreferrer'
+								className='gz-inq-source-link'>
+								{inquiryItem.source}
+								<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-8' />
+							</a>
+						</div>
+					)}
+
+					<label className='gz-inq-card-label d-block mb-2'>
+						Submitted Message Content
+					</label>
+					<div className='gz-inq-message-box'>
+						{inquiryItem?.message ? (
+							inquiryItem.message
+						) : (
+							<span className='text-muted fst-italic'>
+								No raw text message attached with this inquiry submission.
+							</span>
+						)}
+					</div>
+				</div>
+			</div>
+
+			{/* Bottom Action Bar */}
+			<div className='gz-inq-bottom-bar'>
+				<Link to={`${basePath}/contact-inquiry/contact`} className='gz-mgmt-btn-secondary'>
+					<FontAwesomeIcon icon={faArrowLeft} />
+					<span>Back to Inquiries List</span>
+				</Link>
+
+				<div className='d-flex align-items-center gap-2'>
+					<button
+						type='button'
+						className='gz-mgmt-btn-secondary'
+						onClick={copyFullSummary}>
+						<FontAwesomeIcon icon={faCopy} />
+						<span>Copy All Details</span>
+					</button>
+
 					{inquiryItem?.read_receipt ? (
 						<button
 							type='button'
-							className='btn btn-light-danger text-danger fw-bold d-flex align-items-center gap-2'
-							style={{ borderRadius: '10px', height: '40px', padding: '0 18px', border: '1px solid #FECACA' }}
+							className='btn-gz-mark-unread'
 							onClick={handleMarkAsUnread}>
-							<FontAwesomeIcon icon={faCheck} />
+							<FontAwesomeIcon icon={faRotateLeft} />
 							<span>Mark as Unread</span>
 						</button>
 					) : (
 						<button
 							type='button'
-							className='btn text-white fw-bold d-flex align-items-center gap-2'
-							style={{ borderRadius: '10px', height: '40px', padding: '0 18px', backgroundColor: '#D97706', border: 'none' }}
+							className='btn-gz-mark-read'
 							onClick={handleMarkAsRead}>
 							<FontAwesomeIcon icon={faCheck} />
 							<span>Mark as Read</span>
@@ -1021,3 +932,4 @@ const ContactInquiryView: React.FC = () => {
 }
 
 export default ContactInquiryView
+export { ContactInquiryView }

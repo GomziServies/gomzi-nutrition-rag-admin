@@ -9,6 +9,7 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -226,19 +227,21 @@ const TeamManagement: React.FC = () => {
 						</div>
 
 						{/* 4. Manager Dropdown */}
-						<div style={{ minWidth: '180px' }}>
-							<select
-								className='gz-inv-select'
-								style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+						<div style={{ minWidth: '190px' }}>
+							<SelectField
+								showLabel={false}
+								marginRemove={true}
+								className='mb-0'
+								height='38px'
+								name='manager'
 								value={selectedManagerForTask}
-								onChange={(e) => setSelectedManagerForTask(e.target.value)}>
-								<option value=''>All Managers</option>
-								{managers.map((m) => (
-									<option key={m.id} value={m.id}>
-										{m.name}
-									</option>
-								))}
-							</select>
+								defaultLabel='All Managers'
+								options={managers.map((m) => ({ label: m.name, value: m.id }))}
+								onChange={(e: any) => {
+									const val = e?.target?.value ?? e
+									setSelectedManagerForTask(val || '')
+								}}
+							/>
 						</div>
 					</div>
 

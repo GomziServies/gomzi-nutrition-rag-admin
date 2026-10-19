@@ -238,16 +238,6 @@ const HREmployeeAdd = () => {
 				</div>
 			</div>
 
-			{/* Top Bar with Back Link */}
-			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
-				<Link
-					to='/hr/employee-detail'
-					className='btn btn-sm d-inline-flex align-items-center gap-2 gz-back-btn'>
-					<i className='bi bi-arrow-left fs-6'></i>
-					<span className='fw-semibold'>Back to Directory</span>
-				</Link>
-			</div>
-
 			{/* Header Card */}
 			<div
 				className='card shadow-sm border-0 mb-6'
