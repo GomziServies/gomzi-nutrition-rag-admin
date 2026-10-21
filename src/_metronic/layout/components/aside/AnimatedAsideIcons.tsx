@@ -284,12 +284,12 @@ export const BarChart3Icon = forwardRef<
 
     return {
       startAnimation: async () => {
-        await controls.start((i) => ({
+        await controls.start((i: number) => ({
           pathLength: 0,
           opacity: 0,
           transition: { delay: i * 0.1, duration: 0.3 },
         }));
-        await controls.start((i) => ({
+        await controls.start((i: number) => ({
           pathLength: 1,
           opacity: 1,
           transition: { delay: i * 0.1, duration: 0.3 },
@@ -304,12 +304,12 @@ export const BarChart3Icon = forwardRef<
       if (isControlledRef.current) {
         onMouseEnter?.(e);
       } else {
-        await controls.start((i) => ({
+        await controls.start((i: number) => ({
           pathLength: 0,
           opacity: 0,
           transition: { delay: i * 0.1, duration: 0.3 },
         }));
-        await controls.start((i) => ({
+        await controls.start((i: number) => ({
           pathLength: 1,
           opacity: 1,
           transition: { delay: i * 0.1, duration: 0.3 },
