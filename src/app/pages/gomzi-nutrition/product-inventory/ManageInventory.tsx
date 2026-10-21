@@ -8,6 +8,8 @@ import * as XLSX from 'xlsx'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -252,29 +254,33 @@ const ManageInventory = () => {
 							className='me-0'
 						/>
 
-						{/* 3. Stock Status Dropdown Filter */}
-						<select
-							className='gz-prod-select'
-							value={selectedStockStatus}
-							onChange={(e) => handleStockStatusChange(e.target.value)}
-							title='Select Stock Status'>
-							<option value=''>All Stock Statuses</option>
-							<option value='IN_STOCK'>In Stock</option>
-							<option value='LOW_STOCK'>Low Stock</option>
-							<option value='OUT_OF_STOCK'>Out of Stock</option>
-						</select>
-					</div>
+						{/* 3. Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								onClick={downloadExcel}
+								disabled={loading || inventoryData.length === 0}
+								title='Export to Excel'
+							/>
+						</div>
 
-					<div className='gz-inv-toolbar-right'>
-						{/* Download Excel Button */}
-						<button
-							type='button'
-							className='gz-inv-export-btn'
-							onClick={downloadExcel}
-							disabled={loading || inventoryData.length === 0}
-							title='Export to Excel'>
-							<FontAwesomeIcon icon={faDownload} />
-						</button>
+						{/* 4. Stock Status Dropdown Filter */}
+						<div style={{ minWidth: '170px' }}>
+							<SelectField
+								value={selectedStockStatus}
+								onChange={(e: any) => handleStockStatusChange(e.target.value)}
+								options={[
+									{ label: 'All Stock Statuses', value: '' },
+									{ label: 'In Stock', value: 'IN_STOCK' },
+									{ label: 'Low Stock', value: 'LOW_STOCK' },
+									{ label: 'Out of Stock', value: 'OUT_OF_STOCK' },
+								]}
+								showLabel={false}
+								marginRemove={true}
+								hideDefaultOption={true}
+								searchable={false}
+								defaultLabel='All Stock Statuses'
+							/>
+						</div>
 					</div>
 				</div>
 
@@ -381,6 +387,9 @@ const ManageInventory = () => {
 						totalPages={metaData?.totalPages}
 						currentPage={pagination.page}
 						onPageChange={handlePageChange}
+						totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? inventoryData.length}
+						itemsPerPage={pagination.itemsPerPage}
+						entityName='inventory items'
 					/>
 				)}
 			</div>

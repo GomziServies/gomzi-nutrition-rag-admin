@@ -1,7 +1,7 @@
 import { faCalendarDays, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { addDays, endOfMonth, startOfMonth, subDays } from 'date-fns'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { DateRangePicker } from 'react-date-range'
 import 'react-date-range/dist/styles.css'
@@ -18,6 +18,7 @@ type DateFilterProps = {
 	lastMonth?: boolean
 	storageKey?: string
 	customIcon?: React.ReactNode
+	defaultAllDates?: boolean
 }
 
 const DateFilter: React.FC<DateFilterProps> = ({
@@ -26,21 +27,33 @@ const DateFilter: React.FC<DateFilterProps> = ({
 	lastMonth,
 	storageKey,
 	customIcon,
+	defaultAllDates,
 }) => {
 	const location = useLocation()
 	const key = storageKey || `selectedDateRange_${location.pathname}`
 
-	// Set default to current month's start and end
+	// Set default range
 	let defaultRange: DateRange
-	lastMonth
-		? (defaultRange = [
-				startOfMonth(subDays(new Date(), new Date().getDate())),
-				endOfMonth(subDays(new Date(), new Date().getDate())),
-		  ])
-		: (defaultRange = [startOfMonth(new Date()), endOfMonth(new Date())])
+	if (defaultAllDates) {
+		const allDatesStart = new Date(2015, 0, 1)
+		allDatesStart.setHours(0, 0, 0, 0)
+		const allDatesEnd = new Date()
+		allDatesEnd.setHours(23, 59, 59, 999)
+		defaultRange = [allDatesStart, allDatesEnd]
+	} else if (lastMonth) {
+		defaultRange = [
+			startOfMonth(subDays(new Date(), new Date().getDate())),
+			endOfMonth(subDays(new Date(), new Date().getDate())),
+		]
+	} else {
+		defaultRange = [startOfMonth(new Date()), endOfMonth(new Date())]
+	}
 	const [showDatePicker, setShowDatePicker] = useState(false)
 	const [selectedRange, setSelectedRange] = useState<DateRange>(defaultRange)
 	const [tempRange, setTempRange] = useState<DateRange | null>(null)
+	const [shownDate, setShownDate] = useState<Date>(() => {
+		return defaultRange[0] || new Date()
+	})
 	const datePickerRef = useRef<HTMLDivElement>(null)
 
 	const staticRanges = [
@@ -191,6 +204,9 @@ const DateFilter: React.FC<DateFilterProps> = ({
 			const startDate = selection.startDate
 			const endDate = selection.endDate
 			setTempRange([startDate, endDate])
+			if (startDate) {
+				setShownDate(startDate)
+			}
 		} else {
 			setTempRange(defaultRange)
 		}
@@ -207,6 +223,11 @@ const DateFilter: React.FC<DateFilterProps> = ({
 	const toggleDatePicker = () => {
 		if (!showDatePicker) {
 			setTempRange(selectedRange)
+			const initialShown =
+				selectedRange && selectedRange[0] && !isAllDates(selectedRange)
+					? selectedRange[0]
+					: new Date()
+			setShownDate(initialShown)
 		}
 		setShowDatePicker((prev) => !prev)
 	}
@@ -243,6 +264,16 @@ const DateFilter: React.FC<DateFilterProps> = ({
 	}, [selectedRange, key])
 
 	const activeRangeDisplay = tempRange ? tempRange : selectedRange
+
+	const memoizedRanges = useMemo(() => {
+		return [
+			{
+				startDate: activeRangeDisplay[0],
+				endDate: activeRangeDisplay[1],
+				key: 'selection',
+			},
+		]
+	}, [activeRangeDisplay[0]?.getTime(), activeRangeDisplay[1]?.getTime()])
 
 	return (
 		<div
@@ -360,16 +391,13 @@ const DateFilter: React.FC<DateFilterProps> = ({
 								className='p-2'
 								style={{ overflowX: 'auto', overflowY: 'auto' }}>
 								<DateRangePicker
-									ranges={[
-										{
-											startDate: activeRangeDisplay[0],
-											endDate: activeRangeDisplay[1],
-											key: 'selection',
-										},
-									]}
+									ranges={memoizedRanges}
 									onChange={handleDateRangeChange}
 									months={2}
 									direction='horizontal'
+									shownDate={shownDate}
+									onShownDateChange={(date: Date) => setShownDate(date)}
+									preventSnapRefocus={true}
 									staticRanges={staticRanges}
 									inputRanges={inputRanges}
 								/>

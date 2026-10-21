@@ -3,14 +3,22 @@ import TableButton from '../../../components/TableButton'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { KTIcon } from '../../../../_metronic/helpers'
+import UsersListPagination from '../../../components/TablePagination'
+import LengthMenu from '../../../components/LengthMenu'
+import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import DateFilter from '../../../components/DateRangePicker'
 
 type Props = {
 	className: string
+	onCountChange?: (count: number) => void
 }
 
-const ExpiredEmployeeTable: React.FC<Props> = ({ className }) => {
+const ExpiredEmployeeTable: React.FC<Props> = ({ className, onCountChange }) => {
 	const [employeeData, setEmployeeData] = useState<any>([])
 	const [loading, setLoading] = useState(false)
+	const [currentPage, setCurrentPage] = useState(1)
+	const [itemsPerPage, setItemsPerPage] = useState(10)
 
 	const fetchEmployeeData = async () => {
 		setLoading(true)
@@ -66,14 +74,12 @@ const ExpiredEmployeeTable: React.FC<Props> = ({ className }) => {
 					}
 				})
 				.filter((item: any) => item !== null)
-				// Re-applied the 30-day filter or show all based on user request?
-				// User's photo shows "2026-03-23" which is today/tomorrow.
-				// I'll keep showing all that have an expiry date for now as the screenshot shows many.
 			
 			// Sort by most expired first
 			filteredData.sort((a: any, b: any) => a.days_diff - b.days_diff)
 			
 			setEmployeeData(filteredData)
+			onCountChange?.(filteredData.length)
 		} catch (error) {
 			console.error(error)
 		}
@@ -85,17 +91,69 @@ const ExpiredEmployeeTable: React.FC<Props> = ({ className }) => {
 	}, [])
 
 	const [searchTerm, setSearchTerm] = useState('')
+	const [dateRange, setDateRange] = useState<[Date, Date] | null>(null)
+
+	useEffect(() => {
+		setCurrentPage(1)
+	}, [searchTerm])
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setDateRange(range)
+		setCurrentPage(1)
+	}
 
 	const filteredEmployees = employeeData.filter((emp: any) => {
-		if (!searchTerm) return true
-		const q = searchTerm.toLowerCase()
-		return (
-			emp.name?.toLowerCase().includes(q) ||
-			emp.position?.toLowerCase().includes(q) ||
-			emp.document_type?.toLowerCase().includes(q) ||
-			emp.mobile?.toString().includes(q)
-		)
+		let matchesSearch = true
+		if (searchTerm) {
+			const q = searchTerm.toLowerCase()
+			matchesSearch =
+				emp.name?.toLowerCase().includes(q) ||
+				emp.position?.toLowerCase().includes(q) ||
+				emp.document_type?.toLowerCase().includes(q) ||
+				emp.mobile?.toString().includes(q)
+		}
+
+		let matchesDate = true
+		if (dateRange && dateRange[0] && dateRange[1]) {
+			const isAllDates = new Date(dateRange[0]).getFullYear() <= 2015
+			if (!isAllDates && emp.expiry_date) {
+				const start = new Date(dateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(dateRange[1])
+				end.setHours(23, 59, 59, 999)
+
+				const expDate = new Date(emp.expiry_date)
+				matchesDate = expDate >= start && expDate <= end
+			}
+		}
+
+		return matchesSearch && matchesDate
 	})
+
+	useEffect(() => {
+		onCountChange?.(filteredEmployees.length)
+	}, [filteredEmployees.length, onCountChange])
+
+	const excelColumns = [
+		{ title: 'Employee Name', field: 'name' },
+		{ title: 'Position', field: 'position' },
+		{ title: 'Document Type', field: 'document_type' },
+		{ title: 'Expiry Date', field: 'formatted_expiry_date' },
+		{ title: 'Email', field: 'email' },
+		{ title: 'Mobile', field: 'mobile' },
+		{ title: 'Status', field: 'expiry_status' },
+	]
+
+	const excelData = filteredEmployees.map((emp: any) => ({
+		...emp,
+		formatted_expiry_date: emp.expiry_date ? DayJS(emp.expiry_date).format('DD/MM/YYYY') : '-',
+		expiry_status:
+			emp.days_diff < 0
+				? `Expired (${Math.abs(emp.days_diff)}d ago)`
+				: emp.days_diff === 0
+				? 'Expires Today'
+				: `Expires in ${emp.days_diff}d`,
+	}))
 
 	const getDocStatusBadge = (daysDiff: number) => {
 		if (daysDiff < 0) {
@@ -129,6 +187,12 @@ const ExpiredEmployeeTable: React.FC<Props> = ({ className }) => {
 		)
 	}
 
+	const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage) || 1
+	const paginatedEmployees = filteredEmployees.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage
+	)
+
 	return (
 		<div className={`card ${className}`}>
 			{/* Header */}
@@ -151,7 +215,7 @@ const ExpiredEmployeeTable: React.FC<Props> = ({ className }) => {
 						<div className='d-flex align-items-center gap-2'>
 							<h3 className='card-title fw-bold fs-4 m-0 text-dark'>Agreement Expiries</h3>
 							<span className='badge badge-light-danger fw-bold fs-8 px-2 py-1'>
-								{employeeData.length} Records
+								{filteredEmployees.length} Records
 							</span>
 						</div>
 						<span className='text-muted fw-semibold fs-7'>
@@ -160,31 +224,53 @@ const ExpiredEmployeeTable: React.FC<Props> = ({ className }) => {
 					</div>
 				</div>
 
-				<div className='gz-table-search-bar'>
-					<i className='bi bi-search gz-table-search-icon'></i>
-					<input
-						type='text'
-						className='gz-table-search-input'
-						placeholder='Search employee or document...'
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-					/>
-					{searchTerm && (
-						<button
-							type='button'
-							className='gz-table-search-clear'
-							onClick={() => setSearchTerm('')}
-							title='Clear search'>
-							<i className='bi bi-x-lg' style={{ fontSize: '10px' }}></i>
-						</button>
-					)}
+				{/* Toolbar: Search -> LengthMenu -> DownloadExcel -> DateFilter */}
+				<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+					{/* 1. Search Filter */}
+					<div style={{ width: '240px', minWidth: '180px' }}>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search employee or document...'
+							className='me-0'
+						/>
+					</div>
+
+					{/* 2. Dropdown (Show entries per page) */}
+					<div style={{ flexShrink: 0 }}>
+						<LengthMenu
+							itemsPerPage={itemsPerPage}
+							setItemsPerPage={(n) => {
+								setItemsPerPage(n)
+								setCurrentPage(1)
+							}}
+							className='me-0'
+						/>
+					</div>
+
+					{/* 3. Excel Download Button */}
+					<div style={{ flexShrink: 0 }}>
+						<DownloadExcelButton
+							data={excelData}
+							columns={excelColumns}
+							filename='Agreement_Expiries'
+						/>
+					</div>
+
+					{/* 4. Date Filter */}
+					<div style={{ flexShrink: 0 }}>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							defaultAllDates={true}
+							storageKey='hr_dashboard_expiry_range'
+						/>
+					</div>
 				</div>
 			</div>
 
 			{/* Body */}
-			<div
-				className='card-body py-2 px-6'
-				style={{ maxHeight: '500px', overflowY: 'auto' }}>
+			<div className='card-body py-2 px-6'>
 				<div className='table-responsive'>
 					<table className='table table-row-dashed table-row-gray-200 align-middle gs-0 gy-3'>
 						<thead>
@@ -231,67 +317,70 @@ const ExpiredEmployeeTable: React.FC<Props> = ({ className }) => {
 										</td>
 									</tr>
 								))
-							) : filteredEmployees.length > 0 ? (
-								filteredEmployees.map((employee: any, index: number) => (
-									<tr key={employee._id} className='hover-elevate-up'>
-										<td className='ps-2'>
-											<span className='text-muted fw-semibold fs-7'>{index + 1}</span>
-										</td>
-										<td>
-											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-40px me-3'>
-													{employee.photo ? (
-														<img
-															src={`https://files.fggroup.in/${employee.photo}`}
-															alt={employee.name}
-															onError={(e) => {
-																const target = e.target as HTMLImageElement
-																target.style.display = 'none'
-															}}
-															className='rounded-circle object-fit-cover'
-														/>
-													) : (
-														<span className='symbol-label bg-light-primary text-primary fw-bold fs-6 rounded-circle'>
-															{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+							) : paginatedEmployees.length > 0 ? (
+								paginatedEmployees.map((employee: any, index: number) => {
+									const rowIndex = (currentPage - 1) * itemsPerPage + index + 1
+									return (
+										<tr key={employee._id} className='hover-elevate-up'>
+											<td className='ps-2'>
+												<span className='text-muted fw-semibold fs-7'>{rowIndex}</span>
+											</td>
+											<td>
+												<div className='d-flex align-items-center'>
+													<div className='symbol symbol-40px me-3'>
+														{employee.photo ? (
+															<img
+																src={`https://files.fggroup.in/${employee.photo}`}
+																alt={employee.name}
+																onError={(e) => {
+																	const target = e.target as HTMLImageElement
+																	target.style.display = 'none'
+																}}
+																className='rounded-circle object-fit-cover'
+															/>
+														) : (
+															<span className='symbol-label bg-light-primary text-primary fw-bold fs-6 rounded-circle'>
+																{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+															</span>
+														)}
+													</div>
+													<div className='d-flex flex-column'>
+														<span className='text-dark fw-bold text-hover-primary fs-6 mb-0'>
+															{employee.name}
 														</span>
-													)}
+														<span className='text-muted fs-8 fw-semibold'>
+															{employee.mobile || employee.email || '-'}
+														</span>
+													</div>
 												</div>
-												<div className='d-flex flex-column'>
-													<span className='text-dark fw-bold text-hover-primary fs-6 mb-0'>
-														{employee.name}
-													</span>
-													<span className='text-muted fs-8 fw-semibold'>
-														{employee.mobile || employee.email || '-'}
-													</span>
-												</div>
-											</div>
-										</td>
-										<td>
-											<span className='text-dark fw-semibold fs-7'>
-												{employee.position || 'Employee'}
-											</span>
-										</td>
-										<td>
-											<span className='badge badge-light fw-bold fs-8 px-2 py-1 text-gray-700'>
-												{employee.document_type || 'Document'}
-											</span>
-										</td>
-										<td>
-											<span className='text-dark fw-semibold fs-7'>
-												{employee.expiry_date ? DayJS(employee.expiry_date).format('DD MMM YYYY') : '-'}
-											</span>
-										</td>
-										<td className='text-center'>
-											{getDocStatusBadge(employee.days_diff)}
-										</td>
-										<td className='text-end pe-2'>
-											<TableButton
-												action='view'
-												to={`/hr/employee-view?employee_id=${employee._id}`}
-											/>
-										</td>
-									</tr>
-								))
+											</td>
+											<td>
+												<span className='text-dark fw-semibold fs-7'>
+													{employee.position || 'Employee'}
+												</span>
+											</td>
+											<td>
+												<span className='badge badge-light fw-bold fs-8 px-2 py-1 text-gray-700'>
+													{employee.document_type || 'Document'}
+												</span>
+											</td>
+											<td>
+												<span className='text-dark fw-semibold fs-7'>
+													{employee.expiry_date ? DayJS(employee.expiry_date).format('DD MMM YYYY') : '-'}
+												</span>
+											</td>
+											<td className='text-center'>
+												{getDocStatusBadge(employee.days_diff)}
+											</td>
+											<td className='text-end pe-2'>
+												<TableButton
+													action='view'
+													to={`/hr/employee-view?employee_id=${employee._id}`}
+												/>
+											</td>
+										</tr>
+									)
+								})
 							) : (
 								<tr>
 									<td colSpan={7} className='text-center py-10'>
@@ -306,6 +395,31 @@ const ExpiredEmployeeTable: React.FC<Props> = ({ className }) => {
 					</table>
 				</div>
 			</div>
+
+			{/* Pagination Footer */}
+			{filteredEmployees.length > 0 && (
+				<div className='card-footer border-0 py-3 px-6 d-flex align-items-center justify-content-between flex-wrap gap-2'>
+					{/* <div className='text-muted fs-7'>
+						Showing{' '}
+						<span className='fw-bold text-dark'>
+							{filteredEmployees.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}
+						</span>{' '}
+						to{' '}
+						<span className='fw-bold text-dark'>
+							{Math.min(currentPage * itemsPerPage, filteredEmployees.length)}
+						</span>{' '}
+						of{' '}
+						<span className='fw-bold text-dark'>{filteredEmployees.length}</span> entries
+					</div> */}
+					<UsersListPagination
+						totalPages={totalPages}
+						currentPage={currentPage}
+						onPageChange={(page) => setCurrentPage(page)}
+						totalRecords={filteredEmployees.length}
+						itemsPerPage={itemsPerPage}
+					/>
+				</div>
+			)}
 		</div>
 	)
 }

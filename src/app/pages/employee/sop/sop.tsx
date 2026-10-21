@@ -10,6 +10,7 @@ import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
+import { FG_GROUP_FILE_BASE_URL } from '../../../constants/base_URL'
 import { FileUploadToFGGroup } from '../../../Functions/FGGroup'
 import { CompleteSOP, GetSOP } from '../../../Functions/FGGroup/SOP'
 
@@ -70,16 +71,19 @@ const EmployeeSOP: React.FC = () => {
 				if (!isAssigned) return
 
 				const serviceDetails = (el.service_details || []).map((row: any) => ({
+					...row,
 					title: row.title,
 					description: row.description,
 					services_id: row._id,
 					completed_by: row.completed_by || [],
+					file_url: row.file_url || row.file || row.document || '',
 					createdAt: row.createdAt,
 					updatedAt: row.updatedAt,
 				}))
 
 				serviceDetails.forEach((detail: any) => {
 					combinedData.push({
+						...el,
 						...detail,
 						sop_id: el._id,
 						employee_ids: el.employee_ids,
@@ -92,6 +96,94 @@ const EmployeeSOP: React.FC = () => {
 			console.error(error)
 		}
 		setLoading(false)
+	}
+
+	// Helper to resolve an absolute file URL from an uploaded file key/path
+	const getFileUrl = (path: string | undefined | null): string => {
+		if (!path || typeof path !== 'string') return ''
+		const trimmed = path.trim()
+		if (!trimmed) return ''
+		if (
+			trimmed.startsWith('http://') ||
+			trimmed.startsWith('https://') ||
+			trimmed.startsWith('blob:') ||
+			trimmed.startsWith('data:')
+		) {
+			return trimmed
+		}
+		const cleanPath = trimmed.replace(/^\/+/, '')
+		return `${FG_GROUP_FILE_BASE_URL}/${cleanPath}`
+	}
+
+	// Helper to resolve the proof/document URL attached to a completed SOP
+	const getProofUrl = (item: any): string => {
+		const completedList = Array.isArray(item?.completed_by) ? item.completed_by : []
+		const employee = getStoredEmployee()
+		const empId = employee?._id || employee?.id || employee?.admin_id
+
+		const myCompletion =
+			completedList.find((c: any) => {
+				if (!c) return false
+				if (typeof c === 'string') return c === empId
+				return (
+					c.admin_id === empId ||
+					c.employee_id === empId ||
+					c._id === empId ||
+					c.id === empId
+				)
+			}) || completedList[0]
+
+		const candidates = [
+			myCompletion?.file_url,
+			myCompletion?.file,
+			myCompletion?.document,
+			myCompletion?.proof,
+			myCompletion?.upload_photo,
+			item?.file_url,
+			item?.file,
+			item?.document,
+			item?.attachment,
+		]
+
+		for (const c of candidates) {
+			if (Array.isArray(c) && c.length > 0 && typeof c[0] === 'string' && c[0].trim()) {
+				return c[0].trim()
+			}
+			if (c && typeof c === 'string' && c.trim()) {
+				return c.trim()
+			}
+		}
+		return ''
+	}
+
+	// Trigger robust download via blob or new tab with absolute URL
+	const handleDownload = async (fileUrl: string, defaultName?: string) => {
+		const fullUrl = getFileUrl(fileUrl)
+		if (!fullUrl) {
+			toast.error('No document file URL available')
+			return
+		}
+
+		try {
+			const response = await fetch(fullUrl, { mode: 'cors' })
+			if (!response.ok) throw new Error('Fetch failed')
+			const blob = await response.blob()
+			const blobUrl = window.URL.createObjectURL(blob)
+			const link = document.createElement('a')
+			link.href = blobUrl
+			const cleanName = (defaultName || 'SOP-Proof').replace(/[^a-zA-Z0-9_-]/g, '_')
+			const rawExt = fullUrl.split('.').pop()?.split('?')[0]?.toLowerCase()
+			const ext = rawExt && rawExt.length <= 4 ? rawExt : 'pdf'
+			link.download = `${cleanName}.${ext}`
+			document.body.appendChild(link)
+			link.click()
+			document.body.removeChild(link)
+			window.URL.revokeObjectURL(blobUrl)
+			toast.success('Download started')
+		} catch (err) {
+			// If direct fetch is restricted by CORS, open absolute URL directly in new tab
+			window.open(fullUrl, '_blank', 'noopener,noreferrer')
+		}
 	}
 
 	useEffect(() => {
@@ -297,6 +389,7 @@ const EmployeeSOP: React.FC = () => {
 							) => {
 								const isCompleted = item.completed_by && item.completed_by.length > 0
 								const completionInfo = isCompleted ? item.completed_by[0] : null
+								const proofUrl = getProofUrl(item)
 
 								return (
 									<React.Fragment key={item.services_id || index}>
@@ -349,13 +442,23 @@ const EmployeeSOP: React.FC = () => {
 														}}
 													/>
 													{isCompleted ? (
-														completionInfo?.file_url && (
+														proofUrl ? (
 															<TableButton
 																action='download'
-																title='View Supporting Proof Document'
+																title='Download Supporting Proof Document'
 																onClick={(e) => {
 																	e.stopPropagation()
-																	window.open(completionInfo.file_url, '_blank', 'noopener,noreferrer')
+																	handleDownload(proofUrl, `${item.title || 'SOP'}-Proof`)
+																}}
+															/>
+														) : (
+															<TableButton
+																action='download'
+																title='No Proof Document Attached'
+																disabled
+																onClick={(e) => {
+																	e.stopPropagation()
+																	toast.error('No proof document attached for this procedure.')
 																}}
 															/>
 														)
@@ -415,18 +518,20 @@ const EmployeeSOP: React.FC = () => {
 																			<div className='text-gray-800'>{completionInfo.remarks}</div>
 																		</div>
 																	)}
-																	{completionInfo.file_url && (
+																	{proofUrl && (
 																		<div className='col-md-4'>
 																			<strong className='text-gray-700'>Proof Attachment:</strong>
 																			<div className='mt-1'>
-																				<a
-																					href={completionInfo.file_url}
-																					target='_blank'
-																					rel='noopener noreferrer'
+																				<button
+																					type='button'
+																					onClick={(e) => {
+																						e.stopPropagation()
+																						handleDownload(proofUrl, `${item.title || 'SOP'}-Proof`)
+																					}}
 																					className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2'>
 																					<FontAwesomeIcon icon={faDownload} />
 																					<span>Download Proof</span>
-																				</a>
+																				</button>
 																			</div>
 																		</div>
 																	)}

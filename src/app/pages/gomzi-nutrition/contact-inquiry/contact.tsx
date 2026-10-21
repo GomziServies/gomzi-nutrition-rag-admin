@@ -17,6 +17,7 @@ import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import SelectField from '../../../components/SelectField'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -388,6 +389,15 @@ const ContactInquiry: React.FC = () => {
 							className='me-0'
 						/>
 
+						<div>
+							<DownloadExcelButton
+								onClick={downloadExcel}
+								disabled={loading || exporting || filteredContactInquiry.length === 0}
+								loading={exporting}
+								filename='ContactInquiry'
+							/>
+						</div>
+
 						<div style={{ minWidth: '220px', maxWidth: '300px' }}>
 							<SelectField
 								className='fv-row mb-0'
@@ -568,6 +578,9 @@ const ContactInquiry: React.FC = () => {
 							totalPages={paginationTotalPages}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={filteredContactInquiry.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='inquiries'
 						/>
 					)}
 				</div>

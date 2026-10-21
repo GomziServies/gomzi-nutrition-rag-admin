@@ -3,14 +3,22 @@ import TableButton from '../../../components/TableButton'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { KTIcon } from '../../../../_metronic/helpers'
+import UsersListPagination from '../../../components/TablePagination'
+import LengthMenu from '../../../components/LengthMenu'
+import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import DateFilter from '../../../components/DateRangePicker'
 
 type Props = {
 	className: string
+	onCountChange?: (count: number) => void
 }
 
-const EmployeeAnniversaryTable: React.FC<Props> = ({ className }) => {
+const EmployeeAnniversaryTable: React.FC<Props> = ({ className, onCountChange }) => {
 	const [employeeData, setEmployeeData] = useState<any>([])
 	const [loading, setLoading] = useState(false)
+	const [currentPage, setCurrentPage] = useState(1)
+	const [itemsPerPage, setItemsPerPage] = useState(10)
 
 	const fetchEmployeeData = async () => {
 		setLoading(true)
@@ -86,6 +94,7 @@ const EmployeeAnniversaryTable: React.FC<Props> = ({ className }) => {
 			})
 			
 			setEmployeeData(filteredData)
+			onCountChange?.(filteredData.length)
 		} catch (error) {
 			console.error(error)
 		}
@@ -194,16 +203,82 @@ const EmployeeAnniversaryTable: React.FC<Props> = ({ className }) => {
 	}
 
 	const [searchTerm, setSearchTerm] = useState('')
+	const [dateRange, setDateRange] = useState<[Date, Date] | null>(null)
+
+	useEffect(() => {
+		setCurrentPage(1)
+	}, [searchTerm])
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setDateRange(range)
+		setCurrentPage(1)
+	}
 
 	const filteredEmployees = employeeData.filter((emp: any) => {
-		if (!searchTerm) return true
-		const q = searchTerm.toLowerCase()
-		return (
-			emp.name?.toLowerCase().includes(q) ||
-			emp.position?.toLowerCase().includes(q) ||
-			emp.mobile?.toString().includes(q)
-		)
+		let matchesSearch = true
+		if (searchTerm) {
+			const q = searchTerm.toLowerCase()
+			matchesSearch =
+				emp.name?.toLowerCase().includes(q) ||
+				emp.position?.toLowerCase().includes(q) ||
+				emp.mobile?.toString().includes(q)
+		}
+
+		let matchesDate = true
+		if (dateRange && dateRange[0] && dateRange[1]) {
+			const isAllDates = new Date(dateRange[0]).getFullYear() <= 2015
+			if (!isAllDates && emp.joining_date) {
+				const start = new Date(dateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(dateRange[1])
+				end.setHours(23, 59, 59, 999)
+
+				const joinDate = new Date(emp.joining_date)
+				const isJoiningInRange = joinDate >= start && joinDate <= end
+
+				let isAnniversaryInRange = false
+				const startYear = start.getFullYear()
+				const endYear = end.getFullYear()
+				for (let y = startYear; y <= endYear; y++) {
+					const annDate = new Date(y, joinDate.getMonth(), joinDate.getDate())
+					if (annDate >= start && annDate <= end) {
+						isAnniversaryInRange = true
+						break
+					}
+				}
+
+				matchesDate = isJoiningInRange || isAnniversaryInRange
+			}
+		}
+
+		return matchesSearch && matchesDate
 	})
+
+	useEffect(() => {
+		onCountChange?.(filteredEmployees.length)
+	}, [filteredEmployees.length, onCountChange])
+
+	const excelColumns = [
+		{ title: 'Employee Name', field: 'name' },
+		{ title: 'Position', field: 'position' },
+		{ title: 'Email', field: 'email' },
+		{ title: 'Mobile', field: 'mobile' },
+		{ title: 'Joining Date', field: 'formatted_joining_date' },
+		{ title: 'Years of Service', field: 'years_of_service' },
+		{ title: 'Milestone', field: 'milestone_status' },
+	]
+
+	const excelData = filteredEmployees.map((emp: any) => ({
+		...emp,
+		formatted_joining_date: emp.joining_date ? DayJS(emp.joining_date).format('DD/MM/YYYY') : '-',
+		milestone_status: emp.is_anniversary_today ? 'Today' : `${emp.days_until_anniversary} days`,
+	}))
+
+	const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage) || 1
+	const paginatedEmployees = filteredEmployees.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage
+	)
 
 	return (
 		<div className={`card ${className}`}>
@@ -227,7 +302,7 @@ const EmployeeAnniversaryTable: React.FC<Props> = ({ className }) => {
 						<div className='d-flex align-items-center gap-2'>
 							<h3 className='card-title fw-bold fs-4 m-0 text-dark'>Work Anniversaries</h3>
 							<span className='badge badge-light-warning fw-bold fs-8 px-2 py-1'>
-								{employeeData.length} Records
+								{filteredEmployees.length} Records
 							</span>
 						</div>
 						<span className='text-muted fw-semibold fs-7'>
@@ -236,31 +311,53 @@ const EmployeeAnniversaryTable: React.FC<Props> = ({ className }) => {
 					</div>
 				</div>
 
-				<div className='gz-table-search-bar'>
-					<i className='bi bi-search gz-table-search-icon'></i>
-					<input
-						type='text'
-						className='gz-table-search-input'
-						placeholder='Search employee or role...'
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-					/>
-					{searchTerm && (
-						<button
-							type='button'
-							className='gz-table-search-clear'
-							onClick={() => setSearchTerm('')}
-							title='Clear search'>
-							<i className='bi bi-x-lg' style={{ fontSize: '10px' }}></i>
-						</button>
-					)}
+				{/* Toolbar: Search -> LengthMenu -> DownloadExcel -> DateFilter */}
+				<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+					{/* 1. Search Filter */}
+					<div style={{ width: '240px', minWidth: '180px' }}>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							placeholder='Search employee or role...'
+							className='me-0'
+						/>
+					</div>
+
+					{/* 2. Dropdown (Show entries per page) */}
+					<div style={{ flexShrink: 0 }}>
+						<LengthMenu
+							itemsPerPage={itemsPerPage}
+							setItemsPerPage={(n) => {
+								setItemsPerPage(n)
+								setCurrentPage(1)
+							}}
+							className='me-0'
+						/>
+					</div>
+
+					{/* 3. Excel Download Button */}
+					<div style={{ flexShrink: 0 }}>
+						<DownloadExcelButton
+							data={excelData}
+							columns={excelColumns}
+							filename='Work_Anniversaries'
+						/>
+					</div>
+
+					{/* 4. Date Filter */}
+					<div style={{ flexShrink: 0 }}>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							defaultAllDates={true}
+							storageKey='hr_dashboard_anniversary_range'
+						/>
+					</div>
 				</div>
 			</div>
 
 			{/* Body */}
-			<div
-				className='card-body py-2 px-6'
-				style={{ maxHeight: '500px', overflowY: 'auto' }}>
+			<div className='card-body py-2 px-6'>
 				<div className='table-responsive'>
 					<table className='table table-row-dashed table-row-gray-200 align-middle gs-0 gy-3'>
 						<thead>
@@ -300,90 +397,93 @@ const EmployeeAnniversaryTable: React.FC<Props> = ({ className }) => {
 											<span className='gz-hr-skeleton d-inline-block' style={{ width: '60px', height: '22px', borderRadius: '6px' }}></span>
 										</td>
 										<td className='text-center'>
-											<span className='gz-hr-skeleton d-inline-block' style={{ width: '75px', height: '22px', borderRadius: '6px' }}></span>
+											<span className='gz-hr-skeleton d-inline-block' style={{ width: '80px', height: '22px', borderRadius: '6px' }}></span>
 										</td>
 										<td className='text-end pe-2'>
 											<span className='gz-hr-skeleton d-inline-block' style={{ width: '32px', height: '32px', borderRadius: '6px' }}></span>
 										</td>
 									</tr>
 								))
-							) : filteredEmployees.length > 0 ? (
-								filteredEmployees.map((employee: any, index: number) => (
-									<tr key={employee._id} className='hover-elevate-up'>
-										<td className='ps-2'>
-											<span className='text-muted fw-semibold fs-7'>{index + 1}</span>
-										</td>
-										<td>
-											<div className='d-flex align-items-center'>
-												<div className='symbol symbol-40px me-3'>
-													{employee.photo ? (
-														<img
-															src={`https://files.fggroup.in/${employee.photo}`}
-															alt={employee.name}
-															onError={(e) => {
-																const target = e.target as HTMLImageElement
-																target.style.display = 'none'
-															}}
-															className='rounded-circle object-fit-cover'
-														/>
-													) : (
-														<span className='symbol-label bg-light-primary text-primary fw-bold fs-6 rounded-circle'>
-															{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+							) : paginatedEmployees.length > 0 ? (
+								paginatedEmployees.map((employee: any, index: number) => {
+									const rowIndex = (currentPage - 1) * itemsPerPage + index + 1
+									return (
+										<tr key={employee._id} className='hover-elevate-up'>
+											<td className='ps-2'>
+												<span className='text-muted fw-semibold fs-7'>{rowIndex}</span>
+											</td>
+											<td>
+												<div className='d-flex align-items-center'>
+													<div className='symbol symbol-40px me-3'>
+														{employee.photo ? (
+															<img
+																src={`https://files.fggroup.in/${employee.photo}`}
+																alt={employee.name}
+																onError={(e) => {
+																	const target = e.target as HTMLImageElement
+																	target.style.display = 'none'
+																}}
+																className='rounded-circle object-fit-cover'
+															/>
+														) : (
+															<span className='symbol-label bg-light-primary text-primary fw-bold fs-6 rounded-circle'>
+																{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+															</span>
+														)}
+													</div>
+													<div className='d-flex flex-column'>
+														<span className='text-dark fw-bold text-hover-primary fs-6 mb-0'>
+															{employee.name}
+														</span>
+														<span className='text-muted fs-8 fw-semibold'>
+															{employee.mobile || employee.email || '-'}
+														</span>
+													</div>
+												</div>
+											</td>
+											<td>
+												<span className='text-dark fw-semibold fs-7'>
+													{employee.position || 'Employee'}
+												</span>
+											</td>
+											<td>
+												<span className='text-dark fw-semibold fs-7'>
+													{DayJS(employee.joining_date).format('DD MMM YYYY')}
+												</span>
+											</td>
+											<td className='text-center'>
+												<span className='badge badge-light-primary fw-bold fs-8 px-2 py-1'>
+													{employee.years_of_service}{' '}
+													{employee.years_of_service === 1 ? 'Year' : 'Years'}
+												</span>
+											</td>
+											<td className='text-center'>
+												<div className='d-flex flex-column align-items-center gap-1'>
+													<span className={getBadgeClass(employee.joining_date, employee.has_upcoming_anniversary)}>
+														{employee.is_anniversary_today ? (
+															<span>🎉 Today!</span>
+														) : employee.has_upcoming_anniversary ? (
+															daysUntilAnniversary(employee.joining_date)
+														) : (
+															`${getDaysUntilNextAnniversary(employee.joining_date)} days`
+														)}
+													</span>
+													{!employee.is_anniversary_today && employee.has_upcoming_anniversary && (
+														<span className='text-muted fs-9 fw-semibold'>
+															Completing {getNextAnniversaryYear(employee.joining_date, employee.years_of_service)} years
 														</span>
 													)}
 												</div>
-												<div className='d-flex flex-column'>
-													<span className='text-dark fw-bold text-hover-primary fs-6 mb-0'>
-														{employee.name}
-													</span>
-													<span className='text-muted fs-8 fw-semibold'>
-														{employee.mobile || employee.email || '-'}
-													</span>
-												</div>
-											</div>
-										</td>
-										<td>
-											<span className='text-dark fw-semibold fs-7'>
-												{employee.position || 'Employee'}
-											</span>
-										</td>
-										<td>
-											<span className='text-dark fw-semibold fs-7'>
-												{DayJS(employee.joining_date).format('DD MMM YYYY')}
-											</span>
-										</td>
-										<td className='text-center'>
-											<span className='badge badge-light-primary fw-bold fs-8 px-2 py-1'>
-												{employee.years_of_service}{' '}
-												{employee.years_of_service === 1 ? 'Year' : 'Years'}
-											</span>
-										</td>
-										<td className='text-center'>
-											<div className='d-flex flex-column align-items-center gap-1'>
-												<span className={getBadgeClass(employee.joining_date, employee.has_upcoming_anniversary)}>
-													{employee.is_anniversary_today ? (
-														<span>🎉 Today!</span>
-													) : employee.has_upcoming_anniversary ? (
-														daysUntilAnniversary(employee.joining_date)
-													) : (
-														`${getDaysUntilNextAnniversary(employee.joining_date)} days`
-													)}
-												</span>
-												{!employee.is_anniversary_today && employee.has_upcoming_anniversary && (
-													<span className='text-muted fs-9 fw-semibold'>
-														Completing {getNextAnniversaryYear(employee.joining_date, employee.years_of_service)} years
-													</span>
-												)}
-											</div>
-										</td>
-										<td className='text-end pe-2'>
-											<TableButton
-												action='view'
-												to={`/hr/employee-view?employee_id=${employee._id}`}
-											/>
-										</td>
-									</tr>
-								))
+											</td>
+											<td className='text-end pe-2'>
+												<TableButton
+													action='view'
+													to={`/hr/employee-view?employee_id=${employee._id}`}
+												/>
+											</td>
+										</tr>
+									)
+								})
 							) : (
 								<tr>
 									<td colSpan={7} className='text-center py-10'>
@@ -398,6 +498,31 @@ const EmployeeAnniversaryTable: React.FC<Props> = ({ className }) => {
 					</table>
 				</div>
 			</div>
+
+			{/* Pagination Footer */}
+			{filteredEmployees.length > 0 && (
+				<div className='card-footer border-0 py-3 px-6 d-flex align-items-center justify-content-between flex-wrap gap-2'>
+					{/* <div className='text-muted fs-7'>
+						Showing{' '}
+						<span className='fw-bold text-dark'>
+							{filteredEmployees.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}
+						</span>{' '}
+						to{' '}
+						<span className='fw-bold text-dark'>
+							{Math.min(currentPage * itemsPerPage, filteredEmployees.length)}
+						</span>{' '}
+						of{' '}
+						<span className='fw-bold text-dark'>{filteredEmployees.length}</span> entries
+					</div> */}
+					<UsersListPagination
+						totalPages={totalPages}
+						currentPage={currentPage}
+						onPageChange={(page) => setCurrentPage(page)}
+						totalRecords={filteredEmployees.length}
+						itemsPerPage={itemsPerPage}
+					/>
+				</div>
+			)}
 		</div>
 	)
 }

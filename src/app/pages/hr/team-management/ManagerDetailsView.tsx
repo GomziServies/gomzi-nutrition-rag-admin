@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Button, Form, Modal } from 'react-bootstrap'
 import Card from 'react-bootstrap/Card'
 import toast from 'react-hot-toast'
@@ -7,9 +7,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import DateFilter from '../../../components/DateRangePicker'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
-import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -193,6 +194,11 @@ const ManagerDetailsView: React.FC = () => {
 		fetchEmployees()
 	}, [id, pagination.page, pagination.itemsPerPage, searchTerm, sort, sortOrder])
 
+	const handleDateRangeChange = useCallback((range: [Date, Date] | null) => {
+		setDateRange(range)
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}, [])
+
 	const filteredAssignedTeams = assignedTeams.filter((team) => {
 		const matchesSearch =
 			searchTerm === '' ||
@@ -201,8 +207,15 @@ const ManagerDetailsView: React.FC = () => {
 
 		let matchesDate = true
 		if (dateRange && dateRange[0] && dateRange[1]) {
-			const assignedDate = new Date(team.assignedDate)
-			matchesDate = assignedDate >= dateRange[0] && assignedDate <= dateRange[1]
+			const isAllDates = new Date(dateRange[0]).getFullYear() <= 2015
+			if (!isAllDates && team.assignedDate) {
+				const start = new Date(dateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(dateRange[1])
+				end.setHours(23, 59, 59, 999)
+				const assignedDate = new Date(team.assignedDate)
+				matchesDate = assignedDate >= start && assignedDate <= end
+			}
 		}
 
 		return matchesSearch && matchesDate
@@ -382,12 +395,14 @@ const ManagerDetailsView: React.FC = () => {
 						</div>
 					</div>
 
-					{/* Filter Toolbar (Order: Search -> LengthMenu -> DownloadExcel -> Filters -> Date -> Right Action) */}
+					{/* Filter Toolbar (Order: Search -> Dropdown (entries per page) -> Download Excel -> DateFilter -> Right Action: Assign Team) */}
 					<div className='gz-filter-card mb-5'>
-						<div className='d-flex align-items-center justify-content-between flex-wrap gap-3 w-100'>
-							<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
+						<div
+							className='d-flex align-items-center justify-content-between flex-wrap gap-3 w-100'
+							style={{ minHeight: '42px' }}>
+							<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1 flex-grow-1'>
 								{/* 1. Search */}
-								<div style={{ flex: '1 1 240px', maxWidth: '360px' }}>
+								<div style={{ width: '240px', minWidth: '180px' }}>
 									<SearchFilter
 										searchTerm={searchTerm}
 										setSearchTerm={setSearchTerm}
@@ -396,27 +411,35 @@ const ManagerDetailsView: React.FC = () => {
 									/>
 								</div>
 
-								{/* 2. Page Size */}
-								<div>
+								{/* 2. Dropdown (Show entries per page) */}
+								<div style={{ flexShrink: 0 }}>
 									<LengthMenu
-										expenseData={assignedTeams}
+										expenseData={filteredAssignedTeams}
 										handleItemsPerPageChange={handleItemsPerPageChange}
 										className='me-0'
 									/>
 								</div>
 
 								{/* 3. Download Excel Button */}
-								<div>
+								<div style={{ flexShrink: 0 }}>
 									<DownloadExcelButton
-										data={assignedTeams}
+										data={filteredAssignedTeams}
 										columns={sortableFields}
 										filename='Manager_Teams'
 									/>
 								</div>
+
+								{/* 4. Date Filter */}
+								<div style={{ flexShrink: 0 }}>
+									<DateFilter
+										onDateRangeChange={handleDateRangeChange}
+										rightValue='0'
+									/>
+								</div>
 							</div>
 
-							{/* 6. End me right side Assign Team Button */}
-							<div className='flex-shrink-0 ms-auto'>
+							{/* Right side: Assign Team Button */}
+							<div className='flex-shrink-0 ms-auto py-1'>
 								<TableButton
 									action='add'
 									onClick={handleCreateTeam}
@@ -428,7 +451,7 @@ const ManagerDetailsView: React.FC = () => {
 
 					<div className='gz-inv-table-card'>
 					<div className='table-responsive'>
-						{assignedTeams.length === 0 && !loading ? (
+						{filteredAssignedTeams.length === 0 && !loading ? (
 							<div
 								className='text-center py-20'
 								style={{ background: '#fcfcfc', borderRadius: '12px' }}>
@@ -446,7 +469,7 @@ const ManagerDetailsView: React.FC = () => {
 							</div>
 						) : (
 							<Table
-								data={assignedTeams}
+								data={filteredAssignedTeams}
 								columns={sortableFields}
 								sort={sort}
 								sortOrder={sortOrder}

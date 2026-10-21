@@ -10,6 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import SelectField from '../../../components/SelectField'
 import { AddProductVariation, FileUploadToFGGroup, GetProduct } from '../../../Functions/FGGroup'
 import '../products-theme.css'
 
@@ -494,17 +495,22 @@ const AddGomziNutritionVariationProduct: React.FC = () => {
 									<label className='gz-prod-label' htmlFor='weightUnit'>
 										<span>Unit</span>
 									</label>
-									<select
+									<SelectField
 										id='weightUnit'
-										className='gz-prod-input'
 										value={formData.weight.unit}
-										onChange={(e) => updateWeight('unit', e.target.value)}>
-										<option value='g'>g (Grams)</option>
-										<option value='kg'>kg (Kilograms)</option>
-										<option value='mg'>mg (Milligrams)</option>
-										<option value='lb'>lb (Pounds)</option>
-										<option value='oz'>oz (Ounces)</option>
-									</select>
+										onChange={(e: any) => updateWeight('unit', e.target.value)}
+										options={[
+											{ label: 'g (Grams)', value: 'g' },
+											{ label: 'kg (Kilograms)', value: 'kg' },
+											{ label: 'mg (Milligrams)', value: 'mg' },
+											{ label: 'lb (Pounds)', value: 'lb' },
+											{ label: 'oz (Ounces)', value: 'oz' },
+										]}
+										showLabel={false}
+										marginRemove={true}
+										hideDefaultOption={true}
+										searchable={false}
+									/>
 								</div>
 							</div>
 						</div>

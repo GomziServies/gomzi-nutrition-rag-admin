@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { KTCard } from '../../../../../_metronic/helpers'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import DateFilter from '../../../../components/DateRangePicker'
+import DownloadExcelButton from '../../../../components/DownloadExcelButton'
 import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
 import { GetGnStock } from '../../../../Functions/FGGroup'
@@ -102,21 +103,18 @@ const GNInventoryStockList: React.FC = () => {
                   />
                 </div>
 
-                <div className='col-auto d-none d-lg-block'>
+                <div className='col-auto'>
                   <LengthMenu
                     expenseData={stockData}
                     handleItemsPerPageChange={handleItemsPerPageChange}
                   />
                 </div>
 
-                {/* <div className='col-12 col-sm-6 col-md-4 col-lg-4'>
-                  <DateFilter onDateRangeChange={handleDateRangeChange} rightValue='0'/>
-                </div> */}
-
-                <div className='col-auto d-lg-none mt-2'>
-                  <LengthMenu
-                    expenseData={stockData}
-                    handleItemsPerPageChange={handleItemsPerPageChange}
+                <div className='col-auto'>
+                  <DownloadExcelButton
+                    data={stockData}
+                    columns={sortableFields}
+                    filename='gn-inventory-stock'
                   />
                 </div>
               </div>

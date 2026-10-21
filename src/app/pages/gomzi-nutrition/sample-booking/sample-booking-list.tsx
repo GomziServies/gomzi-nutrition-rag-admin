@@ -21,6 +21,7 @@ import * as XLSX from 'xlsx'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SearchFilter from '../../../components/SearchFilter'
 import GomziTablePagination from '../../../components/GomziTablePagination'
 import CopyButton from '../../../components/motion/CopyButton'
@@ -384,7 +385,7 @@ const SampleBookingList: React.FC = () => {
 			</div>
 
 			{/* =========================================================================
-			    TOOLBAR (SEARCH -> LENGTH -> DATE -> EXPORT)
+			    TOOLBAR (SEARCH -> LENGTH -> DOWNLOAD EXCEL -> DATE)
 			    ========================================================================= */}
 			<div className='gz-prod-toolbar'>
 				<div className='gz-prod-toolbar-left'>
@@ -399,6 +400,14 @@ const SampleBookingList: React.FC = () => {
 						value={pagination.itemsPerPage}
 						className='me-0'
 					/>
+					<div>
+						<DownloadExcelButton
+							onClick={downloadExcel}
+							disabled={exporting || bookingData.length === 0}
+							loading={exporting}
+							title='Export Sample Bookings to Excel'
+						/>
+					</div>
 					<div className='d-flex align-items-center flex-shrink-0'>
 						<DateFilter
 							onDateRangeChange={handleDateRangeChange}
@@ -406,21 +415,6 @@ const SampleBookingList: React.FC = () => {
 							customIcon={<CalendarDays size={18} color='#172B4D' />}
 						/>
 					</div>
-				</div>
-
-				<div className='gz-prod-toolbar-right'>
-					<button
-						type='button'
-						className='gz-prod-btn-icon-export'
-						onClick={downloadExcel}
-						disabled={exporting || bookingData.length === 0}
-						title='Export Sample Bookings to Excel'>
-						{exporting ? (
-							<span className='spinner-border spinner-border-sm' role='status' aria-hidden='true'></span>
-						) : (
-							<FontAwesomeIcon icon={faDownload} />
-						)}
-					</button>
 				</div>
 			</div>
 

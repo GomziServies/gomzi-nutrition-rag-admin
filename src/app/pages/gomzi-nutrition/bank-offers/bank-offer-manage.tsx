@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import SelectField from '../../../components/SelectField'
 import {
 	BankOfferItem,
 	GetBankOffersAdmin,
@@ -703,17 +704,21 @@ export default function BankOfferManage() {
 
 										<div className="col-md-6">
 											<label className="form-label fw-bold text-gray-700 fs-7">Bank Icon / Logo Preset</label>
-											<select
-												className="form-select form-select-solid"
-												value={formData.bankPreset}
-												onChange={(e) => setFormData({ ...formData, bankPreset: e.target.value })}
-											>
-												<option value="icici">ICICI Bank (Vector Logo)</option>
-												<option value="hdfc">HDFC Bank (Vector Logo)</option>
-												<option value="hsbc">HSBC (Vector Logo)</option>
-												<option value="upi">UPI Pay (Vector Logo)</option>
-												<option value="other">Custom (Use Uploaded Image or Generic Icon)</option>
-											</select>
+											<SelectField
+												value={formData.bankPreset || 'icici'}
+												onChange={(e: any) => setFormData({ ...formData, bankPreset: e.target.value })}
+												options={[
+													{ label: 'ICICI Bank (Vector Logo)', value: 'icici' },
+													{ label: 'HDFC Bank (Vector Logo)', value: 'hdfc' },
+													{ label: 'HSBC (Vector Logo)', value: 'hsbc' },
+													{ label: 'UPI Pay (Vector Logo)', value: 'upi' },
+													{ label: 'Custom (Use Uploaded Image or Generic Icon)', value: 'other' },
+												]}
+												showLabel={false}
+												marginRemove={true}
+												hideDefaultOption={true}
+												searchable={false}
+											/>
 										</div>
 
 										<div className="col-md-6">

@@ -13,6 +13,7 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import NumberTicker from '../../../components/NumberTicker'
 import SearchFilter from '../../../components/SearchFilter'
 import GomziTablePagination from '../../../components/GomziTablePagination'
@@ -257,7 +258,7 @@ const AddToCart: React.FC = () => {
 
 			{/* Main Card with Toolbar & Table */}
 			<div className='gz-prod-card'>
-				{/* Toolbar: SearchFilter -> LengthMenu -> DateFilter -> Export */}
+				{/* Toolbar: SearchFilter -> LengthMenu -> DownloadExcel -> DateFilter */}
 				<div className='gz-prod-toolbar'>
 					<div className='gz-prod-toolbar-left'>
 						<SearchFilter
@@ -271,21 +272,19 @@ const AddToCart: React.FC = () => {
 							handleItemsPerPageChange={handleItemsPerPageChange}
 							className='me-0'
 						/>
-					</div>
-
-					<div className='gz-prod-toolbar-right'>
-						<DateFilter
-							onDateRangeChange={handleDateRangeChange}
-							rightValue='0'
-						/>
-						<button
-							type='button'
-							className='gz-prod-btn-icon-export'
-							onClick={downloadExcel}
-							disabled={loading || filteredCartData.length === 0}
-							title='Export Records to Excel'>
-							<FontAwesomeIcon icon={faDownload} />
-						</button>
+						<div>
+							<DownloadExcelButton
+								onClick={downloadExcel}
+								disabled={loading || filteredCartData.length === 0}
+								title='Export Records to Excel'
+							/>
+						</div>
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+							/>
+						</div>
 					</div>
 				</div>
 

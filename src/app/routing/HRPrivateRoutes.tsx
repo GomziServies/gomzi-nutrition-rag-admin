@@ -216,11 +216,6 @@ const HRPrivateRoutes = () => {
 					element={<GlsEmployeeSalaryView />}
 				/>
 
-				<Route
-					path='hr-chat'
-					element={<HRChatPage />}
-				/>
-
 				{/* Salary Slip Routes */}
 				<Route
 					path='salary-slip'
@@ -283,6 +278,11 @@ const HRPrivateRoutes = () => {
 					element={<RBACSetup />}
 				/>
 			</Route>
+
+			<Route
+				path='hr-chat'
+				element={<HRChatPage />}
+			/>
 		</Routes>
 	)
 }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { KTCard, toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import Swal from 'sweetalert2'
@@ -587,6 +588,26 @@ const GroupManagement: React.FC = () => {
                     setRowsPerPage(value)
                     setCurrentPage(1)
                   }}
+                />
+              </div>
+              <div className='d-flex align-items-center'>
+                <DownloadExcelButton
+                  data={activeTab === 'groups' ? groups : filteredContacts}
+                  columns={
+                    activeTab === 'groups'
+                      ? [
+                          { title: 'Group Name', field: 'group_name' },
+                          { title: 'Brand Name', field: 'brand_id.brand_name' },
+                          { title: 'Created At', field: 'createdAt' },
+                        ]
+                      : [
+                          { title: 'Name', field: 'full_name' },
+                          { title: 'Phone Number', field: 'phone_number' },
+                          { title: 'Email', field: 'email' },
+                          { title: 'Brand Name', field: 'brand_id.brand_name' },
+                        ]
+                  }
+                  filename={activeTab === 'groups' ? 'groups-list' : 'group-contacts-list'}
                 />
               </div>
             </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import SelectField from '../../../components/SelectField'
 import {
 	DealItem,
 	GetDealsAdmin,
@@ -827,21 +828,24 @@ export default function DealManage() {
 										{/* Quick Pick from Official Catalog */}
 										<div className='d-flex align-items-center gap-2 mt-2'>
 											<span className='fs-8 text-muted text-nowrap'>Catalog Images:</span>
-											<select
-												className='form-select form-select-sm'
-												value={CATALOG_IMAGES.some((c) => c.path === formData.image) ? formData.image : ''}
-												onChange={(e) => {
-													if (e.target.value) {
-														setFormData({ ...formData, image: e.target.value })
-													}
-												}}>
-												<option value=''>-- Quick Select Catalog Image --</option>
-												{CATALOG_IMAGES.map((item, idx) => (
-													<option key={idx} value={item.path}>
-														{item.label} ({item.path.split('/').pop()})
-													</option>
-												))}
-											</select>
+											<div className='flex-grow-1'>
+												<SelectField
+													value={CATALOG_IMAGES.some((c) => c.path === formData.image) ? formData.image : ''}
+													onChange={(e: any) => {
+														if (e.target.value) {
+															setFormData({ ...formData, image: e.target.value })
+														}
+													}}
+													options={CATALOG_IMAGES.map((item) => ({
+														label: `${item.label} (${item.path.split('/').pop()})`,
+														value: item.path,
+													}))}
+													defaultLabel='-- Quick Select Catalog Image --'
+													showLabel={false}
+													marginRemove={true}
+													searchable={true}
+												/>
+											</div>
 										</div>
 									</div>
 								</div>

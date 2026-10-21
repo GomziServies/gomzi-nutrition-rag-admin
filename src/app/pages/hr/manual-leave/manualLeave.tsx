@@ -13,6 +13,7 @@ import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
+import DateFilter from '../../../components/DateRangePicker'
 import {
 	ActionEmployeeLeave,
 	CreateEmployeeLeave,
@@ -313,12 +314,34 @@ const HRManualLeave: React.FC = () => {
 		}
 	}
 
+	const [dateRange, setDateRange] = useState<[Date, Date] | null>(null)
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setDateRange(range)
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}
+
 	const filteredAdminData = leaveData.filter((admin: any) => {
-		return (
+		const matchesSearch =
 			admin?.admin_id?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			admin?.reason?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			admin?.notes?.toLowerCase().includes(searchTerm.toLowerCase())
-		)
+
+		let matchesDate = true
+		if (dateRange && dateRange[0] && dateRange[1]) {
+			const isAllDates = new Date(dateRange[0]).getFullYear() <= 2015
+			if (!isAllDates && (admin?.from_date || admin?.createdAt)) {
+				const start = new Date(dateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(dateRange[1])
+				end.setHours(23, 59, 59, 999)
+
+				const d = new Date(admin?.from_date || admin?.createdAt)
+				matchesDate = d >= start && d <= end
+			}
+		}
+
+		return matchesSearch && matchesDate
 	})
 
 	const paginatedAdminData = filteredAdminData.slice(
@@ -388,9 +411,19 @@ const HRManualLeave: React.FC = () => {
 						{/* 3. Download Excel Button */}
 						<div>
 							<DownloadExcelButton
-								data={leaveData}
+								data={filteredAdminData}
 								columns={sortableFields}
 								filename='Festival_Leaves'
+							/>
+						</div>
+
+						{/* 4. Date Filter */}
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+								defaultAllDates={true}
+								storageKey='hr_manual_leave_date_range'
 							/>
 						</div>
 					</div>

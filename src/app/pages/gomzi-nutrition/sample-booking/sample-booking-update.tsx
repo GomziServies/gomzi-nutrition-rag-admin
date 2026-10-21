@@ -677,26 +677,18 @@ const SampleBookingUpdate: React.FC = () => {
 							<div className='col-md-6'>
 								<label className='sb-form-label'>Courier Partner</label>
 								<div className='d-flex gap-2'>
-									<select
-										name='courier'
-										value={formData.courier}
-										onChange={handleInputChange}
-										className='form-select form-select-solid'
-										style={{
-											height: '44px',
-											backgroundColor: '#F8FAFD',
-											borderColor: '#E4EAF2',
-											color: '#172B4D',
-											borderRadius: '10px',
-											fontSize: '13.5px',
-											fontWeight: 500,
-										}}>
-										{COURIER_OPTIONS.map((c) => (
-											<option key={c} value={c}>
-												{c}
-											</option>
-										))}
-									</select>
+									<div className='flex-grow-1'>
+										<SelectField
+											name='courier'
+											value={formData.courier}
+											onChange={handleInputChange}
+											options={COURIER_OPTIONS}
+											showLabel={false}
+											marginRemove={true}
+											hideDefaultOption={true}
+											searchable={false}
+										/>
+									</div>
 									{formData.courier === 'Other' && (
 										<input
 											type='text'

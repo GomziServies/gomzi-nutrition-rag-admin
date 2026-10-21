@@ -9,6 +9,7 @@ import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import InputField from '../../../../components/InputField'
 import LengthMenu from '../../../../components/LengthMenu'
+import DownloadExcelButton from '../../../../components/DownloadExcelButton'
 import SearchFilter from '../../../../components/SearchFilter'
 import SelectField from '../../../../components/SelectField'
 import Table from '../../../../components/Table'
@@ -346,27 +347,20 @@ const NutritionAllOrder: React.FC = () => {
 						/>
 					</div>
 				</div>
-				<div className='d-flex justify-content-between mx-3 m-5'>
-					<div className='d-flex pt-1 mx-2'>
-						<div className='d-flex align-items-center justify-content-between'>
-							<LengthMenu handleItemsPerPageChange={handleItemsPerPageChange} />
-						</div>
-						<button
-							className='btn btn-primary ms-5 mx-2'
-							onClick={downloadExcel}
-							disabled={loading}>
-							<FontAwesomeIcon
-								icon={faDownload}
-								className='fs-3'
-								style={{ marginRight: '10px' }}
-							/>
-							Excel
-						</button>
-					</div>
+				<div className='d-flex align-items-center flex-wrap gap-3 mx-3 m-5'>
 					<SearchFilter
 						searchTerm={searchTerm}
 						setSearchTerm={setSearchTerm}
+						className='me-0'
 					/>
+					<LengthMenu handleItemsPerPageChange={handleItemsPerPageChange} className='me-0' />
+					<div>
+						<DownloadExcelButton
+							onClick={downloadExcel}
+							disabled={loading}
+							title='Export to Excel'
+						/>
+					</div>
 				</div>
 
 				<div className='py-4 card-body'>
@@ -561,6 +555,9 @@ const NutritionAllOrder: React.FC = () => {
 							totalPages={metaData?.totalPages}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? orderData.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='orders'
 						/>
 					</div>
 				)}

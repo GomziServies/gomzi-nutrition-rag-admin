@@ -183,12 +183,38 @@ const EmployeeChatPage = () => {
 
 					{/* WhatsApp-Style Rounded Search Bar */}
 					<div className='gz-emp-search-wrap'>
-						<div className='gz-emp-search-box'>
-							<FontAwesomeIcon icon={faMagnifyingGlass} className='gz-emp-search-icon' />
+						<div
+							className='gz-emp-search-box'
+							style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
+							<FontAwesomeIcon
+								icon={faMagnifyingGlass}
+								className='gz-emp-search-icon'
+								style={{
+									position: 'absolute',
+									left: '16px',
+									top: '50%',
+									transform: 'translateY(-50%)',
+									color: '#94a3b8',
+									fontSize: '14px',
+									pointerEvents: 'none',
+									zIndex: 3,
+								}}
+							/>
 							<input
 								type='text'
-								data-kt-user-table-filter='search'
 								className='gz-emp-search-input'
+								style={{
+									paddingLeft: '48px',
+									paddingRight: '16px',
+									borderRadius: '24px',
+									height: '42px',
+									width: '100%',
+									backgroundColor: '#f8fafd',
+									border: '1px solid #e2e8f0',
+									fontSize: '13.5px',
+									outline: 'none',
+									boxSizing: 'border-box',
+								}}
 								placeholder='Search conversations...'
 								value={localSearchTerm}
 								onChange={(e) => setLocalSearchTerm(e.target.value)}

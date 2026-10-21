@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faChevronDown, faSearch } from '@fortawesome/free-solid-svg-icons'
 
 type Props = {
+	id?: string
 	className?: string
 	label?: string
 	name?: string
@@ -22,9 +23,12 @@ type Props = {
 	defaultLabel?: string
 	height?: string
 	placement?: 'auto' | 'top' | 'bottom'
+	style?: React.CSSProperties
+	triggerStyle?: React.CSSProperties
 }
 
 const SelectField: React.FC<Props> = ({
+	id,
 	className = '',
 	label = '',
 	value,
@@ -43,6 +47,8 @@ const SelectField: React.FC<Props> = ({
 	defaultLabel,
 	height,
 	placement = 'auto',
+	style,
+	triggerStyle,
 }) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const [searchTerm, setSearchTerm] = useState('')
@@ -185,12 +191,13 @@ const SelectField: React.FC<Props> = ({
 		return opt.label.toLowerCase().includes(searchTerm.toLowerCase())
 	})
 
-	const triggerStyle: React.CSSProperties = height
-		? { height, minHeight: height }
-		: {}
+	const mergedTriggerStyle: React.CSSProperties = {
+		...(height ? { height, minHeight: height } : {}),
+		...triggerStyle,
+	}
 
 	return (
-		<div className={`fv-row ${marginRemove ? `mb-0` : `mb-md-7 mb-3`} ${className}`}>
+		<div className={`fv-row ${marginRemove ? `mb-0` : `mb-md-7 mb-3`} ${className}`} style={style}>
 			{showLabel && (
 				<label
 					htmlFor={htmlFor}
@@ -210,11 +217,12 @@ const SelectField: React.FC<Props> = ({
 			) : (
 				<div
 					ref={dropdownRef}
-					className={`gz-custom-select-wrap selectfield-bg mb-3 mb-lg-0 ${isOpen ? 'is-open' : ''}`}
+					className={`gz-custom-select-wrap selectfield-bg ${marginRemove ? 'mb-0' : 'mb-3 mb-lg-0'} ${isOpen ? 'is-open' : ''}`}
 					style={{ position: 'relative', zIndex: isOpen ? 1075 : 1 }}>
 					{/* Hidden native input for form compatibility */}
 					<input
 						type='hidden'
+						id={id}
 						name={name}
 						value={currentVal}
 					/>
@@ -224,7 +232,7 @@ const SelectField: React.FC<Props> = ({
 						className={`gz-custom-select-trigger ${isOpen ? 'is-open' : ''} ${
 							disabled ? 'is-disabled' : ''
 						}`}
-						style={triggerStyle}
+						style={mergedTriggerStyle}
 						onClick={() => {
 							if (!disabled) {
 								if (!isOpen) {

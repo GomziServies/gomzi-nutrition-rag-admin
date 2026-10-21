@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { Link, useLocation } from 'react-router-dom'
@@ -7,6 +7,7 @@ import { KTCard, KTIcon, toAbsoluteUrl } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -83,20 +84,10 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 
 	useEffect(() => {
 		fetchTrainerData()
-	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder])
-
-	const isFirstRender = useRef(true)
+	}, [])
 
 	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false
-			return
-		}
-
-		if (searchTerm.trim() || searchTerm === '') {
-			setPagination((prev) => ({ ...prev, page: 1 }))
-			if (pagination.page === 1) fetchTrainerData()
-		}
+		setPagination((prev) => (prev.page === 1 ? prev : { ...prev, page: 1 }))
 	}, [searchTerm])
 
 	const handleSubmit = async () => {
@@ -219,10 +210,10 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 	}
 
 	const handlePageChange = (page: number) => {
-		setPagination({ ...pagination, page })
+		setPagination((prev) => ({ ...prev, page }))
 	}
 	const handleItemsPerPageChange = (value: number) => {
-		setPagination({ ...pagination, itemsPerPage: value })
+		setPagination({ page: 1, itemsPerPage: value })
 	}
 
 	const handleDeleteTrainer = async (_id: string) => {
@@ -259,7 +250,43 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
 		setSort(newSort)
 		setSortOrder(newSortOrder)
+		setPagination((prev) => ({ ...prev, page: 1 }))
 	}
+
+	const sortedTrainers = useMemo(() => {
+		let result = trainerData
+
+		if (searchTerm.trim()) {
+			const term = searchTerm.toLowerCase().trim()
+			result = result.filter(
+				(t: any) =>
+					(t.name || '').toLowerCase().includes(term) ||
+					(t.email || '').toLowerCase().includes(term) ||
+					(t.mobile || '').toString().includes(term) ||
+					(t.city || '').toLowerCase().includes(term) ||
+					(t.company || '').toLowerCase().includes(term)
+			)
+		}
+
+		if (sort) {
+			result = [...result].sort((a: any, b: any) => {
+				const aVal = (a[sort] || '').toString()
+				const bVal = (b[sort] || '').toString()
+				return sortOrder === 'asc'
+					? aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' })
+					: bVal.localeCompare(aVal, undefined, { numeric: true, sensitivity: 'base' })
+			})
+		}
+
+		return result
+	}, [trainerData, searchTerm, sort, sortOrder])
+
+	const paginatedTrainers = useMemo(() => {
+		const start = (pagination.page - 1) * pagination.itemsPerPage
+		return sortedTrainers.slice(start, start + pagination.itemsPerPage)
+	}, [sortedTrainers, pagination.page, pagination.itemsPerPage])
+
+	const totalPages = Math.ceil(sortedTrainers.length / pagination.itemsPerPage) || 1
 
 	const handleRowClick = (id: string) => {
 		if (window.innerWidth <= 1024) {
@@ -303,17 +330,25 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 							className='me-0'
 						/>
 						<LengthMenu
-							expenseData={trainerData}
+							expenseData={sortedTrainers}
 							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
 							className='me-0'
 						/>
+						<div>
+							<DownloadExcelButton
+								data={sortedTrainers}
+								columns={sortableFields}
+								filename='Trainer_List'
+							/>
+						</div>
 					</div>
 				</div>
 
 				<div className='card-body p-0'>
 					<div className='table-responsive'>
 						<Table
-							data={trainerData}
+							data={paginatedTrainers}
 							columns={sortableFields}
 							sort={sort}
 							sortOrder={sortOrder}
@@ -424,16 +459,18 @@ const GomziNutritionTrainerDetail: React.FC = () => {
 							loading={loading}
 						/>
 					</div>
-					{trainerData.length === 0 && !loading && (
+					{sortedTrainers.length === 0 && !loading && (
 						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10 text-muted'>
-							<b>No trainers found</b>
+							<b>{searchTerm ? 'No matching trainers found' : 'No trainers found'}</b>
 						</div>
 					)}
-					{trainerData.length > 0 && (
+					{sortedTrainers.length > 0 && (
 						<UsersListPagination
-							totalPages={Math.ceil(trainerData.length / pagination.itemsPerPage) || 1}
+							totalPages={totalPages}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={sortedTrainers.length}
+							itemsPerPage={pagination.itemsPerPage}
 						/>
 					)}
 				</div>

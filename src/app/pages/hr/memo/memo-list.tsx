@@ -12,6 +12,7 @@ import SearchFilter from '../../../components/SearchFilter'
 import SelectField from '../../../components/SelectField'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import UsersListPagination from '../../../components/TablePagination'
+import DateFilter from '../../../components/DateRangePicker'
 import { DeleteEmployeeMemo, GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { generateMemoPdf, MemoDocument } from './MemoDocument'
 import './memo-letterhead.css'
@@ -33,6 +34,12 @@ function MemoList() {
 	})
 	const [sort, setSort] = useState<string>('created_date')
 	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+	const [dateRange, setDateRange] = useState<[Date, Date] | null>(null)
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setDateRange(range)
+		setPagination((p) => ({ ...p, page: 1 }))
+	}
 
 	const handleSort = (field: string) => {
 		if (sort === field) {
@@ -363,7 +370,7 @@ function MemoList() {
 		})
 
 		// Filter by search term if provided
-		const filtered = searchTerm
+		let filtered = searchTerm
 			? allMemos.filter((item) => {
 					const term = searchTerm.toLowerCase()
 					return (
@@ -374,6 +381,24 @@ function MemoList() {
 					)
 			  })
 			: allMemos
+
+		// Filter by date range if provided
+		if (dateRange && dateRange[0] && dateRange[1]) {
+			const isAllDates = new Date(dateRange[0]).getFullYear() <= 2015
+			if (!isAllDates) {
+				const start = new Date(dateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(dateRange[1])
+				end.setHours(23, 59, 59, 999)
+
+				filtered = filtered.filter((item) => {
+					const memoDateStr = item.memo?.date || item.memo?.created_date
+					if (!memoDateStr) return false
+					const d = new Date(memoDateStr)
+					return d >= start && d <= end
+				})
+			}
+		}
 
 		// Sort by selected field and order
 		return filtered.sort((a, b) => {
@@ -509,6 +534,16 @@ function MemoList() {
 									const val = e?.target?.value ?? e
 									setSelectedEmployee(val || '')
 								}}
+							/>
+						</div>
+
+						{/* 5. Date Filter */}
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+								defaultAllDates={true}
+								storageKey='hr_memo_date_range'
 							/>
 						</div>
 					</div>

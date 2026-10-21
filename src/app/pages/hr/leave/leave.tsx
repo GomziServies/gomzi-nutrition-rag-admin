@@ -19,6 +19,7 @@ import SearchFilter from '../../../components/SearchFilter'
 import TableButton from '../../../components/TableButton'
 import SelectField from '../../../components/SelectField'
 import UsersListPagination from '../../../components/TablePagination'
+import DateFilter from '../../../components/DateRangePicker'
 import {
 	ActionEmployeeLeave,
 	GetEmployeeLeaves,
@@ -191,10 +192,34 @@ const HRLeave: React.FC = () => {
 		}
 	}
 
-	const filteredData = leaveData.filter((sale: any) =>
-		(sale?.admin_id?.full_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-		(sale?.reason || '').toLowerCase().includes((searchTerm || '').toLowerCase())
-	)
+	const [dateRange, setDateRange] = useState<[Date, Date] | null>(null)
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setDateRange(range)
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}
+
+	const filteredData = leaveData.filter((sale: any) => {
+		const matchesSearch =
+			(sale?.admin_id?.full_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+			(sale?.reason || '').toLowerCase().includes((searchTerm || '').toLowerCase())
+
+		let matchesDate = true
+		if (dateRange && dateRange[0] && dateRange[1]) {
+			const isAllDates = new Date(dateRange[0]).getFullYear() <= 2015
+			if (!isAllDates && (sale?.from_date || sale?.createdAt)) {
+				const start = new Date(dateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(dateRange[1])
+				end.setHours(23, 59, 59, 999)
+
+				const leaveDate = new Date(sale?.from_date || sale?.createdAt)
+				matchesDate = leaveDate >= start && leaveDate <= end
+			}
+		}
+
+		return matchesSearch && matchesDate
+	})
 
 	const sortedLeaveData = [...filteredData].sort((a: any, b: any) => {
 		let aVal: any
@@ -300,16 +325,26 @@ const HRLeave: React.FC = () => {
 					{/* 3. Download Excel Button */}
 					<div>
 						<DownloadExcelButton
-							data={leaveData}
+							data={sortedLeaveData}
 							columns={[
-								{ title: 'Employee Name', field: 'employee_details.full_name' },
-								{ title: 'Start Date', field: 'start_date' },
-								{ title: 'End Date', field: 'end_date' },
+								{ title: 'Employee Name', field: 'admin_id.full_name' },
+								{ title: 'Start Date', field: 'from_date' },
+								{ title: 'End Date', field: 'to_date' },
 								{ title: 'Time', field: 'time' },
 								{ title: 'Reason', field: 'reason' },
 								{ title: 'Status', field: 'status' },
 							]}
 							filename='Leave_Requests'
+						/>
+					</div>
+
+					{/* 4. Date Filter */}
+					<div>
+						<DateFilter
+							onDateRangeChange={handleDateRangeChange}
+							rightValue='0'
+							defaultAllDates={true}
+							storageKey='hr_leave_date_range'
 						/>
 					</div>
 				</div>

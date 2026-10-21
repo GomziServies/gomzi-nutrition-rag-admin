@@ -1387,11 +1387,11 @@ a.text-hover-primary:hover {
 }
 
 /* ================================================================ INPUTS & FORM CONTROLS (GOMZI THEME) */
-.form-control:not(.gz-top-search-input):not(.gz-search-filter-input),
+.form-control:not(.gz-top-search-input):not(.gz-search-filter-input):not(.gz-emp-search-input):not(.gz-chat-search-input),
 .form-select,
 .inputfield-bg,
 .inputfield-bg1,
-input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.selectfield-search-input):not(.gz-staged-caption-input):not(.gz-emp-composer-input),
+input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.selectfield-search-input):not(.gz-staged-caption-input):not(.gz-emp-composer-input):not(.gz-emp-search-input):not(.gz-chat-search-input),
 input[type='email'],
 input[type='password'],
 input[type='number'],
@@ -1728,11 +1728,11 @@ input.gz-top-search-input,
 }
 .form-control:not(.gz-top-search-input):not(.gz-search-filter-input),
 .form-select,
-.form-control-solid:not(.gz-top-search-input):not(.gz-search-filter-input),
+.form-control-solid:not(.gz-top-search-input):not(.gz-search-filter-input):not(.gz-emp-search-input):not(.gz-chat-search-input),
 .form-select-solid,
 .select2-container .select2-selection,
 .rsuite-picker,
-input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.selectfield-search-input):not(.gz-staged-caption-input):not(.gz-emp-composer-input),
+input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.selectfield-search-input):not(.gz-staged-caption-input):not(.gz-emp-composer-input):not(.gz-emp-search-input):not(.gz-chat-search-input),
 input[type='number'],
 input[type='email'],
 input[type='password'],
@@ -1745,12 +1745,12 @@ textarea:not(.gz-emp-composer-input) {
 	color: var(--gz-text) !important;
 	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
-.form-control:not(.gz-top-search-input):not(.gz-search-filter-input):focus,
+.form-control:not(.gz-top-search-input):not(.gz-search-filter-input):not(.gz-emp-search-input):not(.gz-chat-search-input):focus,
 .form-select:focus,
-.form-control-solid:not(.gz-top-search-input):not(.gz-search-filter-input):focus,
+.form-control-solid:not(.gz-top-search-input):not(.gz-search-filter-input):not(.gz-emp-search-input):not(.gz-chat-search-input):focus,
 .form-select-solid:focus,
 textarea:not(.gz-emp-composer-input):focus,
-input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.gz-staged-caption-input):not(.gz-emp-composer-input):focus {
+input[type='text']:not(.gz-top-search-input):not(.gz-search-filter-input):not(.gz-staged-caption-input):not(.gz-emp-composer-input):not(.gz-emp-search-input):not(.gz-chat-search-input):focus {
 	border-color: #2563eb !important;
 	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 	background-color: #ffffff !important;

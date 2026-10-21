@@ -28,6 +28,7 @@ import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { CreateSOP, DeleteSOP, GetSOP, UpdateSOP } from '../../../Functions/FGGroup/SOP'
+import { FG_GROUP_FILE_BASE_URL } from '../../../constants/base_URL'
 
 // Distinct deterministic avatar pastel colors for initial fallbacks
 const AVATAR_COLORS = [
@@ -48,6 +49,39 @@ const getAvatarColor = (name?: string) => {
 	}
 	const index = Math.abs(hash) % AVATAR_COLORS.length
 	return AVATAR_COLORS[index]
+}
+
+// Helper to resolve an absolute, well-formed file URL from an uploaded file key/path
+export const getFileUrl = (path: string | undefined | null): string => {
+	if (!path || typeof path !== 'string') return ''
+	const trimmed = path.trim()
+	if (!trimmed) return ''
+	if (
+		trimmed.startsWith('http://') ||
+		trimmed.startsWith('https://') ||
+		trimmed.startsWith('blob:') ||
+		trimmed.startsWith('data:')
+	) {
+		return trimmed
+	}
+	const cleanPath = trimmed.replace(/^\/+/, '')
+	const base = FG_GROUP_FILE_BASE_URL || 'https://files.fggroup.in'
+	return `${base}/${cleanPath}`
+}
+
+// Handler to safely open file attachment in a new tab without routing collisions
+export const handleOpenAttachment = (
+	e: React.MouseEvent,
+	rawUrl: string | undefined | null
+) => {
+	e.preventDefault()
+	e.stopPropagation()
+	const targetUrl = getFileUrl(rawUrl)
+	if (targetUrl) {
+		window.open(targetUrl, '_blank', 'noopener,noreferrer')
+	} else {
+		toast.error('No valid attachment file found')
+	}
 }
 
 // Modern overlapping employee avatar component with tooltip & initials fallback
@@ -116,7 +150,7 @@ const EmployeeAvatar: React.FC<{ emp: any; index: number; enableHoverScale?: boo
 			title={tooltip}>
 			{hasPhoto ? (
 				<img
-					src={`https://files.fggroup.in/${photoUrl}`}
+					src={getFileUrl(photoUrl)}
 					alt={fullName}
 					style={{ width: '100%', height: '100%', objectFit: 'cover' }}
 					onError={() => setImgError(true)}
@@ -710,6 +744,17 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 												<span style={{ fontSize: '10px', color: '#94A3B8', marginTop: '2px' }}>
 													{DayJS(completion.completed_at).format('DD/MM/YYYY')}
 												</span>
+											)}
+											{completion.file_url && (
+												<button
+													type='button'
+													className='d-inline-flex align-items-center gap-1 mt-1 text-primary fs-9 fw-bold border-0 bg-transparent p-0'
+													style={{ cursor: 'pointer' }}
+													title='Click to view uploaded attachment'
+													onClick={(e) => handleOpenAttachment(e, completion.file_url)}>
+													<FontAwesomeIcon icon={faFileAlt} style={{ fontSize: '9px' }} />
+													<span>Attachment</span>
+												</button>
 											)}
 										</div>
 									) : (
@@ -1377,8 +1422,10 @@ const HRAssignSopList: React.FC = () => {
 						const isAllCompleted = totalAssigned > 0
 							? completedEmployeesCount === totalAssigned
 							: completedByList.length > 0
-						const isPartiallyCompleted = totalAssigned > 0 && completedEmployeesCount > 0 && completedEmployeesCount < totalAssigned
-						const latestFeedback = completedByList[0]
+						const isPartiallyCompleted =
+							totalAssigned > 0 && completedEmployeesCount > 0 && completedEmployeesCount < totalAssigned
+						const latestFeedback =
+							completedByList.find((c: any) => c?.file_url || c?.remarks) || completedByList[0]
 
 						return (
 							<React.Fragment key={sop._id || `${index}-${actualIndex}`}>
@@ -1537,15 +1584,15 @@ const HRAssignSopList: React.FC = () => {
 												)}
 											</span>
 											{latestFeedback?.file_url && (
-												<a
-													href={`https://files.fggroup.in${latestFeedback.file_url}`}
-													target='_blank'
-													rel='noopener noreferrer'
-													className='d-inline-flex align-items-center gap-1 mt-1 text-primary fs-8 fw-bold text-hover-underline'
-													onClick={(e) => e.stopPropagation()}>
+												<button
+													type='button'
+													className='d-inline-flex align-items-center gap-1 mt-1 text-primary fs-8 fw-bold text-hover-underline border-0 bg-transparent p-0'
+													style={{ cursor: 'pointer', textAlign: 'left', textDecoration: 'none' }}
+													title='Click to open attachment document in a new tab'
+													onClick={(e) => handleOpenAttachment(e, latestFeedback.file_url)}>
 													<FontAwesomeIcon icon={faFileAlt} className='fs-8' />
 													<span>View Attachment</span>
-												</a>
+												</button>
 											)}
 										</div>
 									</td>

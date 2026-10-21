@@ -22,6 +22,7 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import SearchFilter from '../../../components/SearchFilter'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import NumberTicker from '../../../components/NumberTicker'
 import GomziTablePagination from '../../../components/GomziTablePagination'
 import { GetProduct, RemoveProductVariation } from '../../../Functions/FGGroup'
@@ -210,7 +211,7 @@ const GomziNutritionProductVariationList: React.FC = () => {
 	}
 
 	const currentStart = (pagination.page - 1) * pagination.itemsPerPage + 1
-	const totalItems = metaData?.totalRecords || filteredVariations.length
+	const totalItems = metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? filteredVariations.length
 	const totalPages = metaData?.totalPages || Math.ceil(totalItems / pagination.itemsPerPage) || 1
 
 	return (
@@ -334,7 +335,7 @@ const GomziNutritionProductVariationList: React.FC = () => {
 			</div>
 
 			{/* =========================================================================
-			    TOOLBAR (SEARCHBAR -> LENGTHMENU -> EXPORT)
+			    TOOLBAR (SEARCHBAR -> LENGTHMENU -> DOWNLOAD EXCEL)
 			    ========================================================================= */}
 			<div className='gz-prod-toolbar'>
 				<div className='gz-prod-toolbar-left'>
@@ -348,17 +349,13 @@ const GomziNutritionProductVariationList: React.FC = () => {
 						handleItemsPerPageChange={handleItemsPerPageChange}
 						className='me-0'
 					/>
-				</div>
-
-				<div className='gz-prod-toolbar-right'>
-					<button
-						type='button'
-						className='gz-prod-btn-icon-export'
-						onClick={downloadExcel}
-						disabled={loading || filteredVariations.length === 0}
-						title='Export Variations to Excel'>
-						<FontAwesomeIcon icon={faDownload} />
-					</button>
+					<div>
+						<DownloadExcelButton
+							onClick={downloadExcel}
+							disabled={loading || filteredVariations.length === 0}
+							title='Export Variations to Excel'
+						/>
+					</div>
 				</div>
 			</div>
 

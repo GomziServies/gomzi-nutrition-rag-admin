@@ -25,6 +25,8 @@ import {
 	faThLarge,
 } from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import {
 	CompanyAdItem,
 	GetCompanyAdsAdmin,
@@ -421,9 +423,9 @@ export const CompanyAdManage: React.FC = () => {
 			    ========================================================================= */}
 			<div className='card bg-body shadow-sm border-0 mb-6'>
 				<div className='card-body p-4'>
-					<div className='row g-3 align-items-center justify-content-between'>
-						<div className='col-12 col-md-4'>
-							<div className='position-relative'>
+					<div className='d-flex flex-wrap align-items-center justify-content-between gap-3'>
+						<div className='d-flex flex-wrap align-items-center gap-3 flex-grow-1'>
+							<div className='position-relative' style={{ minWidth: '240px' }}>
 								<FontAwesomeIcon
 									icon={faSearch}
 									className='position-absolute top-50 translate-middle-y ms-4 text-muted'
@@ -436,29 +438,50 @@ export const CompanyAdManage: React.FC = () => {
 									onChange={(e) => setSearchTerm(e.target.value)}
 								/>
 							</div>
-						</div>
-						<div className='col-6 col-md-3'>
-							<select
-								className='form-select form-select-solid fs-7'
-								value={companyFilter}
-								onChange={(e) => setCompanyFilter(e.target.value)}>
-								<option value='All'>All Companies</option>
-								{companies.map((c, i) => (
-									<option key={i} value={c.name}>
-										{c.name}
-									</option>
-								))}
-							</select>
-						</div>
-						<div className='col-6 col-md-2'>
-							<select
-								className='form-select form-select-solid fs-7'
-								value={statusFilter}
-								onChange={(e) => setStatusFilter(e.target.value)}>
-								<option value='All'>All Statuses</option>
-								<option value='Active'>Active Only</option>
-								<option value='Inactive'>Inactive Only</option>
-							</select>
+
+							<DownloadExcelButton
+								data={filteredAds}
+								columns={[
+									{ title: 'Title', field: 'title' },
+									{ title: 'Company Name', field: 'companyName' },
+									{ title: 'Redirect URL', field: 'redirectUrl' },
+									{ title: 'Status', field: 'status' },
+								]}
+								filename='company-ads-list'
+							/>
+
+							<div style={{ minWidth: '180px' }}>
+								<SelectField
+									value={companyFilter}
+									onChange={(e: any) => setCompanyFilter(e.target.value)}
+									options={[
+										{ label: 'All Companies', value: 'All' },
+										...companies.map((c) => ({ label: c.name, value: c.name })),
+									]}
+									showLabel={false}
+									marginRemove={true}
+									hideDefaultOption={true}
+									searchable={companies.length > 5}
+									defaultLabel='All Companies'
+								/>
+							</div>
+
+							<div style={{ minWidth: '140px' }}>
+								<SelectField
+									value={statusFilter}
+									onChange={(e: any) => setStatusFilter(e.target.value)}
+									options={[
+										{ label: 'All Statuses', value: 'All' },
+										{ label: 'Active Only', value: 'Active' },
+										{ label: 'Inactive Only', value: 'Inactive' },
+									]}
+									showLabel={false}
+									marginRemove={true}
+									hideDefaultOption={true}
+									searchable={false}
+									defaultLabel='All Statuses'
+								/>
+							</div>
 						</div>
 						<div className='col-12 col-md-3 d-flex justify-content-md-end align-items-center gap-2'>
 							<div className='btn-group shadow-xs' role='group' aria-label='View layout'>

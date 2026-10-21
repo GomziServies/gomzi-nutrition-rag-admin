@@ -185,7 +185,7 @@
 
 .gz-kpi-col {
 	padding: 0 18px;
-	border-right: 1px solid #eef2f6;
+	/* border-right: 1px solid #eef2f6; */
 }
 
 .gz-kpi-col:last-child {

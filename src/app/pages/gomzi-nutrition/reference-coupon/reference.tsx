@@ -15,6 +15,8 @@ import {
 	faUser,
 } from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SearchFilter from '../../../components/SearchFilter'
 import UsersListPagination from '../../../components/TablePagination'
 import CopyButton from '../../../components/motion/CopyButton'
@@ -93,6 +95,10 @@ const Reference: React.FC = () => {
 
 	const handlePageChange = (page: number) => {
 		setPagination({ ...pagination, page })
+	}
+
+	const handleItemsPerPageChange = (itemsPerPage: number) => {
+		setPagination((prev) => ({ ...prev, itemsPerPage, page: 1 }))
 	}
 
 	const filteredData = referenceData.filter((data: any) => {
@@ -207,11 +213,28 @@ const Reference: React.FC = () => {
 			<div className='gz-prod-card'>
 				{/* Toolbar */}
 				<div className='gz-prod-toolbar'>
-					<div className='d-flex align-items-center gap-3 flex-wrap flex-grow-1'>
-						<div style={{ minWidth: '280px', maxWidth: '420px', flexGrow: 1 }}>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
+					<div className='d-flex align-items-center gap-3 flex-wrap'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
+						<LengthMenu
+							expenseData={filteredData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
+						<div>
+							<DownloadExcelButton
+								data={filteredData.map((d: any) => ({
+									'Customer Name': `${d.user_id?.first_name || ''} ${d.user_id?.last_name || ''}`.trim() || 'Guest',
+									'Contact Mobile': d.user_id?.phone_number || 'N/A',
+									'Discount Given': `₹${((d.amount * discountPercentage) / 100).toFixed(2)}`,
+									'Paid Amount': `₹${d.amount?.toFixed(2) || '0.00'}`,
+									'Module / Item Type': d.order_item_type?.replace(/_/g, ' ') || 'N/A',
+								}))}
+								filename='Referral_Orders'
 							/>
 						</div>
 					</div>

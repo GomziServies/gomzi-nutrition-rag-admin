@@ -10,6 +10,7 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -311,15 +312,13 @@ const QuotationList: React.FC = () => {
 							handleItemsPerPageChange={handleItemsPerPageChange}
 							className='me-0'
 						/>
-						<button
-							type='button'
-							className='gz-mgmt-export-btn'
-							onClick={exportToExcel}
-							disabled={loading || quotationData.length === 0}
-							title='Download Excel'>
-							<FontAwesomeIcon icon={faDownload} />
-							<span>Export</span>
-						</button>
+						<div>
+							<DownloadExcelButton
+								onClick={exportToExcel}
+								disabled={loading || quotationData.length === 0}
+								title='Download Excel'
+							/>
+						</div>
 						<div className='d-flex align-items-center'>
 							<DateFilter
 								onDateRangeChange={handleDateRangeChange}
@@ -363,7 +362,7 @@ const QuotationList: React.FC = () => {
 								totalPages={metaData?.totalPages}
 								currentPage={pagination.page}
 								onPageChange={handlePageChange}
-								totalRecords={metaData?.totalRecords || quotationData.length}
+								totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? quotationData.length}
 								itemsPerPage={pagination.itemsPerPage}
 								entityName='quotations'
 							/>

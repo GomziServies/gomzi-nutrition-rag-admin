@@ -9,6 +9,7 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -302,33 +303,23 @@ const AttendenceList = () => {
 							className='me-0'
 						/>
 
-						{/* 3. Datefilter */}
+						{/* 3. Download Excel */}
+						<div>
+							<DownloadExcelButton
+								onClick={downloadExcel}
+								disabled={exporting}
+								loading={exporting}
+								title='Download Excel'
+							/>
+						</div>
+
+						{/* 4. Datefilter */}
 						<div className='d-flex align-items-center flex-shrink-0'>
 							<DateFilter
 								onDateRangeChange={handleDateRangeChange}
 								rightValue='0'
 							/>
 						</div>
-					</div>
-
-					{/* 4. Right: Excel Download */}
-					<div className='gz-mgmt-toolbar-right'>
-						<button
-							type='button'
-							className='gz-mgmt-export-btn'
-							onClick={downloadExcel}
-							disabled={exporting}
-							title='Download Excel'>
-							{exporting ? (
-								<span
-									className='spinner-border spinner-border-sm'
-									role='status'
-									aria-hidden='true'></span>
-							) : (
-								<FontAwesomeIcon icon={faDownload} />
-							)}
-							<span>Export Excel</span>
-						</button>
 					</div>
 				</div>
 
@@ -448,6 +439,9 @@ const AttendenceList = () => {
 							totalPages={metaData?.totalPages || metaData?.total_pages || 1}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? attendanceData.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='attendance records'
 						/>
 					)}
 				</div>

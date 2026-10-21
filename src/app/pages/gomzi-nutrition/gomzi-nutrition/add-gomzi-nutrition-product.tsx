@@ -13,6 +13,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import SelectField from '../../../components/SelectField'
 import { AddProduct, FileUploadToFGGroup, GetCategoriesAdmin, GetCompaniesAdmin, CompanyItem } from '../../../Functions/FGGroup'
 import '../products-theme.css'
 
@@ -609,16 +610,17 @@ export const AddGomziNutritionProduct: React.FC = () => {
 											value={formData.weight.amount}
 											onChange={(e) => updateWeight('amount', e.target.value)}
 										/>
-										<select
-											className='gz-prod-select'
-											style={{ width: '90px' }}
-											value={formData.weight.unit}
-											onChange={(e) => updateWeight('unit', e.target.value)}>
-											<option value='g'>g</option>
-											<option value='kg'>kg</option>
-											<option value='ml'>ml</option>
-											<option value='l'>L</option>
-										</select>
+										<div style={{ width: '90px' }}>
+											<SelectField
+												value={formData.weight.unit}
+												onChange={(e: any) => updateWeight('unit', e.target.value)}
+												options={['g', 'kg', 'ml', 'l']}
+												showLabel={false}
+												marginRemove={true}
+												hideDefaultOption={true}
+												searchable={false}
+											/>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -626,17 +628,16 @@ export const AddGomziNutritionProduct: React.FC = () => {
 							<div className='col-12 col-md-6'>
 								<div className='gz-prod-field-group'>
 									<label className='gz-prod-label'>Categories</label>
-									<select
-										className='gz-prod-select mb-2'
+									<SelectField
+										className='mb-2'
+										value=''
 										onChange={handleCategorySelect}
-										defaultValue=''>
-										<option value=''>-- Select Product Category --</option>
-										{categoryOptions.map((cat, idx) => (
-											<option key={idx} value={cat.value}>
-												{cat.label}
-											</option>
-										))}
-									</select>
+										options={categoryOptions}
+										defaultLabel='-- Select Product Category --'
+										showLabel={false}
+										marginRemove={true}
+										searchable={categoryOptions.length > 5}
+									/>
 									<div className='d-flex flex-wrap gap-1 mb-2'>
 										{formData.categories
 											? formData.categories
@@ -748,18 +749,16 @@ export const AddGomziNutritionProduct: React.FC = () => {
 									<label className='gz-prod-label'>
 										Select Company / Brand <span className='req'>*</span>
 									</label>
-									<select
+									<SelectField
 										name='company'
-										className='gz-prod-select'
 										value={formData.company}
-										onChange={handleCompanyChange}>
-										<option value=''>-- Select Company / Brand --</option>
-										{companyOptions.map((comp, idx) => (
-											<option key={idx} value={comp}>
-												{comp}
-											</option>
-										))}
-									</select>
+										onChange={handleCompanyChange}
+										options={companyOptions}
+										defaultLabel='-- Select Company / Brand --'
+										showLabel={false}
+										marginRemove={true}
+										searchable={true}
+									/>
 								</div>
 							</div>
 
