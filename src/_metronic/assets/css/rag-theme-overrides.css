@@ -241,10 +241,13 @@ body {
 .aside-menu .menu-link .menu-icon i,
 .aside-menu .menu-link .menu-icon svg {
 	color: #555b68 !important;
-	fill: #555b68 !important;
 	font-size: 15px !important;
-	transition: color 0.15s ease, fill 0.15s ease !important;
+	transition: color 0.15s ease !important;
 	margin-right: 10px !important;
+}
+
+.aside-menu .menu-link .menu-icon .svg-inline--fa {
+	fill: #555b68 !important;
 }
 
 /* Hover State - Clean Cool Slate Tint */
@@ -262,6 +265,9 @@ body {
 .aside-menu .menu-link:hover:not(.active) .menu-icon i,
 .aside-menu .menu-link:hover:not(.active) .menu-icon svg {
 	color: #2563eb !important;
+}
+
+.aside-menu .menu-link:hover:not(.active) .menu-icon .svg-inline--fa {
 	fill: #2563eb !important;
 }
 
@@ -293,6 +299,10 @@ body {
 #kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-icon i,
 #kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-icon svg {
 	color: #FFFFFF !important;
+}
+
+.aside-menu .menu-item > .menu-link.without-sub.active .menu-icon .svg-inline--fa,
+#kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-icon .svg-inline--fa {
 	fill: #FFFFFF !important;
 }
 
@@ -324,6 +334,10 @@ body {
 #kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-icon i,
 #kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-icon svg {
 	color: #172B4D !important;
+}
+
+.aside-menu .menu-item.menu-accordion.show > .menu-link .menu-icon .svg-inline--fa,
+#kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-icon .svg-inline--fa {
 	fill: #172B4D !important;
 }
 
@@ -361,6 +375,10 @@ body {
 #kt_aside_menu .menu-item.here > .menu-link .menu-icon i,
 #kt_aside_menu .menu-item.here > .menu-link .menu-icon svg {
 	color: #172B4D !important;
+}
+
+.aside-menu .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+#kt_aside_menu .menu-item.here > .menu-link .menu-icon .svg-inline--fa {
 	fill: #172B4D !important;
 }
 

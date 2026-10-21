@@ -52,6 +52,7 @@ const AsideMenuItemWithSub: React.FC<Props & WithChildren> = ({
 	const [floatingPos, setFloatingPos] = useState({ top: 0, left: 80, maxHeight: 400 })
 	const triggerRef = useRef<HTMLSpanElement | null>(null)
 	const panelRef = useRef<HTMLDivElement | null>(null)
+	const iconRef = useRef<any>(null)
 	const menuId = useRef(`sub-menu-${Math.random().toString(36).slice(2, 9)}`).current
 
 	const isEmployeeLogin = localStorage.getItem('is_employee_login') === 'true'
@@ -238,6 +239,8 @@ const AsideMenuItemWithSub: React.FC<Props & WithChildren> = ({
 					aria-expanded={isFloatingOpen}
 					aria-controls={isFloatingOpen ? floatingPanelId : undefined}
 					onClick={handleLinkClick}
+					onMouseEnter={() => iconRef.current?.startAnimation?.()}
+					onMouseLeave={() => iconRef.current?.stopAnimation?.()}
 					onKeyDown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') {
 							e.preventDefault()
@@ -259,7 +262,7 @@ const AsideMenuItemWithSub: React.FC<Props & WithChildren> = ({
 									className='fs-2'
 								/>
 							) : typeof Icon === 'function' || (typeof Icon === 'object' && Icon !== null && (Icon.$$typeof || Icon.render)) ? (
-								React.createElement(Icon as any)
+								React.createElement(Icon as any, { ref: iconRef, size: 18 })
 							) : (
 								<FontAwesomeIcon
 									icon={Icon}
