@@ -28,6 +28,25 @@ export const AsideFooter: FC = () => {
 			.substring(0, 2)
 			.toUpperCase() || 'CF'
 
+	const asidePopperConfig = {
+		strategy: 'fixed' as const,
+		modifiers: [
+			{
+				name: 'offset',
+				options: {
+					offset: [0, 10],
+				},
+			},
+			{
+				name: 'preventOverflow',
+				options: {
+					boundary: 'viewport' as const,
+					padding: 8,
+				},
+			},
+		],
+	}
+
 	return (
 		<div className='gz-aside-footer'>
 			{/* Motivational Quote Card */}
@@ -51,7 +70,8 @@ export const AsideFooter: FC = () => {
 			<div className='gz-aside-nav-utils'>
 				<OverlayTrigger
 					placement='right'
-					delay={{ show: 120, hide: 50 }}
+					popperConfig={asidePopperConfig}
+					delay={{ show: 50, hide: 0 }}
 					overlay={<Tooltip id='aside-tip-settings' className='gz-aside-tooltip'>Settings</Tooltip>}>
 					<Link to='/employee/document' className='gz-aside-util-link'>
 						<i className='bi bi-gear'></i>
@@ -60,7 +80,8 @@ export const AsideFooter: FC = () => {
 				</OverlayTrigger>
 				<OverlayTrigger
 					placement='right'
-					delay={{ show: 120, hide: 50 }}
+					popperConfig={asidePopperConfig}
+					delay={{ show: 50, hide: 0 }}
 					overlay={<Tooltip id='aside-tip-help' className='gz-aside-tooltip'>Help &amp; Support</Tooltip>}>
 					<Link to='/employee/sop' className='gz-aside-util-link'>
 						<i className='bi bi-question-circle'></i>
@@ -73,7 +94,8 @@ export const AsideFooter: FC = () => {
 			<div className='gz-aside-user-widget'>
 				<OverlayTrigger
 					placement='right'
-					delay={{ show: 120, hide: 50 }}
+					popperConfig={asidePopperConfig}
+					delay={{ show: 50, hide: 0 }}
 					overlay={<Tooltip id='aside-tip-user' className='gz-aside-tooltip'>{name} ({role})</Tooltip>}>
 					<div className='gz-aside-user-info'>
 						<div className='gz-aside-avatar-circle'>{initials}</div>

@@ -861,6 +861,7 @@ body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link {
 	box-sizing: border-box !important;
 	background-color: transparent !important;
 	border: 1px solid transparent !important;
+	overflow: hidden !important;
 	transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -1195,6 +1196,212 @@ body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.show > .menu-
 body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon .svg-inline--fa {
 	color: #FFFFFF !important;
 	fill: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   3.1 COLLAPSED ASIDE RAIL: PRESERVE OUTLINE/STROKE LUCIDE ANIMATED ICONS
+   Lucide icons are stroke-based (fill="none", stroke="currentColor").
+   Prevent FontAwesome fill inheritance from turning them into solid silhouettes.
+   ========================================================================== */
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu_wrapper .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize [id="#kt_aside_menu"] .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-icon svg:not(.svg-inline--fa) {
+	fill: none !important;
+	stroke: currentColor !important;
+	color: #64748B !important;
+}
+
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) path:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) rect:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) circle:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) line:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polyline:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polygon:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) path:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) rect:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) circle:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) line:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polyline:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polygon:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) path:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) rect:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) circle:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) line:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polyline:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polygon:not([fill="currentColor"]) {
+	fill: none !important;
+	stroke: currentColor !important;
+}
+
+/* Hover state for Lucide stroke icons */
+body.aside-minimize .aside .menu-item .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa) {
+	color: #172B4D !important;
+	stroke: #172B4D !important;
+	fill: none !important;
+}
+
+/* Active state for Lucide stroke icons */
+body.aside-minimize .aside .menu-item .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu_wrapper .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize .aside .menu-item.here > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item.here > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item.here > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize .aside .menu-item.show > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item.show > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item.show > .menu-link .menu-icon svg:not(.svg-inline--fa) {
+	color: #FFFFFF !important;
+	stroke: #FFFFFF !important;
+	fill: none !important;
+}
+
+/* Elements with inline fill="currentColor" (e.g. calendar dots) */
+body.aside-minimize .menu-icon svg:not(.svg-inline--fa) [fill="currentColor"],
+body.gz-aside-collapsed .menu-icon svg:not(.svg-inline--fa) [fill="currentColor"],
+body[data-kt-aside-minimize="on"] .menu-icon svg:not(.svg-inline--fa) [fill="currentColor"] {
+	fill: currentColor !important;
+	stroke: none !important;
+}
+
+/* ==========================================================================
+   3.2 PREVENT HORIZONTAL SCROLLBAR ON SHELL & DASHBOARD
+   ========================================================================== */
+html {
+	scrollbar-gutter: stable;
+}
+
+html,
+body {
+	overflow-x: hidden !important;
+	max-width: 100% !important;
+}
+
+.page {
+	overflow-x: hidden !important;
+	max-width: 100% !important;
+}
+
+.wrapper,
+#kt_wrapper {
+	min-width: 0 !important;
+	max-width: 100% !important;
+	overflow-x: hidden !important;
+}
+
+.content,
+#kt_content,
+.post,
+#kt_post,
+#kt_content_container {
+	min-width: 0 !important;
+	max-width: 100% !important;
+}
+
+/* ==========================================================================
+   3.3 ASIDE COLLAPSED TOOLTIP - MODERN LUXURY PILL DESIGN
+   ========================================================================== */
+.tooltip.gz-aside-tooltip {
+	position: fixed !important;
+	z-index: 1090 !important;
+	pointer-events: none !important;
+	width: max-content !important;
+	max-width: 320px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	opacity: 0 !important;
+	visibility: hidden !important;
+	transition: none !important;
+	animation: none !important;
+}
+
+.tooltip.gz-aside-tooltip.show {
+	opacity: 1 !important;
+	visibility: visible !important;
+	transition: opacity 0.12s ease-out !important;
+}
+
+.tooltip.gz-aside-tooltip .tooltip-inner {
+	background: #172B4D !important;
+	color: #FFFFFF !important;
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	line-height: 1.35 !important;
+	padding: 6px 12px !important;
+	border-radius: 8px !important;
+	box-shadow: 0 4px 18px rgba(15, 23, 42, 0.3), 0 2px 6px rgba(15, 23, 42, 0.15) !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+	white-space: nowrap !important;
+	letter-spacing: 0.015em !important;
+	text-align: left !important;
+	width: auto !important;
+	max-width: none !important;
+	display: inline-block !important;
+	box-sizing: border-box !important;
+}
+
+/* Tooltip Arrow */
+.tooltip.gz-aside-tooltip.bs-tooltip-end .tooltip-arrow,
+.tooltip.gz-aside-tooltip[data-popper-placement^='right'] .tooltip-arrow {
+	width: 6px !important;
+	height: 12px !important;
+}
+
+.tooltip.gz-aside-tooltip.bs-tooltip-end .tooltip-arrow::before,
+.tooltip.gz-aside-tooltip[data-popper-placement^='right'] .tooltip-arrow::before {
+	border-right-color: #172B4D !important;
+	border-width: 6px 6px 6px 0 !important;
+}
+
+.tooltip.gz-aside-tooltip.bs-tooltip-start .tooltip-arrow::before,
+.tooltip.gz-aside-tooltip[data-popper-placement^='left'] .tooltip-arrow::before {
+	border-left-color: #172B4D !important;
+	border-width: 6px 0 6px 6px !important;
+}
+
+.tooltip.gz-aside-tooltip.bs-tooltip-top .tooltip-arrow::before,
+.tooltip.gz-aside-tooltip[data-popper-placement^='top'] .tooltip-arrow::before {
+	border-top-color: #172B4D !important;
+	border-width: 6px 6px 0 !important;
+}
+
+.tooltip.gz-aside-tooltip.bs-tooltip-bottom .tooltip-arrow::before,
+.tooltip.gz-aside-tooltip[data-popper-placement^='bottom'] .tooltip-arrow::before {
+	border-bottom-color: #172B4D !important;
+	border-width: 0 6px 6px !important;
+}
+
+/* Suppress aside tooltip completely when sidebar is expanded */
+body:not(.aside-minimize):not(.gz-aside-collapsed):not([data-kt-aside-minimize='on']) .tooltip.gz-aside-tooltip {
+	display: none !important;
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
 }
 
 /* ==========================================================================

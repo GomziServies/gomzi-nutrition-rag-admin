@@ -72,6 +72,12 @@ const AsideToolbar = () => {
 			localStorage.setItem('sidebar_minimized', 'false')
 		}
 		setIsMinimized(nextState)
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new Event('resize'))
+			setTimeout(() => {
+				window.dispatchEvent(new Event('resize'))
+			}, 250)
+		}
 	}
 
 	return (

@@ -254,6 +254,7 @@ select:focus-visible,
 		border-radius: 12px !important;
 		position: relative !important;
 		background-color: transparent !important;
+		overflow: hidden !important;
 		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 	}
 
@@ -578,19 +579,37 @@ select:focus-visible,
 
 /* --- ASIDE COLLAPSED FLOATING TOOLTIPS --- */
 .tooltip.gz-aside-tooltip {
+	position: fixed !important;
 	z-index: 1090 !important;
 	pointer-events: none !important;
+	width: max-content !important;
+	max-width: 320px !important;
+	opacity: 0 !important;
+	visibility: hidden !important;
+	transition: none !important;
+	animation: none !important;
+
+	&.show {
+		opacity: 1 !important;
+		visibility: visible !important;
+		transition: opacity 0.12s ease-out !important;
+	}
 
 	.tooltip-inner {
 		background-color: #172B4D !important;
 		color: #FFFFFF !important;
-		font-size: 11.5px !important;
+		font-size: 12px !important;
 		font-weight: 600 !important;
-		padding: 6px 10px !important;
-		border-radius: 6px !important;
-		box-shadow: 0 4px 14px rgba(23, 43, 77, 0.25) !important;
-		letter-spacing: 0.01em !important;
+		line-height: 1.35 !important;
+		padding: 6px 12px !important;
+		border-radius: 8px !important;
+		box-shadow: 0 4px 18px rgba(15, 23, 42, 0.3), 0 2px 6px rgba(15, 23, 42, 0.15) !important;
+		border: 1px solid rgba(255, 255, 255, 0.12) !important;
+		letter-spacing: 0.015em !important;
 		white-space: nowrap !important;
+		width: auto !important;
+		max-width: none !important;
+		display: inline-block !important;
 	}
 
 	&.bs-tooltip-end .tooltip-arrow::before,

@@ -214,14 +214,34 @@ const AsideMenuItemWithSub: React.FC<Props & WithChildren> = ({
 		}
 	}
 
+const asidePopperConfig = {
+	strategy: 'fixed' as const,
+	modifiers: [
+		{
+			name: 'offset',
+			options: {
+				offset: [0, 10],
+			},
+		},
+		{
+			name: 'preventOverflow',
+			options: {
+				boundary: 'viewport' as const,
+				padding: 8,
+			},
+		},
+	],
+}
+
 	return (
 		<div
 			className={clsx('menu-item', { 'here show': isActive }, 'menu-accordion')}
 			data-kt-menu-trigger='click'>
 			<OverlayTrigger
 				placement='right'
+				popperConfig={asidePopperConfig}
 				show={isFloatingOpen ? false : undefined}
-				delay={{ show: 120, hide: 50 }}
+				delay={{ show: 50, hide: 0 }}
 				overlay={
 					<Tooltip id={tipId} className='gz-aside-tooltip'>
 						{title}

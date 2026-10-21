@@ -242,8 +242,19 @@ const Report: React.FC = () => {
         let endDate: Date | null = null
 
         if (selectedDateRange) {
-            ;[startDate, endDate] = selectedDateRange
-            endDate = new Date(endDate.setHours(23, 59, 59, 999))
+            if (Array.isArray(selectedDateRange)) {
+                startDate = selectedDateRange[0] ? new Date(selectedDateRange[0]) : null
+                endDate = selectedDateRange[1] ? new Date(selectedDateRange[1]) : null
+            } else if (typeof selectedDateRange === 'object') {
+                const s = (selectedDateRange as any).startDate || (selectedDateRange as any).start || (selectedDateRange as any)[0]
+                const e = (selectedDateRange as any).endDate || (selectedDateRange as any).end || (selectedDateRange as any)[1]
+                startDate = s ? new Date(s) : null
+                endDate = e ? new Date(e) : null
+            }
+            if (endDate && !isNaN(endDate.getTime())) {
+                endDate = new Date(endDate)
+                endDate.setHours(23, 59, 59, 999)
+            }
         } else {
             const now = new Date()
             startDate = new Date(now.getFullYear(), now.getMonth(), 1)

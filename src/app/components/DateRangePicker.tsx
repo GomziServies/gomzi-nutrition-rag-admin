@@ -236,17 +236,30 @@ const DateFilter: React.FC<DateFilterProps> = ({
 		const storedDateRange = localStorage.getItem(key)
 		if (storedDateRange) {
 			try {
-				const [startStr, endStr] = JSON.parse(storedDateRange)
-				const startDate = new Date(startStr)
-				const endDate = new Date(endStr)
+				const parsed = JSON.parse(storedDateRange)
+				let startDate: Date | null = null
+				let endDate: Date | null = null
 
-				if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+				if (Array.isArray(parsed) && parsed.length >= 2) {
+					startDate = new Date(parsed[0])
+					endDate = new Date(parsed[1])
+				} else if (parsed && typeof parsed === 'object') {
+					const s = parsed.startDate || parsed.start || parsed[0]
+					const e = parsed.endDate || parsed.end || parsed[1]
+					if (s) startDate = new Date(s)
+					if (e) endDate = new Date(e)
+				}
+
+				if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
 					setSelectedRange([startDate, endDate])
 					setTempRange([startDate, endDate])
 					onDateRangeChange([startDate, endDate])
+				} else {
+					onDateRangeChange(defaultRange)
 				}
 			} catch (error) {
 				console.error('Error parsing stored date range:', error)
+				onDateRangeChange(defaultRange)
 			}
 		} else {
 			onDateRangeChange(defaultRange)

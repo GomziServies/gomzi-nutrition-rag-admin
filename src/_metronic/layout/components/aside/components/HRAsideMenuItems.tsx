@@ -1,48 +1,49 @@
 /* eslint-disable react/jsx-no-target-blank */
-import {
-	faAddressBook,
-	faBarsProgress,
-	faCalendarCheck,
-	faChartSimple,
-	faCheck,
-	faComment,
-	faDollar,
-	faEnvelope,
-	faFileLines,
-	faHome,
-	faListUl,
-	faMoneyBills,
-	faPersonWalking,
-	faShieldHalved,
-	faUserPlus,
-	faUsers,
-} from '@fortawesome/free-solid-svg-icons'
 import { AsideMenuItem } from '../AsideMenuItem'
 import { AsideMenuItemWithSub } from '../AsideMenuItemWithSub'
+import {
+	BarChart3Icon,
+	BookOpenIcon,
+	CalendarDaysIcon,
+	CheckSquareIcon,
+	ClipboardListIcon,
+	FolderIcon,
+	HandCoinsIcon,
+	LayoutGridIcon,
+	LayersIcon,
+	MailIcon,
+	MessageSquareIcon,
+	ReceiptIcon,
+	ShieldCheckIcon,
+	TargetIcon,
+	UserPlusIcon,
+	UsersIcon,
+	WalletIcon,
+} from '../AnimatedAsideIcons'
 
 export function HRAsideMenuItems() {
 	return (
 		<>
 			<AsideMenuItem
 				to='/hr/dashboard'
-				Icon={faHome}
+				Icon={LayoutGridIcon}
 				title='Dashboard'
 			/>
 			<AsideMenuItem
 				to='/hr/employee-detail'
-				Icon={faListUl}
+				Icon={UsersIcon}
 				title='Employee Detail'
 			/>
 
 			<AsideMenuItem
 				to='/hr/attendance'
-				Icon={faAddressBook}
+				Icon={CalendarDaysIcon}
 				title='Attendance Detail'
 			/>
 			<AsideMenuItemWithSub
 				to=''
 				title='Gls-Employee-detail'
-				Icon={faUsers}>
+				Icon={LayersIcon}>
 				<AsideMenuItem
 					to='/hr/gls-employees'
 					title='GlsEmployee Detail'
@@ -61,95 +62,85 @@ export function HRAsideMenuItems() {
 			</AsideMenuItemWithSub>
 			<AsideMenuItem
 				to='/hr/employee-salary'
-				Icon={faDollar}
+				Icon={WalletIcon}
 				title='Employee Salary'
 			/>
 			<AsideMenuItem
 				to='/hr/salary-data'
-				Icon={faDollar}
+				Icon={HandCoinsIcon}
 				title='Salary Data'
 			/>
 			<AsideMenuItem
 				to='/hr/salary-slip'
-				Icon={faMoneyBills}
+				Icon={ReceiptIcon}
 				title='Salary Slip'
 			/>
 
-			{/* <AsideMenuItem
-				to='/hr/attendance'
-				Icon={faAddressBook}
-				title='Attendance Detail'
-			/> */}
 			<AsideMenuItem
 				to='/hr/hr-chat'
-				Icon={faComment}
+				Icon={MessageSquareIcon}
 				title='Chat'
 			/>
 			<AsideMenuItem
 				to='/hr/task-list'
-				Icon={faCheck}
+				Icon={CheckSquareIcon}
 				title='Assign task'
 			/>
 			<AsideMenuItem
 				to='/hr/team-management'
-				Icon={faUsers}
+				Icon={UsersIcon}
 				title='Team Management'
 			/>
 			<AsideMenuItem
 				to='/hr/hiring-request'
-				Icon={faUserPlus}
+				Icon={UserPlusIcon}
 				title='Hiring Request'
 			/>
 			<AsideMenuItem
 				to='/hr/reports'
-				Icon={faFileLines}
+				Icon={BarChart3Icon}
 				title='Reports'
 			/>
 			<AsideMenuItem
 				to='/hr/daily-report'
-				Icon={faBarsProgress}
+				Icon={ClipboardListIcon}
 				title='Daily Report'
 			/>
 			<AsideMenuItem
 				to='/hr/contact-inquiry/contact'
-				Icon={faEnvelope}
+				Icon={MailIcon}
 				title='Contact Inquiry'
 			/>
 			<AsideMenuItem
 				to='/hr/expenses-list'
-				Icon={faMoneyBills}
+				Icon={ReceiptIcon}
 				title='Expenses'
 			/>
-			{/* <AsideMenuItem
-						to='/hr/lead'
-						Icon={faUserPlus}
-						title='Leads'
-						/> */}
 			<AsideMenuItem
 				to='/hr/sop-list'
-				Icon={faChartSimple}
+				Icon={BookOpenIcon}
 				title='SOP'
 			/>
 			<AsideMenuItem
 				to='/hr/leave'
-				Icon={faPersonWalking}
+				Icon={CalendarDaysIcon}
 				title='Leave'
 			/>
 			<AsideMenuItem
 				to='/hr/manual-leave'
-				Icon={faPersonWalking}
+				Icon={CalendarDaysIcon}
 				title='Add Manual leave'
 			/>
 			<AsideMenuItem
 				to='/hr/target'
-				Icon={faCalendarCheck}
+				Icon={TargetIcon}
 				title='Target'
 			/>
 			{/* Authority Management */}
 			<AsideMenuItemWithSub
 				to=''
 				title='Authority Management'
-				Icon={faShieldHalved}>
+				Icon={ShieldCheckIcon}>
 				<AsideMenuItem
 					to='/hr/authority-setup'
 					title='Panel & Menu Setup'
@@ -164,7 +155,7 @@ export function HRAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Memo'
-				Icon={faFileLines}>
+				Icon={FolderIcon}>
 				<AsideMenuItem
 					to='/hr/create-memo'
 					title='Create Memo'

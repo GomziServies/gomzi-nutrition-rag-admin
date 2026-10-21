@@ -73,7 +73,24 @@ const EmployeeTask: React.FC = () => {
 		if (storedRange) {
 			try {
 				const parsed = JSON.parse(storedRange)
-				return [new Date(parsed[0]), new Date(parsed[1])]
+				if (Array.isArray(parsed) && parsed.length >= 2) {
+					const start = new Date(parsed[0])
+					const end = new Date(parsed[1])
+					if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+						return [start, end]
+					}
+				} else if (parsed && typeof parsed === 'object') {
+					const s = parsed.startDate || parsed.start || parsed[0]
+					const e = parsed.endDate || parsed.end || parsed[1]
+					if (s && e) {
+						const start = new Date(s)
+						const end = new Date(e)
+						if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+							return [start, end]
+						}
+					}
+				}
+				return null
 			} catch (e) {
 				return null
 			}
@@ -126,8 +143,19 @@ const EmployeeTask: React.FC = () => {
 		let endDate: Date | null = null
 
 		if (selectedDateRange) {
-			;[startDate, endDate] = selectedDateRange
-			endDate = new Date(endDate.setHours(23, 59, 59, 999))
+			if (Array.isArray(selectedDateRange)) {
+				startDate = selectedDateRange[0] ? new Date(selectedDateRange[0]) : null
+				endDate = selectedDateRange[1] ? new Date(selectedDateRange[1]) : null
+			} else if (typeof selectedDateRange === 'object') {
+				const s = (selectedDateRange as any).startDate || (selectedDateRange as any).start || (selectedDateRange as any)[0]
+				const e = (selectedDateRange as any).endDate || (selectedDateRange as any).end || (selectedDateRange as any)[1]
+				startDate = s ? new Date(s) : null
+				endDate = e ? new Date(e) : null
+			}
+			if (endDate && !isNaN(endDate.getTime())) {
+				endDate = new Date(endDate)
+				endDate.setHours(23, 59, 59, 999)
+			}
 		} else {
 			const now = new Date()
 			startDate = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -192,8 +220,19 @@ const EmployeeTask: React.FC = () => {
 			let endDate: any = null
 
 			if (selectedDateRange) {
-				;[startDate, endDate] = selectedDateRange
-				endDate = new Date(endDate.setHours(23, 59, 59, 999))
+				if (Array.isArray(selectedDateRange)) {
+					startDate = selectedDateRange[0] ? new Date(selectedDateRange[0]) : null
+					endDate = selectedDateRange[1] ? new Date(selectedDateRange[1]) : null
+				} else if (typeof selectedDateRange === 'object') {
+					const s = (selectedDateRange as any).startDate || (selectedDateRange as any).start || (selectedDateRange as any)[0]
+					const e = (selectedDateRange as any).endDate || (selectedDateRange as any).end || (selectedDateRange as any)[1]
+					startDate = s ? new Date(s) : null
+					endDate = e ? new Date(e) : null
+				}
+				if (endDate && !isNaN(endDate.getTime())) {
+					endDate = new Date(endDate)
+					endDate.setHours(23, 59, 59, 999)
+				}
 			} else {
 				const now = new Date()
 				startDate = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -420,10 +459,10 @@ const EmployeeTask: React.FC = () => {
 
 		const isSame =
 			(!range && !selectedDateRange) ||
-			(range &&
-				selectedDateRange &&
-				range[0].getTime() === selectedDateRange[0].getTime() &&
-				range[1].getTime() === selectedDateRange[1].getTime())
+			(Array.isArray(range) &&
+				Array.isArray(selectedDateRange) &&
+				range[0]?.getTime?.() === selectedDateRange[0]?.getTime?.() &&
+				range[1]?.getTime?.() === selectedDateRange[1]?.getTime?.())
 
 		if (!isSame) {
 			setSelectedDateRange(range)

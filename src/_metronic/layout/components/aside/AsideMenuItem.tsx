@@ -109,6 +109,25 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 		</Link>
 	)
 
+const asidePopperConfig = {
+	strategy: 'fixed' as const,
+	modifiers: [
+		{
+			name: 'offset',
+			options: {
+				offset: [0, 10],
+			},
+		},
+		{
+			name: 'preventOverflow',
+			options: {
+				boundary: 'viewport' as const,
+				padding: 8,
+			},
+		},
+	],
+}
+
 	return (
 		<div className='menu-item'>
 			{hasBullet ? (
@@ -116,7 +135,8 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 			) : (
 				<OverlayTrigger
 					placement='right'
-					delay={{ show: 120, hide: 50 }}
+					popperConfig={asidePopperConfig}
+					delay={{ show: 50, hide: 0 }}
 					overlay={
 						<Tooltip id={tipId} className='gz-aside-tooltip'>
 							{title}
