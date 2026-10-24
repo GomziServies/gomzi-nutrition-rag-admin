@@ -250,11 +250,11 @@ const AppRoutes: FC = () => {
 										to={
 											admin === 'Employee'
 												? '/employee/dashboard'
-												: admin === 'Master'
-												? '/master/dashboard'
+												/* : admin === 'Master'
+												? '/master/dashboard' */
 												: admin === 'HR'
 												? '/hr/dashboard'
-												: admin === 'Trainer'
+												/* : admin === 'Trainer'
 												? '/trainer/dashboard'
 												: admin === 'Account'
 												? '/account/dashboard'
@@ -265,29 +265,29 @@ const AppRoutes: FC = () => {
 												: admin === 'Matrices'
 												? '/matrices/gls-report'
 												: admin === 'Automation'
-												? '/automation/broadcast/list'
+												? '/automation/broadcast/list' */
 												: '/rag/dashboard'
 										}
 										replace
 									/>
 								}
 							/>
-							<Route
+							{/* <Route
 								path='/tele/login'
 								element={<Navigate to='/automation/broadcast/list' />}
 							/>
 							<Route
 								path='/master/login'
 								element={<Navigate to='/master/dashboard' />}
-							/>
+							/> */}
 							<Route
 								path='/rag/login'
 								element={<Navigate to='/rag/dashboard' />}
 							/>
-							<Route
+							{/* <Route
 								path='/gls-investor/login'
 								element={<Navigate to='/gls-investor/dashboard' />}
-							/>
+							/> */}
 
 							{/* Module Routes */}
 							<Route
@@ -302,19 +302,19 @@ const AppRoutes: FC = () => {
 								path='/nutrition/*'
 								element={<GomziNutritionPrivateRoutes />}
 							/>
-							<Route
+							{/* <Route
 								path='/trainer/*'
 								element={<TrainerPrivateRoutes />}
 							/>
 							<Route
 								path='/master/*'
 								element={<MasterPrivateRoutes />}
-							/>
+							/> */}
 							<Route
 								path='/hr/*'
 								element={<HRPrivateRoutes />}
 							/>
-							<Route
+							{/* <Route
 								path='/account/*'
 								element={<AccountPrivateRoutes />}
 							/>
@@ -377,7 +377,7 @@ const AppRoutes: FC = () => {
 							<Route
 								path='/matrices/*'
 								element={<MatricesPrivateRoute />}
-							/>
+							/> */}
 						</>
 					) : (
 						<>

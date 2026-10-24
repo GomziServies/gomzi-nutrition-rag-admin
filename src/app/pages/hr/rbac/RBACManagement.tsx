@@ -29,7 +29,22 @@ const RBACManagement: React.FC = () => {
 			setEmployees(empRes.data || [])
 
 			const panelRes: any = await GetPanels()
+			/*
+			// Original unfiltered panel loading:
 			setPanels(panelRes.data || [])
+			*/
+			// Restrict to only 3 panels: HR, Employee, and RAG (Gomzi_Nutrition)
+			const ALLOWED_PANELS = ['hr', 'employee', 'gomzi_nutrition', 'rag', 'gomzi nutrition']
+			const seen = new Set()
+			const filteredPanels = (panelRes.data || []).filter((p: any) => {
+				const norm = (p.name || '').toLowerCase().trim()
+				if (ALLOWED_PANELS.includes(norm) && !seen.has(norm)) {
+					seen.add(norm)
+					return true
+				}
+				return false
+			})
+			setPanels(filteredPanels)
 		} catch (error) {
 			console.error(error)
 			toast.error('Failed to fetch initial data')
@@ -228,10 +243,27 @@ const RBACManagement: React.FC = () => {
 										}}
 										options={[
 											{ value: '', label: 'Choose Panel' },
+											/*
 											...panels.map((p) => ({
 												value: p._id,
 												label: p.name,
 											})),
+											*/
+											...panels
+												.filter((p) => {
+													const norm = (p.name || '').toLowerCase().trim()
+													return (
+														norm === 'hr' ||
+														norm === 'employee' ||
+														norm === 'gomzi_nutrition' ||
+														norm === 'rag' ||
+														norm === 'gomzi nutrition'
+													)
+												})
+												.map((p) => ({
+													value: p._id,
+													label: p.name === 'Gomzi_Nutrition' ? 'Gomzi Nutrition (RAG)' : p.name,
+												})),
 										]}
 									/>
 								</div>

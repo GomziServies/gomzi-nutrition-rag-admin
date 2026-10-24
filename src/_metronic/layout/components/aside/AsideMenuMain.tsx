@@ -82,33 +82,33 @@ export function AsideMenuMain() {
 
 	return (
 		<>
-			{adminType === 'Trainer' && <TrainerAsideMenuItems />}
-			{portalAdminType === 'fwg_portal' && <FwgPortalAsideMenuItems />}
-			{adminType === 'FGIIT' && <FGIITAsideMenuItems />}
-			{adminType === 'FWG' && portalAdminType !== 'fwg_portal' && <FWGAsideMenuItems />}
-			{adminType === 'Vesu-Master' && <VesuFWGAsideMenuItems />}
+			{/* {adminType === 'Trainer' && <TrainerAsideMenuItems />} */}
+			{/* {portalAdminType === 'fwg_portal' && <FwgPortalAsideMenuItems />} */}
+			{/* {adminType === 'FGIIT' && <FGIITAsideMenuItems />} */}
+			{/* {adminType === 'FWG' && portalAdminType !== 'fwg_portal' && <FWGAsideMenuItems />} */}
+			{/* {adminType === 'Vesu-Master' && <VesuFWGAsideMenuItems />} */}
 			{adminType === 'HR' && <HRAsideMenuItems />}
-			{adminType === 'GCS' && <GCSAsideMenuItems />}
+			{/* {adminType === 'GCS' && <GCSAsideMenuItems />} */}
 			{adminType === 'Employee' && <EmployeeAsideMenuItems />}
-			{adminType === 'Master' && <MasterAsideMenuItems />}
+			{/* {adminType === 'Master' && <MasterAsideMenuItems />} */}
 			{adminType === 'Gomzi_Nutrition' && <GomziNutritionAsideMenuItems />}
-			{adminType === 'Gomzi_Nutrition_Tele_Sales' && <GomziNutritionTeleSalesAsideMenuItems />}
-			{adminType === 'Fgiit_Tele_Sales' && <FGIITTeleSalesAsideMenuItems />}
-			{adminType === 'Fwg_Tele_Sales' && <FWGTeleSalesAsideMenuItems />}
-			{adminType === 'Store' && <StoreNutritionAsideMenuItems />}
-			{adminType === 'Gomzi_Medical' && <GomziMedicalAsideMenuItems />}
-			{adminType === 'Gomzi_Medical_Doctor' && <GomziMedicalDoctorAsideMenuItems />}
-			{adminType === 'Gomzi_Medical_Pharmacy' && <GomziMedicalPharmacyAsideMenuItems />}
-			{adminType === 'Adajan-Branch' && <AdajanBranchAsideMenuItems />}
-			{adminType === 'Account' && <AccountAsideMenuItems />}
-			{adminType === 'Automation' && <AutomationAsideMenuItems />}
-			{adminType === 'GLS_Investor' && <GlsInvestorAsideMenuItems />}
-			{adminType === 'Investor' && <InvestorAsideMenuItems />}
-			{adminType === 'Matrices' && <MatricesAsideMenuItems />}
-			{adminType === 'FWG_LOGIN_PORTAL' && <FwgloginAsidemenuItems />}
-			{adminType === 'FGIIT_LOGIN_PORTAL' && <FgiitLoginAsideMenuItems />}
-			{adminType === 'Gomzi_Nutrition_Login' && <GomziNutritionLoginAsideMenuItems />}
-			{adminType === 'Helix' && <HelixAsideMenuItems />}
+			{/* {adminType === 'Gomzi_Nutrition_Tele_Sales' && <GomziNutritionTeleSalesAsideMenuItems />} */}
+			{/* {adminType === 'Fgiit_Tele_Sales' && <FGIITTeleSalesAsideMenuItems />} */}
+			{/* {adminType === 'Fwg_Tele_Sales' && <FWGTeleSalesAsideMenuItems />} */}
+			{/* {adminType === 'Store' && <StoreNutritionAsideMenuItems />} */}
+			{/* {adminType === 'Gomzi_Medical' && <GomziMedicalAsideMenuItems />} */}
+			{/* {adminType === 'Gomzi_Medical_Doctor' && <GomziMedicalDoctorAsideMenuItems />} */}
+			{/* {adminType === 'Gomzi_Medical_Pharmacy' && <GomziMedicalPharmacyAsideMenuItems />} */}
+			{/* {adminType === 'Adajan-Branch' && <AdajanBranchAsideMenuItems />} */}
+			{/* {adminType === 'Account' && <AccountAsideMenuItems />} */}
+			{/* {adminType === 'Automation' && <AutomationAsideMenuItems />} */}
+			{/* {adminType === 'GLS_Investor' && <GlsInvestorAsideMenuItems />} */}
+			{/* {adminType === 'Investor' && <InvestorAsideMenuItems />} */}
+			{/* {adminType === 'Matrices' && <MatricesAsideMenuItems />} */}
+			{/* {adminType === 'FWG_LOGIN_PORTAL' && <FwgloginAsidemenuItems />} */}
+			{/* {adminType === 'FGIIT_LOGIN_PORTAL' && <FgiitLoginAsideMenuItems />} */}
+			{/* {adminType === 'Gomzi_Nutrition_Login' && <GomziNutritionLoginAsideMenuItems />} */}
+			{/* {adminType === 'Helix' && <HelixAsideMenuItems />} */}
 		</>
 	)
 }

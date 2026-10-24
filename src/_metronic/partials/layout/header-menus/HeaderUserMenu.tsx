@@ -35,6 +35,7 @@ export const ALL_PANELS: PanelDef[] = [
 		color: '#8b523c',
 		category: 'Invoices & Sales',
 	},
+	/*
 	{
 		id: 'master',
 		name: 'Master Admin',
@@ -62,6 +63,7 @@ export const ALL_PANELS: PanelDef[] = [
 		color: '#d97706',
 		category: 'Courses & Students',
 	},
+	*/
 	{
 		id: 'hr',
 		name: 'HR Portal',
@@ -71,6 +73,7 @@ export const ALL_PANELS: PanelDef[] = [
 		color: '#dc2626',
 		category: 'Payroll & Team',
 	},
+	/*
 	{
 		id: 'investor',
 		name: 'Investor Portal',
@@ -125,6 +128,7 @@ export const ALL_PANELS: PanelDef[] = [
 		color: '#3b82f6',
 		category: 'GLS Reports',
 	},
+	*/
 ]
 
 const HeaderUserMenu: FC = () => {
@@ -136,23 +140,31 @@ const HeaderUserMenu: FC = () => {
 		const path = (location.pathname || window.location.pathname || '').toLowerCase()
 		if (path.startsWith('/rag') || path.startsWith('/nutrition')) return 'rag'
 		if (path.startsWith('/employee')) return 'employee'
+		/*
 		if (path.startsWith('/master')) return 'master'
 		if (path.startsWith('/fwg')) return 'fwg'
 		if (path.startsWith('/fgiit')) return 'fgiit'
+		*/
 		if (path.startsWith('/hr')) return 'hr'
+		/*
 		if (path.startsWith('/investor') || path.startsWith('/gls-investor')) return 'investor'
 		if (path.startsWith('/helix')) return 'helix'
 		if (path.startsWith('/account')) return 'account'
 		if (path.startsWith('/adajan-branch')) return 'adajan-branch'
 		if (path.startsWith('/automation') || path.startsWith('/tele')) return 'automation'
 		if (path.startsWith('/matrices')) return 'matrices'
+		*/
 
 		const admin = (localStorage.getItem('admin') || '').toLowerCase()
 		if (admin === 'employee') return 'employee'
+		/*
 		if (admin === 'master') return 'master'
+		*/
 		if (admin === 'hr') return 'hr'
+		/*
 		if (admin === 'fwg') return 'fwg'
 		if (admin === 'fgiit') return 'fgiit'
+		*/
 		return 'rag'
 	}
 
@@ -241,16 +253,20 @@ const HeaderUserMenu: FC = () => {
 			window.location.href = '/employee/login'
 		} else if (currentActive === 'rag') {
 			window.location.href = '/rag/login'
+		/*
 		} else if (currentActive === 'master') {
 			window.location.href = '/master/login'
+		*/
 		} else if (currentActive === 'hr') {
 			window.location.href = '/hr/login'
+		/*
 		} else if (currentActive === 'fwg') {
 			window.location.href = '/fwg/login'
 		} else if (currentActive === 'fgiit') {
 			window.location.href = '/fgiit/login'
 		} else if (currentActive === 'investor') {
 			window.location.href = '/investor/login'
+		*/
 		} else {
 			window.location.href = '/login'
 		}
@@ -260,7 +276,7 @@ const HeaderUserMenu: FC = () => {
 		const storedAdmin = (localStorage.getItem('admin') || '').toLowerCase()
 		const userType = (userProfile?.type || '').toLowerCase()
 
-		// Master / SuperAdmin has full access to all panels
+		// Master / SuperAdmin has full access to active panels
 		if (storedAdmin === 'master' || userType === 'master' || userType === 'superadmin') {
 			return ALL_PANELS
 		}
@@ -293,7 +309,7 @@ const HeaderUserMenu: FC = () => {
 
 				if (found) {
 					map.set(found.id, found)
-				} else {
+				} /* else {
 					const customId = auth.panel_id?._id || auth.panel_id?.name
 					if (customId && !map.has(customId)) {
 						map.set(customId, {
@@ -306,11 +322,11 @@ const HeaderUserMenu: FC = () => {
 							category: 'Assigned Department',
 						})
 					}
-				}
+				} */
 			})
 		}
 
-		return Array.from(map.values())
+		return Array.from(map.values()).filter((p) => ['employee', 'rag', 'hr'].includes(p.id))
 	}
 
 	const accessiblePanels = getAccessiblePanels()

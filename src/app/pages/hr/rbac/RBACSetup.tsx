@@ -42,12 +42,27 @@ const RBACSetup: React.FC = () => {
 		try {
 			const res: any = await GetPanels()
 			const panelsData = res.data || []
+			/*
+			// Original unfiltered panels:
 			setPanels(panelsData)
+			*/
+			// Restrict to only 3 panels: HR, Employee, and RAG (Gomzi_Nutrition)
+			const ALLOWED_PANELS = ['hr', 'employee', 'gomzi_nutrition', 'rag', 'gomzi nutrition']
+			const seen = new Set()
+			const filteredPanels = panelsData.filter((p: any) => {
+				const norm = (p.name || '').toLowerCase().trim()
+				if (ALLOWED_PANELS.includes(norm) && !seen.has(norm)) {
+					seen.add(norm)
+					return true
+				}
+				return false
+			})
+			setPanels(filteredPanels)
 
 			// Select first panel by default if not set
-			if (panelsData.length > 0 && !selectedPanelId) {
-				setSelectedPanelId(panelsData[0]._id)
-				fetchFolders(panelsData[0]._id)
+			if (filteredPanels.length > 0 && !selectedPanelId) {
+				setSelectedPanelId(filteredPanels[0]._id)
+				fetchFolders(filteredPanels[0]._id)
 			}
 		} catch (error) {
 			console.error(error)
