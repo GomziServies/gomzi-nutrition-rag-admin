@@ -116,19 +116,13 @@
 		"webpack-cli": "4.10.0"
 	},
 	"overrides": {
-		"@types/react": "18.0.6"
+		"@types/react": "$@types/react"
 	},
 	"scripts": {
-<<<<<<< HEAD
 		"start": "vite",
 		"dev": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
-=======
-		"start": "node --max-old-space-size=4096 node_modules/react-scripts/scripts/start.js",
-		"dev": "node --max-old-space-size=4096 node_modules/react-scripts/scripts/start.js",
-		"build": "node --max-old-space-size=4096 node_modules/react-scripts/scripts/build.js",
->>>>>>> c895cbaeb5f1f8a2f5594e1b7af99fc46e5274ca
 		"test": "react-scripts test",
 		"lint": "eslint --fix --ext .js,.ts,.tsx .",
 		"format": "prettier --ignore-path .gitignore  --write \"src/**/*.+(js|ts|json|tsx|jsx)\"",
