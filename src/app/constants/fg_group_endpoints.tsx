@@ -45,6 +45,10 @@ export const GetBankOffers = `${AdminV1Route}/bank-offers`
 export const ManageBankOffer = `${AdminV1Route}/bank-offers`
 
 // Hero Banner
+// Ad Banners (Pure Strength, Zero Compromise single/multi banner)
+export const GetAdBanners = `${AdminV1Route}/ads-banner`
+export const ManageAdBanner = `${AdminV1Route}/ads-banner`
+
 export const GetHeroBanner = `${AdminV1Route}/hero-banner`
 export const UpdateHeroBanner = `${AdminV1Route}/hero-banner`
 export const TeleLogin = `${BASE_URL}/tele/v1/login`

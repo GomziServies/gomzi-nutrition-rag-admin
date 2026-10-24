@@ -1217,7 +1217,7 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 	const groupedMessages = useMemo(() => groupMessagesWithAlbums(messages), [messages])
 
 	const renderMessageContent = (message: any, isMe: boolean) => {
-		const EMOJI_MATCH_REGEX = /([\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{FE0F}\u{200D}]+)/gu
+		const EMOJI_MATCH_REGEX = new RegExp('([\\p{Extended_Pictographic}\\u{1F3FB}-\\u{1F3FF}\\u{FE0F}\\u{200D}]+)', 'u')
 
 		const renderTextWithAppleEmojis = (content: string, isOnlyEmojis = false) => {
 			const parts = content.split(EMOJI_MATCH_REGEX)

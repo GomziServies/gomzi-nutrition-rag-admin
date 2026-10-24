@@ -1,4 +1,4 @@
-const AUTH_LOCAL_STORAGE_KEY = 'auth_fwg' && 'auth_fg_group'
+const AUTH_LOCAL_STORAGE_KEY = 'auth_fg_group'
 
 const getAuth = (): string | null | undefined => {
 	if (!localStorage) {

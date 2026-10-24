@@ -15,7 +15,6 @@ import {
 	ReceiptIcon,
 	SendIcon,
 	ShieldCheckIcon,
-	SparklesIcon,
 	TruckIcon,
 	UserPlusIcon,
 	UsersIcon,
@@ -50,11 +49,6 @@ export function GomziNutritionAsideMenuItems() {
 					hasBullet={true}
 				/>
 				<AsideMenuItem
-					to='/rag/deals'
-					title='Deals'
-					hasBullet={true}
-				/>
-				<AsideMenuItem
 					to='/rag/promo-banners'
 					title='Promo Banners'
 					hasBullet={true}
@@ -65,17 +59,11 @@ export function GomziNutritionAsideMenuItems() {
 					hasBullet={true}
 				/>
 				<AsideMenuItem
-					to='/rag/bank-offers'
-					title='Bank Offers'
+					to='/rag/ad-banners'
+					title='Ad Banners'
 					hasBullet={true}
 				/>
 			</AsideMenuItemWithSub>
-
-			<AsideMenuItem
-				to='/rag/company-ads'
-				Icon={SparklesIcon}
-				title='Company Advertisements'
-			/>
 
 			{isMasterAdmin && (
 				<AsideMenuItem

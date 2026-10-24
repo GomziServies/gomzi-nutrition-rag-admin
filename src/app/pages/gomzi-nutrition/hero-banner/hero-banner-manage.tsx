@@ -19,7 +19,6 @@ import {
 	faFilePdf,
 	faImage,
 	faLink,
-	faMobileScreen,
 	faPlus,
 	faRotateLeft,
 	faTrash,
@@ -73,13 +72,10 @@ export default function HeroBannerManage() {
 	const [loading, setLoading] = useState<boolean>(true)
 	const [saving, setSaving] = useState<boolean>(false)
 	const [deleting, setDeleting] = useState<boolean>(false)
-	const [previewTab, setPreviewTab] = useState<'desktop' | 'mobile'>('desktop')
 
 	// Current active slide editing state
 	const [desktopFile, setDesktopFile] = useState<File | null>(null)
 	const [desktopPreview, setDesktopPreview] = useState<string>('')
-	const [mobileFile, setMobileFile] = useState<File | null>(null)
-	const [mobilePreview, setMobilePreview] = useState<string>('')
 
 	const currentSlide: BannerSlide = slides[activeSlideIndex] || DEFAULT_BANNER
 
@@ -117,9 +113,7 @@ export default function HeroBannerManage() {
 
 	const initSlideForm = (slide: BannerSlide) => {
 		setDesktopFile(null)
-		setMobileFile(null)
 		setDesktopPreview(getPreviewUrl(slide?.desktop_image || DEFAULT_BANNER.desktop_image))
-		setMobilePreview(getPreviewUrl(slide?.mobile_image || DEFAULT_BANNER.mobile_image || ''))
 	}
 
 	const handleSelectSlide = (index: number) => {
@@ -189,14 +183,6 @@ export default function HeroBannerManage() {
 		}
 	}
 
-	const handleMobileFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files && e.target.files[0]) {
-			const file = e.target.files[0]
-			setMobileFile(file)
-			setMobilePreview(URL.createObjectURL(file))
-		}
-	}
-
 	const handleFieldChange = (field: keyof BannerSlide, value: any) => {
 		const updated = [...slides]
 		updated[activeSlideIndex] = {
@@ -223,18 +209,6 @@ export default function HeroBannerManage() {
 				if (uploadedKey) {
 					finalDesktop = uploadedKey
 					setDesktopPreview(getPreviewUrl(uploadedKey))
-				}
-			}
-
-			// Upload Mobile File if new file selected
-			if (mobileFile) {
-				const uploadRes: any = await FileUploadToFGGroup([mobileFile], {
-					directory: 'hero-banner',
-				})
-				const uploadedKey = uploadRes?.data?.fileURLs?.[0]
-				if (uploadedKey) {
-					finalMobile = uploadedKey
-					setMobilePreview(getPreviewUrl(uploadedKey))
 				}
 			}
 
@@ -275,7 +249,6 @@ export default function HeroBannerManage() {
 					setSlides(updated)
 				}
 				setDesktopFile(null)
-				setMobileFile(null)
 			} else {
 				toast.error(res?.message || 'Failed to save banner slide')
 			}
@@ -417,7 +390,7 @@ export default function HeroBannerManage() {
 							<div className='gz-prod-summary-info'>
 								<span className='gz-prod-summary-label'>Preview Viewport</span>
 								<span className='gz-prod-summary-value' style={{ fontSize: '1.1rem', textTransform: 'capitalize', color: '#7C3AED' }}>
-									{previewTab}
+									Desktop
 								</span>
 							</div>
 						</div>
@@ -705,83 +678,6 @@ export default function HeroBannerManage() {
 							</div>
 						</div>
 
-						{/* Card: Mobile Image */}
-						<div className='gz-mgmt-card mb-6'>
-							<div
-								className='p-5 border-bottom d-flex align-items-center justify-content-between'
-								style={{ backgroundColor: '#F8FAFD' }}>
-								<div className='d-flex align-items-center gap-3'>
-									<div
-										className='d-flex align-items-center justify-content-center rounded-3'
-										style={{ width: '40px', height: '40px', backgroundColor: '#F0FDF4', color: '#16A34A' }}>
-										<FontAwesomeIcon icon={faMobileScreen} />
-									</div>
-									<div>
-										<h3 className='fs-5 fw-bolder text-dark mb-0'>
-											Slide #{activeSlideIndex + 1}: Mobile Image
-										</h3>
-										<span className='text-muted fs-8'>
-											Recommended: 800 &times; 1100px (WebP or JPG) for screens &lt; 1024px
-										</span>
-									</div>
-								</div>
-								<span className='badge bg-light-success text-success fw-bold px-3 py-1'>Mobile</span>
-							</div>
-
-							<div className='p-6'>
-								<div className='mb-4'>
-									<label className='form-label fw-bold fs-7 text-dark mb-2'>
-										Upload Mobile Graphic
-									</label>
-									<div className='input-group'>
-										<input
-											type='file'
-											accept='image/webp,image/png,image/jpeg,image/jpg'
-											onChange={handleMobileFileChange}
-											className='form-control'
-											id='mobileFileInput'
-											style={{ borderRadius: '10px 0 0 10px', height: '44px' }}
-										/>
-										<label
-											className='input-group-text bg-light text-dark fw-bold'
-											htmlFor='mobileFileInput'
-											style={{ borderRadius: '0 10px 10px 0', cursor: 'pointer' }}>
-											<FontAwesomeIcon icon={faUpload} className='me-2' /> Browse
-										</label>
-									</div>
-									{mobileFile && (
-										<div className='text-success fs-8 mt-2 fw-semibold'>
-											Selected: {mobileFile.name} ({(mobileFile.size / 1024).toFixed(1)} KB)
-										</div>
-									)}
-								</div>
-
-								<div className='mb-0'>
-									<label className='form-label fw-bold fs-7 text-dark mb-2'>
-										Or Mobile Image URL / S3 Asset Key
-									</label>
-									<div className='input-group'>
-										<span
-											className='input-group-text text-muted'
-											style={{ backgroundColor: '#F8FAFD', borderRadius: '10px 0 0 10px' }}>
-											<FontAwesomeIcon icon={faLink} />
-										</span>
-										<input
-											type='text'
-											value={currentSlide.mobile_image || ''}
-											onChange={(e) => {
-												handleFieldChange('mobile_image', e.target.value)
-												if (!mobileFile) setMobilePreview(getPreviewUrl(e.target.value))
-											}}
-											placeholder='/images/banner-(gls)-mobile-view.webp'
-											className='form-control'
-											style={{ borderRadius: '0 10px 10px 0', height: '44px' }}
-										/>
-									</div>
-								</div>
-							</div>
-						</div>
-
 						{/* Card: Slide Configuration */}
 						<div className='gz-mgmt-card mb-6'>
 							<div
@@ -907,33 +803,12 @@ export default function HeroBannerManage() {
 										</button>
 									</div>
 
-									{/* Device view tabs */}
-									<div
-										className='d-flex p-1 rounded-3'
-										style={{ backgroundColor: '#EEF2F7' }}>
-										<button
-											type='button'
-											onClick={() => setPreviewTab('desktop')}
-											className='btn btn-sm py-1 px-3 fs-8 fw-bold border-0 transition-all'
-											style={{
-												backgroundColor: previewTab === 'desktop' ? '#172B4D' : 'transparent',
-												color: previewTab === 'desktop' ? '#fff' : '#64748B',
-												borderRadius: '6px',
-											}}>
-											<FontAwesomeIcon icon={faDesktop} className='me-1' /> Desktop
-										</button>
-										<button
-											type='button'
-											onClick={() => setPreviewTab('mobile')}
-											className='btn btn-sm py-1 px-3 fs-8 fw-bold border-0 transition-all'
-											style={{
-												backgroundColor: previewTab === 'mobile' ? '#172B4D' : 'transparent',
-												color: previewTab === 'mobile' ? '#fff' : '#64748B',
-												borderRadius: '6px',
-											}}>
-											<FontAwesomeIcon icon={faMobileScreen} className='me-1' /> Mobile
-										</button>
-									</div>
+									{/* Desktop View Badge */}
+									<span
+										className='badge px-3 py-2 fw-bold text-dark d-inline-flex align-items-center'
+										style={{ backgroundColor: '#EEF2F7', borderRadius: '8px' }}>
+										<FontAwesomeIcon icon={faDesktop} className='me-1.5 text-primary' /> Desktop Preview
+									</span>
 								</div>
 							</div>
 
@@ -946,138 +821,19 @@ export default function HeroBannerManage() {
 								<div
 									className='overflow-hidden shadow-sm position-relative mx-auto bg-dark'
 									style={{
-										maxWidth: previewTab === 'mobile' ? '300px' : '100%',
+										maxWidth: '100%',
 										borderRadius: '14px',
-										transition: 'max-width 0.3s ease',
 										border: '2px solid #0F172A',
 									}}>
 									<div className='position-relative w-100'>
 										<img
-											src={
-												previewTab === 'desktop'
-													? desktopPreview || getPreviewUrl(currentSlide.desktop_image)
-													: mobilePreview ||
-													  getPreviewUrl(currentSlide.mobile_image || '') ||
-													  desktopPreview ||
-													  getPreviewUrl(currentSlide.desktop_image)
-											}
+											src={desktopPreview || getPreviewUrl(currentSlide.desktop_image)}
 											alt='Hero Slide Preview'
 											className='w-100 h-auto d-block object-fit-cover'
 											onError={(e: any) => {
 												e.target.src = '/images/banner-(gls)-web-view.webp'
 											}}
 										/>
-
-										{/* Static Typography & Badges Overlay */}
-										<div
-											className='position-absolute'
-											style={{
-												top: previewTab === 'mobile' ? '4%' : '8%',
-												left: previewTab === 'mobile' ? '50%' : '5%',
-												transform: previewTab === 'mobile' ? 'translateX(-50%)' : 'none',
-												width: previewTab === 'mobile' ? '92%' : '55%',
-												textAlign: previewTab === 'mobile' ? 'center' : 'left',
-												zIndex: 10,
-												pointerEvents: 'none',
-											}}>
-											{/* 3-Line Heading */}
-											<div style={{ lineHeight: '0.94', fontWeight: 900, textTransform: 'uppercase' }}>
-												<div style={{ color: '#964816', fontSize: previewTab === 'mobile' ? '12px' : '17px' }}>
-													SCIENCE-BACKED
-												</div>
-												<div
-													style={{
-														color: '#23150E',
-														fontSize: previewTab === 'mobile' ? '12px' : '17px',
-														marginTop: '2px',
-													}}>
-													NUTRITION FOR EVERYDAY
-												</div>
-												<div
-													style={{
-														color: '#23150E',
-														fontSize: previewTab === 'mobile' ? '12px' : '17px',
-														marginTop: '2px',
-													}}>
-													PERFORMANCE
-												</div>
-											</div>
-
-											{/* Subtitle */}
-											<div
-												style={{
-													color: '#5A2F20',
-													fontWeight: 700,
-													fontSize: previewTab === 'mobile' ? '8px' : '10px',
-													marginTop: previewTab === 'mobile' ? '3px' : '5px',
-												}}>
-												Premium Protein | Wellness | No Amino Spiking 100%
-											</div>
-
-											{/* Buttons */}
-											<div
-												style={{
-													display: 'flex',
-													gap: '6px',
-													justifyContent: previewTab === 'mobile' ? 'center' : 'flex-start',
-													marginTop: previewTab === 'mobile' ? '8px' : '10px',
-												}}>
-												<span
-													className='badge'
-													style={{
-														background: 'linear-gradient(135deg, #5C3124 0%, #48261c 100%)',
-														color: '#fff',
-														padding: previewTab === 'mobile' ? '4px 7px' : '5px 10px',
-														fontSize: previewTab === 'mobile' ? '8px' : '9.5px',
-														borderRadius: '6px',
-														border: '1px solid rgba(251, 191, 36, 0.4)',
-														boxShadow: '0 3px 6px rgba(0,0,0,0.25)',
-													}}>
-													Shop Now &rarr;
-												</span>
-
-												<span
-													className='badge'
-													style={{
-														background: 'rgba(255, 255, 255, 0.95)',
-														color: '#3d1e15',
-														padding: previewTab === 'mobile' ? '4px 7px' : '5px 10px',
-														fontSize: previewTab === 'mobile' ? '8px' : '9.5px',
-														borderRadius: '6px',
-														border: '1px solid rgba(92, 49, 36, 0.3)',
-														boxShadow: '0 3px 6px rgba(0,0,0,0.15)',
-													}}>
-													Download Brochure
-												</span>
-											</div>
-
-											{/* Badges */}
-											<div
-												style={{
-													display: 'flex',
-													flexWrap: 'wrap',
-													gap: '3px',
-													justifyContent: previewTab === 'mobile' ? 'center' : 'flex-start',
-													marginTop: previewTab === 'mobile' ? '6px' : '8px',
-												}}>
-												{['FSSAI', 'ISO', 'GMP', 'KOSHER', 'HACCP', 'HALAL', 'FDA'].map((badge) => (
-													<span
-														key={badge}
-														className='badge'
-														style={{
-															fontSize: '6.5px',
-															padding: '2px 4px',
-															background: 'rgba(255,255,255,0.95)',
-															color: '#1B5E20',
-															border: '1px solid rgba(27,94,32,0.4)',
-															fontWeight: 800,
-															borderRadius: '4px',
-														}}>
-														{badge}
-													</span>
-												))}
-											</div>
-										</div>
 									</div>
 								</div>
 

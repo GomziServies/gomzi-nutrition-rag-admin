@@ -6,7 +6,6 @@ import Swal from 'sweetalert2'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faPlus,
-	faBullhorn,
 	faTrash,
 	faEdit,
 	faArrowUp,
@@ -308,10 +307,6 @@ export const CompanyManage: React.FC = () => {
 					</p>
 				</div>
 				<div className='d-flex align-items-center gap-3'>
-					<Link to='/rag/company-ads' className='btn btn-sm btn-light-warning d-inline-flex align-items-center gap-2 py-2 px-3 fw-bold'>
-						<FontAwesomeIcon icon={faBullhorn} />
-						<span>Company Ads</span>
-					</Link>
 					<Link to='/rag/product-add' className='gz-prod-btn-cancel text-decoration-none'>
 						+ Add Product
 					</Link>
