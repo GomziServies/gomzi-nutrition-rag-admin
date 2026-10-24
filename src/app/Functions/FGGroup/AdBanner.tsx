@@ -38,9 +38,24 @@ export function DeleteAdBannerAdmin(id: string): Promise<FGGroupAPIResponse> {
 	})
 }
 
-export function ReorderAdBannersAdmin(banners: AdBannerItem[]): Promise<FGGroupAPIResponse> {
+export function SetPrimaryAdBannerAdmin(id: string): Promise<FGGroupAPIResponse> {
+	return APIPost(FGGroupEndpoints.ManageAdBanner, getAPIHeaders('fg_group'), undefined, {
+		action: 'set-primary',
+		id,
+	})
+}
+
+export function ReorderAdBannersAdmin(banners: { _id?: string; id?: string }[]): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.ManageAdBanner, getAPIHeaders('fg_group'), undefined, {
 		action: 'reorder',
 		banners,
 	})
 }
+
+// Aliases for Static Banner naming
+export const GetStaticBannerAdmin = GetAdBannersAdmin
+export const CreateStaticBannerAdmin = CreateAdBannerAdmin
+export const UpdateStaticBannerAdmin = UpdateAdBannerAdmin
+export const DeleteStaticBannerAdmin = DeleteAdBannerAdmin
+export const SetPrimaryStaticBannerAdmin = SetPrimaryAdBannerAdmin
+export const ReorderStaticBannerAdmin = ReorderAdBannersAdmin

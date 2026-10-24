@@ -495,23 +495,26 @@ export const CompanyManage: React.FC = () => {
 															src={previewUrl}
 															alt={comp.name}
 															className='gz-prod-thumb'
-															style={{ objectFit: 'contain', background: '#F8FAFC', padding: '2px' }}
+															style={{ objectFit: 'contain', background: '#FFFFFF', border: '1px solid #E2E8F0', padding: '2px' }}
 															onError={(e) => {
-																;(e.target as HTMLElement).style.display = 'none'
+																const img = e.currentTarget
+																img.style.display = 'none'
+																const fallback = img.parentElement?.querySelector('.gz-prod-thumb-placeholder') as HTMLElement
+																if (fallback) fallback.style.display = 'flex'
 															}}
 														/>
-													) : (
-														<div
-															className='gz-prod-thumb-placeholder'
-															style={{
-																fontWeight: 700,
-																fontSize: '13px',
-																color: '#1E40AF',
-																background: '#EFF6FF',
-															}}>
-															{comp.name.slice(0, 2).toUpperCase()}
-														</div>
-													)}
+													) : null}
+													<div
+														className='gz-prod-thumb-placeholder'
+														style={{
+															display: previewUrl ? 'none' : 'flex',
+															fontWeight: 700,
+															fontSize: '13px',
+															color: '#1E40AF',
+															background: '#EFF6FF',
+														}}>
+														{comp.name.slice(0, 2).toUpperCase()}
+													</div>
 													<div className='gz-prod-identity-info'>
 														<div className='d-flex align-items-center gap-2'>
 															<span className='gz-prod-name'>{comp.name}</span>

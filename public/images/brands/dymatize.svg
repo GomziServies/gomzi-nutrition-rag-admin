@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 56" width="200" height="56" role="img" aria-label="dymatize">
+  <path d="M6 14 L20 14 L14 30 L6 30 Z" fill="#d62828"/>
+    <path d="M6 34 L20 34 L14 18 L6 18 Z" fill="#1e5aa8" opacity="0.85"/>
+    <text x="28" y="38" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="800" letter-spacing="-0.5" fill="#1e5aa8">Dymatize</text>
+</svg>

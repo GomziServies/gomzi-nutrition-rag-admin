@@ -8,6 +8,7 @@ import {
 	UpdateAdBannerAdmin,
 	DeleteAdBannerAdmin,
 	ReorderAdBannersAdmin,
+	SetPrimaryAdBannerAdmin,
 	FileUploadToFGGroup,
 } from '../../../Functions/FGGroup'
 import { FG_GROUP_FILE_BASE_URL } from '../../../constants/base_URL'
@@ -25,6 +26,8 @@ import {
 	faImage,
 	faImages,
 	faRotateRight,
+	faStar,
+	faExternalLinkAlt,
 } from '@fortawesome/free-solid-svg-icons'
 
 const getPreviewUrl = (url?: string) => {
@@ -272,6 +275,16 @@ export default function AdBannerManage() {
 		}
 	}
 
+	const handleSetPrimary = async (id: string, title: string) => {
+		try {
+			await SetPrimaryAdBannerAdmin(id)
+			toast.success(`"${title}" is now set as the active Static Banner!`)
+			fetchBanners()
+		} catch (err: any) {
+			toast.error(err.message || 'Failed to set active static banner')
+		}
+	}
+
 	const handleMove = async (index: number, direction: 'up' | 'down') => {
 		const targetIndex = direction === 'up' ? index - 1 : index + 1
 		if (targetIndex < 0 || targetIndex >= banners.length) return
@@ -293,18 +306,113 @@ export default function AdBannerManage() {
 	}
 
 	const displayModalImage = localPreview || getPreviewUrl(formData.image)
+	const activeBanner = banners.find((b) => b.status !== false && Boolean(b.image)) || banners[0]
 
 	return (
 		<>
-			<PageTitle breadcrumbs={[]}>Ad Banners (Featured Deals)</PageTitle>
+			<PageTitle breadcrumbs={[]}>Promotional & Static Banners (Supplement Page & Storefront)</PageTitle>
 
+			{/* Active Static Banner Live Preview Card */}
+			<div className='card card-custom mb-6 border border-2 border-primary-subtle shadow-sm'>
+				<div className='card-header border-0 pt-6 pb-2'>
+					<div className='card-title d-flex flex-column'>
+						<div className='d-flex align-items-center gap-2 mb-1'>
+							<span className='badge badge-success fs-7 fw-bold'>
+								<FontAwesomeIcon icon={faCheck} className='me-1' />
+								Active On Website
+							</span>
+							<span className='text-muted fs-7'>
+								(Top Banner on /gomzi-supplement & Homepage)
+							</span>
+						</div>
+						<h3 className='fw-bolder text-gray-900 m-0'>
+							{activeBanner?.title || 'Performance Power Combos'}
+						</h3>
+					</div>
+					<div className='card-toolbar d-flex gap-2'>
+						<a
+							href='http://localhost:5173/gomzi-supplement'
+							target='_blank'
+							rel='noreferrer'
+							className='btn btn-sm btn-light-success'>
+							<FontAwesomeIcon icon={faExternalLinkAlt} className='me-1' />
+							View on Supplement Page
+						</a>
+						<a
+							href='http://localhost:5173'
+							target='_blank'
+							rel='noreferrer'
+							className='btn btn-sm btn-light-info'>
+							<FontAwesomeIcon icon={faExternalLinkAlt} className='me-1' />
+							View on Homepage
+						</a>
+						<button
+							type='button'
+							className='btn btn-sm btn-primary'
+							onClick={() => handleOpenModal(activeBanner || undefined)}>
+							<FontAwesomeIcon icon={faUpload} className='me-2' />
+							{activeBanner ? 'Replace / Edit Static Banner' : 'Upload Static Banner'}
+						</button>
+					</div>
+				</div>
+
+				<div className='card-body pt-2'>
+					{/* Responsive preview of the static banner */}
+					<div
+						className='position-relative rounded-3 overflow-hidden shadow-sm border'
+						style={{
+							background: '#faf6f0',
+							cursor: 'pointer',
+						}}
+						onClick={() => handleOpenModal(activeBanner || undefined)}>
+						{activeBanner?.image ? (
+							<img
+								src={getPreviewUrl(activeBanner.image)}
+								alt={activeBanner.alt_text || activeBanner.title}
+								style={{
+									width: '100%',
+									height: 'auto',
+									maxHeight: '260px',
+									objectFit: 'contain',
+									display: 'block',
+								}}
+								onError={(e) => {
+									;(e.target as HTMLImageElement).src =
+										'http://localhost:5173/images/banners/banner-creatine.svg'
+								}}
+							/>
+						) : (
+							<div className='p-8 text-center text-muted'>
+								<FontAwesomeIcon icon={faImage} className='fs-2x mb-2 text-gray-400' />
+								<p className='m-0 fw-bold'>No Banner Uploaded (Default Creatine SVG active)</p>
+							</div>
+						)}
+					</div>
+
+					<div className='d-flex flex-wrap align-items-center justify-content-between mt-3 text-muted fs-7 px-1'>
+						<div>
+							<span className='fw-bold text-gray-800 me-2'>Subtitle:</span>
+							{activeBanner?.subtitle ||
+								'Unflavoured micronised monohydrate, lab tested for purity and potency.'}
+						</div>
+						<div className='d-flex align-items-center gap-2'>
+							<span className='fw-bold text-gray-800'>Target Link:</span>
+							<span className='badge badge-light-primary fw-bold'>
+								{activeBanner?.url || '/gomzi-supplement?search=creatine'}
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Saved Banners Table Card */}
 			<div className='card card-custom'>
 				<div className='card-header border-0 pt-6'>
 					<div className='card-title'>
 						<div className='d-flex align-items-center position-relative my-1'>
 							<h3 className='fw-bolder m-0 text-gray-800 d-inline-flex align-items-center'>
 								<FontAwesomeIcon icon={faImages} className='text-primary me-2' />
-								Ad Banners (Creatine / Featured Section){' '}
+								Saved Static Banners{' '}
 								{loading ? (
 									<span
 										className='gz-skeleton rounded ms-2'
@@ -322,7 +430,7 @@ export default function AdBannerManage() {
 							className='btn btn-primary btn-sm'
 							onClick={() => handleOpenModal()}>
 							<FontAwesomeIcon icon={faPlus} className='me-2' />
-							Add New Ad Banner
+							Upload New Static Banner
 						</button>
 					</div>
 				</div>
@@ -527,18 +635,34 @@ export default function AdBannerManage() {
 
 												{/* Actions */}
 												<td className='text-end'>
+													{idx === 0 && b.status ? (
+														<span
+															className='badge badge-light-success py-2 px-3 me-2 fw-bold'
+															title='Currently displaying on website'>
+															<FontAwesomeIcon icon={faStar} className='text-warning me-1' />
+															Live
+														</span>
+													) : (
+														<button
+															type='button'
+															className='btn btn-icon btn-light-success btn-sm me-2'
+															onClick={() => handleSetPrimary(bannerId, b.title)}
+															title='Make this the active Static Banner on Website'>
+															<FontAwesomeIcon icon={faStar} />
+														</button>
+													)}
 													<button
 														type='button'
 														className='btn btn-icon btn-light-warning btn-sm me-2'
 														onClick={() => handleOpenModal(b)}
-														title='Edit Ad Banner'>
+														title='Edit Static Banner'>
 														<FontAwesomeIcon icon={faEdit} />
 													</button>
 													<button
 														type='button'
 														className='btn btn-icon btn-light-danger btn-sm'
 														onClick={() => handleDelete(bannerId, b.title)}
-														title='Delete Ad Banner'>
+														title='Delete Static Banner'>
 														<FontAwesomeIcon icon={faTrash} />
 													</button>
 												</td>
@@ -563,7 +687,7 @@ export default function AdBannerManage() {
 							<div className='modal-header'>
 								<h5 className='modal-title fw-bolder text-gray-900'>
 									<FontAwesomeIcon icon={faImage} className='text-primary me-2' />
-									{editingBanner ? 'Edit Ad Banner' : 'Add New Ad Banner'}
+									{editingBanner ? 'Edit Static Banner' : 'Upload New Static Banner'}
 								</h5>
 								<button
 									type='button'
@@ -577,7 +701,7 @@ export default function AdBannerManage() {
 									{/* Title */}
 									<div className='mb-6'>
 										<label className='form-label fw-bold text-gray-800 required'>
-											Ad Banner Title
+											Static Banner Title
 										</label>
 										<input
 											type='text'
@@ -788,6 +912,35 @@ export default function AdBannerManage() {
 										<div className='form-text text-muted'>
 											Page URL to navigate when a user clicks the banner (e.g. <code>/gomzi-supplement?search=creatine</code>)
 										</div>
+										<div className='d-flex flex-wrap gap-2 mt-2'>
+											<button
+												type='button'
+												className='btn btn-sm btn-light-primary py-1 px-2 fs-8'
+												onClick={() => setFormData({ ...formData, url: '/gomzi-supplement?search=creatine' })}>
+												Creatine Search
+											</button>
+											<button
+												type='button'
+												className='btn btn-sm btn-light-info py-1 px-2 fs-8'
+												onClick={() => setFormData({ ...formData, url: '/gomzi-supplement' })}>
+												All Supplements
+											</button>
+											<button
+												type='button'
+												className='btn btn-sm btn-light-warning py-1 px-2 fs-8'
+												onClick={() =>
+													setFormData({
+														...formData,
+														image: '/images/banners/banner-creatine.svg',
+														title: 'Pure Strength, Zero Compromise',
+														subtitle:
+															'Unflavoured micronised monohydrate, lab tested for purity and potency.',
+														url: '/gomzi-supplement?search=creatine',
+													})
+												}>
+												Reset Default Creatine Banner
+											</button>
+										</div>
 									</div>
 
 									{/* Status Toggle */}
@@ -822,9 +975,9 @@ export default function AdBannerManage() {
 												Saving...
 											</>
 										) : editingBanner ? (
-											'Update Ad Banner'
+											'Update Static Banner'
 										) : (
-											'Create Ad Banner'
+											'Publish Static Banner'
 										)}
 									</button>
 								</div>

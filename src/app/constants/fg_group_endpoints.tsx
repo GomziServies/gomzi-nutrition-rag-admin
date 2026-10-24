@@ -44,10 +44,11 @@ export const ManageNutritionPromoBanner = `${AdminV1Route}/nutrition-promo-banne
 export const GetBankOffers = `${AdminV1Route}/bank-offers`
 export const ManageBankOffer = `${AdminV1Route}/bank-offers`
 
-// Hero Banner
-// Ad Banners (Pure Strength, Zero Compromise single/multi banner)
+// Ad Banners & Static Banner (Pure Strength, Zero Compromise single banner)
 export const GetAdBanners = `${AdminV1Route}/ads-banner`
 export const ManageAdBanner = `${AdminV1Route}/ads-banner`
+export const GetStaticBanner = `${AdminV1Route}/static-banner`
+export const ManageStaticBanner = `${AdminV1Route}/static-banner`
 
 export const GetHeroBanner = `${AdminV1Route}/hero-banner`
 export const UpdateHeroBanner = `${AdminV1Route}/hero-banner`

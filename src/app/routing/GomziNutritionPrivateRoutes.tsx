@@ -143,6 +143,10 @@ const GomziNutritionPrivateRoutes = () => {
 					element={<AdBannerManage />}
 				/>
 				<Route
+					path='/static-banner'
+					element={<AdBannerManage />}
+				/>
+				<Route
 					path='/users'
 					element={<Users />}
 				/>

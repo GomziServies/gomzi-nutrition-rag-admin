@@ -59,8 +59,8 @@ export function GomziNutritionAsideMenuItems() {
 					hasBullet={true}
 				/>
 				<AsideMenuItem
-					to='/rag/ad-banners'
-					title='Ad Banners'
+					to='/rag/static-banner'
+					title='Static Banner'
 					hasBullet={true}
 				/>
 			</AsideMenuItemWithSub>
