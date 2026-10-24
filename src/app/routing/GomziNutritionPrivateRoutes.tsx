@@ -101,12 +101,10 @@ import GomziNutritionTrainerDetail from '../pages/gomzi-nutrition/trainers/train
 import HeroBannerManage from '../pages/gomzi-nutrition/hero-banner/hero-banner-manage'
 import CategoryManage from '../pages/gomzi-nutrition/categories/category-manage'
 import CompanyManage from '../pages/gomzi-nutrition/companies/company-manage'
-import CompanyAdManage from '../pages/gomzi-nutrition/company-ads/company-ad-manage'
 import BlogManage from '../pages/gomzi-nutrition/blogs/blog-manage'
-import DealManage from '../pages/gomzi-nutrition/deals/deal-manage'
 import PromoBannerManage from '../pages/gomzi-nutrition/promo-banners/promo-banner-manage'
 import NutritionPromoBannerManage from '../pages/gomzi-nutrition/nutrition-promo-banners/nutrition-promo-banner-manage'
-import BankOfferManage from '../pages/gomzi-nutrition/bank-offers/bank-offer-manage'
+import AdBannerManage from '../pages/gomzi-nutrition/ad-banners/ad-banner-manage'
 
 const GomziNutritionPrivateRoutes = () => {
 	return (
@@ -129,16 +127,8 @@ const GomziNutritionPrivateRoutes = () => {
 					element={<CompanyManage />}
 				/>
 				<Route
-					path='/company-ads'
-					element={<CompanyAdManage />}
-				/>
-				<Route
 					path='/blogs'
 					element={<BlogManage />}
-				/>
-				<Route
-					path='/deals'
-					element={<DealManage />}
 				/>
 				<Route
 					path='/promo-banners'
@@ -149,8 +139,8 @@ const GomziNutritionPrivateRoutes = () => {
 					element={<NutritionPromoBannerManage />}
 				/>
 				<Route
-					path='/bank-offers'
-					element={<BankOfferManage />}
+					path='/ad-banners'
+					element={<AdBannerManage />}
 				/>
 				<Route
 					path='/users'

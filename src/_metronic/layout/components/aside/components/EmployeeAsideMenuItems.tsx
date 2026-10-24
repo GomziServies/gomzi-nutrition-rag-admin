@@ -1,29 +1,31 @@
 /* eslint-disable react/jsx-no-target-blank */
-import {
-	faBarsProgress,
-	faCalendarCheck,
-	faChartBar,
-	faChartSimple,
-	faCheck,
-	faComment,
-	faEnvelope,
-	faFolder,
-	faHome,
-	faMoneyBills,
-	faPersonWalking,
-	faUserPlus,
-	faUsers,
-	faWallet,
-} from '@fortawesome/free-solid-svg-icons'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { GetEmployees } from '../../../../../app/Functions/FGGroup/Employee'
+import { GetTask } from '../../../../../app/Functions/FGGroup/TaskManagement'
 import { AsideMenuItem } from '../AsideMenuItem'
 import { AsideMenuItemWithSub } from '../AsideMenuItemWithSub'
+import {
+	BarChart3Icon,
+	BookOpenIcon,
+	CalendarDaysIcon,
+	CheckSquareIcon,
+	ClipboardListIcon,
+	FolderIcon,
+	LayoutGridIcon,
+	MailIcon,
+	MessageSquareIcon,
+	ReceiptIcon,
+	TargetIcon,
+	UserPlusIcon,
+	UsersIcon,
+	WalletIcon,
+} from '../AnimatedAsideIcons'
 
 export function EmployeeAsideMenuItems() {
 	const [isManager, setIsManager] = useState(false)
 	const [isSalesPerson, setIsSalesPerson] = useState(false)
 	const [employeeId, setEmployeeId] = useState('')
+	const [pendingTaskCount, setPendingTaskCount] = useState<number | null>(null)
 
 	useEffect(() => {
 		const fetchEmployeeData = async () => {
@@ -41,6 +43,23 @@ export function EmployeeAsideMenuItems() {
 						if (employeeData?.employee?.position === 'Sales Person') {
 							setIsSalesPerson(true)
 						}
+					}
+
+					// Fetch real pending tasks count
+					try {
+						const taskRes: any = await GetTask({ task_id: _id } as any)
+						if (taskRes?.status === 200 && Array.isArray(taskRes.data)) {
+							const pending = taskRes.data.filter(
+								(t: any) =>
+									t.status !== 'COMPLETED' &&
+									t.status !== 'DONE' &&
+									t.employee_status !== 'DONE' &&
+									t.employee_status !== 'COMPLETED'
+							).length
+							setPendingTaskCount(pending)
+						}
+					} catch (e) {
+						console.warn('Could not fetch task count for sidebar', e)
 					}
 				}
 			} catch (error) {
@@ -61,35 +80,34 @@ export function EmployeeAsideMenuItems() {
 		<>
 			<AsideMenuItem
 				to='/employee/dashboard'
-				Icon={faHome}
+				Icon={LayoutGridIcon}
 				title='Dashboard'
 			/>
 			<AsideMenuItem
 				to='/employee/employee-chat'
-				Icon={faComment}
+				Icon={MessageSquareIcon}
 				title='Chat'
-				badge='12'
 			/>
 			<AsideMenuItem
 				to='/employee/report'
-				Icon={faChartBar}
+				Icon={BarChart3Icon}
 				title='Report'
 			/>
 			<AsideMenuItem
 				to='/employee/daily-report'
-				Icon={faBarsProgress}
+				Icon={ClipboardListIcon}
 				title='Daily Report'
 			/>
 
 			<AsideMenuItem
 				to='/employee/expenses-list'
-				Icon={faMoneyBills}
+				Icon={ReceiptIcon}
 				title='Expenses'
 			/>
 			{isSalesPerson && (
 				<AsideMenuItemWithSub
 					to=''
-					Icon={faWallet}
+					Icon={WalletIcon}
 					title='Wallet'>
 					<AsideMenuItem
 						to='/employee/transactions'
@@ -105,48 +123,48 @@ export function EmployeeAsideMenuItems() {
 			)}
 			<AsideMenuItem
 				to='/employee/task'
-				Icon={faCheck}
+				Icon={CheckSquareIcon}
 				title='Task'
-				badge='3'
+				badge={pendingTaskCount !== null && pendingTaskCount > 0 ? pendingTaskCount : undefined}
 			/>
 			{isManager && (
 				<>
 					<AsideMenuItem
 						to={`/employee/manager-details-view?id=${employeeId}`}
-						Icon={faUsers}
+						Icon={UsersIcon}
 						title='Team Management'
 					/>
 					<AsideMenuItem
 						to='/employee/hiring-request'
-						Icon={faUserPlus}
+						Icon={UserPlusIcon}
 						title='Hiring Request'
 					/>
 				</>
 			)}
 			<AsideMenuItem
 				to='/employee/document'
-				Icon={faFolder}
+				Icon={FolderIcon}
 				title='Document'
 			/>
 			<AsideMenuItem
 				to='/employee/sop'
-				Icon={faChartSimple}
+				Icon={BookOpenIcon}
 				title='SOP'
 			/>
 
 			<AsideMenuItem
 				to='/employee/target'
-				Icon={faCalendarCheck}
+				Icon={TargetIcon}
 				title='Target'
 			/>
 			<AsideMenuItem
 				to='/employee/leave-manager'
-				Icon={faPersonWalking}
+				Icon={CalendarDaysIcon}
 				title='Leave Manager'
 			/>
 			<AsideMenuItem
 				to='/rag/contact-inquiry/contact'
-				Icon={faEnvelope}
+				Icon={MailIcon}
 				title='Contact Inquiry'
 			/>
 		</>

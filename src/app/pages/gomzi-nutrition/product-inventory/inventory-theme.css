@@ -459,7 +459,7 @@ select.gz-prod-select:focus {
 	align-items: center !important;
 	justify-content: center !important;
 	padding: 0 !important;
-	border: 1px solid #DBEAFE !important;
+	border: 1.5px solid #2563EB !important;
 	background-color: #EFF6FF !important;
 	color: #2563EB !important;
 	transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -473,11 +473,13 @@ select.gz-prod-select:focus {
 .gz-inv-actions button.gz-table-action-btn:hover,
 .gz-inv-actions a.gz-table-action-btn:hover,
 .gz-inv-action-btn:hover {
-	background-color: #1E3A5F !important;
-	color: #FFFFFF !important;
-	border-color: #1E3A5F !important;
+	background-color: rgba(30, 58, 95, 0.12) !important;
+	color: #1E3A5F !important;
+	border: 1.5px solid #1E3A5F !important;
 	transform: translateY(-1px) !important;
-	box-shadow: 0 3px 8px rgba(30, 58, 95, 0.2) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 .gz-inv-actions .gz-table-action-btn svg,

@@ -182,7 +182,7 @@ const AttendanceViewUser = () => {
 
 	const handleChangeStatus = (event: any) => {
 		setPagination({ ...pagination, page: 1 })
-		let value = event.target.value
+		let value = typeof event === 'object' && event?.target ? event.target.value : event
 		setSelectedStatus(value)
 		if (value == 'Absent') {
 			value = 'A'
@@ -347,15 +347,16 @@ const AttendanceViewUser = () => {
 
 					{/* 2. Filter Status Dropdown */}
 					<div style={{ minWidth: '160px' }}>
-						<select
-							className='form-select form-select-sm gz-inv-select'
+						<SelectField
 							value={selectedStatus}
-							onChange={handleChangeStatus}>
-							<option value=''>All Statuses</option>
-							<option value='Present'>Present</option>
-							<option value='Absent'>Absent</option>
-							<option value='Leave'>Leave</option>
-						</select>
+							onChange={handleChangeStatus}
+							options={[
+								{ value: '', label: 'All Statuses' },
+								{ value: 'Present', label: 'Present' },
+								{ value: 'Absent', label: 'Absent' },
+								{ value: 'Leave', label: 'Leave' },
+							]}
+						/>
 					</div>
 
 					{/* Spacer */}

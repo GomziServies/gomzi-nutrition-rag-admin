@@ -138,19 +138,26 @@
 .gz-emp-search-icon {
 	position: absolute !important;
 	left: 16px !important;
+	top: 50% !important;
+	transform: translateY(-50%) !important;
 	color: #94a3b8 !important;
 	font-size: 14px !important;
+	width: 14px !important;
+	height: 14px !important;
 	pointer-events: none !important;
-	z-index: 2 !important;
+	z-index: 3 !important;
 }
 
+input.gz-emp-search-input,
+.gz-emp-search-box input,
 .gz-emp-search-input {
 	width: 100% !important;
 	height: 42px !important;
 	border-radius: 24px !important;
 	border: 1px solid #e2e8f0 !important;
 	background: #f8fafd !important;
-	padding: 0 16px 0 46px !important;
+	padding: 0 16px 0 48px !important;
+	padding-left: 48px !important;
 	font-size: 13.5px !important;
 	color: #0f172a !important;
 	outline: none !important;
@@ -158,6 +165,16 @@
 	box-sizing: border-box !important;
 }
 
+input.gz-emp-search-input::placeholder,
+.gz-emp-search-box input::placeholder,
+.gz-emp-search-input::placeholder {
+	color: #94a3b8 !important;
+	font-size: 13.5px !important;
+	opacity: 1 !important;
+}
+
+input.gz-emp-search-input:focus,
+.gz-emp-search-box input:focus,
 .gz-emp-search-input:focus {
 	border-color: #8b5cf6 !important;
 	background: #ffffff !important;
@@ -192,9 +209,21 @@
 }
 
 .gz-emp-contact-card.is-active {
-	background: #ede9fe !important;
-	border-left: 4px solid #7c3aed !important;
-	border-radius: 14px !important;
+	background: #ffffff !important;
+	border: 1px solid rgba(226, 232, 240, 0.9) !important;
+	border-radius: 16px !important;
+	box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+.gz-emp-contact-card.is-active::before {
+	content: '' !important;
+	position: absolute !important;
+	left: 0 !important;
+	top: 16% !important;
+	height: 68% !important;
+	width: 4px !important;
+	background: #172b4d !important;
+	border-radius: 0 4px 4px 0 !important;
 }
 
 .gz-emp-avatar {
@@ -205,11 +234,16 @@
 	align-items: center !important;
 	justify-content: center !important;
 	flex-shrink: 0 !important;
-	background: #ddd6fe !important;
-	color: #1e1b4b !important;
+	background: #172b4d !important;
+	color: #ffffff !important;
 	font-weight: 700 !important;
 	font-size: 17px !important;
 	overflow: hidden !important;
+	transition: all 0.2s ease !important;
+}
+
+.gz-emp-contact-card.is-active .gz-emp-avatar {
+	box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px rgba(23, 43, 77, 0.16) !important;
 }
 
 .gz-emp-avatar img {
@@ -274,8 +308,9 @@
 .gz-emp-canvas {
 	flex-grow: 1 !important;
 	height: calc(100vh - 144px) !important;
-	padding: 20px 24px 10px 24px !important;
+	padding: 20px 20px 10px 20px !important;
 	overflow-y: auto !important;
+	overflow-x: hidden !important;
 	background: transparent !important;
 }
 
@@ -294,14 +329,17 @@
 }
 
 /* --------------------------------------------------------
-   Message Bubbles & Hover Actions
+   Message Bubbles & Hover Actions (Strictly Transparent Row & Group)
    -------------------------------------------------------- */
 .gz-message-wrapper {
 	position: relative !important;
-	margin-bottom: 12px !important;
+	margin-bottom: 8px !important;
 	background: transparent !important;
+	background-color: transparent !important;
 	box-shadow: none !important;
+	-webkit-box-shadow: none !important;
 	border: none !important;
+	outline: none !important;
 	pointer-events: none !important;
 }
 
@@ -309,11 +347,25 @@
 	position: relative !important;
 	display: flex !important;
 	width: 100% !important;
-	margin-bottom: 12px !important;
+	margin-bottom: 8px !important;
 	background: transparent !important;
+	background-color: transparent !important;
 	box-shadow: none !important;
+	-webkit-box-shadow: none !important;
 	border: none !important;
+	outline: none !important;
 	pointer-events: none !important;
+}
+
+.gz-message-row:hover,
+.gz-message-row:focus,
+.gz-message-row:active {
+	background: transparent !important;
+	background-color: transparent !important;
+	box-shadow: none !important;
+	-webkit-box-shadow: none !important;
+	border: none !important;
+	outline: none !important;
 }
 
 .gz-message-row.is-sender {
@@ -324,42 +376,79 @@
 	justify-content: flex-start !important;
 }
 
-/* Hover target strictly wraps bubble + action icons */
+/* Extra bottom spacing when reaction badge is present to prevent overlap with message below */
+.gz-message-row.has-reaction {
+	margin-bottom: 16px !important;
+}
+
+/* Hover target strictly wraps bubble content only */
 .gz-message-bubble-group {
 	position: relative !important;
 	display: inline-flex !important;
 	align-items: center !important;
-	gap: 6px !important;
+	vertical-align: bottom !important;
 	width: fit-content !important;
-	max-width: min(72%, 560px) !important;
+	max-width: min(75%, 620px) !important;
 	background: transparent !important;
+	background-color: transparent !important;
 	box-shadow: none !important;
+	-webkit-box-shadow: none !important;
 	border: none !important;
+	outline: none !important;
 	pointer-events: auto !important;
 	flex-shrink: 0 !important;
+	transform: none !important;
+	transition: none !important;
+	margin: 0 !important;
 }
 
-/* Smooth slide-in animation for newly sent message bubble */
-@keyframes gzMessageSlideIn {
-	0% {
-		opacity: 0;
-		transform: translateY(8px) scale(0.98);
-	}
-	100% {
-		opacity: 1;
-		transform: translateY(0) scale(1);
-	}
+.gz-message-bubble-group:hover,
+.gz-message-bubble-group:focus,
+.gz-message-bubble-group:active,
+.gz-message-bubble-group.has-active-menu {
+	background: transparent !important;
+	background-color: transparent !important;
+	box-shadow: none !important;
+	-webkit-box-shadow: none !important;
+	border: none !important;
+	outline: none !important;
+	transform: none !important;
+	transition: none !important;
 }
 
-.gz-new-message-anim {
-	animation: gzMessageSlideIn 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+/* Transparent hover bridge ensuring smooth cursor transit between bubble and reaction button without losing hover */
+.gz-message-bubble-group.is-sender::before {
+	content: '' !important;
+	position: absolute !important;
+	top: -6px !important;
+	bottom: -6px !important;
+	left: -46px !important;
+	right: -4px !important;
+	background: transparent !important;
+	pointer-events: auto !important;
+	z-index: 0 !important;
 }
 
-/* Message Hover Action Triggers */
+.gz-message-bubble-group.is-receiver::before {
+	content: '' !important;
+	position: absolute !important;
+	top: -6px !important;
+	bottom: -6px !important;
+	left: -4px !important;
+	right: -46px !important;
+	background: transparent !important;
+	pointer-events: auto !important;
+	z-index: 0 !important;
+}
+
+/* Message Hover Action Triggers - positioned beside bubble without shifting flow */
 .gz-msg-hover-actions {
+	position: absolute !important;
+	top: 50% !important;
+	transform: translateY(-50%) !important;
 	opacity: 0 !important;
 	pointer-events: none !important;
-	transition: opacity 0.15s ease, transform 0.15s ease !important;
+	transition: opacity 0.15s ease !important;
 	display: inline-flex !important;
 	align-items: center !important;
 	gap: 4px !important;
@@ -367,18 +456,21 @@
 	z-index: 15 !important;
 }
 
-/* Only reveal when hovering the actual message bubble group */
-.gz-message-bubble-group:hover .gz-msg-hover-actions,
-.gz-message-bubble-group.has-active-menu .gz-msg-hover-actions {
-	opacity: 1 !important;
-	pointer-events: auto !important;
+.gz-message-bubble-group.is-sender .gz-msg-hover-actions {
+	right: calc(100% + 6px) !important;
+	left: auto !important;
+}
+
+.gz-message-bubble-group.is-receiver .gz-msg-hover-actions {
+	left: calc(100% + 6px) !important;
+	right: auto !important;
 }
 
 /* Dropdown Trigger at Bubble Upper Corner */
 .gz-msg-dropdown-trigger {
 	position: absolute !important;
 	top: 5px !important;
-	right: 6px !important;
+	right: 5px !important;
 	width: 20px !important;
 	height: 20px !important;
 	border-radius: 50% !important;
@@ -389,7 +481,7 @@
 	font-size: 10px !important;
 	opacity: 0 !important;
 	pointer-events: none !important;
-	transition: all 0.15s ease !important;
+	transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease !important;
 	z-index: 10 !important;
 	border: none !important;
 	outline: none !important;
@@ -405,7 +497,6 @@
 .gz-msg-dropdown-trigger.is-sender:hover {
 	background: #ffffff !important;
 	color: #172b4d !important;
-	transform: scale(1.1) !important;
 }
 
 .gz-msg-dropdown-trigger.is-receiver {
@@ -418,19 +509,25 @@
 	background: #172b4d !important;
 	color: #ffffff !important;
 	border-color: #172b4d !important;
-	transform: scale(1.1) !important;
 }
 
-/* Reveal dropdown trigger and reaction trigger when message bubble is hovered */
+/* Reveal dropdown trigger and reaction trigger together when message bubble or bridge is hovered or focused */
 .gz-message-bubble-group:hover .gz-msg-dropdown-trigger,
+.gz-message-bubble-group:focus-within .gz-msg-dropdown-trigger,
 .gz-message-bubble-group.has-active-menu .gz-msg-dropdown-trigger,
 .gz-message-bubble-group:hover .gz-msg-hover-actions,
-.gz-message-bubble-group.has-active-menu .gz-msg-hover-actions {
+.gz-message-bubble-group:focus-within .gz-msg-hover-actions,
+.gz-message-bubble-group.has-active-menu .gz-msg-hover-actions,
+.gz-msg-hover-actions:hover,
+.gz-msg-hover-actions:focus-within {
 	opacity: 1 !important;
 	pointer-events: auto !important;
 }
 
 .gz-msg-action-trigger {
+	position: relative !important;
+	z-index: 25 !important;
+	pointer-events: auto !important;
 	width: 28px !important;
 	height: 28px !important;
 	border-radius: 50% !important;
@@ -443,9 +540,27 @@
 	cursor: pointer !important;
 	font-size: 12px !important;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
-	transition: all 0.18s ease !important;
+	transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
 	padding: 0 !important;
 	outline: none !important;
+}
+
+/* Accessible keyboard outline for reaction and dropdown controls (never on mouse click) */
+.gz-msg-action-trigger:focus-visible,
+.gz-msg-dropdown-trigger:focus-visible {
+	opacity: 1 !important;
+	pointer-events: auto !important;
+	outline: 2px solid rgba(23, 43, 77, 0.35) !important;
+	outline-offset: 1px !important;
+}
+
+.gz-msg-action-trigger:focus:not(:focus-visible),
+.gz-msg-dropdown-trigger:focus:not(:focus-visible),
+.gz-msg-action-trigger:active,
+.gz-msg-dropdown-trigger:active {
+	outline: none !important;
+	box-shadow: none !important;
+	transform: none !important;
 }
 
 /* Dark Navy #172B4D hover with white icon */
@@ -453,7 +568,6 @@
 	background: #172b4d !important;
 	color: #ffffff !important;
 	border-color: #172b4d !important;
-	transform: scale(1.08) !important;
 }
 
 /* Floating Reaction Morph Container (WhatsApp / Instagram Style Connected Pill) */
@@ -468,7 +582,6 @@
 	            top 0.22s cubic-bezier(0.16, 1, 0.3, 1),
 	            left 0.22s cubic-bezier(0.16, 1, 0.3, 1),
 	            border-radius 0.22s ease !important;
-	overflow: hidden !important;
 	animation: gzReactionPop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 	box-sizing: border-box !important;
 }
@@ -482,15 +595,31 @@
 	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;
+	overflow: visible !important;
+	animation: gzCompactReactionEntrance 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	will-change: transform, opacity !important;
+	transform-origin: center bottom !important;
+}
+
+@keyframes gzCompactReactionEntrance {
+	from {
+		opacity: 0;
+		transform: scale(0.82) translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
 }
 
 .gz-floating-reaction-container.is-expanded {
-	width: 324px !important;
-	height: 380px !important;
-	max-height: calc(100vh - 160px) !important;
+	width: 320px !important;
+	height: 340px !important;
+	max-height: 340px !important;
 	border-radius: 18px !important;
 	padding: 0 !important;
-	box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+	box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14) !important;
+	overflow: hidden !important;
 }
 
 /* Remove duplicate borders/shadows from EmojiPicker inside expanded reaction container */
@@ -508,6 +637,7 @@
 	gap: 6px !important;
 	width: 100% !important;
 	justify-content: space-between !important;
+	overflow: visible !important;
 }
 
 .gz-reaction-expanded-content {
@@ -528,12 +658,17 @@
 	padding: 3px !important;
 	cursor: pointer !important;
 	border-radius: 50% !important;
-	transition: transform 0.15s cubic-bezier(0.2, 0, 0.13, 1.5) !important;
+	transform-origin: center bottom !important;
+	will-change: transform !important;
+	transition: transform 0.16s cubic-bezier(0.2, 0, 0.2, 1) !important;
 	line-height: 1 !important;
+	outline: none !important;
+	box-shadow: none !important;
 }
 
 .gz-reaction-emoji-btn:hover {
-	transform: scale(1.28) translateY(-2px) !important;
+	transform: scale(1.18) translateY(-2px) !important;
+	z-index: 10 !important;
 }
 
 .gz-reaction-emoji-btn.is-plus {
@@ -558,41 +693,123 @@
 	transform: scale(1.15) !important;
 }
 
-/* Message Reaction Pill Badge */
+/* Message Reaction Pill Badge (WhatsApp Web Style) */
 .gz-message-reaction-pill {
 	position: absolute !important;
-	bottom: -8px !important;
+	bottom: -9px !important;
 	display: inline-flex !important;
 	align-items: center !important;
+	justify-content: center !important;
 	background: #ffffff !important;
-	border: 1px solid #e2e8f0 !important;
-	border-radius: 12px !important;
-	padding: 1px 7px !important;
-	font-size: 13px !important;
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+	border: 1.5px solid #ffffff !important;
+	border-radius: 9999px !important;
+	height: 22px !important;
+	padding: 0 6px !important;
+	box-shadow: 0 1px 3px rgba(11, 20, 26, 0.18), 0 1px 2px rgba(11, 20, 26, 0.1) !important;
 	z-index: 5 !important;
 	cursor: pointer !important;
+	user-select: none !important;
+	animation: gzReactionPillPop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+	transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.gz-message-reaction-pill:hover {
+	transform: scale(1.08) !important;
+	box-shadow: 0 2px 6px rgba(11, 20, 26, 0.22) !important;
 }
 
 .gz-message-reaction-pill.is-sender {
-	right: 14px !important;
+	right: 12px !important;
 }
 
 .gz-message-reaction-pill.is-receiver {
-	left: 14px !important;
+	left: 12px !important;
+}
+
+@keyframes gzReactionPillPop {
+	from {
+		opacity: 0;
+		transform: scale(0.5);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
 }
 
 /* Floating Action Context Menu (Fixed Viewport-Aware) */
 .gz-floating-action-menu {
 	position: fixed !important;
-	z-index: 1000 !important;
+	z-index: 1100 !important;
 	background: #ffffff !important;
 	border: 1px solid rgba(226, 232, 240, 0.9) !important;
 	border-radius: 14px !important;
-	box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08) !important;
+	box-shadow: 0 8px 26px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.04) !important;
 	padding: 6px !important;
-	min-width: 145px !important;
+	min-width: 236px !important;
+	width: max-content !important;
 	animation: gzReactionPop 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+	box-sizing: border-box !important;
+}
+
+/* Quick Reaction Strip inside Floating Action Context Menu (WhatsApp Web Style) */
+.gz-ctx-reaction-strip {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	gap: 4px !important;
+	padding: 4px 6px 8px 6px !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.gz-ctx-reaction-btn {
+	background: transparent !important;
+	border: none !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 3px !important;
+	cursor: pointer !important;
+	border-radius: 50% !important;
+	transform-origin: center bottom !important;
+	will-change: transform !important;
+	transition: transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.15s ease !important;
+	line-height: 1 !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.gz-ctx-reaction-btn:hover {
+	transform: scale(1.3) translateY(-3px) !important;
+	z-index: 5 !important;
+}
+
+.gz-ctx-reaction-btn.is-plus {
+	font-size: 14px !important;
+	font-weight: 700 !important;
+	color: #64748b !important;
+	width: 24px !important;
+	height: 24px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	border-radius: 50% !important;
+	background: #f1f5f9 !important;
+	margin-left: 2px !important;
+	transition: all 0.18s ease !important;
+}
+
+.gz-ctx-reaction-btn.is-plus:hover {
+	background: #172b4d !important;
+	color: #ffffff !important;
+	transform: scale(1.15) !important;
+}
+
+.gz-ctx-divider {
+	height: 1px !important;
+	background: #e2e8f0 !important;
+	margin: 2px 4px 6px 4px !important;
 }
 
 .gz-ctx-menu-item {
@@ -648,26 +865,103 @@
 .gz-emp-bubble-receiver {
 	background: #ffffff !important;
 	color: #0f172a !important;
-	border-radius: 18px 18px 18px 4px !important;
-	padding: 8px 26px 8px 14px !important;
+	border-radius: 16px 16px 16px 4px !important;
+	padding: 7px 28px 6px 12px !important;
 	width: fit-content !important;
-	max-width: min(70%, 540px) !important;
+	min-width: 155px !important;
+	max-width: min(75%, 620px) !important;
 	box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
 	border: 1px solid rgba(226, 232, 240, 0.7) !important;
 	word-break: break-word !important;
 	position: relative !important;
+	box-sizing: border-box !important;
+	z-index: 2 !important;
+	transform: none !important;
+	transition: none !important;
+	margin: 0 !important;
 }
 
 .gz-emp-bubble-sender {
 	background: #172b4d !important;
 	color: #ffffff !important;
-	border-radius: 18px 18px 4px 18px !important;
-	padding: 8px 26px 8px 14px !important;
+	border-radius: 16px 16px 4px 16px !important;
+	padding: 7px 28px 6px 12px !important;
 	width: fit-content !important;
-	max-width: min(70%, 540px) !important;
+	min-width: 155px !important;
+	max-width: min(75%, 620px) !important;
 	box-shadow: 0 3px 12px rgba(23, 43, 77, 0.18) !important;
 	word-break: break-word !important;
 	position: relative !important;
+	box-sizing: border-box !important;
+	z-index: 2 !important;
+	transform: none !important;
+	transition: none !important;
+	margin: 0 !important;
+}
+
+/* Media Bubbles (Photos & Albums: Equal 4px Frame, Zero Extra Right Space) */
+.gz-emp-bubble-sender.is-media-bubble,
+.gz-emp-bubble-receiver.is-media-bubble {
+	padding: 4px 4px 6px 4px !important;
+	min-width: unset !important;
+	max-width: 388px !important;
+	width: fit-content !important;
+	border-radius: 14px !important;
+}
+
+.gz-emp-bubble-sender.is-media-bubble .gz-media-album-grid,
+.gz-emp-bubble-receiver.is-media-bubble .gz-media-album-grid {
+	margin-bottom: 0 !important;
+	border-radius: 10px !important;
+	max-width: 380px !important;
+}
+
+.gz-emp-bubble-sender.is-media-bubble .gz-msg-dropdown-trigger,
+.gz-emp-bubble-receiver.is-media-bubble .gz-msg-dropdown-trigger {
+	top: 8px !important;
+	right: 8px !important;
+	width: 24px !important;
+	height: 24px !important;
+	font-size: 11px !important;
+	background: rgba(15, 23, 42, 0.65) !important;
+	color: #ffffff !important;
+	backdrop-filter: blur(4px) !important;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+}
+
+.gz-emp-bubble-sender.is-media-bubble .gz-emp-bubble-time-sender,
+.gz-emp-bubble-receiver.is-media-bubble .gz-emp-bubble-time-receiver {
+	padding: 2px 8px !important;
+	margin-top: 4px !important;
+}
+
+/* WhatsApp-style flex wrap container for text & metadata */
+.gz-emp-msg-bubble-content {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	align-items: flex-end !important;
+	justify-content: flex-end !important;
+	gap: 2px 8px !important;
+	width: 100% !important;
+}
+
+.gz-emp-msg-text {
+	flex: 0 1 auto !important;
+	min-width: 0 !important;
+	word-break: break-word !important;
+	margin-right: auto !important;
+}
+
+.gz-inline-emoji-wrapper {
+	display: inline-flex !important;
+	vertical-align: -3.5px !important;
+	margin: 0 1.5px !important;
+	line-height: 1 !important;
+}
+
+.gz-inline-emoji-wrapper img {
+	vertical-align: -3.5px !important;
+	display: inline-block !important;
 }
 
 .gz-emp-bubble-sender .text-muted,
@@ -679,36 +973,48 @@
 .gz-emp-bubble-time-sender {
 	font-size: 11px !important;
 	color: rgba(255, 255, 255, 0.75) !important;
-	display: flex !important;
+	display: inline-flex !important;
 	align-items: center !important;
-	gap: 4px !important;
-	justify-content: flex-end !important;
-	margin-top: 4px !important;
+	gap: 3px !important;
+	margin-left: auto !important;
+	white-space: nowrap !important;
+	flex-shrink: 0 !important;
+	user-select: none !important;
+	line-height: 1 !important;
+	margin-bottom: 1px !important;
 }
 
 .gz-emp-bubble-time-receiver {
 	font-size: 11px !important;
 	color: #94a3b8 !important;
-	display: flex !important;
+	display: inline-flex !important;
 	align-items: center !important;
-	gap: 4px !important;
-	justify-content: flex-end !important;
-	margin-top: 4px !important;
+	gap: 3px !important;
+	margin-left: auto !important;
+	white-space: nowrap !important;
+	flex-shrink: 0 !important;
+	user-select: none !important;
+	line-height: 1 !important;
+	margin-bottom: 1px !important;
 }
 
 .gz-emp-check-receipt {
 	color: #60a5fa !important;
 	font-weight: 700 !important;
-	letter-spacing: -1px !important;
-	font-size: 12px !important;
+	letter-spacing: -0.5px !important;
+	font-size: 11.5px !important;
+	white-space: nowrap !important;
+	display: inline-block !important;
+	line-height: 1 !important;
 }
 
 /* --------------------------------------------------------
    Custom Modern Audio Player inside Message Bubbles
    -------------------------------------------------------- */
 .gz-audio-player-wrapper {
-	min-width: 220px !important;
-	max-width: 300px !important;
+	width: 240px !important;
+	min-width: 240px !important;
+	max-width: 240px !important;
 	padding: 4px 0 !important;
 }
 
@@ -814,66 +1120,90 @@
 }
 
 /* --------------------------------------------------------
-   Emoji Picker React Custom Styles (Fix overlap, modern rounded & subtle shadow)
+   Emoji Picker React Custom Styles (Clean Pill Search Bar Matching Reference UI)
    -------------------------------------------------------- */
-.EmojiPickerReact {
+.EmojiPickerReact,
+aside.EmojiPickerReact {
 	--epr-search-input-padding: 0 16px 0 44px !important;
 	--epr-search-input-border-radius: 9999px !important;
-	--epr-search-input-height: 38px !important;
+	--epr-search-input-height: 40px !important;
 	--epr-search-input-bg-color: #f1f5f9 !important;
 	--epr-search-input-bg-color-active: #ffffff !important;
 	--epr-search-border-color: #e2e8f0 !important;
 	--epr-search-border-color-active: #cbd5e1 !important;
 	--epr-highlight-color: #172b4d !important;
 	--epr-search-input-placeholder-color: #94a3b8 !important;
-	--epr-search-bar-inner-padding: 14px !important;
+	--epr-search-bar-inner-padding: 15px !important;
+	--epr-header-padding: 12px 14px 8px 14px !important;
 	border-radius: 18px !important;
 	border: 1px solid rgba(226, 232, 240, 0.85) !important;
 	box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04) !important;
 	overflow: hidden !important;
 }
 
+/* Outer search container - completely borderless and unpadded */
+aside.EmojiPickerReact .epr-search-container,
 .EmojiPickerReact .epr-search-container {
-	padding: 10px 14px 6px 14px !important;
 	position: relative !important;
 	display: flex !important;
 	align-items: center !important;
+	width: 100% !important;
+	background: transparent !important;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+	margin: 0 !important;
 }
 
-/* Match Image 3 Searchbar UI: Pill shape, soft background, clear spacing, zero overlap, no blue focus border */
+/* Single rounded pill input matching reference image */
 aside.EmojiPickerReact .epr-search-container input,
+aside.EmojiPickerReact .epr-search-container input[type="text"],
 aside.EmojiPickerReact input[type="text"],
+aside.EmojiPickerReact input,
 .EmojiPickerReact .epr-search-container input,
+.EmojiPickerReact .epr-search-container input[type="text"],
 .EmojiPickerReact input[type="text"],
 .EmojiPickerReact input {
-	padding: 0 16px 0 44px !important;
-	padding-left: 44px !important;
+	width: 100% !important;
+	height: 40px !important;
+	line-height: 40px !important;
+	padding: 0 16px 0 46px !important;
+	padding-left: 46px !important;
+	padding-right: 36px !important;
 	border-radius: 9999px !important;
-	height: 38px !important;
-	border: 1px solid #e2e8f0 !important;
 	background-color: #f1f5f9 !important;
+	border: 1px solid #e2e8f0 !important;
+	font-size: 13.5px !important;
+	color: #0f172a !important;
 	outline: none !important;
 	outline-width: 0 !important;
 	box-shadow: none !important;
 	-webkit-box-shadow: none !important;
-	font-size: 13.5px !important;
-	color: #0f172a !important;
 	box-sizing: border-box !important;
-	transition: all 0.2s ease !important;
+	transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
+/* Placeholder styling with clear contrast and zero overlap */
 aside.EmojiPickerReact input::placeholder,
 .EmojiPickerReact input::placeholder {
 	color: #94a3b8 !important;
 	opacity: 1 !important;
 }
 
+/* Subtle accessible focus indicator on outer pill - NO blue focus border or double outline */
 aside.EmojiPickerReact .epr-search-container input:focus,
 aside.EmojiPickerReact .epr-search-container input:focus-visible,
+aside.EmojiPickerReact .epr-search-container input[type="text"]:focus,
+aside.EmojiPickerReact .epr-search-container input[type="text"]:focus-visible,
 aside.EmojiPickerReact input[type="text"]:focus,
 aside.EmojiPickerReact input[type="text"]:focus-visible,
+aside.EmojiPickerReact input:focus,
+aside.EmojiPickerReact input:focus-visible,
 .EmojiPickerReact .epr-search-container input:focus,
 .EmojiPickerReact .epr-search-container input:focus-visible,
+.EmojiPickerReact .epr-search-container input[type="text"]:focus,
+.EmojiPickerReact .epr-search-container input[type="text"]:focus-visible,
 .EmojiPickerReact input[type="text"]:focus,
 .EmojiPickerReact input[type="text"]:focus-visible,
 .EmojiPickerReact input:focus,
@@ -886,20 +1216,47 @@ aside.EmojiPickerReact input[type="text"]:focus-visible,
 	-webkit-box-shadow: 0 0 0 2px rgba(23, 43, 77, 0.08) !important;
 }
 
-/* Place the search icon cleanly inside the left of the rounded search bar without overlapping text */
+/* Search icon on the left inside pill - completely removes the stacked sprite and uses crisp SVG */
+aside.EmojiPickerReact .epr-search-container .epr-icn-search,
 aside.EmojiPickerReact .epr-icn-search,
+.EmojiPickerReact .epr-search-container .epr-icn-search,
 .EmojiPickerReact .epr-icn-search {
 	position: absolute !important;
-	left: 26px !important;
+	left: 14px !important;
 	top: 50% !important;
 	transform: translateY(-50%) !important;
-	width: 15px !important;
-	height: 15px !important;
-	background-size: 15px 15px !important;
-	color: #94a3b8 !important;
-	opacity: 0.65 !important;
+	width: 18px !important;
+	height: 18px !important;
+	min-width: 18px !important;
+	min-height: 18px !important;
+	background: none !important;
+	background-image: none !important;
+	color: #64748b !important;
+	opacity: 0.8 !important;
 	pointer-events: none !important;
 	z-index: 5 !important;
+	margin: 0 !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+aside.EmojiPickerReact .epr-search-container .epr-icn-search::after,
+aside.EmojiPickerReact .epr-icn-search::after,
+.EmojiPickerReact .epr-search-container .epr-icn-search::after,
+.EmojiPickerReact .epr-icn-search::after {
+	content: '' !important;
+	display: block !important;
+	width: 17px !important;
+	height: 17px !important;
+	background-color: #64748b !important;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat center / contain !important;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat center / contain !important;
+}
+
+aside.EmojiPickerReact .epr-search-container .epr-icn-search svg,
+.EmojiPickerReact .epr-search-container .epr-icn-search svg {
+	display: none !important;
 }
 
 /* Category header */
@@ -909,6 +1266,34 @@ aside.EmojiPickerReact .epr-icn-search,
 	color: #64748b !important;
 	padding: 8px 16px !important;
 	text-transform: capitalize !important;
+}
+
+/* WhatsApp-style emoji search: hide all category labels and empty category containers when search is active */
+.EmojiPickerReact.epr-search-active .epr-emoji-category-label,
+.EmojiPickerReact.epr-search-active h2.epr-emoji-category-label,
+.EmojiPickerReact:has(input.epr-search:not(:placeholder-shown)) .epr-emoji-category-label,
+.EmojiPickerReact:has(input.epr-search:not(:placeholder-shown)) h2.epr-emoji-category-label {
+	display: none !important;
+	height: 0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+.EmojiPickerReact.epr-search-active .epr-emoji-category.epr-hidden-on-search,
+.EmojiPickerReact:has(input.epr-search:not(:placeholder-shown)) .epr-emoji-category.epr-hidden-on-search {
+	display: none !important;
+	min-height: 0 !important;
+	height: 0 !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	overflow: hidden !important;
+}
+
+.EmojiPickerReact.epr-search-active .epr-emoji-category,
+.EmojiPickerReact:has(input.epr-search:not(:placeholder-shown)) .epr-emoji-category {
+	min-height: 0 !important;
+	margin: 0 !important;
+	padding: 0 !important;
 }
 
 /* Floating Emoji Picker from Composer */
@@ -976,14 +1361,17 @@ aside.EmojiPickerReact .epr-icn-search,
 }
 
 .gz-emp-composer-pill:focus-within {
-	border-color: #8b5cf6 !important;
-	box-shadow: 0 4px 18px rgba(139, 92, 246, 0.12), 0 0 0 3px rgba(139, 92, 246, 0.08) !important;
+	border-color: #172b4d !important;
+	box-shadow: 0 4px 18px rgba(23, 43, 77, 0.08), 0 0 0 2px rgba(23, 43, 77, 0.12) !important;
 }
 
-.gz-emp-composer-pill.is-recording {
+.gz-emp-composer-pill.is-recording,
+.gz-emp-composer-pill.is-recording:focus,
+.gz-emp-composer-pill.is-recording:focus-within {
 	padding: 5px 10px 5px 14px !important;
 	background: #ffffff !important;
 	border-color: #e2e8f0 !important;
+	box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03) !important;
 }
 
 /* Action controls on left & right */
@@ -1025,11 +1413,6 @@ aside.EmojiPickerReact .epr-icn-search,
 	resize: none !important;
 	box-sizing: border-box !important;
 	line-height: 20px !important;
-}
-
-.gz-emp-composer-pill:focus-within {
-	border-color: #172b4d !important;
-	box-shadow: 0 4px 18px rgba(23, 43, 77, 0.08), 0 0 0 2px rgba(23, 43, 77, 0.12) !important;
 }
 
 .gz-emp-composer-input::placeholder {
@@ -1080,6 +1463,12 @@ aside.EmojiPickerReact .epr-icn-search,
 
 .gz-emp-send-btn:active {
 	transform: scale(0.96) !important;
+}
+
+.gz-emp-send-btn:focus-visible {
+	outline: none !important;
+	border-radius: 50% !important;
+	box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #172b4d !important;
 }
 
 /* --------------------------------------------------------
@@ -1135,10 +1524,11 @@ aside.EmojiPickerReact .epr-icn-search,
 	flex-direction: row !important;
 	gap: 3px !important;
 	height: 32px !important;
-	flex-grow: 1 !important;
+	flex: 1 1 0 !important;
+	min-width: 0 !important;
 	overflow: hidden !important;
 	padding: 0 10px !important;
-	margin: 0 4px !important;
+	margin: 0 6px !important;
 }
 
 .gz-live-wave-bar {
@@ -1147,7 +1537,7 @@ aside.EmojiPickerReact .epr-icn-search,
 	background: #7c3aed !important;
 	border-radius: 2px !important;
 	flex-shrink: 0 !important;
-	transition: height 0.08s ease, background 0.15s ease !important;
+	transition: background 0.15s ease !important;
 }
 
 .gz-live-wave-bar.is-paused {
@@ -1155,6 +1545,7 @@ aside.EmojiPickerReact .epr-icn-search,
 }
 
 .gz-recording-controls,
+.gz-recording-controls:hover,
 .gz-recording-controls:focus,
 .gz-recording-controls:focus-visible,
 .gz-recording-controls:focus-within,
@@ -1202,16 +1593,26 @@ aside.EmojiPickerReact .epr-icn-search,
 	background: #172b4d !important;
 	color: #ffffff !important;
 	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
 }
 
 .gz-recording-ctrl-btn.is-cancel:hover {
 	background: #fee2e2 !important;
 	color: #ef4444 !important;
 	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
 }
 
-.gz-recording-ctrl-btn:focus,
-.gz-recording-ctrl-btn:focus-visible,
+/* Subtle, visible keyboard focus indicator strictly on the button itself */
+.gz-recording-ctrl-btn:focus-visible {
+	outline: none !important;
+	border-radius: 50% !important;
+	box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #172b4d !important;
+}
+
+.gz-recording-ctrl-btn:focus:not(:focus-visible),
 .gz-recording-ctrl-btn:active {
 	outline: none !important;
 	box-shadow: none !important;
@@ -1245,14 +1646,887 @@ aside.EmojiPickerReact .epr-icn-search,
 	to { opacity: 1; }
 }
 
+/* --------------------------------------------------------
+   Drag & Drop Fullscreen Overlay (WhatsApp Web Style)
+   -------------------------------------------------------- */
+.gz-drag-drop-overlay {
+	position: absolute !important;
+	inset: 0 !important;
+	z-index: 1200 !important;
+	background: rgba(23, 43, 77, 0.65) !important;
+	backdrop-filter: blur(8px) !important;
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	pointer-events: none !important;
+	animation: gzFadeIn 0.18s ease !important;
+}
+
+.gz-drag-drop-card {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 40px 52px !important;
+	border: 2.5px dashed rgba(255, 255, 255, 0.85) !important;
+	border-radius: 24px !important;
+	background: rgba(255, 255, 255, 0.12) !important;
+	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25) !important;
+	text-align: center !important;
+	animation: gzReactionPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.gz-drag-drop-icon {
+	width: 72px !important;
+	height: 72px !important;
+	border-radius: 50% !important;
+	background: #ffffff !important;
+	color: #172b4d !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 32px !important;
+	margin-bottom: 16px !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+	animation: gzBounce 1.5s infinite ease-in-out !important;
+}
+
+@keyframes gzBounce {
+	0%, 100% { transform: translateY(0); }
+	50% { transform: translateY(-8px); }
+}
+
+.gz-drag-drop-title {
+	font-size: 20px !important;
+	font-weight: 700 !important;
+	color: #ffffff !important;
+	margin-bottom: 4px !important;
+}
+
+.gz-drag-drop-subtitle {
+	font-size: 13.5px !important;
+	color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* --------------------------------------------------------
+   WhatsApp Web Fullscreen Staged Media & File Staging Overlay
+   -------------------------------------------------------- */
+.gz-staged-media-overlay {
+	position: absolute !important;
+	inset: 0 !important;
+	z-index: 1200 !important;
+	background: #f8fafc !important;
+	display: flex !important;
+	flex-direction: column !important;
+	justify-content: space-between !important;
+	animation: gzFadeIn 0.18s ease !important;
+	overflow: hidden !important;
+}
+
+/* Top Toolbar - Clean Light Theme */
+.gz-staged-media-header {
+	height: 56px !important;
+	padding: 0 24px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	background: #ffffff !important;
+	border-bottom: 1px solid #e2e8f0 !important;
+	color: #0f172a !important;
+	flex-shrink: 0 !important;
+	z-index: 10 !important;
+}
+
+.gz-staged-header-btn {
+	width: 38px !important;
+	height: 38px !important;
+	border-radius: 50% !important;
+	background: transparent !important;
+	border: none !important;
+	color: #64748b !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	font-size: 16px !important;
+	transition: all 0.15s ease !important;
+	text-decoration: none !important;
+}
+
+.gz-staged-header-btn:hover {
+	color: #0f172a !important;
+	background: #f1f5f9 !important;
+}
+
+/* Center Editor Tools */
+.gz-staged-tools-center {
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+}
+
+.gz-staged-tool-btn {
+	width: 36px !important;
+	height: 36px !important;
+	border-radius: 8px !important;
+	background: transparent !important;
+	border: none !important;
+	color: #64748b !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	font-size: 15px !important;
+	transition: all 0.15s ease !important;
+}
+
+.gz-staged-tool-btn:hover {
+	color: #0f172a !important;
+	background: #f1f5f9 !important;
+}
+
+.gz-staged-tool-hd {
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	color: #64748b !important;
+	border: 1.5px solid #cbd5e1 !important;
+	border-radius: 4px !important;
+	padding: 1px 5px !important;
+	letter-spacing: 0.5px !important;
+	cursor: pointer !important;
+	transition: all 0.15s ease !important;
+	line-height: 1.2 !important;
+}
+
+.gz-staged-tool-hd:hover {
+	color: #0f172a !important;
+	border-color: #0f172a !important;
+}
+
+/* Center Media Body */
+.gz-staged-media-body {
+	flex-grow: 1 !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 16px 24px !important;
+	overflow: hidden !important;
+	min-height: 0 !important;
+	background: #f8fafc !important;
+}
+
+.gz-staged-image-preview {
+	max-height: calc(100vh - 250px) !important;
+	max-width: 82vw !important;
+	object-fit: contain !important;
+	border-radius: 12px !important;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+	user-select: none !important;
+}
+
+/* Staged Document Card */
+.gz-staged-doc-card {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	padding: 36px 48px !important;
+	background: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 18px !important;
+	box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06) !important;
+	text-align: center !important;
+	max-width: 440px !important;
+	width: 100% !important;
+}
+
+.gz-staged-doc-icon {
+	width: 68px !important;
+	height: 68px !important;
+	border-radius: 16px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 32px !important;
+	margin-bottom: 16px !important;
+}
+
+.gz-staged-doc-icon.is-pdf {
+	background: rgba(239, 68, 68, 0.15) !important;
+	color: #ef4444 !important;
+}
+
+.gz-staged-doc-icon.is-other {
+	background: rgba(59, 130, 246, 0.15) !important;
+	color: #3b82f6 !important;
+}
+
+/* Bottom Wrapper */
+.gz-staged-bottom-wrapper {
+	position: relative !important;
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	padding: 12px 24px 20px 24px !important;
+	background: #f8fafc !important;
+	border-top: 1px solid #edf2f7 !important;
+	flex-shrink: 0 !important;
+}
+
+/* Floating Clean Light Emoji Picker (Matching Chat Section) */
+.gz-staged-emoji-picker-container {
+	position: absolute !important;
+	bottom: calc(100% - 6px) !important;
+	z-index: 100 !important;
+	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12) !important;
+	border: 1px solid #e2e8f0 !important;
+	border-radius: 18px !important;
+	overflow: hidden !important;
+	animation: gzReactionPop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+/* Caption Input Capsule ("Type a message") - Matching Gomzi Chat Composer */
+/* Caption Input Capsule ("Add a caption...") - Matching Gomzi Chat Composer */
+.gz-staged-caption-capsule {
+	max-width: 600px !important;
+	width: 100% !important;
+	height: 48px !important;
+	background: #ffffff !important;
+	background-color: #ffffff !important;
+	border: 1.5px solid #e2e8f0 !important;
+	border-radius: 24px !important;
+	padding: 0 10px 0 16px !important;
+	display: flex !important;
+	align-items: center !important;
+	box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05) !important;
+	margin-bottom: 14px !important;
+	transition: all 0.18s ease !important;
+}
+
+.gz-staged-caption-capsule:focus-within {
+	background: #ffffff !important;
+	border-color: #172b4d !important;
+	box-shadow: 0 4px 16px rgba(23, 43, 77, 0.08) !important;
+}
+
+.gz-staged-caption-input,
+.gz-staged-caption-input:focus,
+.gz-staged-caption-input:focus-visible,
+.gz-staged-caption-input:active,
+input.gz-staged-caption-input,
+input.gz-staged-caption-input:focus,
+input.gz-staged-caption-input:focus-visible,
+input.gz-staged-caption-input:active,
+input[type="text"].gz-staged-caption-input,
+input[type="text"].gz-staged-caption-input:focus,
+input[type="text"].gz-staged-caption-input:focus-visible,
+input[type="text"].gz-staged-caption-input:active,
+.gz-staged-caption-capsule input,
+.gz-staged-caption-capsule input:focus,
+.gz-staged-caption-capsule input:focus-visible,
+.gz-staged-caption-capsule input:active {
+	all: unset !important;
+	flex: 1 1 auto !important;
+	flex-grow: 1 !important;
+	display: block !important;
+	background: transparent !important;
+	background-color: transparent !important;
+	border: 0 !important;
+	border-color: transparent !important;
+	border-style: none !important;
+	border-width: 0 !important;
+	outline: none !important;
+	outline-width: 0 !important;
+	outline-offset: 0 !important;
+	box-shadow: none !important;
+	-webkit-box-shadow: none !important;
+	-webkit-appearance: none !important;
+	appearance: none !important;
+	min-height: unset !important;
+	border-radius: 0 !important;
+	color: #0f172a !important;
+	font-size: 15px !important;
+	font-weight: 500 !important;
+	padding: 0 8px !important;
+	margin: 0 !important;
+	line-height: 44px !important;
+	height: 100% !important;
+	cursor: text !important;
+	box-sizing: border-box !important;
+}
+
+.gz-staged-caption-input::placeholder,
+input.gz-staged-caption-input::placeholder,
+input[type="text"].gz-staged-caption-input::placeholder,
+.gz-staged-caption-capsule input::placeholder {
+	color: #94a3b8 !important;
+	font-size: 14.5px !important;
+	opacity: 1 !important;
+}
+
+.gz-staged-emoji-toggle {
+	width: 36px !important;
+	height: 36px !important;
+	border-radius: 50% !important;
+	background: transparent !important;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+	color: #64748b !important;
+	font-size: 18px !important;
+	cursor: pointer !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	transition: all 0.15s ease !important;
+}
+
+.gz-staged-emoji-toggle:hover {
+	color: #172b4d !important;
+	background: #f1f5f9 !important;
+}
+
+/* Thumbnails Strip (Clean Light Theme) */
+.gz-staged-thumbnails-row {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 10px !important;
+	max-width: 85vw !important;
+	overflow-x: auto !important;
+	padding: 4px 6px !important;
+}
+
+.gz-staged-thumb-item {
+	position: relative !important;
+	width: 52px !important;
+	height: 52px !important;
+	border-radius: 8px !important;
+	overflow: hidden !important;
+	cursor: pointer !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	background: #ffffff !important;
+	box-sizing: border-box !important;
+	border: 1.5px solid #e2e8f0 !important;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+	transition: all 0.15s ease !important;
+	flex-shrink: 0 !important;
+}
+
+.gz-staged-thumb-item.is-active {
+	border: 2.5px solid #172b4d !important;
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.2) !important;
+	transform: scale(1.05) !important;
+}
+
+.gz-staged-thumb-item img {
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: cover !important;
+}
+
+.gz-staged-thumb-doc {
+	width: 100% !important;
+	height: 100% !important;
+	background: #f8fafc !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 20px !important;
+	color: #ef4444 !important;
+}
+
+.gz-staged-thumb-remove-btn {
+	position: absolute !important;
+	top: 2px !important;
+	right: 2px !important;
+	width: 16px !important;
+	height: 16px !important;
+	border-radius: 50% !important;
+	background: rgba(15, 23, 42, 0.75) !important;
+	color: #ffffff !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 9px !important;
+	border: none !important;
+	cursor: pointer !important;
+	opacity: 0;
+	transition: opacity 0.15s ease, background 0.15s ease !important;
+	z-index: 5 !important;
+}
+
+.gz-staged-thumb-item:hover .gz-staged-thumb-remove-btn {
+	opacity: 1 !important;
+}
+
+.gz-staged-thumb-remove-btn:hover {
+	background: #ef4444 !important;
+}
+
+.gz-staged-thumb-add-btn {
+	width: 52px !important;
+	height: 52px !important;
+	border-radius: 8px !important;
+	border: 1.5px dashed #cbd5e1 !important;
+	background: #ffffff !important;
+	color: #64748b !important;
+	font-size: 18px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	transition: all 0.15s ease !important;
+	flex-shrink: 0 !important;
+}
+
+.gz-staged-thumb-add-btn:hover {
+	color: #172b4d !important;
+	border-color: #172b4d !important;
+	background: #f1f5f9 !important;
+}
+
+/* Floating Gomzi Navy Send Button with Counter Badge */
+.gz-staged-whatsapp-send-btn {
+	position: absolute !important;
+	right: 28px !important;
+	bottom: 18px !important;
+	width: 50px !important;
+	height: 50px !important;
+	border-radius: 50% !important;
+	background: #172b4d !important;
+	color: #ffffff !important;
+	border: none !important;
+	outline: none !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	font-size: 18px !important;
+	box-shadow: 0 4px 14px rgba(23, 43, 77, 0.35) !important;
+	transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.gz-staged-whatsapp-send-btn:hover {
+	background: #1e3a8a !important;
+	transform: scale(1.06) !important;
+	box-shadow: 0 6px 18px rgba(23, 43, 77, 0.45) !important;
+}
+
+.gz-staged-send-badge {
+	position: absolute !important;
+	top: -3px !important;
+	right: -3px !important;
+	background: #ffffff !important;
+	color: #172b4d !important;
+	font-size: 11.5px !important;
+	font-weight: 800 !important;
+	min-width: 20px !important;
+	height: 20px !important;
+	border-radius: 10px !important;
+	padding: 0 5px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+	border: 1.5px solid #172b4d !important;
+}
+
+.gz-staged-whatsapp-send-btn:active {
+	transform: scale(0.96) !important;
+}
+
+.gz-staged-whatsapp-send-btn:disabled {
+	opacity: 0.6 !important;
+	cursor: not-allowed !important;
+	transform: none !important;
+}
+
+/* --------------------------------------------------------
+   WhatsApp Style Media Album Grid / Collage
+   -------------------------------------------------------- */
+.gz-media-album-grid {
+	display: grid !important;
+	gap: 4px !important;
+	border-radius: 12px !important;
+	overflow: hidden !important;
+	max-width: 380px !important;
+	width: 100% !important;
+	margin-bottom: 4px !important;
+}
+
+/* 2 Images: Side-by-Side */
+.gz-media-album-grid.is-count-2 {
+	grid-template-columns: 1fr 1fr !important;
+}
+
+.gz-media-album-grid.is-count-2 .gz-album-img-wrap {
+	height: 175px !important;
+}
+
+/* 3 Images: 1 Left, 2 Right */
+.gz-media-album-grid.is-count-3 {
+	grid-template-columns: 1.2fr 1fr !important;
+	grid-template-rows: 1fr 1fr !important;
+}
+
+.gz-media-album-grid.is-count-3 .gz-album-img-wrap:first-child {
+	grid-row: span 2 !important;
+	height: 234px !important;
+}
+
+.gz-media-album-grid.is-count-3 .gz-album-img-wrap:not(:first-child) {
+	height: 115px !important;
+}
+
+/* 4+ Images: 2x2 Grid */
+.gz-media-album-grid.is-count-4,
+.gz-media-album-grid.is-count-more {
+	grid-template-columns: 1fr 1fr !important;
+	grid-template-rows: 1fr 1fr !important;
+}
+
+.gz-media-album-grid.is-count-4 .gz-album-img-wrap,
+.gz-media-album-grid.is-count-more .gz-album-img-wrap {
+	height: 125px !important;
+}
+
+.gz-album-img-wrap {
+	position: relative !important;
+	overflow: hidden !important;
+	cursor: pointer !important;
+	background: #f1f5f9 !important;
+}
+
+.gz-album-img-wrap img {
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: cover !important;
+	transition: transform 0.2s ease !important;
+	display: block !important;
+}
+
+.gz-album-img-wrap:hover img {
+	transform: scale(1.03) !important;
+}
+
+.gz-album-more-overlay {
+	position: absolute !important;
+	inset: 0 !important;
+	background: rgba(15, 23, 42, 0.65) !important;
+	color: #ffffff !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 24px !important;
+	font-weight: 700 !important;
+	backdrop-filter: blur(2px) !important;
+}
+
+/* --------------------------------------------------------
+   Document Message Card inside Message Bubble
+   -------------------------------------------------------- */
+.gz-doc-bubble-card {
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+	padding: 10px 12px !important;
+	border-radius: 12px !important;
+	background: rgba(255, 255, 255, 0.08) !important;
+	margin-bottom: 6px !important;
+	text-decoration: none !important;
+	transition: background 0.15s ease !important;
+}
+
+.gz-emp-bubble-receiver .gz-doc-bubble-card {
+	background: #f1f5f9 !important;
+}
+
+.gz-doc-bubble-card:hover {
+	background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.gz-emp-bubble-receiver .gz-doc-bubble-card:hover {
+	background: #e2e8f0 !important;
+}
+
+.gz-doc-bubble-icon {
+	width: 40px !important;
+	height: 40px !important;
+	border-radius: 10px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 20px !important;
+	flex-shrink: 0 !important;
+}
+
+.gz-doc-bubble-icon.is-pdf {
+	background: rgba(239, 68, 68, 0.15) !important;
+	color: #ef4444 !important;
+}
+
+.gz-doc-bubble-icon.is-other {
+	background: rgba(59, 130, 246, 0.15) !important;
+	color: #3b82f6 !important;
+}
+
+.gz-doc-bubble-details {
+	display: flex !important;
+	flex-direction: column !important;
+	min-width: 0 !important;
+	flex-grow: 1 !important;
+}
+
+.gz-doc-bubble-name {
+	font-size: 13.5px !important;
+	font-weight: 600 !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	max-width: 220px !important;
+}
+
+.gz-emp-bubble-sender .gz-doc-bubble-name {
+	color: #ffffff !important;
+}
+
+.gz-emp-bubble-receiver .gz-doc-bubble-name {
+	color: #0f172a !important;
+}
+
+.gz-doc-bubble-sub {
+	font-size: 11.5px !important;
+	color: #94a3b8 !important;
+	margin-top: 1px !important;
+}
+
+.gz-emp-bubble-receiver .gz-doc-bubble-sub {
+	color: #64748b !important;
+}
+
+.gz-doc-bubble-dl {
+	width: 32px !important;
+	height: 32px !important;
+	border-radius: 50% !important;
+	border: 1px solid rgba(255, 255, 255, 0.2) !important;
+	color: #ffffff !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 13px !important;
+	flex-shrink: 0 !important;
+}
+
+.gz-emp-bubble-receiver .gz-doc-bubble-dl {
+	border-color: #cbd5e1 !important;
+	color: #475569 !important;
+}
+
+/* Image message bubble caption */
+.gz-media-bubble-caption {
+	margin-top: 6px !important;
+	font-size: 14px !important;
+	line-height: 1.45 !important;
+	white-space: pre-wrap !important;
+	word-break: break-word !important;
+}
+
+.gz-emp-bubble-sender .gz-media-bubble-caption {
+	color: #ffffff !important;
+}
+
+.gz-emp-bubble-receiver .gz-media-bubble-caption {
+	color: #0f172a !important;
+}
+
 /* Reduced-Motion Accessibility Support */
 @media (prefers-reduced-motion: reduce) {
 	.gz-new-message-anim,
 	.gz-floating-reaction-container,
 	.gz-floating-action-menu,
 	.gz-composer-emoji-picker,
-	.gz-recording-pulse-dot {
+	.gz-recording-pulse-dot,
+	.gz-drag-drop-card,
+	.gz-drag-drop-icon,
+	.gz-lightbox-backdrop,
+	.gz-lightbox-img {
 		animation: none !important;
 		transition: none !important;
 	}
+}
+
+/* --------------------------------------------------------
+   WhatsApp-Style Fullscreen Lightbox Modal
+   -------------------------------------------------------- */
+.gz-lightbox-backdrop {
+	position: fixed !important;
+	inset: 0 !important;
+	z-index: 2500 !important;
+	background: rgba(11, 20, 26, 0.94) !important;
+	backdrop-filter: blur(8px) !important;
+	display: flex !important;
+	flex-direction: column !important;
+	justify-content: space-between !important;
+	animation: gzFadeIn 0.18s ease !important;
+	user-select: none !important;
+}
+
+.gz-lightbox-header {
+	height: 64px !important;
+	padding: 0 24px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	background: rgba(11, 20, 26, 0.82) !important;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+	z-index: 10 !important;
+}
+
+.gz-lightbox-info {
+	display: flex !important;
+	flex-direction: column !important;
+}
+
+.gz-lightbox-title {
+	font-size: 15px !important;
+	font-weight: 600 !important;
+	color: #ffffff !important;
+}
+
+.gz-lightbox-sub {
+	font-size: 12px !important;
+	color: #94a3b8 !important;
+}
+
+.gz-lightbox-counter {
+	font-size: 14px !important;
+	font-weight: 600 !important;
+	color: #cbd5e1 !important;
+	letter-spacing: 0.3px !important;
+}
+
+.gz-lightbox-actions {
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+}
+
+.gz-lightbox-btn {
+	width: 40px !important;
+	height: 40px !important;
+	border-radius: 50% !important;
+	background: rgba(255, 255, 255, 0.1) !important;
+	color: #ffffff !important;
+	border: none !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	font-size: 16px !important;
+	text-decoration: none !important;
+	transition: all 0.18s ease !important;
+}
+
+.gz-lightbox-btn:hover {
+	background: rgba(255, 255, 255, 0.22) !important;
+	color: #ffffff !important;
+	transform: scale(1.06) !important;
+}
+
+.gz-lightbox-btn.is-close:hover {
+	background: #ef4444 !important;
+	color: #ffffff !important;
+}
+
+.gz-lightbox-body {
+	flex-grow: 1 !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	padding: 16px 24px !important;
+	position: relative !important;
+	overflow: hidden !important;
+}
+
+.gz-lightbox-image-wrap {
+	flex-grow: 1 !important;
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+.gz-lightbox-img {
+	max-width: 88vw !important;
+	max-height: 75vh !important;
+	object-fit: contain !important;
+	border-radius: 8px !important;
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55) !important;
+	animation: gzReactionPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.gz-lightbox-nav-btn {
+	width: 48px !important;
+	height: 48px !important;
+	border-radius: 50% !important;
+	background: rgba(255, 255, 255, 0.14) !important;
+	color: #ffffff !important;
+	border: none !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	font-size: 18px !important;
+	transition: all 0.18s ease !important;
+	z-index: 10 !important;
+	backdrop-filter: blur(4px) !important;
+}
+
+.gz-lightbox-nav-btn:hover {
+	background: rgba(255, 255, 255, 0.3) !important;
+	transform: scale(1.1) !important;
+}
+
+.gz-lightbox-filmstrip {
+	height: 72px !important;
+	padding: 8px 16px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 10px !important;
+	background: rgba(11, 20, 26, 0.82) !important;
+	border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+	overflow-x: auto !important;
+	z-index: 10 !important;
+}
+
+.gz-lightbox-thumb {
+	width: 52px !important;
+	height: 52px !important;
+	border-radius: 6px !important;
+	overflow: hidden !important;
+	cursor: pointer !important;
+	border: 2px solid transparent !important;
+	opacity: 0.55 !important;
+	transition: all 0.15s ease !important;
+	flex-shrink: 0 !important;
+}
+
+.gz-lightbox-thumb:hover {
+	opacity: 0.85 !important;
+}
+
+.gz-lightbox-thumb.is-active {
+	opacity: 1 !important;
+	border-color: #60a5fa !important;
+	transform: scale(1.08) !important;
+}
+
+.gz-lightbox-thumb img {
+	width: 100% !important;
+	height: 100% !important;
+	object-fit: cover !important;
 }

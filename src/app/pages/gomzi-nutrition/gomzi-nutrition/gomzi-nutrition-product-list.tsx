@@ -23,6 +23,8 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import SearchFilter from '../../../components/SearchFilter'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import NumberTicker from '../../../components/NumberTicker'
 import GomziTablePagination from '../../../components/GomziTablePagination'
 import { DeleteProduct, GetProduct } from '../../../Functions/FGGroup'
@@ -86,6 +88,56 @@ const GomziNutritionProductList: React.FC = () => {
 		setPagination({ ...pagination, page: 1, itemsPerPage: value })
 	}
 
+	const [summaryStats, setSummaryStats] = useState({
+		total: 0,
+		active: 0,
+		lowStock: 0,
+		outOfStock: 0,
+	})
+	const [statsLoading, setStatsLoading] = useState(true)
+	const [allCatalogProducts, setAllCatalogProducts] = useState<any[]>([])
+
+	const fetchSummaryStats = async () => {
+		setStatsLoading(true)
+		try {
+			// Fetch catalog-level products (no pagination limit) for global KPI metrics
+			const response: any = await GetProduct()
+			const allProds: any[] = response?.data || []
+			setAllCatalogProducts(allProds)
+			const total = response?.metadata?.pagination?.totalDocs ?? allProds.length
+
+			let inStock = 0
+			let lowStock = 0
+			let outOfStock = 0
+
+			allProds.forEach((p: any) => {
+				const stockNum = Number(p.stock ?? 0)
+				if (stockNum <= 0) {
+					outOfStock++
+				} else if (stockNum <= 10) {
+					lowStock++
+				} else {
+					inStock++
+				}
+			})
+
+			setSummaryStats({
+				total,
+				active: inStock + lowStock,
+				lowStock,
+				outOfStock,
+			})
+		} catch (error) {
+			console.error('Error fetching summary stats:', error)
+		} finally {
+			setStatsLoading(false)
+		}
+	}
+
+	useEffect(() => {
+		fetchSummaryStats()
+	}, [])
+
 	const handlePageChange = (page: number) => {
 		setPagination({ ...pagination, page })
 	}
@@ -108,15 +160,17 @@ const GomziNutritionProductList: React.FC = () => {
 			await DeleteProduct({ id })
 			toast.success('Product deleted successfully')
 			fetchData()
+			fetchSummaryStats()
 		} catch (error: any) {
 			toast.error(error?.message || 'Failed to delete product')
 		}
 	}
 
-	// Dynamic Category extraction from data
+	// Dynamic Category extraction from catalog data (or current page fallback)
 	const categoriesList = useMemo(() => {
 		const cats = new Set<string>()
-		productData.forEach((p) => {
+		const source = allCatalogProducts.length > 0 ? allCatalogProducts : productData
+		source.forEach((p) => {
 			if (Array.isArray(p.categories)) {
 				p.categories.forEach((c: string) => c && cats.add(c.trim()))
 			} else if (p.category) {
@@ -124,7 +178,7 @@ const GomziNutritionProductList: React.FC = () => {
 			}
 		})
 		return Array.from(cats)
-	}, [productData])
+	}, [allCatalogProducts, productData])
 
 	// Filtered product records (client-side Category & Status filtering over fetched page)
 	const filteredProducts = useMemo(() => {
@@ -151,26 +205,27 @@ const GomziNutritionProductList: React.FC = () => {
 		})
 	}, [productData, selectedCategory, selectedStatus])
 
-	// Summary KPI calculations
-	const summaryStats = useMemo(() => {
-		const total = metaData?.totalCount || productData.length || 0
-		const inStock = productData.filter((p) => Number(p.stock ?? 0) > 10).length
-		const lowStock = productData.filter((p) => {
-			const s = Number(p.stock ?? 0)
-			return s > 0 && s <= 10
-		}).length
-		const outOfStock = productData.filter((p) => Number(p.stock ?? 0) === 0).length
-
-		return {
-			total,
-			active: inStock + lowStock,
-			lowStock,
-			outOfStock,
-		}
-	}, [productData, metaData])
-
 	const downloadExcel = () => {
-		const worksheetData = filteredProducts.map((product: any, idx: number) => {
+		const baseSource = allCatalogProducts.length > 0 ? allCatalogProducts : productData
+		const exportSource = baseSource.filter((item) => {
+			if (selectedCategory !== 'All') {
+				const itemCats: string[] = Array.isArray(item.categories)
+					? item.categories.map((c: any) => String(c).toLowerCase())
+					: item.category
+					? [String(item.category).toLowerCase()]
+					: []
+				if (!itemCats.includes(selectedCategory.toLowerCase())) {
+					return false
+				}
+			}
+			const stockNum = Number(item.stock ?? 0)
+			if (selectedStatus === 'in_stock' && stockNum <= 0) return false
+			if (selectedStatus === 'low_stock' && (stockNum <= 0 || stockNum > 10)) return false
+			if (selectedStatus === 'out_of_stock' && stockNum > 0) return false
+			return true
+		})
+
+		const worksheetData = (exportSource.length > 0 ? exportSource : filteredProducts).map((product: any, idx: number) => {
 			const stockVal = Number(product?.stock ?? 0)
 			const statusLabel = stockVal > 10 ? 'In Stock' : stockVal > 0 ? 'Low Stock' : 'Out of Stock'
 			const catDisplay = Array.isArray(product?.categories) ? product.categories.join(', ') : product?.category || 'General'
@@ -196,9 +251,15 @@ const GomziNutritionProductList: React.FC = () => {
 		XLSX.writeFile(workbook, `Gomzi_Products_${DayJS().format('YYYY-MM-DD')}.xlsx`)
 	}
 
-	const totalPages = metaData?.totalPages || Math.ceil((metaData?.totalCount || productData.length) / pagination.itemsPerPage) || 1
-	const currentStart = (pagination.page - 1) * pagination.itemsPerPage + 1
-	const currentEnd = Math.min(pagination.page * pagination.itemsPerPage, metaData?.totalCount || productData.length)
+	const isClientFiltered = selectedCategory !== 'All' || selectedStatus !== 'All'
+	const totalRecords = isClientFiltered
+		? filteredProducts.length
+		: (metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? metaData?.total ?? productData.length)
+	const totalPages = isClientFiltered
+		? Math.max(1, Math.ceil(filteredProducts.length / pagination.itemsPerPage))
+		: (metaData?.totalPages || Math.max(1, Math.ceil(totalRecords / pagination.itemsPerPage)) || 1)
+	const currentStart = totalRecords === 0 ? 0 : (pagination.page - 1) * pagination.itemsPerPage + 1
+	const currentEnd = Math.min(pagination.page * pagination.itemsPerPage, totalRecords)
 
 	return (
 		<div className='gz-prod-container'>
@@ -239,7 +300,7 @@ const GomziNutritionProductList: React.FC = () => {
 					<div className='gz-prod-summary-info'>
 						<span className='gz-prod-summary-label'>Total Products</span>
 						<span className='gz-prod-summary-value'>
-							{loading ? (
+							{statsLoading ? (
 								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
 							) : (
 								<NumberTicker value={summaryStats.total} />
@@ -256,7 +317,7 @@ const GomziNutritionProductList: React.FC = () => {
 					<div className='gz-prod-summary-info'>
 						<span className='gz-prod-summary-label'>Active Products</span>
 						<span className='gz-prod-summary-value'>
-							{loading ? (
+							{statsLoading ? (
 								<span className='gz-prod-skeleton' style={{ width: '45px', height: '24px', borderRadius: '4px' }}></span>
 							) : (
 								<NumberTicker value={summaryStats.active} />
@@ -273,7 +334,7 @@ const GomziNutritionProductList: React.FC = () => {
 					<div className='gz-prod-summary-info'>
 						<span className='gz-prod-summary-label'>Low Stock Items</span>
 						<span className='gz-prod-summary-value'>
-							{loading ? (
+							{statsLoading ? (
 								<span className='gz-prod-skeleton' style={{ width: '35px', height: '24px', borderRadius: '4px' }}></span>
 							) : (
 								<NumberTicker value={summaryStats.lowStock} />
@@ -290,7 +351,7 @@ const GomziNutritionProductList: React.FC = () => {
 					<div className='gz-prod-summary-info'>
 						<span className='gz-prod-summary-label'>Out of Stock</span>
 						<span className='gz-prod-summary-value'>
-							{loading ? (
+							{statsLoading ? (
 								<span className='gz-prod-skeleton' style={{ width: '35px', height: '24px', borderRadius: '4px' }}></span>
 							) : (
 								<NumberTicker value={summaryStats.outOfStock} />
@@ -301,7 +362,7 @@ const GomziNutritionProductList: React.FC = () => {
 			</div>
 
 			{/* =========================================================================
-			    TOOLBAR (SEARCHBAR -> LENGTHMENU -> CATEGORY -> STATUS -> EXPORT)
+			    TOOLBAR (SEARCHBAR -> LENGTHMENU -> DOWNLOAD EXCEL -> CATEGORY -> STATUS)
 			    ========================================================================= */}
 			<div className='gz-prod-toolbar'>
 				<div className='gz-prod-toolbar-left'>
@@ -319,43 +380,50 @@ const GomziNutritionProductList: React.FC = () => {
 						className='me-0'
 					/>
 
-					{/* 3. Category Filter */}
-					<select
-						className='gz-prod-select'
-						value={selectedCategory}
-						onChange={(e) => setSelectedCategory(e.target.value)}
-						title='Filter by Category'>
-						<option value='All'>All Categories</option>
-						{categoriesList.map((cat, idx) => (
-							<option key={idx} value={cat}>
-								{cat}
-							</option>
-						))}
-					</select>
+					{/* 3. Download Excel */}
+					<div>
+						<DownloadExcelButton
+							onClick={downloadExcel}
+							disabled={loading || filteredProducts.length === 0}
+							title='Export Products to Excel'
+						/>
+					</div>
 
-					{/* 4. Status Filter */}
-					<select
-						className='gz-prod-select'
-						value={selectedStatus}
-						onChange={(e) => setSelectedStatus(e.target.value)}
-						title='Filter by Stock Status'>
-						<option value='All'>All Status</option>
-						<option value='in_stock'>In Stock</option>
-						<option value='low_stock'>Low Stock</option>
-						<option value='out_of_stock'>Out of Stock</option>
-					</select>
-				</div>
+					{/* 4. Category Filter */}
+					<div style={{ minWidth: '170px' }}>
+						<SelectField
+							value={selectedCategory}
+							onChange={(e: any) => setSelectedCategory(e.target.value)}
+							options={[
+								{ label: 'All Categories', value: 'All' },
+								...categoriesList.map((cat) => ({ label: cat, value: cat })),
+							]}
+							showLabel={false}
+							marginRemove={true}
+							hideDefaultOption={true}
+							searchable={categoriesList.length > 5}
+							defaultLabel='All Categories'
+						/>
+					</div>
 
-				<div className='gz-prod-toolbar-right'>
-					{/* 5. Download Excel */}
-					<button
-						type='button'
-						className='gz-prod-btn-icon-export'
-						onClick={downloadExcel}
-						disabled={loading || filteredProducts.length === 0}
-						title='Export Products to Excel'>
-						<FontAwesomeIcon icon={faDownload} />
-					</button>
+					{/* 5. Status Filter */}
+					<div style={{ minWidth: '150px' }}>
+						<SelectField
+							value={selectedStatus}
+							onChange={(e: any) => setSelectedStatus(e.target.value)}
+							options={[
+								{ label: 'All Status', value: 'All' },
+								{ label: 'In Stock', value: 'in_stock' },
+								{ label: 'Low Stock', value: 'low_stock' },
+								{ label: 'Out of Stock', value: 'out_of_stock' },
+							]}
+							showLabel={false}
+							marginRemove={true}
+							hideDefaultOption={true}
+							searchable={false}
+							defaultLabel='All Status'
+						/>
+					</div>
 				</div>
 			</div>
 
@@ -566,9 +634,9 @@ const GomziNutritionProductList: React.FC = () => {
 				</div>
 
 				{/* Pagination Footer */}
-				{!loading && productData.length > 0 && (
+				{!loading && (filteredProducts.length > 0 || totalRecords > 0) && (
 					<GomziTablePagination
-						totalRecords={metaData?.totalCount || productData.length}
+						totalRecords={totalRecords}
 						page={pagination.page}
 						itemsPerPage={pagination.itemsPerPage}
 						totalPages={totalPages}

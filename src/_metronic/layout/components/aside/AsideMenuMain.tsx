@@ -38,6 +38,10 @@ export function AsideMenuMain() {
 			localStorage.removeItem('is_employee_login')
 			return 'Gomzi_Nutrition'
 		}
+		if (window.location.pathname.startsWith('/hr')) {
+			localStorage.setItem('admin', 'HR')
+			return 'HR'
+		}
 		return localStorage.getItem('admin') || ''
 	})
 	const location = useLocation()
@@ -51,6 +55,12 @@ export function AsideMenuMain() {
 			localStorage.setItem('admin', 'Gomzi_Nutrition')
 			localStorage.setItem('admin_type', 'Gomzi_Nutrition')
 			localStorage.removeItem('is_employee_login')
+			return
+		}
+
+		if (firstSegment === 'hr') {
+			setAdminType('HR')
+			localStorage.setItem('admin', 'HR')
 			return
 		}
 

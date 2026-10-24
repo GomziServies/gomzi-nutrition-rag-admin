@@ -6,6 +6,8 @@ import toast from 'react-hot-toast'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
@@ -180,20 +182,36 @@ const InventoryLogList = () => {
 							className='me-0'
 						/>
 
-						{/* Native Select Source Dropdown */}
-						<select
-							className='gz-prod-select'
-							value={selectedSource}
-							onChange={(e: any) => setSelectedSource(e.target.value)}
-							title='Select Source'>
-							<option value=''>All Sources</option>
-							<option value='MANUAL'>MANUAL</option>
-							<option value='ORDER'>ORDER</option>
-							<option value='INVOICE'>INVOICE</option>
-							<option value='RESET'>RESET</option>
-							<option value='RETURN'>RETURN</option>
-							<option value='PURCHASE'>PURCHASE</option>
-						</select>
+						{/* Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={inventoryData}
+								columns={sortableFields}
+								filename='Inventory_History_Logs'
+							/>
+						</div>
+
+						{/* Source Dropdown Filter */}
+						<div style={{ minWidth: '150px' }}>
+							<SelectField
+								value={selectedSource}
+								onChange={(e: any) => setSelectedSource(e.target.value)}
+								options={[
+									{ label: 'All Sources', value: '' },
+									{ label: 'MANUAL', value: 'MANUAL' },
+									{ label: 'ORDER', value: 'ORDER' },
+									{ label: 'INVOICE', value: 'INVOICE' },
+									{ label: 'RESET', value: 'RESET' },
+									{ label: 'RETURN', value: 'RETURN' },
+									{ label: 'PURCHASE', value: 'PURCHASE' },
+								]}
+								showLabel={false}
+								marginRemove={true}
+								hideDefaultOption={true}
+								searchable={false}
+								defaultLabel='All Sources'
+							/>
+						</div>
 					</div>
 				</div>
 
@@ -284,6 +302,9 @@ const InventoryLogList = () => {
 						totalPages={metaData?.totalPages}
 						currentPage={pagination.page}
 						onPageChange={handlePageChange}
+						totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? inventoryData.length}
+						itemsPerPage={pagination.itemsPerPage}
+						entityName='inventory logs'
 					/>
 				)}
 			</div>

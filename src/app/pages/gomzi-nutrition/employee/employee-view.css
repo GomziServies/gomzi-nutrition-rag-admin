@@ -1,0 +1,104 @@
+/* Employee View — new navy theme (visual-only, scoped to this page) */
+
+.gz-emp-back-btn {
+	background-color: #ffffff !important;
+	border: 1px solid #e4eaf2 !important;
+	color: #172b4d !important;
+	border-radius: 8px !important;
+	height: 38px !important;
+	padding: 0 14px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+	transition: all 0.18s ease !important;
+}
+
+.gz-emp-back-btn i,
+.gz-emp-back-btn span,
+.gz-emp-back-btn svg {
+	color: #172b4d !important;
+	transition: color 0.18s ease !important;
+}
+
+.gz-emp-back-btn:hover,
+.gz-emp-back-btn:focus,
+.gz-emp-back-btn:active,
+.gz-emp-back-btn:focus-visible {
+	background-color: #172b4d !important;
+	border-color: #172b4d !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.28) !important;
+	transform: translateY(-1px) !important;
+	text-decoration: none !important;
+}
+
+.gz-emp-back-btn:hover i,
+.gz-emp-back-btn:hover span,
+.gz-emp-back-btn:hover svg,
+.gz-emp-back-btn:focus i,
+.gz-emp-back-btn:focus span,
+.gz-emp-back-btn:focus svg,
+.gz-emp-back-btn:active i,
+.gz-emp-back-btn:active span,
+.gz-emp-back-btn:active svg,
+.gz-emp-back-btn:focus-visible i,
+.gz-emp-back-btn:focus-visible span,
+.gz-emp-back-btn:focus-visible svg {
+	color: #ffffff !important;
+}
+
+/* Section tabs — navy pill system to match sidebar active state */
+.gz-emp-tab {
+	height: 38px !important;
+	padding: 0 14px !important;
+	border-radius: 8px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: #71809a !important;
+	background-color: transparent !important;
+	border: 1px solid transparent !important;
+	transition: all 0.18s ease !important;
+}
+
+.gz-emp-tab i {
+	font-size: 14px !important;
+	color: #94a3b8 !important;
+	transition: color 0.18s ease !important;
+}
+
+.gz-emp-tab:hover:not(.is-active) {
+	background-color: #f5f7fb !important;
+	color: #142447 !important;
+}
+
+.gz-emp-tab:hover:not(.is-active) i {
+	color: #172b4d !important;
+}
+
+.gz-emp-tab.is-active {
+	font-weight: 700 !important;
+	color: #ffffff !important;
+	background-color: #172b4d !important;
+	border: 1px solid #172b4d !important;
+	box-shadow: 0 2px 8px rgba(23, 43, 77, 0.25) !important;
+}
+
+.gz-emp-tab.is-active i {
+	color: #ffffff !important;
+}
+
+/* Secondary light-primary action on this page (Add member) — keep navy hover with white text */
+.gz-emp-light-action:hover,
+.gz-emp-light-action:focus,
+.gz-emp-light-action:active {
+	background-color: #172b4d !important;
+	border-color: #172b4d !important;
+	color: #ffffff !important;
+}
+
+.gz-emp-light-action:hover i,
+.gz-emp-light-action:hover span,
+.gz-emp-light-action:focus i,
+.gz-emp-light-action:focus span {
+	color: #ffffff !important;
+}

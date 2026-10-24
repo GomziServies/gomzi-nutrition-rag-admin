@@ -19,6 +19,7 @@ import {
 import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import UsersListPagination from '../../../components/TablePagination'
@@ -406,7 +407,7 @@ const Inventory: React.FC = () => {
 							</div>
 						</div>
 
-						{/* Right Toolbar: Search Filter, Date Filter, and Length Menu */}
+						{/* Right Toolbar: Search Filter, Length Menu, Download Excel, Date Filter */}
 						<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3'>
 							{/* Fixed Search Filter using the standardized project component */}
 							<SearchFilter
@@ -415,9 +416,6 @@ const Inventory: React.FC = () => {
 								className='me-0'
 								style={{ width: '220px' }}
 							/>
-
-							{/* Date Filter */}
-							<DateFilter onDateRangeChange={handleDateRangeChange} rightValue='0' />
 
 							{/* Entries per page */}
 							<LengthMenu
@@ -428,6 +426,21 @@ const Inventory: React.FC = () => {
 								value={pagination.itemsPerPage}
 								className='me-0'
 							/>
+
+							{/* Download Excel */}
+							<DownloadExcelButton
+								data={clientProcesses}
+								columns={[
+									{ title: 'Invoice No.', field: 'invoiceNo' },
+									{ title: 'Client Name', field: 'clientName' },
+									{ title: 'Mobile', field: 'phone' },
+									{ title: 'Email', field: 'email' },
+								]}
+								filename='client-production-process'
+							/>
+
+							{/* Date Filter */}
+							<DateFilter onDateRangeChange={handleDateRangeChange} rightValue='0' />
 						</div>
 					</div>
 

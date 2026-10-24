@@ -7,6 +7,7 @@ import Swal from 'sweetalert2'
 import { KTCard } from '../../../../../_metronic/helpers'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import InputField from '../../../../components/InputField'
+import DownloadExcelButton from '../../../../components/DownloadExcelButton'
 import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
 import Table from '../../../../components/Table'
@@ -229,7 +230,7 @@ const GNInventoryItem: React.FC = () => {
 			<KTCard>
 				<div className='card-header border-0 pt-6'>
 					<div className='card-title'>
-						<div className='card-branch_code d-flex'>
+						<div className='card-branch_code d-flex align-items-center gap-2'>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
@@ -237,6 +238,11 @@ const GNInventoryItem: React.FC = () => {
 							<LengthMenu
 								expenseData={productData}
 								handleItemsPerPageChange={handleItemsPerPageChange}
+							/>
+							<DownloadExcelButton
+								data={productData}
+								columns={sortableFields}
+								filename='inventory-items'
 							/>
 						</div>
 					</div>
@@ -339,6 +345,9 @@ const GNInventoryItem: React.FC = () => {
 							totalPages={metaData?.totalPages}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? productData.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='inventory items'
 						/>
 					)}
 				</div>

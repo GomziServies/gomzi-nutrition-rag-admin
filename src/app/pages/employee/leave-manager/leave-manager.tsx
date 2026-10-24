@@ -1,17 +1,20 @@
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faPlus, faRotateLeft, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
+import Swal from 'sweetalert2'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
+import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import {
 	CreateEmployeeLeave,
 	GetEmployeeLeaves,
+	RemoveEmployeeLeave,
 } from '../../../Functions/FGGroup/EmployeeLeaveManagement'
 
 interface PaginationState {
@@ -159,12 +162,35 @@ const EmployeeLeaveManager: React.FC = () => {
 		setSubmitLoading(false)
 	}
 
+	const handleDeleteLeave = async (leaveId: string) => {
+		const result = await Swal.fire({
+			title: 'Withdraw Leave Request?',
+			text: 'Are you sure you want to cancel this pending leave application?',
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonColor: '#3085d6',
+			cancelButtonColor: '#d33',
+			confirmButtonText: 'Yes, withdraw it!',
+		})
+
+		if (result.isConfirmed) {
+			try {
+				await RemoveEmployeeLeave({ leave_id: leaveId })
+				Swal.fire('Withdrawn!', 'Your leave request has been cancelled.', 'success')
+				fetchLeaveData()
+			} catch (error: any) {
+				console.error('Error withdrawing leave:', error)
+				Swal.fire('Error!', error?.message || 'Failed to cancel leave request.', 'error')
+			}
+		}
+	}
+
 	const sortableFields = [
-		{ title: 'Name', field: 'name' },
+		{ title: 'Employee', field: 'admin_id.full_name' },
 		{ title: 'Start Date', field: 'from_date' },
 		{ title: 'End Date', field: 'to_date' },
 		{ title: 'Reason', field: 'reason' },
-		{ title: 'Remark', field: 'remark' },
+		{ title: 'Remark', field: 'remarks' },
 		{ title: 'Status', field: 'status' },
 	]
 
@@ -191,9 +217,7 @@ const EmployeeLeaveManager: React.FC = () => {
 	)
 
 	const handleRowClick = (id: string) => {
-		if (window.innerWidth <= 1024) {
-			setVisibleDetails(visibleDetails === id ? null : id)
-		}
+		setVisibleDetails(visibleDetails === id ? null : id)
 	}
 
 	const [expandedDescription, setExpandedDescription] = useState<{ [key: number]: boolean }>({})
@@ -256,14 +280,26 @@ const EmployeeLeaveManager: React.FC = () => {
 							</span>
 						</div>
 
-						<button
-							type='button'
-							onClick={() => setShowModal(true)}
-							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
-							style={{ height: '38px', borderRadius: '10px' }}>
-							<i className='bi bi-plus-lg fs-6'></i>
-							<span>Apply Leave</span>
-						</button>
+						<div className='d-flex align-items-center gap-2'>
+							<button
+								type='button'
+								className='btn btn-sm btn-light d-flex align-items-center gap-2 px-3'
+								style={{ height: '38px', borderRadius: '10px' }}
+								onClick={fetchLeaveData}
+								disabled={loading}>
+								<FontAwesomeIcon icon={faRotateLeft} className={loading ? 'fa-spin' : ''} />
+								<span>Refresh</span>
+							</button>
+
+							<button
+								type='button'
+								onClick={() => setShowModal(true)}
+								className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
+								style={{ height: '38px', borderRadius: '10px' }}>
+								<FontAwesomeIcon icon={faPlus} />
+								<span>Apply Leave</span>
+							</button>
+						</div>
 					</div>
 
 					{/* Header Bottom: Filter Bar */}
@@ -272,7 +308,7 @@ const EmployeeLeaveManager: React.FC = () => {
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
-								placeholder='Search leaves...'
+								placeholder='Search leaves by employee or reason...'
 							/>
 						</div>
 
@@ -308,7 +344,6 @@ const EmployeeLeaveManager: React.FC = () => {
 							setPagination={setPagination}
 							loading={loading}
 							manualSearch={searchTerm}
-							removeAction={true}
 							visibleDetails={visibleDetails}
 							renderRow={(
 								leave: any,
@@ -320,17 +355,10 @@ const EmployeeLeaveManager: React.FC = () => {
 									<tr
 										onClick={() => handleRowClick(leave._id)}
 										className='data-row'>
-										<td className='text-center'>
-											<div className='d-flex'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
-												<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-													{actualIndex}
-												</span>
-											</div>
+										<td>
+											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+												{actualIndex}
+											</span>
 										</td>
 										<td>
 											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
@@ -349,51 +377,29 @@ const EmployeeLeaveManager: React.FC = () => {
 										</td>
 										<td>
 											<span
-												className='text-dark fw-bold text-hover-primary d-md-block d-none mb-1 fs-6'
+												className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'
 												onClick={() => toggleDescription(index)}
 												title={leave.reason}
 												style={{ cursor: 'pointer' }}>
 												{expandedDescription[index]
 													? leave.reason
-													: truncateString(leave.reason, 100)}
-											</span>
-											<span
-												className='text-dark fw-bold text-hover-primary d-md-none d-block mb-1 fs-6'
-												style={{ cursor: 'pointer' }}
-												title={leave.reason}
-												onClick={() => toggleDescription(index)}>
-												{expandedDescription[index]
-													? leave.reason
-													: truncateString(leave.reason, 20)}
+													: truncateString(leave.reason, 60)}
 											</span>
 										</td>
 										<td>
-											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-												{leave.status === 'PENDING' ? (
-													<span className='text-muted fs-7'>Decision Pending</span>
-												) : (
-													<>
-														<span
-															className='text-dark fw-bold text-hover-primary d-md-block d-none mb-1 fs-6'
-															onClick={() => toggleDescription(index)}
-															title={leave.remarks}
-															style={{ cursor: 'pointer' }}>
-															{expandedDescription[index]
-																? leave.remarks
-																: truncateString(leave.remarks, 100)}
-														</span>
-														<span
-															className='text-dark fw-bold text-hover-primary d-md-none d-block mb-1 fs-6'
-															style={{ cursor: 'pointer' }}
-															title={leave.remarks}
-															onClick={() => toggleDescription(index)}>
-															{expandedDescription[index]
-																? leave.remarks
-																: truncateString(leave.remarks, 20)}
-														</span>
-													</>
-												)}
-											</span>
+											{leave.status === 'PENDING' ? (
+												<span className='text-muted fs-7'>Decision Pending</span>
+											) : (
+												<span
+													className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'
+													onClick={() => toggleDescription(index)}
+													title={leave.remarks}
+													style={{ cursor: 'pointer' }}>
+													{expandedDescription[index]
+														? leave.remarks
+														: truncateString(leave.remarks, 60)}
+												</span>
+											)}
 										</td>
 										<td>
 											{leave.status === 'APPROVED' ? (
@@ -410,69 +416,76 @@ const EmployeeLeaveManager: React.FC = () => {
 												</span>
 											)}
 										</td>
+										<td className='text-center py-4'>
+											<div className='d-flex align-items-center justify-content-center gap-2'>
+												<TableButton
+													action='view'
+													title='View Details'
+													onClick={(e) => {
+														e.stopPropagation()
+														handleRowClick(leave._id)
+													}}
+												/>
+												{leave.status === 'PENDING' && (
+													<TableButton
+														action='remove'
+														title='Withdraw Leave Request'
+														onClick={(e) => {
+															e.stopPropagation()
+															handleDeleteLeave(leave._id)
+														}}
+													/>
+												)}
+											</div>
+										</td>
 									</tr>
 									{isVisible && (
 										<tr className={`detail-row ${isVisible ? 'is-visible' : ''}`}>
 											<td colSpan={12}>
 												<div className='p-3 bg-light rounded-3'>
-													<strong>{sortableFields[0].title}:</strong>{' '}
-													{leave?.admin_id?.full_name || 'Me'}
-													<br />
-													<strong>{sortableFields[1].title}:</strong>{' '}
-													{DayJS(leave.from_date).format('DD/MM/YYYY hh:mm A')}
-													<br />
-													<strong>{sortableFields[2].title}:</strong>{' '}
-													{DayJS(leave.to_date).format('DD/MM/YYYY hh:mm A')}
-													<br />
-													<div className='d-flex'>
-														<strong>{sortableFields[3].title}:</strong>
-														<span
-															className='text-dark fw-bold text-hover-primary d-md-none d-block mb-2 ms-1 fs-6'
-															style={{ cursor: 'pointer' }}
-															title={leave.reason}
-															onClick={() => toggleDescription(index)}>
-															{expandedDescription[index]
-																? leave.reason
-																: truncateString(leave.reason, 55)}
-														</span>
-													</div>
-													<div className='d-flex'>
-														<strong>{sortableFields[4].title}:</strong>{' '}
-														<span className='text-dark fw-bold text-hover-primary d-block mb-3 ms-1 fs-6'>
-															{leave.status === 'PENDING' ? (
-																'Decision Pending'
-															) : (
-																<>
-																	<span
-																		className='text-dark fw-bold text-hover-primary d-md-none d-block fs-6'
-																		style={{ cursor: 'pointer' }}
-																		title={leave.remarks}
-																		onClick={() => toggleDescription(index)}>
-																		{expandedDescription[index]
-																			? leave.remarks
-																			: truncateString(leave.remarks, 55)}
+													<div className='row g-3'>
+														<div className='col-md-4'>
+															<strong className='text-gray-700'>Applicant:</strong>
+															<div className='text-gray-900 fw-bold'>{leave?.admin_id?.full_name || 'Me'}</div>
+														</div>
+														<div className='col-md-4'>
+															<strong className='text-gray-700'>Start Date:</strong>
+															<div className='text-gray-800'>
+																{DayJS(leave.from_date).format('DD/MM/YYYY hh:mm A')}
+															</div>
+														</div>
+														<div className='col-md-4'>
+															<strong className='text-gray-700'>End Date:</strong>
+															<div className='text-gray-800'>
+																{DayJS(leave.to_date).format('DD/MM/YYYY hh:mm A')}
+															</div>
+														</div>
+														<div className='col-md-6'>
+															<strong className='text-gray-700'>Reason:</strong>
+															<div className='text-gray-900'>{leave.reason}</div>
+														</div>
+														<div className='col-md-6'>
+															<strong className='text-gray-700'>HR / Manager Remarks:</strong>
+															<div className='text-gray-900'>{leave.remarks || 'No remarks recorded yet.'}</div>
+														</div>
+														<div className='col-md-4'>
+															<strong className='text-gray-700'>Status:</strong>
+															<div>
+																{leave.status === 'APPROVED' ? (
+																	<span className='badge badge-light-success px-3 py-1 fs-7 fw-semibold'>
+																		Approved
 																	</span>
-																</>
-															)}
-														</span>
-													</div>
-													<div className='d-flex'>
-														<strong className='mt-1'>{sortableFields[5].title}:</strong>{' '}
-														<span className='text-dark fw-bold text-hover-primary d-block mb-1 ms-1 fs-6'>
-															{leave.status === 'APPROVED' ? (
-																<span className='badge badge-light-success px-3 py-2 fs-7'>
-																	Approved
-																</span>
-															) : leave.status === 'REJECTED' ? (
-																<span className='badge badge-light-danger px-3 py-2 fs-7'>
-																	Rejected
-																</span>
-															) : (
-																<span className='badge badge-light-warning px-3 py-2 fs-7'>
-																	Pending
-																</span>
-															)}
-														</span>
+																) : leave.status === 'REJECTED' ? (
+																	<span className='badge badge-light-danger px-3 py-1 fs-7 fw-semibold'>
+																		Rejected
+																	</span>
+																) : (
+																	<span className='badge badge-light-warning px-3 py-1 fs-7 fw-semibold'>
+																		Pending Review
+																	</span>
+																)}
+															</div>
+														</div>
 													</div>
 												</div>
 											</td>
@@ -502,7 +515,7 @@ const EmployeeLeaveManager: React.FC = () => {
 								{Math.min(pagination.page * pagination.itemsPerPage, filteredData.length)} of {filteredData.length} records
 							</div>
 							<UsersListPagination
-								totalPages={Math.ceil(filteredData.length / pagination.itemsPerPage)}
+								totalPages={Math.ceil(filteredData.length / pagination.itemsPerPage) || 1}
 								currentPage={pagination.page}
 								onPageChange={handlePageChange}
 							/>
@@ -645,7 +658,7 @@ const EmployeeLeaveManager: React.FC = () => {
 										<Form.Label className='fw-bold text-gray-700 fs-7'>From Date</Form.Label>
 										<Form.Control
 											type='date'
-											value={DayJS(fromDate).format('YYYY-MM-DD')}
+											value={fromDate ? DayJS(fromDate).format('YYYY-MM-DD') : ''}
 											style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
 											onChange={(e) => {
 												const selectedDate = DayJS(e.target.value).startOf('day').format('YYYY-MM-DD')
@@ -660,7 +673,7 @@ const EmployeeLeaveManager: React.FC = () => {
 										<Form.Label className='fw-bold text-gray-700 fs-7'>To Date</Form.Label>
 										<Form.Control
 											type='date'
-											value={DayJS(toDate).format('YYYY-MM-DD')}
+											value={toDate ? DayJS(toDate).format('YYYY-MM-DD') : ''}
 											style={{ height: '42px', borderRadius: '8px', borderColor: '#ded8d2' }}
 											onChange={(e) => {
 												const selectedDate = DayJS(e.target.value).endOf('day').format('YYYY-MM-DD')

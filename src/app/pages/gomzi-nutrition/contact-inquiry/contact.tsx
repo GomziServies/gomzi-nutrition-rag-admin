@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { endOfMonth, startOfMonth } from 'date-fns'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { KTCard } from '../../../../_metronic/helpers'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -17,6 +17,7 @@ import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import SelectField from '../../../components/SelectField'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -26,6 +27,8 @@ import '../products-theme.css'
 import '../orders-theme.css'
 
 const ContactInquiry: React.FC = () => {
+	const location = useLocation()
+	const basePath = location.pathname.startsWith('/hr') ? '/hr' : '/rag'
 	const [searchTerm, setSearchTerm] = useState('')
 	const [metaData, setMetaData] = useState<any>()
 	const [contactInquiry, setContactInquiry] = useState<any>([])
@@ -319,7 +322,7 @@ const ContactInquiry: React.FC = () => {
 
 			{/* Breadcrumb */}
 			<div className='gz-mgmt-breadcrumb'>
-				<Link to='/rag/dashboard'>Dashboard</Link>
+				<Link to={`${basePath}/dashboard`}>Dashboard</Link>
 				<span className='sep'>&gt;</span>
 				<span className='current'>Contact Inquiries</span>
 			</div>
@@ -385,6 +388,15 @@ const ContactInquiry: React.FC = () => {
 							value={pagination.itemsPerPage}
 							className='me-0'
 						/>
+
+						<div>
+							<DownloadExcelButton
+								onClick={downloadExcel}
+								disabled={loading || exporting || filteredContactInquiry.length === 0}
+								loading={exporting}
+								filename='ContactInquiry'
+							/>
+						</div>
 
 						<div style={{ minWidth: '220px', maxWidth: '300px' }}>
 							<SelectField
@@ -506,7 +518,7 @@ const ContactInquiry: React.FC = () => {
 										<td>
 											<TableButton
 												action='view'
-												to={`/rag/contact-inquiry/contact-inquiry-view?contactInquiry_id=${item._id}`}
+												to={`${basePath}/contact-inquiry/contact-inquiry-view?contactInquiry_id=${item._id}`}
 											/>
 										</td>
 									</tr>
@@ -566,6 +578,9 @@ const ContactInquiry: React.FC = () => {
 							totalPages={paginationTotalPages}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={filteredContactInquiry.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='inquiries'
 						/>
 					)}
 				</div>

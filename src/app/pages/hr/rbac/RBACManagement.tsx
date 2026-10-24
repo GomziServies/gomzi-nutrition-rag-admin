@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { MultiSelect } from 'react-multi-select-component'
 import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import SelectField from '../../../components/SelectField'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { GetPanels, GetMenus, AssignAuthority, GetAuthority, RemoveAuthority } from '../../../Functions/FGGroup/RBAC'
 import toast from 'react-hot-toast'
@@ -202,31 +203,37 @@ const RBACManagement: React.FC = () => {
 							<div className='row mb-10'>
 								<div className='col-md-6'>
 									<label className='form-label fw-bold'>Select Employee</label>
-									<select
-										className='form-select'
+									<SelectField
 										value={selectedEmployee}
-										onChange={(e) => handleEmployeeChange(e.target.value)}
-									>
-										<option value=''>Choose Employee</option>
-										{employees.filter(emp => emp.employee_id).map((emp) => (
-											<option key={emp._id} value={emp.employee_id}>
-												{emp.full_name} ({emp.employee?.employee_code})
-											</option>
-										))}
-									</select>
+										onChange={(val: any) => {
+											const v = typeof val === 'object' && val?.target ? val.target.value : val
+											handleEmployeeChange(v)
+										}}
+										options={[
+											{ value: '', label: 'Choose Employee' },
+											...employees.filter(emp => emp.employee_id).map((emp) => ({
+												value: emp.employee_id,
+												label: `${emp.full_name} (${emp.employee?.employee_code})`,
+											})),
+										]}
+									/>
 								</div>
 								<div className='col-md-6'>
 									<label className='form-label fw-bold'>Target Panel</label>
-									<select
-										className='form-select'
+									<SelectField
 										value={selectedPanel}
-										onChange={(e) => handlePanelChange(e.target.value)}
-									>
-										<option value=''>Choose Panel</option>
-										{panels.map((p) => (
-											<option key={p._id} value={p._id}>{p.name}</option>
-										))}
-									</select>
+										onChange={(val: any) => {
+											const v = typeof val === 'object' && val?.target ? val.target.value : val
+											handlePanelChange(v)
+										}}
+										options={[
+											{ value: '', label: 'Choose Panel' },
+											...panels.map((p) => ({
+												value: p._id,
+												label: p.name,
+											})),
+										]}
+									/>
 								</div>
 							</div>
 

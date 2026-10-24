@@ -213,14 +213,24 @@ const ManagerTasksView: React.FC = () => {
 
 					{/* 4. Status Filter */}
 					<div style={{ minWidth: '160px' }}>
-						<select
-							className='form-select form-select-sm gz-inv-select'
-							value={statusFilter}
-							onChange={(e: any) => setStatusFilter(e.target.value)}>
-							<option value='Select'>All Statuses</option>
-							<option value='Pending'>Pending</option>
-							<option value='Employee Done'>Employee Done</option>
-						</select>
+						<SelectField
+							showLabel={false}
+							marginRemove={true}
+							className='mb-0'
+							height='38px'
+							name='status'
+							value={statusFilter === 'Select' ? '' : statusFilter}
+							defaultLabel='All Statuses'
+							options={[
+								{ label: 'All Statuses', value: '' },
+								{ label: 'Pending', value: 'Pending' },
+								{ label: 'Employee Done', value: 'Employee Done' },
+							]}
+							onChange={(e: any) => {
+								const val = e?.target?.value ?? e
+								setStatusFilter(val || 'Select')
+							}}
+						/>
 					</div>
 
 					{/* 5. Date Filter */}

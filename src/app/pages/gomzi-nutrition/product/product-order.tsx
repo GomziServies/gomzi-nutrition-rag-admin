@@ -15,6 +15,8 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import NumberTicker from '../../../components/NumberTicker'
 import SearchFilter from '../../../components/SearchFilter'
 import GomziTablePagination from '../../../components/GomziTablePagination'
@@ -222,8 +224,9 @@ const ProductOrder: React.FC = () => {
 	}, [orderData, shipmentStatus, searchTerm])
 
 	// Derived metrics for summary cards
+	const totalOrdersCount = metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? metaData?.total ?? orderData.length
 	const metrics = useMemo(() => {
-		const total = metaData?.totalRecords || orderData.length
+		const total = totalOrdersCount
 		let placed = 0
 		let dispatched = 0
 		let delivered = 0
@@ -236,7 +239,7 @@ const ProductOrder: React.FC = () => {
 		})
 
 		return { total, placed, dispatched, delivered }
-	}, [orderData, metaData])
+	}, [orderData, totalOrdersCount])
 
 	const downloadExcel = () => {
 		const worksheetData = filteredOrderData.map((order: any, idx: number) => {
@@ -373,7 +376,7 @@ const ProductOrder: React.FC = () => {
 
 			{/* Main Card with Toolbar & Table */}
 			<div className='gz-prod-card'>
-				{/* Standard Toolbar Placement: Search -> LengthMenu -> Status -> DateFilter -> Export */}
+				{/* Standard Toolbar Placement: Search -> LengthMenu -> DownloadExcel -> Status -> DateFilter */}
 				<div className='gz-prod-toolbar'>
 					<div className='gz-prod-toolbar-left'>
 						<SearchFilter
@@ -387,36 +390,41 @@ const ProductOrder: React.FC = () => {
 							handleItemsPerPageChange={handleItemsPerPageChange}
 							className='me-0'
 						/>
-						<select
-							className='gz-prod-select'
-							value={shipmentStatus}
-							onChange={(e) => {
-								setShipmentStatus(e.target.value)
-								setPagination((prev) => ({ ...prev, page: 1 }))
-							}}
-							aria-label='Filter by shipment status'>
-							<option value=''>All Status</option>
-							<option value='PLACED'>Placed</option>
-							<option value='DISPATCHED'>Dispatched</option>
-							<option value='DELIVERED'>Delivered</option>
-							<option value='CANCELLED'>Cancelled</option>
-							<option value='RETURN'>Return</option>
-						</select>
-					</div>
-
-					<div className='gz-prod-toolbar-right'>
-						<DateFilter
-							onDateRangeChange={handleDateRangeChange}
-							rightValue='0'
-						/>
-						<button
-							type='button'
-							className='gz-prod-btn-icon-export'
-							onClick={downloadExcel}
-							disabled={loading || filteredOrderData.length === 0}
-							title='Export Records to Excel'>
-							<FontAwesomeIcon icon={faDownload} />
-						</button>
+						<div>
+							<DownloadExcelButton
+								onClick={downloadExcel}
+								disabled={loading || filteredOrderData.length === 0}
+								title='Export Records to Excel'
+							/>
+						</div>
+						<div style={{ minWidth: '150px' }}>
+							<SelectField
+								value={shipmentStatus}
+								onChange={(e: any) => {
+									setShipmentStatus(e.target.value)
+									setPagination((prev) => ({ ...prev, page: 1 }))
+								}}
+								options={[
+									{ label: 'All Status', value: '' },
+									{ label: 'Placed', value: 'PLACED' },
+									{ label: 'Dispatched', value: 'DISPATCHED' },
+									{ label: 'Delivered', value: 'DELIVERED' },
+									{ label: 'Cancelled', value: 'CANCELLED' },
+									{ label: 'Return', value: 'RETURN' },
+								]}
+								showLabel={false}
+								marginRemove={true}
+								hideDefaultOption={true}
+								searchable={false}
+								defaultLabel='All Status'
+							/>
+						</div>
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+							/>
+						</div>
 					</div>
 				</div>
 
@@ -574,10 +582,10 @@ const ProductOrder: React.FC = () => {
 				{/* Pagination Footer */}
 				{filteredOrderData.length > 0 && (
 					<GomziTablePagination
-						totalRecords={metaData?.totalRecords || filteredOrderData.length}
+						totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? filteredOrderData.length}
 						page={pagination.page}
 						itemsPerPage={pagination.itemsPerPage}
-						totalPages={metaData?.totalPages || Math.ceil((metaData?.totalRecords || filteredOrderData.length) / pagination.itemsPerPage) || 1}
+						totalPages={metaData?.totalPages || Math.ceil((metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? filteredOrderData.length) / pagination.itemsPerPage) || 1}
 						onPageChange={handlePageChange}
 						entityName='orders'
 					/>

@@ -30,3 +30,8 @@ declare module 'lucide-react' {
 	const icons: Record<string, Icon>
 	export default icons
 }
+
+declare module 'motion/react' {
+	export * from 'framer-motion'
+}
+

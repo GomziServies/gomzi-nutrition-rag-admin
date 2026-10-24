@@ -21,6 +21,8 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import SearchFilter from '../../../components/SearchFilter'
 import LengthMenu from '../../../components/LengthMenu'
+import SelectField from '../../../components/SelectField'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import NumberTicker from '../../../components/NumberTicker'
 import {
 	getInvoice,
@@ -440,7 +442,15 @@ const NutritionTotalSalesList: React.FC = () => {
 						/>
 					</div>
 
-					{/* 3. Status Filter Dropdown */}
+					{/* 3. Download Excel Button */}
+					<div>
+						<DownloadExcelButton
+							onClick={downloadExcel}
+							disabled={loading || invoiceData.length === 0}
+						/>
+					</div>
+
+					{/* 4. Status Filter Dropdown */}
 					<div className='position-relative' ref={statusDropdownRef}>
 						<button
 							type='button'
@@ -471,21 +481,27 @@ const NutritionTotalSalesList: React.FC = () => {
 
 					{/* 4. Store / Branch Dropdown */}
 					{adminType !== 'Store' && branchesData.length > 0 && (
-						<select
-							className='gz-inv-select'
-							style={{ width: 'auto', minWidth: '150px', height: '38px', borderRadius: '8px' }}
-							value={selectedBranch}
-							onChange={(e) => {
-								setSelectedBranch(e.target.value)
-								setPagination((prev) => ({ ...prev, page: 1 }))
-							}}>
-							<option value='default'>All Stores</option>
-							{branchesData.map((branch: any) => (
-								<option key={branch} value={branch}>
-									{branch}
-								</option>
-							))}
-						</select>
+						<div style={{ minWidth: '160px' }}>
+							<SelectField
+								value={selectedBranch}
+								onChange={(e: any) => {
+									setSelectedBranch(e.target.value)
+									setPagination((prev) => ({ ...prev, page: 1 }))
+								}}
+								options={[
+									{ label: 'All Stores', value: 'default' },
+									...branchesData.map((branch: any) => ({
+										label: branch,
+										value: branch,
+									})),
+								]}
+								showLabel={false}
+								marginRemove={true}
+								hideDefaultOption={true}
+								searchable={branchesData.length > 5}
+								defaultLabel='All Stores'
+							/>
+						</div>
 					)}
 
 					{/* Spacer */}

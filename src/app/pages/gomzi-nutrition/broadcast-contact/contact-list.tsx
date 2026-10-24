@@ -6,6 +6,7 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -381,6 +382,13 @@ const ContactList: React.FC = () => {
 							<LengthMenu
 								expenseData={contactData}
 								handleItemsPerPageChange={handleItemsPerPageChange}
+							/>
+						</div>
+						<div className='col-auto'>
+							<DownloadExcelButton
+								data={contactData}
+								columns={sortableFields}
+								filename='contact-list'
 							/>
 						</div>
 					</div>

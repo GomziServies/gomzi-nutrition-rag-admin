@@ -9,6 +9,7 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -226,19 +227,21 @@ const TeamManagement: React.FC = () => {
 						</div>
 
 						{/* 4. Manager Dropdown */}
-						<div style={{ minWidth: '180px' }}>
-							<select
-								className='gz-inv-select'
-								style={{ width: '100%', height: '38px', borderRadius: '8px' }}
+						<div style={{ minWidth: '190px' }}>
+							<SelectField
+								showLabel={false}
+								marginRemove={true}
+								className='mb-0'
+								height='38px'
+								name='manager'
 								value={selectedManagerForTask}
-								onChange={(e) => setSelectedManagerForTask(e.target.value)}>
-								<option value=''>All Managers</option>
-								{managers.map((m) => (
-									<option key={m.id} value={m.id}>
-										{m.name}
-									</option>
-								))}
-							</select>
+								defaultLabel='All Managers'
+								options={managers.map((m) => ({ label: m.name, value: m.id }))}
+								onChange={(e: any) => {
+									const val = e?.target?.value ?? e
+									setSelectedManagerForTask(val || '')
+								}}
+							/>
 						</div>
 					</div>
 
@@ -356,62 +359,256 @@ const TeamManagement: React.FC = () => {
 				onHide={() => setShowTeamsModal(false)}
 				size='lg'
 				centered>
-				<Modal.Header closeButton>
-					<Modal.Title>Teams Managed by {selectedManagerName}</Modal.Title>
+				<Modal.Header
+					closeButton
+					className='border-0 pb-0 pt-7 px-8 d-flex align-items-center justify-content-between'>
+					<div className='d-flex align-items-center gap-3'>
+						<div
+							style={{
+								width: '44px',
+								height: '44px',
+								minWidth: '44px',
+								minHeight: '44px',
+								maxWidth: '44px',
+								maxHeight: '44px',
+								borderRadius: '12px',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								background: '#eff6ff',
+								color: '#1e3a5f',
+								fontSize: '20px',
+								flexShrink: 0,
+								padding: 0,
+							}}>
+							<i className='bi bi-diagram-3-fill'></i>
+						</div>
+						<div>
+							<Modal.Title className='fw-bolder fs-3 text-gray-900 mb-0'>
+								Teams Managed by <span className='text-primary'>{selectedManagerName}</span>
+							</Modal.Title>
+							<div className='text-muted fs-7 fw-semibold'>
+								Assigned teams, leadership, and reporting members
+								{selectedTeams.length > 0 && ` (${selectedTeams.length} ${selectedTeams.length === 1 ? 'Position' : 'Positions'})`}
+							</div>
+						</div>
+					</div>
 				</Modal.Header>
-				<Modal.Body className='py-8 px-10'>
+				<Modal.Body
+					className='py-6 px-8'
+					style={{ maxHeight: '68vh', overflowY: 'auto' }}>
 					{loadingTeams ? (
-						<div className='text-center py-10'>
+						<div className='text-center py-12'>
 							<Spinner
 								animation='border'
 								variant='primary'
 							/>
-							<div className='text-muted mt-3'>Loading teams...</div>
+							<div className='text-muted mt-3 fw-semibold fs-7'>Loading assigned teams...</div>
 						</div>
 					) : selectedTeams.length === 0 ? (
-						<div className='text-center py-10 text-muted'>No teams assigned to this manager.</div>
+						<div
+							className='text-center py-12 px-6'
+							style={{ background: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+							<div
+								style={{
+									width: '64px',
+									height: '64px',
+									minWidth: '64px',
+									minHeight: '64px',
+									maxWidth: '64px',
+									maxHeight: '64px',
+									borderRadius: '50%',
+									background: '#ffffff',
+									border: '1px solid #e2e8f0',
+									boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									margin: '0 auto 16px auto',
+									flexShrink: 0,
+									padding: 0,
+								}}>
+								<i className='bi bi-people text-muted' style={{ fontSize: '26px' }}></i>
+							</div>
+							<div className='fw-bolder text-gray-800 fs-5 mb-1'>No Teams Assigned</div>
+							<div className='text-muted fs-7'>There are no teams currently assigned to this manager.</div>
+						</div>
 					) : (
-						<div className='row g-4'>
-							{selectedTeams.map((team, index) => (
-								<div
-									key={team._id}
-									className='col-12'>
-									<div className='card bg-light-primary border border-primary border-dashed rounded-3 shadow-none'>
-										<div className='card-body p-6'>
-											{/* Position Header */}
-											<div className='d-flex align-items-center mb-4'>
-												<span className='fw-bold text-gray-800 fs-5 me-2'>Position:</span>
-												<span className='fs-5 text-dark fw-bolder'>{team.position}</span>
+						<div className='d-flex flex-column gap-4'>
+							{selectedTeams.map((team, index) => {
+								const members = team.members || []
+								const leaderName = team.leader_id?.full_name?.trim()
+								const isLeaderAssigned = Boolean(leaderName && leaderName.toLowerCase() !== 'n/a')
+								const totalCount = members.length + (isLeaderAssigned ? 1 : 0)
+
+								const getInitials = (fullName?: string) => {
+									if (!fullName || fullName.toLowerCase() === 'n/a') return '?'
+									const parts = fullName.trim().split(' ')
+									if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+									return fullName.substring(0, 2).toUpperCase()
+								}
+
+								return (
+									<div
+										key={team._id || index}
+										className='card border border-gray-200 shadow-xs rounded-3 overflow-hidden bg-white'>
+										{/* Card Header with Position & Total Count */}
+										<div className='d-flex align-items-center justify-content-between px-5 py-3 bg-light border-bottom border-gray-200'>
+											<div className='d-flex align-items-center gap-2'>
+												<span
+													className='badge badge-light-primary fw-bolder fs-7 px-3 py-2 d-inline-flex align-items-center gap-2'
+													style={{ background: '#eff6ff', color: '#1e3a5f' }}>
+													<i className='bi bi-briefcase-fill text-primary fs-8'></i>
+													<span>{team.position || 'Team'}</span>
+												</span>
+											</div>
+											<span
+												className='badge badge-light fw-bold fs-8 px-3 py-1'
+												style={{ background: '#f1f5f9', color: '#475569' }}>
+												<i className='bi bi-people me-1'></i>
+												{totalCount} {totalCount === 1 ? 'Member' : 'Members'}
+											</span>
+										</div>
+
+										{/* Card Body with Leader & Members */}
+										<div className='p-4'>
+											{/* Leader Highlight Row */}
+											<div
+												className='d-flex align-items-center justify-content-between p-3 rounded-3 mb-3'
+												style={{
+													background: isLeaderAssigned ? '#fffbeb' : '#f8fafc',
+													border: `1px solid ${isLeaderAssigned ? '#fde68a' : '#e2e8f0'}`,
+												}}>
+												<div className='d-flex align-items-center gap-3'>
+													<div
+														style={{
+															width: '38px',
+															height: '38px',
+															minWidth: '38px',
+															minHeight: '38px',
+															maxWidth: '38px',
+															maxHeight: '38px',
+															borderRadius: '50%',
+															display: 'flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+															flexShrink: 0,
+															padding: 0,
+															background: isLeaderAssigned ? '#f59e0b' : '#cbd5e1',
+															color: '#ffffff',
+															fontWeight: 700,
+															fontSize: '13px',
+															lineHeight: 1,
+															boxShadow: isLeaderAssigned
+																? '0 2px 6px rgba(245, 158, 11, 0.3)'
+																: 'none',
+														}}>
+														{isLeaderAssigned ? (
+															getInitials(leaderName)
+														) : (
+															<i className='bi bi-person text-white' style={{ fontSize: '16px' }}></i>
+														)}
+													</div>
+													<div>
+														<div
+															className={`fs-6 ${
+																isLeaderAssigned
+																	? 'fw-bold text-gray-900'
+																	: 'fw-semibold text-gray-500 fst-italic'
+															}`}>
+															{isLeaderAssigned ? leaderName : 'Not Assigned'}
+														</div>
+														{isLeaderAssigned && team.leader_id?.email && (
+															<div className='text-muted fs-8'>{team.leader_id.email}</div>
+														)}
+													</div>
+												</div>
+												{isLeaderAssigned ? (
+													<span
+														className='badge badge-light-warning fw-bolder fs-8 px-2 py-1 d-inline-flex align-items-center gap-1'
+														style={{ background: '#fef3c7', color: '#b45309' }}>
+														<i className='bi bi-star-fill text-warning me-1' style={{ fontSize: '10px' }}></i>
+														Team Leader
+													</span>
+												) : (
+													<span
+														className='badge badge-light fw-semibold fs-8 px-2 py-1 text-muted'
+														style={{ background: '#f1f5f9' }}>
+														Unassigned Leader
+													</span>
+												)}
 											</div>
 
 											{/* Members List */}
-											<div className='ps-2'>
-												{/* Leader is always #1 */}
-												<div className='d-flex align-items-center mb-2'>
-													<span className='text-gray-400 fw-bold me-3'>1.</span>
-													<span className='text-gray-800 fw-bold fs-6'>
-														{team.leader_id?.full_name || 'N/A'}
-														<span className='badge badge-light-danger fs-9 ms-3'>Team Leader</span>
-													</span>
-												</div>
-
-												{/* Members follow */}
-												{(team.members || []).map((member: any, mIndex: number) => (
-													<div
-														key={member._id}
-														className='d-flex align-items-center mb-2'>
-														<span className='text-gray-400 fw-bold me-3'>{mIndex + 2}.</span>
-														<span className='text-dark fw-semibold fs-6'>{member.full_name}</span>
+											{members.length > 0 ? (
+												<div className='d-flex flex-column gap-2 ps-1'>
+													<div className='text-uppercase text-muted fs-9 fw-bolder tracking-wider mb-1'>
+														Team Members ({members.length})
 													</div>
-												))}
-											</div>
+													{members.map((member: any, mIndex: number) => (
+														<div
+															key={member._id || mIndex}
+															className='d-flex align-items-center justify-content-between p-2 rounded-2'
+															style={{
+																background: '#fafafa',
+																border: '1px solid #f1f5f9',
+															}}>
+															<div className='d-flex align-items-center gap-3'>
+																<div
+																	style={{
+																		width: '32px',
+																		height: '32px',
+																		minWidth: '32px',
+																		minHeight: '32px',
+																		maxWidth: '32px',
+																		maxHeight: '32px',
+																		borderRadius: '50%',
+																		display: 'flex',
+																		alignItems: 'center',
+																		justifyContent: 'center',
+																		flexShrink: 0,
+																		padding: 0,
+																		background: '#e2e8f0',
+																		color: '#334155',
+																		fontWeight: 700,
+																		fontSize: '11.5px',
+																		lineHeight: 1,
+																	}}>
+																	{getInitials(member.full_name)}
+																</div>
+																<span className='fw-semibold text-gray-800 fs-7'>
+																	{member.full_name}
+																</span>
+															</div>
+															<span
+																className='badge badge-light fw-medium fs-9 px-2 py-1'
+																style={{ color: '#64748b' }}>
+																Member #{mIndex + 1}
+															</span>
+														</div>
+													))}
+												</div>
+											) : (
+												<div className='text-muted fs-8 fst-italic ps-1 pt-1'>
+													<i className='bi bi-info-circle me-1'></i>
+													No additional members in this team.
+												</div>
+											)}
 										</div>
 									</div>
-								</div>
-							))}
+								)
+							})}
 						</div>
 					)}
 				</Modal.Body>
+				<Modal.Footer className='border-0 pt-0 pb-6 px-8 d-flex justify-content-end'>
+					<button
+						type='button'
+						className='btn btn-sm btn-light fw-bold px-6'
+						onClick={() => setShowTeamsModal(false)}>
+						Close
+					</button>
+				</Modal.Footer>
 			</Modal>
 		</>
 	)

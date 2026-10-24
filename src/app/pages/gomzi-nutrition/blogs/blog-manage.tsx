@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import {
 	BlogItem,
 	GetBlogsAdmin,
@@ -265,8 +267,8 @@ export default function BlogManage() {
 
 				{/* Search & Filter Bar */}
 				<div className='card-body py-3 border-bottom'>
-					<div className='row g-3 align-items-center'>
-						<div className='col-md-4'>
+					<div className='d-flex flex-wrap align-items-center gap-3'>
+						<div style={{ minWidth: '260px' }}>
 							<input
 								type='text'
 								className='form-control form-control-sm'
@@ -275,18 +277,37 @@ export default function BlogManage() {
 								onChange={(e) => setSearchQuery(e.target.value)}
 							/>
 						</div>
-						<div className='col-md-4'>
-							<select
-								className='form-select form-select-sm'
+
+						<DownloadExcelButton
+							data={filteredBlogs}
+							columns={[
+								{ title: 'Article Title', field: 'title' },
+								{ title: 'Category', field: 'category' },
+								{ title: 'Reviewer', field: 'medicalReviewer' },
+								{ title: 'Featured', field: 'featured' },
+								{ title: 'Reads', field: 'reads' },
+								{ title: 'Status', field: 'status' },
+							]}
+							filename='articles-list'
+						/>
+
+						<div style={{ minWidth: '180px' }}>
+							<SelectField
 								value={selectedCategory}
-								onChange={(e) => setSelectedCategory(e.target.value)}
-							>
-								<option value='all'>All Categories</option>
-								<option value='Nutrition'>Nutrition</option>
-								<option value='protein'>Whey & Protein</option>
-								<option value='clinical'>Clinical & ICMR</option>
-								<option value='brand'>Brand Legacy</option>
-							</select>
+								onChange={(e: any) => setSelectedCategory(e.target.value)}
+								options={[
+									{ label: 'All Categories', value: 'all' },
+									{ label: 'Nutrition', value: 'Nutrition' },
+									{ label: 'Whey & Protein', value: 'protein' },
+									{ label: 'Clinical & ICMR', value: 'clinical' },
+									{ label: 'Brand Legacy', value: 'brand' },
+								]}
+								showLabel={false}
+								marginRemove={true}
+								hideDefaultOption={true}
+								searchable={false}
+								defaultLabel='All Categories'
+							/>
 						</div>
 					</div>
 				</div>
@@ -520,18 +541,22 @@ export default function BlogManage() {
 
 										<div className='col-md-6'>
 											<label className='form-label fw-bold'>Category</label>
-											<select
-												className='form-select form-select-sm'
+											<SelectField
 												value={formData.category || 'Nutrition'}
-												onChange={(e) =>
+												onChange={(e: any) =>
 													setFormData({ ...formData, category: e.target.value })
 												}
-											>
-												<option value='Nutrition'>Nutrition</option>
-												<option value='Clinical Nutrition'>Clinical Nutrition</option>
-												<option value='Sports Performance'>Sports Performance</option>
-												<option value='Brand Story'>Brand Story</option>
-											</select>
+												options={[
+													{ label: 'Nutrition', value: 'Nutrition' },
+													{ label: 'Clinical Nutrition', value: 'Clinical Nutrition' },
+													{ label: 'Sports Performance', value: 'Sports Performance' },
+													{ label: 'Brand Story', value: 'Brand Story' },
+												]}
+												showLabel={false}
+												marginRemove={true}
+												hideDefaultOption={true}
+												searchable={false}
+											/>
 										</div>
 
 										<div className='col-md-6'>

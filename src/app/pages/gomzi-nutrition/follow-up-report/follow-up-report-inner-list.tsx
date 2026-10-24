@@ -16,6 +16,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -791,6 +792,14 @@ const FollowUpReportInnerList: React.FC = () => {
 								setPagination({ ...pagination, itemsPerPage: value })
 							}
 						/>
+
+						<div>
+							<DownloadExcelButton
+								data={jobData}
+								columns={sortableFields}
+								filename='Follow_Up_Call_History'
+							/>
+						</div>
 					</div>
 
 					{(shouldShowAddButton || (selectedData?.phone && selectedData.phone !== 'N/A')) && (
@@ -969,6 +978,9 @@ const FollowUpReportInnerList: React.FC = () => {
 							totalPages={metaData?.totalPages}
 							currentPage={pagination.page}
 							onPageChange={(page: number) => setPagination({ ...pagination, page })}
+							totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? jobData.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='leads'
 						/>
 					)}
 				</div>

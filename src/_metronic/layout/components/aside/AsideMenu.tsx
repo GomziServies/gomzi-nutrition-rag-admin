@@ -65,10 +65,10 @@ const AsideMenu: React.FC<Props> = ({ asideMenuCSSClasses }) => {
 		<div
 			id='kt_aside_menu_wrapper'
 			ref={scrollRef}
-			className='hover-scroll-overlay-y px-2 my-5 my-lg-5'
+			className='hover-scroll-overlay-y px-2 py-3 my-0'
 			data-kt-scroll='true'
 			data-kt-scroll-height='auto'
-			data-kt-scroll-dependencies="{default: '#kt_aside_toolbar, #kt_aside_footer', lg: '#kt_header, #kt_aside_toolbar, #kt_aside_footer'}"
+			data-kt-scroll-dependencies="{default: '#kt_aside_toolbar', lg: '#kt_header, #kt_aside_toolbar'}"
 			data-kt-scroll-wrappers='#kt_aside_menu'
 			data-kt-scroll-offset='5px'>
 			<div

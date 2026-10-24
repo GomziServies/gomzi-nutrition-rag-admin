@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { errorToast, successToast } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import TableButton from '../../../components/TableButton'
+import SelectField from '../../../components/SelectField'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { AddSalarySlip } from '../../../Functions/FGGroup/SalarySlip'
 
@@ -221,71 +222,79 @@ const SalarySlipAdd = () => {
 						<div className='row'>
 							<div className='col-md-6 mb-7 '>
 								<label className='form-label fw-bold'>Select Company</label>
-								<select
-									className='form-select'
+								<SelectField
 									value={formData.company}
-									onChange={(e) => handleInputChange('', 'company', e.target.value)}>
-									<option value='GCS'>Gomzi Consulting Services (GCS)</option>
-									<option value='GLS'>Gomzi Lifesciences (GLS)</option>
-								</select>
+									onChange={(val: any) => {
+										const v = typeof val === 'object' && val?.target ? val.target.value : val
+										handleInputChange('', 'company', v)
+									}}
+									options={[
+										{ value: 'GCS', label: 'Gomzi Consulting Services (GCS)' },
+										{ value: 'GLS', label: 'Gomzi Lifesciences (GLS)' },
+									]}
+								/>
 							</div>
 							<div className='col-md-6 mb-7'>
 								<label className='form-label fw-bold'>Select Employee</label>
-								<select
-									className='form-select'
+								<SelectField
 									value={formData.employeeId}
-									onChange={(e) => handleInputChange('', 'employeeId', e.target.value)}>
-									<option value=''>Choose Employee...</option>
-									{staffList.map((staff: any) => (
-										<option
-											key={staff._id}
-											value={staff._id}>
-											{staff.full_name} (
-											{staff.employee?.employee_code ||
-												staff.employee_code ||
-												staff.employee_id ||
-												'Staff'}
-											)
-										</option>
-									))}
-								</select>
+									onChange={(val: any) => {
+										const v = typeof val === 'object' && val?.target ? val.target.value : val
+										handleInputChange('', 'employeeId', v)
+									}}
+									options={[
+										{ value: '', label: 'Choose Employee...' },
+										...staffList.map((staff: any) => ({
+											value: staff._id,
+											label: `${staff.full_name} (${staff.employee?.employee_code || staff.employee_code || staff.employee_id || 'Staff'})`,
+										})),
+									]}
+								/>
 							</div>
 							<div className='col-md-6 mb-7'>
 								<label className='form-label fw-bold'>Month</label>
-								<select
-									className='form-select'
+								<SelectField
 									value={formData.month}
-									onChange={(e) => handleInputChange('', 'month', e.target.value)}>
-									<option value=''>Select Month</option>
-									<option value='01'>January</option>
-									<option value='02'>February</option>
-									<option value='03'>March</option>
-									<option value='04'>April</option>
-									<option value='05'>May</option>
-									<option value='06'>June</option>
-									<option value='07'>July</option>
-									<option value='08'>August</option>
-									<option value='09'>September</option>
-									<option value='10'>October</option>
-									<option value='11'>November</option>
-									<option value='12'>December</option>
-								</select>
+									onChange={(val: any) => {
+										const v = typeof val === 'object' && val?.target ? val.target.value : val
+										handleInputChange('', 'month', v)
+									}}
+									options={[
+										{ value: '', label: 'Select Month' },
+										{ value: '01', label: 'January' },
+										{ value: '02', label: 'February' },
+										{ value: '03', label: 'March' },
+										{ value: '04', label: 'April' },
+										{ value: '05', label: 'May' },
+										{ value: '06', label: 'June' },
+										{ value: '07', label: 'July' },
+										{ value: '08', label: 'August' },
+										{ value: '09', label: 'September' },
+										{ value: '10', label: 'October' },
+										{ value: '11', label: 'November' },
+										{ value: '12', label: 'December' },
+									]}
+								/>
 							</div>
 							<div className='col-md-6 mb-7'>
 								<label className='form-label fw-bold'>Year</label>
-								<select
-									className='form-select'
+								<SelectField
 									value={formData.year}
-									onChange={(e) => handleInputChange('', 'year', e.target.value)}>
-									<option value=''>Select Year</option>
-									<option value='2024'>2024</option>
-									<option value='2025'>2025</option>
-									<option value='2026'>2026</option>
-									<option value='2026'>2027</option>
-									<option value='2026'>2028</option>
-									<option value='2026'>2029</option>
-									<option value='2026'>2030</option>
-								</select>
+									onChange={(val: any) => {
+										const v = typeof val === 'object' && val?.target ? val.target.value : val
+										handleInputChange('', 'year', v)
+									}}
+									options={[
+										{ value: '', label: 'Select Year' },
+										{ value: '2024', label: '2024' },
+										{ value: '2025', label: '2025' },
+										{ value: '2026', label: '2026' },
+										{ value: '2027', label: '2027' },
+										{ value: '2028', label: '2028' },
+										{ value: '2029', label: '2029' },
+										{ value: '2030', label: '2030' },
+									]}
+								/>
 							</div>
 						</div>
 					</div>
@@ -665,16 +674,17 @@ const SalarySlipAdd = () => {
 						<div className='row'>
 							<div className='col-md-4 mb-7'>
 								<label className='form-label fw-bold'>Payment Method</label>
-								<select
-									className='form-select'
+								<SelectField
 									value={formData.bank.mode === 'Cash' ? 'Cash' : 'Online'}
-									onChange={(e) => {
-										const val = e.target.value
-										handleInputChange('bank', 'mode', val === 'Cash' ? 'Cash' : 'NEFT')
-									}}>
-									<option value='Online'>Online</option>
-									<option value='Cash'>Cash</option>
-								</select>
+									onChange={(val: any) => {
+										const v = typeof val === 'object' && val?.target ? val.target.value : val
+										handleInputChange('bank', 'mode', v === 'Cash' ? 'Cash' : 'NEFT')
+									}}
+									options={[
+										{ value: 'Online', label: 'Online' },
+										{ value: 'Cash', label: 'Cash' },
+									]}
+								/>
 							</div>
 
 							{formData.bank.mode !== 'Cash' && (
@@ -701,16 +711,20 @@ const SalarySlipAdd = () => {
 									</div>
 									<div className='col-md-4 mb-7'>
 										<label className='form-label fw-bold'>Payment Mode</label>
-										<select
-											className='form-select'
+										<SelectField
 											value={formData.bank.mode === 'Online' ? 'NEFT' : formData.bank.mode}
-											onChange={(e) => handleInputChange('bank', 'mode', e.target.value)}>
-											<option value='NEFT'>NEFT</option>
-											<option value='IMPS'>IMPS</option>
-											<option value='RTGS'>RTGS</option>
-											<option value='Transfer'>Transfer</option>
-											<option value='UPI'>UPI</option>
-										</select>
+											onChange={(val: any) => {
+												const v = typeof val === 'object' && val?.target ? val.target.value : val
+												handleInputChange('bank', 'mode', v)
+											}}
+											options={[
+												{ value: 'NEFT', label: 'NEFT' },
+												{ value: 'IMPS', label: 'IMPS' },
+												{ value: 'RTGS', label: 'RTGS' },
+												{ value: 'Transfer', label: 'Transfer' },
+												{ value: 'UPI', label: 'UPI' },
+											]}
+										/>
 									</div>
 								</>
 							)}

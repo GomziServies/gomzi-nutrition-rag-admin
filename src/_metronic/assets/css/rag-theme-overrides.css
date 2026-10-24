@@ -116,16 +116,20 @@ body {
    ========================================================================== */
 #kt_aside,
 .aside {
-	background: #F3F7FC !important;
+	background: #FFFFFF !important;
 	backdrop-filter: none !important;
 	-webkit-backdrop-filter: none !important;
 	border: none !important;
 	border-right: 1px solid #DFE7F0 !important;
-	box-shadow: 6px 0 20px -3px rgba(15, 23, 42, 0.06) !important;
+	box-shadow: 2px 0 12px 0 rgba(15, 23, 42, 0.04) !important;
 	width: 265px !important;
 	min-width: 265px !important;
 	max-width: 265px !important;
 	z-index: 104 !important;
+	display: flex !important;
+	flex-direction: column !important;
+	height: 100vh !important;
+	overflow: hidden !important;
 	transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -153,10 +157,35 @@ body {
 .aside-toolbar {
 	display: block !important;
 	height: auto !important;
-	background: #F3F7FC !important;
+	background: #FFFFFF !important;
 	border-bottom: 1px solid #DFE7F0 !important;
 	margin: 0 !important;
 	padding: 0 !important;
+	flex-shrink: 0 !important;
+}
+
+.aside-menu {
+	flex: 1 1 auto !important;
+	display: flex !important;
+	flex-direction: column !important;
+	min-height: 0 !important;
+	height: 100% !important;
+	background: #FFFFFF !important;
+	overflow: hidden !important;
+}
+
+#kt_aside_menu_wrapper {
+	flex: 1 1 auto !important;
+	margin: 0 !important;
+	padding-top: 8px !important;
+	padding-bottom: 24px !important;
+	min-height: 100% !important;
+	background: #FFFFFF !important;
+}
+
+#kt_aside_menu,
+[id="#kt_aside_menu"] {
+	background: #FFFFFF !important;
 }
 
 .aside-search {
@@ -212,10 +241,13 @@ body {
 .aside-menu .menu-link .menu-icon i,
 .aside-menu .menu-link .menu-icon svg {
 	color: #555b68 !important;
-	fill: #555b68 !important;
 	font-size: 15px !important;
-	transition: color 0.15s ease, fill 0.15s ease !important;
+	transition: color 0.15s ease !important;
 	margin-right: 10px !important;
+}
+
+.aside-menu .menu-link .menu-icon .svg-inline--fa {
+	fill: #555b68 !important;
 }
 
 /* Hover State - Clean Cool Slate Tint */
@@ -233,6 +265,9 @@ body {
 .aside-menu .menu-link:hover:not(.active) .menu-icon i,
 .aside-menu .menu-link:hover:not(.active) .menu-icon svg {
 	color: #2563eb !important;
+}
+
+.aside-menu .menu-link:hover:not(.active) .menu-icon .svg-inline--fa {
 	fill: #2563eb !important;
 }
 
@@ -264,6 +299,10 @@ body {
 #kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-icon i,
 #kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-icon svg {
 	color: #FFFFFF !important;
+}
+
+.aside-menu .menu-item > .menu-link.without-sub.active .menu-icon .svg-inline--fa,
+#kt_aside_menu .menu-item > .menu-link.without-sub.active .menu-icon .svg-inline--fa {
 	fill: #FFFFFF !important;
 }
 
@@ -295,6 +334,10 @@ body {
 #kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-icon i,
 #kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-icon svg {
 	color: #172B4D !important;
+}
+
+.aside-menu .menu-item.menu-accordion.show > .menu-link .menu-icon .svg-inline--fa,
+#kt_aside_menu .menu-item.menu-accordion.show > .menu-link .menu-icon .svg-inline--fa {
 	fill: #172B4D !important;
 }
 
@@ -332,6 +375,10 @@ body {
 #kt_aside_menu .menu-item.here > .menu-link .menu-icon i,
 #kt_aside_menu .menu-item.here > .menu-link .menu-icon svg {
 	color: #172B4D !important;
+}
+
+.aside-menu .menu-item.here > .menu-link .menu-icon .svg-inline--fa,
+#kt_aside_menu .menu-item.here > .menu-link .menu-icon .svg-inline--fa {
 	fill: #172B4D !important;
 }
 
@@ -814,6 +861,7 @@ body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-link {
 	box-sizing: border-box !important;
 	background-color: transparent !important;
 	border: 1px solid transparent !important;
+	overflow: hidden !important;
 	transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -1148,6 +1196,212 @@ body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.show > .menu-
 body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-item.show > .menu-link .menu-icon .svg-inline--fa {
 	color: #FFFFFF !important;
 	fill: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   3.1 COLLAPSED ASIDE RAIL: PRESERVE OUTLINE/STROKE LUCIDE ANIMATED ICONS
+   Lucide icons are stroke-based (fill="none", stroke="currentColor").
+   Prevent FontAwesome fill inheritance from turning them into solid silhouettes.
+   ========================================================================== */
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu_wrapper .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize [id="#kt_aside_menu"] .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed [id="#kt_aside_menu"] .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] [id="#kt_aside_menu"] .menu-icon svg:not(.svg-inline--fa) {
+	fill: none !important;
+	stroke: currentColor !important;
+	color: #64748B !important;
+}
+
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) path:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) rect:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) circle:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) line:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polyline:not([fill="currentColor"]),
+body.aside-minimize .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polygon:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) path:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) rect:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) circle:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) line:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polyline:not([fill="currentColor"]),
+body.gz-aside-collapsed .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polygon:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) path:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) rect:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) circle:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) line:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polyline:not([fill="currentColor"]),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-icon svg:not(.svg-inline--fa) polygon:not([fill="currentColor"]) {
+	fill: none !important;
+	stroke: currentColor !important;
+}
+
+/* Hover state for Lucide stroke icons */
+body.aside-minimize .aside .menu-item .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link:hover:not(.active) .menu-icon svg:not(.svg-inline--fa) {
+	color: #172B4D !important;
+	stroke: #172B4D !important;
+	fill: none !important;
+}
+
+/* Active state for Lucide stroke icons */
+body.aside-minimize .aside .menu-item .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize #kt_aside_menu_wrapper .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed #kt_aside_menu_wrapper .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] #kt_aside_menu_wrapper .menu-link.active .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize .aside .menu-item.here > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item.here > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item.here > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body.aside-minimize .aside .menu-item.show > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body.gz-aside-collapsed .aside .menu-item.show > .menu-link .menu-icon svg:not(.svg-inline--fa),
+body[data-kt-aside-minimize="on"] .aside .menu-item.show > .menu-link .menu-icon svg:not(.svg-inline--fa) {
+	color: #FFFFFF !important;
+	stroke: #FFFFFF !important;
+	fill: none !important;
+}
+
+/* Elements with inline fill="currentColor" (e.g. calendar dots) */
+body.aside-minimize .menu-icon svg:not(.svg-inline--fa) [fill="currentColor"],
+body.gz-aside-collapsed .menu-icon svg:not(.svg-inline--fa) [fill="currentColor"],
+body[data-kt-aside-minimize="on"] .menu-icon svg:not(.svg-inline--fa) [fill="currentColor"] {
+	fill: currentColor !important;
+	stroke: none !important;
+}
+
+/* ==========================================================================
+   3.2 PREVENT HORIZONTAL SCROLLBAR ON SHELL & DASHBOARD
+   ========================================================================== */
+html {
+	scrollbar-gutter: stable;
+}
+
+html,
+body {
+	overflow-x: hidden !important;
+	max-width: 100% !important;
+}
+
+.page {
+	overflow-x: hidden !important;
+	max-width: 100% !important;
+}
+
+.wrapper,
+#kt_wrapper {
+	min-width: 0 !important;
+	max-width: 100% !important;
+	overflow-x: hidden !important;
+}
+
+.content,
+#kt_content,
+.post,
+#kt_post,
+#kt_content_container {
+	min-width: 0 !important;
+	max-width: 100% !important;
+}
+
+/* ==========================================================================
+   3.3 ASIDE COLLAPSED TOOLTIP - MODERN LUXURY PILL DESIGN
+   ========================================================================== */
+.tooltip.gz-aside-tooltip {
+	position: fixed !important;
+	z-index: 1090 !important;
+	pointer-events: none !important;
+	width: max-content !important;
+	max-width: 320px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	opacity: 0 !important;
+	visibility: hidden !important;
+	transition: none !important;
+	animation: none !important;
+}
+
+.tooltip.gz-aside-tooltip.show {
+	opacity: 1 !important;
+	visibility: visible !important;
+	transition: opacity 0.12s ease-out !important;
+}
+
+.tooltip.gz-aside-tooltip .tooltip-inner {
+	background: #172B4D !important;
+	color: #FFFFFF !important;
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	line-height: 1.35 !important;
+	padding: 6px 12px !important;
+	border-radius: 8px !important;
+	box-shadow: 0 4px 18px rgba(15, 23, 42, 0.3), 0 2px 6px rgba(15, 23, 42, 0.15) !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+	white-space: nowrap !important;
+	letter-spacing: 0.015em !important;
+	text-align: left !important;
+	width: auto !important;
+	max-width: none !important;
+	display: inline-block !important;
+	box-sizing: border-box !important;
+}
+
+/* Tooltip Arrow */
+.tooltip.gz-aside-tooltip.bs-tooltip-end .tooltip-arrow,
+.tooltip.gz-aside-tooltip[data-popper-placement^='right'] .tooltip-arrow {
+	width: 6px !important;
+	height: 12px !important;
+}
+
+.tooltip.gz-aside-tooltip.bs-tooltip-end .tooltip-arrow::before,
+.tooltip.gz-aside-tooltip[data-popper-placement^='right'] .tooltip-arrow::before {
+	border-right-color: #172B4D !important;
+	border-width: 6px 6px 6px 0 !important;
+}
+
+.tooltip.gz-aside-tooltip.bs-tooltip-start .tooltip-arrow::before,
+.tooltip.gz-aside-tooltip[data-popper-placement^='left'] .tooltip-arrow::before {
+	border-left-color: #172B4D !important;
+	border-width: 6px 0 6px 6px !important;
+}
+
+.tooltip.gz-aside-tooltip.bs-tooltip-top .tooltip-arrow::before,
+.tooltip.gz-aside-tooltip[data-popper-placement^='top'] .tooltip-arrow::before {
+	border-top-color: #172B4D !important;
+	border-width: 6px 6px 0 !important;
+}
+
+.tooltip.gz-aside-tooltip.bs-tooltip-bottom .tooltip-arrow::before,
+.tooltip.gz-aside-tooltip[data-popper-placement^='bottom'] .tooltip-arrow::before {
+	border-bottom-color: #172B4D !important;
+	border-width: 0 6px 6px !important;
+}
+
+/* Suppress aside tooltip completely when sidebar is expanded */
+body:not(.aside-minimize):not(.gz-aside-collapsed):not([data-kt-aside-minimize='on']) .tooltip.gz-aside-tooltip {
+	display: none !important;
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
 }
 
 /* ==========================================================================
@@ -1497,7 +1751,7 @@ div[class*='-option'] {
 
 .react-select__option:hover,
 div[class*='-option']:hover {
-	background-color: rgba(30, 58, 95, 0.1) !important;
+	/* background-color: rgba(30, 58, 95, 0.1) !important; */
 	color: #1E3A5F !important;
 }
 
@@ -2690,34 +2944,42 @@ select.gz-inv-select {
 .table td .btn.btn-icon.btn-light-primary,
 .gz-inv-table td .btn.btn-icon.btn-light-primary {
 	color: #1E4F8A !important;
-	background-color: transparent !important;
+	background-color: #EFF6FF !important;
+	border: 1.5px solid #2563EB !important;
 }
 .gz-inv-action-btn.view:hover,
 .gz-table-action-btn.is-view:hover,
 .table td .btn.btn-icon.btn-light-primary:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-primary:hover {
-	background-color: #EAF1F8 !important;
+	background-color: rgba(37, 99, 235, 0.14) !important;
 	color: #101F38 !important;
-	border-color: rgba(30, 79, 138, 0.15) !important;
+	border: 1.5px solid #2563EB !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
-/* Action button variants: Edit / Purple */
+/* Action button variants: Edit / Green */
 .gz-inv-action-btn.edit,
 .gz-table-action-btn.is-edit,
 .table td .btn.btn-icon.btn-light-info,
 .gz-inv-table td .btn.btn-icon.btn-light-info {
-	color: #4C3AB3 !important;
-	background-color: transparent !important;
+	color: #16A34A !important;
+	background-color: #F0FDF4 !important;
+	border: 1.5px solid #16A34A !important;
 }
 .gz-inv-action-btn.edit:hover,
 .gz-table-action-btn.is-edit:hover,
 .table td .btn.btn-icon.btn-light-info:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-info:hover {
-	background-color: #E8E6F8 !important;
-	color: #3B2E99 !important;
-	border-color: rgba(76, 58, 179, 0.15) !important;
+	background-color: rgba(22, 163, 74, 0.14) !important;
+	color: #15803D !important;
+	border: 1.5px solid #16A34A !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Action button variants: Delete / Red */
@@ -2725,17 +2987,21 @@ select.gz-inv-select {
 .gz-table-action-btn.is-remove,
 .table td .btn.btn-icon.btn-light-danger,
 .gz-inv-table td .btn.btn-icon.btn-light-danger {
-	color: #D94A62 !important;
-	background-color: transparent !important;
+	color: #DC2626 !important;
+	background-color: #FEF2F2 !important;
+	border: 1.5px solid #DC2626 !important;
 }
 .gz-inv-action-btn.delete:hover,
 .gz-table-action-btn.is-remove:hover,
 .table td .btn.btn-icon.btn-light-danger:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-danger:hover {
-	background-color: #FBECEF !important;
-	color: #B52F46 !important;
-	border-color: rgba(217, 74, 98, 0.2) !important;
+	background-color: rgba(220, 38, 38, 0.14) !important;
+	color: #B91C1C !important;
+	border: 1.5px solid #DC2626 !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Action button variants: Warning / Amber */
@@ -2744,38 +3010,46 @@ select.gz-inv-select {
 .gz-table-action-btn.is-assign,
 .table td .btn.btn-icon.btn-light-warning,
 .gz-inv-table td .btn.btn-icon.btn-light-warning {
-	color: #A46A13 !important;
-	background-color: transparent !important;
+	color: #EA580C !important;
+	background-color: #FFF7ED !important;
+	border: 1.5px solid #EA580C !important;
 }
 .gz-inv-action-btn.warning:hover,
 .gz-table-action-btn.is-star:hover,
 .gz-table-action-btn.is-assign:hover,
 .table td .btn.btn-icon.btn-light-warning:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-warning:hover {
-	background-color: #FEF4E6 !important;
-	color: #7D4E05 !important;
-	border-color: rgba(164, 106, 19, 0.2) !important;
+	background-color: rgba(234, 88, 12, 0.14) !important;
+	color: #C2410C !important;
+	border: 1.5px solid #EA580C !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
-/* Action button variants: Success / Mint */
+/* Action button variants: Success / Mint / Approve */
 .gz-inv-action-btn.success,
 .gz-table-action-btn.is-approve,
 .gz-table-action-btn.is-send,
 .table td .btn.btn-icon.btn-light-success,
 .gz-inv-table td .btn.btn-icon.btn-light-success {
-	color: #168064 !important;
-	background-color: transparent !important;
+	color: #059669 !important;
+	background-color: #ECFDF5 !important;
+	border: 1.5px solid #059669 !important;
 }
 .gz-inv-action-btn.success:hover,
 .gz-table-action-btn.is-approve:hover,
 .gz-table-action-btn.is-send:hover,
 .table td .btn.btn-icon.btn-light-success:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-success:hover {
-	background-color: #ECFDF5 !important;
-	color: #0E5A45 !important;
-	border-color: rgba(22, 128, 100, 0.2) !important;
+	background-color: rgba(5, 150, 105, 0.14) !important;
+	color: #047857 !important;
+	border: 1.5px solid #059669 !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Action button variants: Dark / QR */
@@ -2783,17 +3057,21 @@ select.gz-inv-select {
 .gz-table-action-btn.is-qr,
 .table td .btn.btn-icon.btn-light-dark,
 .gz-inv-table td .btn.btn-icon.btn-light-dark {
-	color: #475569 !important;
-	background-color: transparent !important;
+	color: #334155 !important;
+	background-color: #F1F5F9 !important;
+	border: 1.5px solid #334155 !important;
 }
 .gz-inv-action-btn.qr:hover,
 .gz-table-action-btn.is-qr:hover,
 .table td .btn.btn-icon.btn-light-dark:hover,
 .gz-inv-table td .btn.btn-icon.btn-light-dark:hover {
-	background-color: #F1F5F9 !important;
-	color: #1E293B !important;
-	border-color: rgba(71, 85, 105, 0.2) !important;
+	background-color: rgba(51, 65, 85, 0.14) !important;
+	color: #0F172A !important;
+	border: 1.5px solid #334155 !important;
 	transform: translateY(-1px) !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* 4. Table Cards across all pages */
@@ -2978,7 +3256,7 @@ select.gz-inv-select {
 	right: 0 !important;
 	min-width: 100% !important;
 	width: max-content !important;
-	max-width: 320px !important;
+	max-width: 480px !important;
 	background: #ffffff !important;
 	border: 1px solid #DFE7F0 !important;
 	border-radius: 10px !important;
@@ -2989,62 +3267,95 @@ select.gz-inv-select {
 	box-sizing: border-box !important;
 }
 
+@keyframes gzDropdownRevealUp {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.gz-custom-select-dropdown.is-open-up {
+	top: auto !important;
+	bottom: calc(100% + 4px) !important;
+	box-shadow: 0 -12px 30px rgba(15, 23, 42, 0.18), 0 -2px 6px rgba(0, 0, 0, 0.08) !important;
+	animation: gzDropdownRevealUp 180ms ease-out forwards !important;
+}
+
 .gz-select-search-box {
-	padding: 6px !important;
-	border-bottom: 1px solid #F1F5F9 !important;
 	position: relative !important;
-	display: flex !important;
-	align-items: center !important;
+	padding: 6px 8px 8px 8px !important;
+	border-bottom: 1px solid #F1F5F9 !important;
+	background: #ffffff !important;
 	box-sizing: border-box !important;
 }
 
-.gz-select-search-box .gz-select-search-icon,
-.gz-select-search-box svg,
-.gz-select-search-box i {
-	position: absolute !important;
-	left: 17px !important;
-	top: 50% !important;
-	transform: translateY(-50%) !important;
-	font-size: 12px !important;
-	color: #1E3A5F !important;
-	pointer-events: none !important;
-	z-index: 5 !important;
-}
-
-.gz-select-search-box input,
-.gz-select-search-box input[type='text'] {
+.gz-select-search-box .selectfield-search-wrapper {
+	display: flex !important;
+	align-items: center !important;
 	width: 100% !important;
 	height: 34px !important;
 	min-height: 34px !important;
-	line-height: normal !important;
-	background-color: #F8FAFD !important;
 	border: 1px solid #DFE7F0 !important;
 	border-radius: 6px !important;
-	padding: 0 10px 0 36px !important; /* 36px ensures search icon and text NEVER overlap */
+	background-color: #F8FAFD !important;
+	padding: 0 10px !important;
+	gap: 8px !important;
+	box-sizing: border-box !important;
+	transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.gz-select-search-box .selectfield-search-wrapper:focus-within {
+	border-color: #1E3A5F !important;
+	background-color: #FFFFFF !important;
+	box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.12) !important;
+}
+
+.gz-select-search-box .selectfield-search-wrapper .gz-select-search-icon,
+.gz-select-search-box .selectfield-search-wrapper svg {
+	position: static !important;
+	transform: none !important;
+	left: auto !important;
+	top: auto !important;
+	font-size: 12px !important;
+	color: #71809A !important;
+	flex-shrink: 0 !important;
+	pointer-events: none !important;
+	margin: 0 !important;
+}
+
+.gz-select-search-box .selectfield-search-wrapper input.selectfield-search-input,
+.gz-select-search-box .selectfield-search-wrapper input {
+	flex: 1 1 auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	min-height: 0 !important;
+	line-height: normal !important;
+	background-color: transparent !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+	margin: 0 !important;
 	font-size: 12.5px !important;
 	font-weight: 500 !important;
-	color: #172B4D !important;
+	color: #142447 !important;
 	outline: none !important;
 	box-sizing: border-box !important;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
 }
 
-.gz-select-search-box input:focus,
-.gz-select-search-box input[type='text']:focus {
-	background-color: #ffffff !important;
-	border-color: #1E3A5F !important;
-	box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.15) !important;
-}
-
-.gz-select-search-box input::placeholder,
-.gz-select-search-box input[type='text']::placeholder {
+.gz-select-search-box .selectfield-search-wrapper input::placeholder {
 	color: #94A3B8 !important;
 	font-size: 12.5px !important;
 	font-weight: 400 !important;
 }
 
+
 .gz-select-options-list {
-	max-height: 220px !important;
+	max-height: var(--gz-options-max-height, 220px) !important;
 	overflow-y: auto !important;
 	padding: 4px 2px !important;
 }
@@ -3065,6 +3376,7 @@ select.gz-inv-select {
 	font-size: 13px !important;
 	font-weight: 500 !important;
 	color: #475569 !important;
+	background-color: transparent !important;
 	border-radius: 6px !important;
 	margin-bottom: 2px !important;
 	display: flex !important;
@@ -3075,19 +3387,28 @@ select.gz-inv-select {
 	user-select: none !important;
 }
 
-.gz-select-option:hover {
-	background-color: rgba(30, 58, 95, 0.08) !important;
+/* Hover light background ONLY applies to the unselected option currently hovered */
+.gz-select-option:not(.is-selected):hover {
+	background-color: #E8F0F8 !important;
 	color: #1E3A5F !important;
+	font-weight: 600 !important;
 }
 
-.gz-select-option.is-selected {
+/* Selected option ALWAYS keeps solid #1E3A5F background and white text, even when other items are hovered */
+.gz-select-option.is-selected,
+.gz-select-options-list .gz-select-option.is-selected,
+.gz-select-options-list:hover .gz-select-option.is-selected,
+.gz-select-options-list:hover .gz-select-option.is-selected:not(:hover),
+.gz-select-option.is-selected:hover {
 	background-color: #1E3A5F !important;
 	color: #ffffff !important;
 	font-weight: 700 !important;
 }
 
 .gz-select-option.is-selected .gz-select-check-icon,
-.gz-select-option.is-selected svg {
+.gz-select-option.is-selected svg,
+.gz-select-options-list:hover .gz-select-option.is-selected .gz-select-check-icon,
+.gz-select-options-list:hover .gz-select-option.is-selected:not(:hover) .gz-select-check-icon {
 	font-size: 12px !important;
 	color: #ffffff !important;
 	font-weight: bold !important;
@@ -3100,26 +3421,40 @@ select.gz-inv-select {
 	color: #94a3b8 !important;
 }
 
-/* Download Action Button in Table Rows (1:1 with DownloadExcelButton) */
+/* Download Action Button in Table Rows */
 .gz-table-action-btn.is-download {
-	background-color: #ffffff !important;
-	border: 1px solid #DFE7F0 !important;
-	color: #1E3A5F !important;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	background-color: #EFF6FF !important;
+	border: 1.5px solid #2563EB !important;
+	color: #1E4F8A !important;
+	box-shadow: none !important;
 }
 
 .gz-table-action-btn.is-download:hover {
-	background-color: #1E3A5F !important;
-	border-color: #1E3A5F !important;
-	color: #ffffff !important;
-	box-shadow: 0 4px 10px rgba(30, 58, 95, 0.25) !important;
+	background-color: rgba(37, 99, 235, 0.14) !important;
+	border: 1.5px solid #2563EB !important;
+	color: #101F38 !important;
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 	transform: translateY(-1px) !important;
 }
 
 .gz-table-action-btn.is-download:hover i,
 .gz-table-action-btn.is-download:hover svg,
 .gz-table-action-btn.is-download:hover span {
-	color: #ffffff !important;
+	color: #1E3A5F !important;
+}
+
+/* Table Action Buttons: Guarantee no box shadow on hover, blur background and subtle border */
+.gz-table-action-btn:hover,
+.gz-inv-action-btn:hover,
+.table td .btn.btn-icon.btn-sm:hover,
+.gz-inv-table td .btn.btn-icon.btn-sm:hover,
+button.gz-table-action-btn:hover,
+a.gz-table-action-btn:hover {
+	box-shadow: none !important;
+	backdrop-filter: blur(8px) !important;
+	-webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Global Unified Back Button (Exact match with http://localhost:3000/hr/employee-view) */
@@ -3182,5 +3517,204 @@ select.gz-inv-select {
 	background-color: #e8f0f8 !important;
 	color: #1e3a5f !important;
 	font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   13. UNIFIED TABLE UI (EXACT MATCH WITH http://localhost:3000/hr/employee-detail)
+   Theme: Header #F8FAFD, border #E4EAF2, uppercase text #71809A, hover #F9FBFE,
+   seamless 16px radius card, row divider #EEF2F6, no inner card-body padding.
+   ========================================================================== */
+
+/* Universal Table Card Container */
+.gz-inv-table-card {
+	background: #ffffff !important;
+	border: 1px solid #E4EAF2 !important;
+	border-radius: 16px !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+	overflow: hidden !important;
+}
+
+/* Eliminate nested card wrappers and card-body padding if wrapped around tables */
+.gz-inv-table-card .gz-inv-table-card {
+	border: none !important;
+	box-shadow: none !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+}
+
+.gz-inv-table-card > .card-body,
+.gz-inv-table-card > .py-4.card-body,
+.gz-inv-table-card > .card-body.py-4 {
+	padding: 0 !important;
+	background: transparent !important;
+}
+
+/* Universal Table Base */
+.gz-inv-table,
+.gz-inv-table-card table,
+#kt_table_users {
+	width: 100% !important;
+	border-collapse: separate !important;
+	border-spacing: 0 !important;
+}
+
+/* Universal Table Header */
+.gz-inv-table thead tr,
+.gz-inv-table-card table thead tr,
+#kt_table_users thead tr {
+	background-color: #F8FAFD !important;
+	border-bottom: 1px solid #E4EAF2 !important;
+}
+
+.gz-inv-table thead th,
+.gz-inv-table-card table thead th,
+#kt_table_users thead th {
+	background-color: #F8FAFD !important;
+	color: #71809A !important;
+	font-size: 12px !important;
+	font-weight: 650 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.02em !important;
+	padding: 16px 20px !important;
+	border-bottom: 1px solid #E4EAF2 !important;
+	border-top: none !important;
+	border-left: none !important;
+	border-right: none !important;
+	white-space: nowrap !important;
+	vertical-align: middle !important;
+}
+
+/* Universal Table Body Rows */
+.gz-inv-table tbody tr,
+.gz-inv-table-card table tbody tr,
+#kt_table_users tbody tr {
+	transition: background-color 0.15s ease !important;
+	background-color: #ffffff !important;
+}
+
+.gz-inv-table tbody tr:hover,
+.gz-inv-table-card table tbody tr:hover,
+#kt_table_users tbody tr:hover {
+	background-color: #F9FBFE !important;
+}
+
+.gz-inv-table tbody td,
+.gz-inv-table-card table tbody td,
+#kt_table_users tbody td {
+	padding: 16px 20px !important;
+	border-bottom: 1px solid #EEF2F6 !important;
+	border-top: none !important;
+	border-left: none !important;
+	border-right: none !important;
+	font-size: 13.5px !important;
+	vertical-align: middle !important;
+	color: #172B4D !important;
+}
+
+.gz-inv-table tbody tr:last-child td,
+.gz-inv-table-card table tbody tr:last-child td,
+#kt_table_users tbody tr:last-child td {
+	border-bottom: none !important;
+}
+
+.gz-inv-table-card > .table-responsive {
+	margin-bottom: 0 !important;
+}
+
+
+
+
+/* ==========================================================================
+   14. TARGET MODAL DROPDOWN STACKING & OVERFLOW FIX
+   Prevents dropdown from expanding scrollbars inside modal; floats with high z-index
+   ========================================================================== */
+#kt_modal_target_add,
+#kt_modal_target_update {
+	overflow: visible !important;
+}
+
+#kt_modal_target_add .modal-dialog,
+#kt_modal_target_update .modal-dialog {
+	overflow: visible !important;
+}
+
+#kt_modal_target_add .modal-content,
+#kt_modal_target_update .modal-content {
+	overflow: visible !important;
+}
+
+#kt_modal_target_add .modal-body,
+#kt_modal_target_update .modal-body {
+	overflow: visible !important;
+	position: relative !important;
+	z-index: 1055 !important;
+	max-height: none !important;
+}
+
+#kt_modal_target_add .modal-footer,
+#kt_modal_target_update .modal-footer {
+	position: relative !important;
+	z-index: 1 !important;
+}
+
+.modal .gz-custom-select-wrap.is-open {
+	z-index: 1075 !important;
+	position: relative !important;
+}
+
+.modal .gz-custom-select-dropdown {
+	z-index: 1085 !important;
+	min-width: 100% !important;
+	box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22), 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+.modal .gz-custom-select-dropdown.is-open-up {
+	top: auto !important;
+	bottom: calc(100% + 4px) !important;
+	box-shadow: 0 -16px 36px rgba(15, 23, 42, 0.22), 0 -4px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Global native select fallbacks so any remaining/external select matches theme */
+.form-select,
+.gz-inv-select,
+select.form-control {
+	min-height: 38px !important;
+	height: 38px !important;
+	background-color: #ffffff !important;
+	border: 1px solid #DFE7F0 !important;
+	border-radius: 8px !important;
+	padding: 6px 36px 6px 12px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: #142447 !important;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%231E3A5F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 12px center !important;
+	background-size: 14px 10px !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.form-select:hover:not(:disabled),
+.gz-inv-select:hover:not(:disabled),
+select.form-control:hover:not(:disabled) {
+	border-color: #1E3A5F !important;
+}
+
+.form-select:focus,
+.gz-inv-select:focus,
+select.form-control:focus {
+	border-color: #1E3A5F !important;
+	box-shadow: 0 0 0 0.22rem rgba(30, 58, 95, 0.15) !important;
+	outline: none !important;
+}
+
+.form-select:disabled,
+.gz-inv-select:disabled,
+select.form-control:disabled {
+	background-color: #f1f5f9 !important;
+	color: #94a3b8 !important;
+	cursor: not-allowed !important;
+	border-color: #DFE7F0 !important;
 }
 

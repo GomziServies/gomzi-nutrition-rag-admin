@@ -1,13 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faChevronDown, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
+import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -25,617 +23,6 @@ interface EmployeeOption {
 	mobile?: string
 	photo?: string
 	source?: 'Standard' | 'GLS'
-}
-
-/* ==========================================================================
-   Custom Dropdown 1: Employee Selector (Inspired by LengthMenu Dropdown UI)
-   ========================================================================== */
-interface EmployeeSelectDropdownProps {
-	selectedEmployee: EmployeeOption | null
-	employeeList: EmployeeOption[]
-	loading: boolean
-	onSelect: (emp: EmployeeOption | null) => void
-}
-
-const EmployeeSelectDropdown: React.FC<EmployeeSelectDropdownProps> = ({
-	selectedEmployee,
-	employeeList,
-	loading,
-	onSelect,
-}) => {
-	const [isOpen, setIsOpen] = useState(false)
-	const [searchTerm, setSearchTerm] = useState('')
-	const [coords, setCoords] = useState<{ top: number; left: number; width: number }>({
-		top: 0,
-		left: 0,
-		width: 340,
-	})
-	const buttonRef = useRef<HTMLButtonElement>(null)
-	const dropdownRef = useRef<HTMLDivElement>(null)
-	const searchInputRef = useRef<HTMLInputElement>(null)
-
-	const updateCoords = () => {
-		if (buttonRef.current) {
-			const rect = buttonRef.current.getBoundingClientRect()
-			const dropdownHeight = 360
-			const spaceBelow = window.innerHeight - rect.bottom
-			const openUp = spaceBelow < dropdownHeight && rect.top >= dropdownHeight
-			setCoords({
-				top: openUp ? Math.max(8, rect.top - dropdownHeight - 4) : rect.bottom + 6,
-				left: rect.left,
-				width: Math.max(rect.width, 340),
-			})
-		}
-	}
-
-	const toggleDropdown = (e: React.MouseEvent) => {
-		e.preventDefault()
-		e.stopPropagation()
-		if (!isOpen) {
-			updateCoords()
-		}
-		setIsOpen((prev) => !prev)
-	}
-
-	useEffect(() => {
-		if (isOpen) {
-			setTimeout(() => {
-				searchInputRef.current?.focus()
-			}, 50)
-		} else {
-			setSearchTerm('')
-		}
-	}, [isOpen])
-
-	useEffect(() => {
-		if (!isOpen) return
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				dropdownRef.current &&
-				!dropdownRef.current.contains(event.target as Node) &&
-				buttonRef.current &&
-				!buttonRef.current.contains(event.target as Node)
-			) {
-				setIsOpen(false)
-			}
-		}
-		const handleScroll = () => {
-			if (isOpen) updateCoords()
-		}
-		window.addEventListener('scroll', handleScroll, true)
-		window.addEventListener('resize', handleScroll)
-		document.addEventListener('mousedown', handleClickOutside)
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside)
-			window.removeEventListener('scroll', handleScroll, true)
-			window.removeEventListener('resize', handleScroll)
-		}
-	}, [isOpen])
-
-	const filteredList = useMemo(() => {
-		if (!searchTerm.trim()) return employeeList
-		const term = searchTerm.toLowerCase().trim()
-		return employeeList.filter(
-			(emp) =>
-				emp.name.toLowerCase().includes(term) ||
-				(emp.employee_code || '').toLowerCase().includes(term) ||
-				(emp.position || '').toLowerCase().includes(term) ||
-				(emp.email || '').toLowerCase().includes(term) ||
-				(emp.mobile || '').toLowerCase().includes(term)
-		)
-	}, [employeeList, searchTerm])
-
-	return (
-		<div className='position-relative w-100'>
-			<button
-				ref={buttonRef}
-				type='button'
-				onClick={toggleDropdown}
-				disabled={loading}
-				style={{
-					width: '100%',
-					height: '40px',
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'space-between',
-					gap: '10px',
-					backgroundColor: '#FFFFFF',
-					border: `1.5px solid ${isOpen ? '#172B4D' : '#DFE7F0'}`,
-					borderRadius: '10px',
-					padding: '6px 14px',
-					fontSize: '13px',
-					fontWeight: 600,
-					color: '#111827',
-					cursor: loading ? 'not-allowed' : 'pointer',
-					boxShadow: isOpen
-						? '0 0 0 0.22rem rgba(23, 43, 77, 0.14)'
-						: '0 1px 2px rgba(0, 0, 0, 0.04)',
-					transition: 'all 0.18s ease',
-					outline: 'none',
-				}}>
-				<div className='d-flex align-items-center gap-2 overflow-hidden text-truncate'>
-					{selectedEmployee ? (
-						<>
-							<div
-								style={{
-									width: '24px',
-									height: '24px',
-									minWidth: '24px',
-									borderRadius: '50%',
-									background: '#172B4D',
-									color: '#FFFFFF',
-									fontSize: '11px',
-									fontWeight: 700,
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'center',
-								}}>
-								{selectedEmployee.name ? selectedEmployee.name.charAt(0).toUpperCase() : 'E'}
-							</div>
-							{selectedEmployee.employee_code && (
-								<span
-									style={{
-										color: '#1D4ED8',
-										backgroundColor: '#EFF6FF',
-										border: '1px solid #BFDBFE',
-										borderRadius: '4px',
-										padding: '1px 5px',
-										fontSize: '11px',
-										fontWeight: 700,
-									}}>
-									#{selectedEmployee.employee_code}
-								</span>
-							)}
-							<span className='fw-bold text-truncate' style={{ color: '#172B4D' }}>
-								{selectedEmployee.name}
-							</span>
-							<span className='text-muted fs-8 text-truncate d-none d-sm-inline'>
-								— {selectedEmployee.position || 'Staff'} {selectedEmployee.source === 'GLS' ? '(GLS)' : ''}
-							</span>
-						</>
-					) : (
-						<span style={{ color: '#94A3B8', fontWeight: 500 }}>
-							Select an employee to audit...
-						</span>
-					)}
-				</div>
-
-				<FontAwesomeIcon
-					icon={faChevronDown}
-					style={{
-						fontSize: '11px',
-						color: '#172B4D',
-						transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-						transition: 'transform 0.2s ease',
-						flexShrink: 0,
-					}}
-				/>
-			</button>
-
-			{isOpen &&
-				createPortal(
-					<div
-						ref={dropdownRef}
-						onClick={(e) => e.stopPropagation()}
-						style={{
-							position: 'fixed',
-							top: coords.top,
-							left: coords.left,
-							width: coords.width,
-							backgroundColor: '#FFFFFF',
-							border: '1.5px solid #DFE7F0',
-							borderRadius: '12px',
-							boxShadow: '0 16px 40px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08)',
-							padding: '6px',
-							zIndex: 999999,
-							boxSizing: 'border-box',
-						}}>
-						{/* Search Input inside Dropdown */}
-						<div
-							style={{
-								padding: '4px 6px 8px 6px',
-								borderBottom: '1px solid #F1F5F9',
-								marginBottom: '4px',
-							}}>
-							<div
-								style={{
-									display: 'flex',
-									alignItems: 'center',
-									backgroundColor: '#F8FAFD',
-									border: '1px solid #E2E8F0',
-									borderRadius: '8px',
-									padding: '0 10px',
-									height: '34px',
-								}}>
-								<FontAwesomeIcon
-									icon={faSearch}
-									style={{ fontSize: '11px', color: '#94A3B8', marginRight: '8px' }}
-								/>
-								<input
-									ref={searchInputRef}
-									type='text'
-									value={searchTerm}
-									onChange={(e) => setSearchTerm(e.target.value)}
-									placeholder='Search by name, code, role...'
-									style={{
-										width: '100%',
-										border: 'none',
-										backgroundColor: 'transparent',
-										fontSize: '12.5px',
-										color: '#172B4D',
-										outline: 'none',
-									}}
-								/>
-								{searchTerm && (
-									<button
-										type='button'
-										onClick={() => setSearchTerm('')}
-										style={{
-											border: 'none',
-											background: 'transparent',
-											color: '#94A3B8',
-											cursor: 'pointer',
-											padding: 0,
-										}}>
-										<FontAwesomeIcon icon={faTimes} style={{ fontSize: '11px' }} />
-									</button>
-								)}
-							</div>
-						</div>
-
-						{/* Option to return to All Employees Directory Table */}
-						<button
-							type='button'
-							onClick={() => {
-								onSelect(null)
-								setIsOpen(false)
-							}}
-							style={{
-								width: '100%',
-								display: 'flex',
-								alignItems: 'center',
-								gap: '8px',
-								padding: '8px 12px',
-								border: 'none',
-								borderRadius: '8px',
-								backgroundColor: !selectedEmployee ? '#172B4D' : '#F8FAFC',
-								color: !selectedEmployee ? '#FFFFFF' : '#172B4D',
-								fontSize: '12.5px',
-								fontWeight: 600,
-								cursor: 'pointer',
-								marginBottom: '4px',
-								transition: 'all 0.15s ease',
-							}}
-							onMouseEnter={(e) => {
-								if (selectedEmployee) {
-									e.currentTarget.style.backgroundColor = '#E8F0F8'
-								}
-							}}
-							onMouseLeave={(e) => {
-								if (selectedEmployee) {
-									e.currentTarget.style.backgroundColor = '#F8FAFC'
-								}
-							}}>
-							<i className='bi bi-arrow-left-circle fs-6'></i>
-							<span>← Back to All Employees Table</span>
-						</button>
-
-						<div style={{ maxHeight: '260px', overflowY: 'auto' }}>
-							{filteredList.length === 0 ? (
-								<div
-									style={{
-										padding: '16px 12px',
-										textAlign: 'center',
-										color: '#94A3B8',
-										fontSize: '12.5px',
-									}}>
-									No employees matched "{searchTerm}"
-								</div>
-							) : (
-								filteredList.map((emp) => {
-									const isSelected = selectedEmployee?.id === emp.id
-									return (
-										<button
-											key={emp.id}
-											type='button'
-											onClick={() => {
-												onSelect(emp)
-												setIsOpen(false)
-											}}
-											style={{
-												width: '100%',
-												display: 'flex',
-												alignItems: 'center',
-												justifyContent: 'space-between',
-												gap: '8px',
-												padding: '8px 10px',
-												border: 'none',
-												borderRadius: '8px',
-												backgroundColor: isSelected ? '#172B4D' : 'transparent',
-												color: isSelected ? '#FFFFFF' : '#1E293B',
-												fontSize: '12.5px',
-												cursor: 'pointer',
-												marginBottom: '2px',
-												textAlign: 'left',
-												transition: 'all 0.12s ease',
-											}}
-											onMouseEnter={(e) => {
-												if (!isSelected) {
-													e.currentTarget.style.backgroundColor = '#E8F0F8'
-													e.currentTarget.style.color = '#172B4D'
-												}
-											}}
-											onMouseLeave={(e) => {
-												if (!isSelected) {
-													e.currentTarget.style.backgroundColor = 'transparent'
-													e.currentTarget.style.color = '#1E293B'
-												}
-											}}>
-											<div className='d-flex align-items-center gap-2 overflow-hidden text-truncate'>
-												<div
-													style={{
-														width: '24px',
-														height: '24px',
-														minWidth: '24px',
-														borderRadius: '50%',
-														background: isSelected ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
-														color: isSelected ? '#FFFFFF' : '#172B4D',
-														fontSize: '11px',
-														fontWeight: 700,
-														display: 'flex',
-														alignItems: 'center',
-														justifyContent: 'center',
-													}}>
-													{emp.name ? emp.name.charAt(0).toUpperCase() : 'E'}
-												</div>
-												<div className='overflow-hidden text-truncate'>
-													<div className='d-flex align-items-center gap-1.5'>
-														{emp.employee_code && (
-															<span
-																style={{
-																	fontSize: '10px',
-																	fontWeight: 700,
-																	color: isSelected ? '#93C5FD' : '#1D4ED8',
-																}}>
-																[{emp.employee_code}]
-															</span>
-														)}
-														<span className='fw-bold text-truncate'>{emp.name}</span>
-													</div>
-													<div
-														style={{
-															fontSize: '11px',
-															color: isSelected ? 'rgba(255,255,255,0.7)' : '#64748B',
-														}}>
-														{emp.position || 'Staff'} {emp.source === 'GLS' ? '• GLS' : ''}
-													</div>
-												</div>
-											</div>
-
-											{isSelected && (
-												<FontAwesomeIcon
-													icon={faCheck}
-													style={{ fontSize: '11px', color: '#10B981', flexShrink: 0 }}
-												/>
-											)}
-										</button>
-									)
-								})
-							)}
-						</div>
-					</div>,
-					document.body
-				)}
-		</div>
-	)
-}
-
-/* ==========================================================================
-   Custom Dropdown 2: Directory Filter (Inspired by LengthMenu Dropdown UI)
-   ========================================================================== */
-interface DirectoryFilterDropdownProps {
-	sourceFilter: 'All' | 'Standard' | 'GLS'
-	employeeList: EmployeeOption[]
-	onChange: (source: 'All' | 'Standard' | 'GLS') => void
-}
-
-const DirectoryFilterDropdown: React.FC<DirectoryFilterDropdownProps> = ({
-	sourceFilter,
-	employeeList,
-	onChange,
-}) => {
-	const [isOpen, setIsOpen] = useState(false)
-	const [coords, setCoords] = useState<{ top: number; left: number; width: number }>({
-		top: 0,
-		left: 0,
-		width: 180,
-	})
-	const buttonRef = useRef<HTMLButtonElement>(null)
-	const dropdownRef = useRef<HTMLDivElement>(null)
-
-	const updateCoords = () => {
-		if (buttonRef.current) {
-			const rect = buttonRef.current.getBoundingClientRect()
-			setCoords({
-				top: rect.bottom + 6,
-				left: rect.left,
-				width: Math.max(rect.width, 210),
-			})
-		}
-	}
-
-	const toggleDropdown = (e: React.MouseEvent) => {
-		e.preventDefault()
-		e.stopPropagation()
-		if (!isOpen) {
-			updateCoords()
-		}
-		setIsOpen((prev) => !prev)
-	}
-
-	useEffect(() => {
-		if (!isOpen) return
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				dropdownRef.current &&
-				!dropdownRef.current.contains(event.target as Node) &&
-				buttonRef.current &&
-				!buttonRef.current.contains(event.target as Node)
-			) {
-				setIsOpen(false)
-			}
-		}
-		const handleScroll = () => {
-			if (isOpen) updateCoords()
-		}
-		window.addEventListener('scroll', handleScroll, true)
-		window.addEventListener('resize', handleScroll)
-		document.addEventListener('mousedown', handleClickOutside)
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside)
-			window.removeEventListener('scroll', handleScroll, true)
-			window.removeEventListener('resize', handleScroll)
-		}
-	}, [isOpen])
-
-	const directoryOptions: { label: string; value: 'All' | 'Standard' | 'GLS'; count: number }[] = [
-		{ label: 'All Directories', value: 'All', count: employeeList.length },
-		{
-			label: 'Standard HR',
-			value: 'Standard',
-			count: employeeList.filter((e) => e.source === 'Standard').length,
-		},
-		{
-			label: 'GLS Staff',
-			value: 'GLS',
-			count: employeeList.filter((e) => e.source === 'GLS').length,
-		},
-	]
-
-	const currentOption = directoryOptions.find((opt) => opt.value === sourceFilter) || directoryOptions[0]
-
-	return (
-		<div className='d-inline-block' style={{ minWidth: '180px' }}>
-			<button
-				ref={buttonRef}
-				type='button'
-				onClick={toggleDropdown}
-				style={{
-					width: '100%',
-					height: '38px',
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'space-between',
-					gap: '8px',
-					backgroundColor: '#FFFFFF',
-					border: `1px solid ${isOpen ? '#172B4D' : '#DFE7F0'}`,
-					borderRadius: '8px',
-					padding: '6px 12px',
-					fontSize: '13px',
-					fontWeight: 600,
-					color: '#111827',
-					cursor: 'pointer',
-					boxShadow: isOpen
-						? '0 0 0 0.22rem rgba(23, 43, 77, 0.14)'
-						: '0 1px 2px rgba(0, 0, 0, 0.04)',
-					transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-					outline: 'none',
-				}}>
-				<div className='d-flex align-items-center gap-2'>
-					<i className='bi bi-folder2-open text-primary' style={{ fontSize: '13px' }}></i>
-					<span>
-						{currentOption.label} ({currentOption.count})
-					</span>
-				</div>
-				<FontAwesomeIcon
-					icon={faChevronDown}
-					style={{
-						fontSize: '11px',
-						color: '#1E3A5F',
-						transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-						transition: 'transform 0.2s ease',
-						pointerEvents: 'none',
-					}}
-				/>
-			</button>
-
-			{isOpen &&
-				createPortal(
-					<div
-						ref={dropdownRef}
-						onClick={(e) => e.stopPropagation()}
-						style={{
-							position: 'fixed',
-							top: coords.top,
-							left: coords.left,
-							width: coords.width,
-							backgroundColor: '#FFFFFF',
-							border: '1px solid #DFE7F0',
-							borderRadius: '10px',
-							boxShadow: '0 12px 30px rgba(15, 23, 42, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08)',
-							padding: '4px',
-							zIndex: 999999,
-						}}>
-						{directoryOptions.map((opt) => {
-							const isSelected = opt.value === sourceFilter
-							return (
-								<button
-									key={opt.value}
-									type='button'
-									onClick={(e) => {
-										e.preventDefault()
-										e.stopPropagation()
-										onChange(opt.value)
-										setIsOpen(false)
-									}}
-									style={{
-										width: '100%',
-										display: 'flex',
-										alignItems: 'center',
-										justifyContent: 'space-between',
-										padding: '8px 12px',
-										border: 'none',
-										borderRadius: '6px',
-										backgroundColor: isSelected ? '#172B4D' : 'transparent',
-										color: isSelected ? '#FFFFFF' : '#475569',
-										fontSize: '13px',
-										fontWeight: isSelected ? 700 : 500,
-										cursor: 'pointer',
-										transition: 'all 0.12s ease',
-										marginBottom: '2px',
-									}}
-									onMouseEnter={(e) => {
-										if (!isSelected) {
-											e.currentTarget.style.backgroundColor = '#E8F0F8'
-											e.currentTarget.style.color = '#172B4D'
-										}
-									}}
-									onMouseLeave={(e) => {
-										if (!isSelected) {
-											e.currentTarget.style.backgroundColor = 'transparent'
-											e.currentTarget.style.color = '#475569'
-										}
-									}}>
-									<span>{opt.label}</span>
-									<span
-										style={{
-											fontSize: '11px',
-											padding: '1px 6px',
-											borderRadius: '10px',
-											backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
-											color: isSelected ? '#FFFFFF' : '#64748B',
-											fontWeight: 600,
-										}}>
-										{opt.count}
-									</span>
-								</button>
-							)
-						})}
-					</div>,
-					document.body
-				)}
-		</div>
-	)
 }
 
 const HRReports: React.FC = () => {
@@ -720,7 +107,6 @@ const HRReports: React.FC = () => {
 				if (match) {
 					setSelectedEmployee(match)
 				} else {
-					// Fallback targeted single query if not present in the lists
 					fetchSingleEmployee(employeeIdParam)
 				}
 			}
@@ -844,21 +230,6 @@ const HRReports: React.FC = () => {
 		fetchRattingData()
 	}, [selectedEmployee, selectedDateRange])
 
-	const handleEmployeeSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
-		const selectedId = event.target.value
-
-		if (!selectedId) {
-			setSelectedEmployee(null)
-			navigate('/hr/reports')
-		} else {
-			const matched = employeeList.find((el) => el.id === selectedId)
-			if (matched) {
-				setSelectedEmployee(matched)
-				navigate(`/hr/reports?employee_id=${matched.id}`)
-			}
-		}
-	}
-
 	const handleViewEmployeeReport = (emp: EmployeeOption) => {
 		setSelectedEmployee(emp)
 		navigate(`/hr/reports?employee_id=${emp.id}`)
@@ -976,17 +347,25 @@ const HRReports: React.FC = () => {
 	const starsCount = Math.min(5, Math.max(0, Math.round(ratingPercent / 20)))
 
 	const getRatingTier = (score: number) => {
-		if (score >= 90) return { label: 'Outstanding', class: 'is-success' }
-		if (score >= 75) return { label: 'Good Performance', class: 'is-success' }
-		if (score >= 50) return { label: 'Average', class: 'is-warning' }
-		if (score > 0) return { label: 'Needs Improvement', class: 'is-danger' }
-		return { label: 'Not Rated', class: 'is-neutral' }
+		if (score >= 90) return { label: 'Outstanding', badgeClass: 'badge-light-success text-success' }
+		if (score >= 75) return { label: 'Good Performance', badgeClass: 'badge-light-success text-success' }
+		if (score >= 50) return { label: 'Average', badgeClass: 'badge-light-warning text-warning' }
+		if (score > 0) return { label: 'Needs Improvement', badgeClass: 'badge-light-danger text-danger' }
+		return { label: 'Not Rated', badgeClass: 'badge-light-secondary text-dark' }
 	}
 	const ratingTier = getRatingTier(ratingPercent)
 
-	// Back URL target based on employee type or default
+	// Back URL target based on employee type
 	const backLink =
 		selectedEmployee?.source === 'GLS' ? '/hr/gls-employees' : '/hr/employee-detail'
+
+	// Prepare options for SelectField dropdowns
+	const employeeSelectOptions = useMemo(() => {
+		return employeeList.map((emp) => ({
+			label: `${emp.name}${emp.employee_code ? ` (#${emp.employee_code})` : ''} — ${emp.position || 'Staff'}${emp.source === 'GLS' ? ' (GLS)' : ''}`,
+			value: emp.id,
+		}))
+	}, [employeeList])
 
 	return (
 		<>
@@ -995,97 +374,123 @@ const HRReports: React.FC = () => {
 			{selectedEmployee ? (
 				/* ======================= INDIVIDUAL EMPLOYEE DETAIL VIEW ======================= */
 				<>
-					{/* Detail View Header Bar */}
-					<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
-						<div className='d-flex align-items-center gap-3'>
-							<button
-								type='button'
-								onClick={handleBackToAllEmployees}
-								className='gz-rep-back-btn'>
-								<i className='bi bi-arrow-left me-1'></i>
-								<span>All Employees</span>
-							</button>
-							<div className='gz-rep-header-icon d-none d-sm-flex'>
-								<i className='bi bi-graph-up-arrow fs-5 text-white'></i>
+					{/* Detail View Header Card */}
+					<div
+						className='card shadow-sm border-0 mb-6'
+						style={{
+							borderRadius: '16px',
+							border: '1px solid #E4EAF2',
+							background: '#ffffff',
+							boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+						}}>
+						<div className='card-body p-5 p-lg-6 d-flex flex-wrap align-items-center justify-content-between gap-4'>
+							<div className='d-flex align-items-center gap-3 gap-md-4 flex-wrap'>
+								<button
+									type='button'
+									onClick={handleBackToAllEmployees}
+									className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2'
+									style={{ height: '38px', borderRadius: '8px', fontWeight: 600 }}>
+									<i className='bi bi-arrow-left fs-6'></i>
+									<span>All Employees</span>
+								</button>
+								<div className='vr h-30px opacity-25 d-none d-sm-block' />
+								<div
+									className='d-none d-sm-flex align-items-center justify-content-center flex-shrink-0'
+									style={{
+										width: '46px',
+										height: '46px',
+										borderRadius: '12px',
+										background: '#EAF1FB',
+										border: '1px solid #DCE8F8',
+									}}>
+									<i className='bi bi-graph-up fs-3' style={{ color: '#172B4D' }}></i>
+								</div>
+								<div>
+									<div className='d-flex align-items-center gap-2 flex-wrap'>
+										<h2 className='fw-bold fs-3 m-0' style={{ color: '#142447' }}>
+											{selectedEmployee.name}
+										</h2>
+										{selectedEmployee.employee_code && (
+											<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
+												#{selectedEmployee.employee_code}
+											</span>
+										)}
+										<span className='badge badge-light-secondary text-dark fw-bold fs-8 px-2.5 py-1'>
+											{selectedEmployee.source === 'GLS' ? 'GLS Staff' : 'Standard HR'}
+										</span>
+									</div>
+									<span className='fs-7' style={{ color: '#71809A' }}>
+										Performance report, task completion analytics & rating evaluation
+									</span>
+								</div>
 							</div>
-							<div>
-								<h2 className='fw-bold fs-2 m-0' style={{ color: '#172B4D' }}>
-									Performance Report: {selectedEmployee.name}
-								</h2>
-								<span className='fs-7 fw-semibold' style={{ color: '#71809A' }}>
-									Individual task completion breakdown, deadlines audit & rating evaluation
-								</span>
-							</div>
-						</div>
 
-						<div className='d-flex align-items-center gap-2'>
-							<button
-								type='button'
-								onClick={fetchRattingData}
-								className='gz-rep-secondary-btn'
-								title='Refresh Analytics'>
-								<i className='bi bi-arrow-clockwise text-primary'></i>
-								<span>Refresh</span>
-							</button>
-							<Link
-								to={backLink}
-								className='gz-rep-secondary-btn'
-								title='View Full Employee Profile'>
-								<i className='bi bi-person-badge text-primary'></i>
-								<span>Profile</span>
-							</Link>
-							<span className='gz-rep-badge is-neutral'>
-								<i className='bi bi-shield-check text-primary'></i>
-								{selectedEmployee.source === 'GLS' ? 'GLS Staff' : 'Standard HR'}
-							</span>
-							{selectedEmployee.employee_code && (
-								<span className='gz-rep-badge is-success'>
-									<i className='bi bi-hash'></i>
-									{selectedEmployee.employee_code}
-								</span>
-							)}
+							<div className='d-flex align-items-center gap-2 ms-auto ms-sm-0'>
+								<button
+									type='button'
+									onClick={fetchRattingData}
+									className='btn btn-sm btn-light-secondary text-dark d-inline-flex align-items-center gap-2'
+									style={{ height: '38px', borderRadius: '8px', border: '1px solid #DFE7F0', fontWeight: 600 }}
+									title='Refresh Analytics'>
+									<i className='bi bi-arrow-clockwise text-primary fs-6'></i>
+									<span>Refresh</span>
+								</button>
+								<Link
+									to={backLink}
+									className='btn btn-sm btn-light-secondary text-dark d-inline-flex align-items-center gap-2'
+									style={{ height: '38px', borderRadius: '8px', border: '1px solid #DFE7F0', fontWeight: 600 }}
+									title='View Full Employee Profile'>
+									<i className='bi bi-person-badge text-primary fs-6'></i>
+									<span>Profile</span>
+								</Link>
+							</div>
 						</div>
 					</div>
 
 					{/* Filter & Selector Toolbar Card for Detail View */}
-					<div className='gz-rep-card mb-6 px-4 py-3'>
-						<div className='row g-3 align-items-center'>
-							{/* Employee Selection Dropdown (Custom LengthMenu-Style Portal Dropdown) */}
-							<div className='col-12 col-md-6 col-lg-5'>
-								<label
-									className='form-label fs-8 fw-bold text-uppercase mb-1 d-flex align-items-center gap-1.5'
-									style={{ color: '#71809A', letterSpacing: '0.04em' }}>
-									<i className='bi bi-person-badge text-primary'></i>
-									Select Employee
-								</label>
-								<EmployeeSelectDropdown
-									selectedEmployee={selectedEmployee}
-									employeeList={employeeList}
-									loading={loadingEmployees}
-									onSelect={(emp) => {
-										if (!emp) {
+					<div
+						className='card shadow-sm border-0 mb-6'
+						style={{
+							borderRadius: '16px',
+							background: '#ffffff',
+							border: '1px solid #E4EAF2',
+							boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+							position: 'relative',
+							zIndex: 20,
+						}}>
+						<div className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+							{/* Employee Select */}
+							<div style={{ minWidth: '280px', maxWidth: '420px', flex: '1 1 280px' }}>
+								<SelectField
+									showLabel={false}
+									marginRemove={true}
+									className='mb-0'
+									height='38px'
+									name='employee'
+									value={selectedEmployee.id}
+									defaultLabel='Select employee...'
+									options={employeeSelectOptions}
+									onChange={(e: any) => {
+										const selectedId = e?.target?.value ?? e
+										if (!selectedId) {
 											handleBackToAllEmployees()
 										} else {
-											handleViewEmployeeReport(emp)
+											const matched = employeeList.find((el) => el.id === selectedId)
+											if (matched) {
+												handleViewEmployeeReport(matched)
+											}
 										}
 									}}
 								/>
 							</div>
 
 							{/* Date Range Filter */}
-							<div className='col-12 col-md-6 col-lg-7 d-flex justify-content-md-end align-items-end'>
-								<div>
-									<label
-										className='form-label fs-8 fw-bold text-uppercase mb-1 d-block'
-										style={{ color: '#71809A', letterSpacing: '0.04em' }}>
-										Reporting Period
-									</label>
-									<DateFilter
-										onDateRangeChange={handleDateRangeChange}
-										rightValue='0'
-										lastMonth={true}
-									/>
-								</div>
+							<div className='ms-auto'>
+								<DateFilter
+									onDateRangeChange={handleDateRangeChange}
+									rightValue='0'
+									lastMonth={true}
+								/>
 							</div>
 						</div>
 					</div>
@@ -1093,35 +498,61 @@ const HRReports: React.FC = () => {
 			) : (
 				/* ======================= ALL EMPLOYEES DIRECTORY TABLE VIEW ======================= */
 				<>
-					{/* Table View Header Bar */}
-					<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3'>
-						<div className='d-flex align-items-center gap-3'>
-							<div className='d-flex flex-column'>
-								<div className='d-flex align-items-center gap-2'>
-									<h2 className='fw-bold fs-2 m-0' style={{ color: '#142447' }}>
-										Employee Performance Reports
-									</h2>
-									{filteredEmployees.length > 0 && (
-										<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
-											{filteredEmployees.length} Total
-										</span>
-									)}
+					{/* Table View Header Card */}
+					<div
+						className='card shadow-sm border-0 mb-6'
+						style={{
+							borderRadius: '16px',
+							border: '1px solid #E4EAF2',
+							background: '#ffffff',
+							boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+						}}>
+						<div className='card-body p-6 d-flex flex-wrap align-items-center justify-content-between gap-4'>
+							<div className='d-flex align-items-center gap-4'>
+								<div
+									className='d-flex align-items-center justify-content-center flex-shrink-0'
+									style={{
+										width: '52px',
+										height: '52px',
+										borderRadius: '12px',
+										background: '#EAF1FB',
+										border: '1px solid #DCE8F8',
+									}}>
+									<i className='bi bi-graph-up fs-2' style={{ color: '#172B4D' }}></i>
 								</div>
-								<span className='fs-7 fw-semibold mt-1' style={{ color: '#71809A' }}>
-									Directory of employee performance evaluations, task analytics & audit records
-								</span>
+								<div>
+									<div className='d-flex align-items-center gap-2'>
+										<h2 className='fw-bold fs-3 m-0' style={{ color: '#142447' }}>
+											Employee Performance Reports
+										</h2>
+										{filteredEmployees.length > 0 && (
+											<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
+												{filteredEmployees.length} Total
+											</span>
+										)}
+									</div>
+									<span className='fs-7' style={{ color: '#71809A' }}>
+										Directory of employee performance evaluations, task analytics & audit records
+									</span>
+								</div>
 							</div>
-						</div>
 
-						<div className='d-flex align-items-center gap-2'>
-							<Link to='/hr/employee-detail' className='gz-rep-back-btn'>
-								<i className='bi bi-people me-2'></i>
-								<span>Standard Employees</span>
-							</Link>
-							<Link to='/hr/gls-employees' className='gz-rep-back-btn'>
-								<i className='bi bi-building me-2'></i>
-								<span>GLS Employees</span>
-							</Link>
+							<div className='d-flex align-items-center gap-2'>
+								<Link
+									to='/hr/employee-detail'
+									className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2'
+									style={{ height: '38px', borderRadius: '8px', fontWeight: 600 }}>
+									<i className='bi bi-people fs-6'></i>
+									<span>Standard Employees</span>
+								</Link>
+								<Link
+									to='/hr/gls-employees'
+									className='btn btn-sm btn-light-secondary text-dark d-inline-flex align-items-center gap-2'
+									style={{ height: '38px', borderRadius: '8px', border: '1px solid #DFE7F0', fontWeight: 600 }}>
+									<i className='bi bi-building fs-6 text-primary'></i>
+									<span>GLS Employees</span>
+								</Link>
+							</div>
 						</div>
 					</div>
 
@@ -1133,15 +564,17 @@ const HRReports: React.FC = () => {
 							background: '#ffffff',
 							border: '1px solid #E4EAF2',
 							boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+							position: 'relative',
+							zIndex: 20,
 						}}>
 						<div className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'>
 							<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
 								{/* 1. Searchbar */}
-								<div style={{ minWidth: '240px', maxWidth: '360px', flex: '1 1 240px' }}>
+								<div style={{ minWidth: '240px', maxWidth: '340px', flex: '1 1 240px' }}>
 									<SearchFilter
 										searchTerm={searchTerm}
 										setSearchTerm={handleSearchChange}
-										placeholder='Search employee name, code, role...'
+										placeholder='Search name, code, role...'
 										className='me-0'
 									/>
 								</div>
@@ -1165,13 +598,30 @@ const HRReports: React.FC = () => {
 									/>
 								</div>
 
-								{/* 4. Directory Filter (Custom LengthMenu-Style Portal Dropdown) */}
-								<div>
-									<DirectoryFilterDropdown
-										sourceFilter={sourceFilter}
-										employeeList={employeeList}
-										onChange={(source) => {
-											setSourceFilter(source)
+								{/* 4. Directory Filter using SelectField */}
+								<div style={{ minWidth: '180px' }}>
+									<SelectField
+										showLabel={false}
+										marginRemove={true}
+										className='mb-0'
+										height='38px'
+										name='sourceFilter'
+										value={sourceFilter}
+										defaultLabel='All Directories'
+										options={[
+											{ label: `All Employees (${employeeList.length})`, value: 'All' },
+											{
+												label: `Standard HR (${employeeList.filter((e) => e.source === 'Standard').length})`,
+												value: 'Standard',
+											},
+											{
+												label: `GLS Staff (${employeeList.filter((e) => e.source === 'GLS').length})`,
+												value: 'GLS',
+											},
+										]}
+										onChange={(e: any) => {
+											const val = e?.target?.value ?? e
+											setSourceFilter(val || 'All')
 											setPagination((prev) => ({ ...prev, page: 1 }))
 										}}
 									/>
@@ -1184,7 +634,13 @@ const HRReports: React.FC = () => {
 
 			{/* Content Area */}
 			{loading ? (
-				<div className='gz-rep-card p-12 text-center'>
+				<div
+					className='card shadow-sm border-0 mb-6 p-12 text-center'
+					style={{
+						borderRadius: '16px',
+						background: '#ffffff',
+						border: '1px solid #E4EAF2',
+					}}>
 					<div className='spinner-border text-primary mb-3' role='status' style={{ width: '3rem', height: '3rem' }}>
 						<span className='visually-hidden'>Loading...</span>
 					</div>
@@ -1194,14 +650,36 @@ const HRReports: React.FC = () => {
 			) : selectedEmployee ? (
 				<>
 					{/* 1. Executive Employee Profile Hero Card */}
-					<div className='gz-rep-hero-card mb-6'>
-						<div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
+					<div
+						className='card shadow-sm border-0 mb-6'
+						style={{
+							borderRadius: '16px',
+							background: '#ffffff',
+							border: '1px solid #E4EAF2',
+							boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+						}}>
+						<div className='card-body p-6 d-flex flex-wrap align-items-center justify-content-between gap-4'>
 							<div className='d-flex align-items-center gap-4'>
-								<div className='gz-rep-avatar-wrap'>
+								{/* Avatar */}
+								<div
+									style={{
+										width: '64px',
+										height: '64px',
+										minWidth: '64px',
+										minHeight: '64px',
+										borderRadius: '50%',
+										background: '#F1F5F9',
+										border: '2px solid #E2E8F0',
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										overflow: 'hidden',
+									}}>
 									{selectedEmployee.photo ? (
 										<img
 											src={`https://files.fggroup.in/${selectedEmployee.photo}`}
 											alt={selectedEmployee.name}
+											style={{ width: '100%', height: '100%', objectFit: 'cover' }}
 											onError={(e: any) => {
 												e.target.style.display = 'none'
 												if (e.target.nextSibling) {
@@ -1211,15 +689,25 @@ const HRReports: React.FC = () => {
 										/>
 									) : null}
 									<div
-										className='gz-rep-avatar-fallback'
-										style={{ display: selectedEmployee.photo ? 'none' : 'flex' }}>
+										style={{
+											display: selectedEmployee.photo ? 'none' : 'flex',
+											width: '100%',
+											height: '100%',
+											alignItems: 'center',
+											justifyContent: 'center',
+											color: '#172B4D',
+											fontSize: '22px',
+											fontWeight: 700,
+											background: '#EAF1FB',
+										}}>
 										{selectedEmployee.name ? selectedEmployee.name.charAt(0).toUpperCase() : 'E'}
 									</div>
 								</div>
 
+								{/* Details */}
 								<div>
 									<div className='d-flex align-items-center flex-wrap gap-2 mb-2'>
-										<h3 className='fw-bold fs-3 m-0' style={{ color: '#172B4D' }}>
+										<h3 className='fw-bold fs-3 m-0' style={{ color: '#142447' }}>
 											{selectedEmployee.name}
 										</h3>
 										{selectedEmployee.employee_code && (
@@ -1227,19 +715,22 @@ const HRReports: React.FC = () => {
 												#{selectedEmployee.employee_code}
 											</span>
 										)}
-										<span className='gz-rep-badge is-neutral fs-8'>
+										<span className='badge badge-light-secondary text-dark fw-bold fs-8 px-2.5 py-1'>
 											{selectedEmployee.source === 'GLS' ? 'GLS Staff' : 'Standard HR'}
 										</span>
 									</div>
 									<div className='d-flex flex-wrap align-items-center gap-2'>
-										<span className='gz-rep-meta-chip'>
+										<span
+											className='badge badge-light-secondary text-dark fs-8 px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5'
+											style={{ border: '1px solid #DFE7F0' }}>
 											<i className='bi bi-briefcase text-primary'></i>
 											<span>{selectedEmployee.position || 'Staff'}</span>
 										</span>
 										{selectedEmployee.mobile && (
 											<a
 												href={`tel:${selectedEmployee.mobile}`}
-												className='gz-rep-meta-chip'>
+												className='badge badge-light-secondary text-dark fs-8 px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 text-hover-primary'
+												style={{ border: '1px solid #DFE7F0', textDecoration: 'none' }}>
 												<i className='bi bi-telephone text-success'></i>
 												<span>{selectedEmployee.mobile}</span>
 											</a>
@@ -1247,7 +738,8 @@ const HRReports: React.FC = () => {
 										{selectedEmployee.email && (
 											<a
 												href={`mailto:${selectedEmployee.email}`}
-												className='gz-rep-meta-chip'>
+												className='badge badge-light-secondary text-dark fs-8 px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 text-hover-primary'
+												style={{ border: '1px solid #DFE7F0', textDecoration: 'none' }}>
 												<i className='bi bi-envelope text-info'></i>
 												<span>{selectedEmployee.email}</span>
 											</a>
@@ -1257,19 +749,28 @@ const HRReports: React.FC = () => {
 							</div>
 
 							{/* Rating Score Box */}
-							<div className='gz-rep-rating-box'>
-								<div className='d-flex align-items-center justify-content-between mb-1 gap-2'>
+							<div
+								style={{
+									background: '#F8FAFD',
+									border: '1px solid #E4EAF2',
+									borderRadius: '14px',
+									padding: '16px 20px',
+									minWidth: '240px',
+								}}>
+								<div className='d-flex align-items-center justify-content-between mb-2 gap-3'>
 									<span
 										className='fs-8 fw-bold text-uppercase d-flex align-items-center gap-1.5'
 										style={{ color: '#71809A', letterSpacing: '0.04em' }}>
 										<i className='bi bi-star-half text-warning fs-7'></i>
 										Performance Rating
 									</span>
-									<span className={`gz-rep-badge ${ratingTier.class}`}>{ratingTier.label}</span>
+									<span className={`badge ${ratingTier.badgeClass} fw-bold px-2.5 py-1 fs-8`}>
+										{ratingTier.label}
+									</span>
 								</div>
 
-								<div className='d-flex align-items-baseline gap-2 mt-2'>
-									<span className='fs-2hx fw-bold' style={{ color: '#172B4D', lineHeight: 1 }}>
+								<div className='d-flex align-items-baseline gap-2 mt-1'>
+									<span className='fs-2hx fw-bold' style={{ color: '#142447', lineHeight: 1 }}>
 										{ratingPercent > 0 ? `${ratingPercent}%` : 'N/A'}
 									</span>
 									{ratingPercent > 0 ? (
@@ -1287,14 +788,13 @@ const HRReports: React.FC = () => {
 									)}
 								</div>
 
-								<div className='gz-rep-rating-progress'>
+								<div className='progress h-6px w-100 bg-light-primary mt-3' style={{ borderRadius: '4px' }}>
 									<div
-										className='gz-rep-rating-bar'
-										style={{
-											width: `${Math.min(100, Math.max(0, ratingPercent))}%`,
-											backgroundColor:
-												ratingPercent >= 75 ? '#10B981' : ratingPercent >= 50 ? '#F59E0B' : '#EF4444',
-										}}></div>
+										className={`progress-bar ${
+											ratingPercent >= 75 ? 'bg-success' : ratingPercent >= 50 ? 'bg-warning' : 'bg-danger'
+										}`}
+										role='progressbar'
+										style={{ width: `${Math.min(100, Math.max(0, ratingPercent))}%` }}></div>
 								</div>
 							</div>
 						</div>
@@ -1304,68 +804,160 @@ const HRReports: React.FC = () => {
 					<div className='row g-4 mb-6'>
 						{/* Total Tasks */}
 						<div className='col-12 col-sm-6 col-xl-3'>
-							<div className='gz-rep-kpi-card is-primary'>
-								<div>
-									<div className='kpi-icon-wrap'>
-										<i className='bi bi-list-task'></i>
+							<div
+								className='card shadow-sm border-0 h-100'
+								style={{
+									borderRadius: '16px',
+									background: '#ffffff',
+									border: '1px solid #E4EAF2',
+									boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+								}}>
+								<div className='card-body p-6 d-flex flex-column justify-content-between'>
+									<div className='d-flex align-items-center justify-content-between mb-3'>
+										<span
+											className='fs-8 fw-bold text-uppercase'
+											style={{ color: '#71809A', letterSpacing: '0.04em' }}>
+											Total Assigned
+										</span>
+										<div
+											className='d-flex align-items-center justify-content-center'
+											style={{
+												width: '42px',
+												height: '42px',
+												borderRadius: '10px',
+												background: '#EFF6FF',
+												color: '#2563EB',
+											}}>
+											<i className='bi bi-list-task fs-3'></i>
+										</div>
 									</div>
-									<span className='kpi-label'>Total Assigned</span>
-									<div className='kpi-value'>{totalTasks}</div>
-								</div>
-								<div className='kpi-subtext'>
-									<i className='bi bi-calendar3 text-muted'></i>
-									<span>Assigned for selected range</span>
+									<div className='fs-2hx fw-bold mb-2' style={{ color: '#142447', lineHeight: 1 }}>
+										{totalTasks}
+									</div>
+									<div className='d-flex align-items-center gap-1.5 fs-8 text-muted'>
+										<i className='bi bi-calendar3 text-muted'></i>
+										<span>Assigned for selected range</span>
+									</div>
 								</div>
 							</div>
 						</div>
 
 						{/* Completed on Time */}
 						<div className='col-12 col-sm-6 col-xl-3'>
-							<div className='gz-rep-kpi-card is-success'>
-								<div>
-									<div className='kpi-icon-wrap'>
-										<i className='bi bi-check2-circle'></i>
+							<div
+								className='card shadow-sm border-0 h-100'
+								style={{
+									borderRadius: '16px',
+									background: '#ffffff',
+									border: '1px solid #E4EAF2',
+									boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+								}}>
+								<div className='card-body p-6 d-flex flex-column justify-content-between'>
+									<div className='d-flex align-items-center justify-content-between mb-3'>
+										<span
+											className='fs-8 fw-bold text-uppercase'
+											style={{ color: '#71809A', letterSpacing: '0.04em' }}>
+											Completed on Time
+										</span>
+										<div
+											className='d-flex align-items-center justify-content-center'
+											style={{
+												width: '42px',
+												height: '42px',
+												borderRadius: '10px',
+												background: '#ECFDF5',
+												color: '#059669',
+											}}>
+											<i className='bi bi-check2-circle fs-3'></i>
+										</div>
 									</div>
-									<span className='kpi-label'>Completed on Time</span>
-									<div className='kpi-value'>{completedTasks}</div>
-								</div>
-								<div className='kpi-subtext'>
-									<span className='fw-bold text-success'>{completedRate}%</span>
-									<span>completion efficiency</span>
+									<div className='fs-2hx fw-bold mb-2' style={{ color: '#059669', lineHeight: 1 }}>
+										{completedTasks}
+									</div>
+									<div className='d-flex align-items-center gap-1.5 fs-8'>
+										<span className='badge badge-light-success fw-bold px-2 py-0.5'>{completedRate}%</span>
+										<span className='text-muted'>completion efficiency</span>
+									</div>
 								</div>
 							</div>
 						</div>
 
 						{/* Late Completed */}
 						<div className='col-12 col-sm-6 col-xl-3'>
-							<div className='gz-rep-kpi-card is-warning'>
-								<div>
-									<div className='kpi-icon-wrap'>
-										<i className='bi bi-clock-history'></i>
+							<div
+								className='card shadow-sm border-0 h-100'
+								style={{
+									borderRadius: '16px',
+									background: '#ffffff',
+									border: '1px solid #E4EAF2',
+									boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+								}}>
+								<div className='card-body p-6 d-flex flex-column justify-content-between'>
+									<div className='d-flex align-items-center justify-content-between mb-3'>
+										<span
+											className='fs-8 fw-bold text-uppercase'
+											style={{ color: '#71809A', letterSpacing: '0.04em' }}>
+											Late Completed
+										</span>
+										<div
+											className='d-flex align-items-center justify-content-center'
+											style={{
+												width: '42px',
+												height: '42px',
+												borderRadius: '10px',
+												background: '#FFFBEB',
+												color: '#D97706',
+											}}>
+											<i className='bi bi-clock-history fs-3'></i>
+										</div>
 									</div>
-									<span className='kpi-label'>Late Completed</span>
-									<div className='kpi-value'>{lateCompletedTasks}</div>
-								</div>
-								<div className='kpi-subtext'>
-									<span className='fw-bold text-warning'>{lateRate}%</span>
-									<span>delayed submissions</span>
+									<div className='fs-2hx fw-bold mb-2' style={{ color: '#D97706', lineHeight: 1 }}>
+										{lateCompletedTasks}
+									</div>
+									<div className='d-flex align-items-center gap-1.5 fs-8'>
+										<span className='badge badge-light-warning fw-bold px-2 py-0.5'>{lateRate}%</span>
+										<span className='text-muted'>delayed submissions</span>
+									</div>
 								</div>
 							</div>
 						</div>
 
-						{/* Pending Work */}
+						{/* Pending Tasks */}
 						<div className='col-12 col-sm-6 col-xl-3'>
-							<div className='gz-rep-kpi-card is-danger'>
-								<div>
-									<div className='kpi-icon-wrap'>
-										<i className='bi bi-hourglass-split'></i>
+							<div
+								className='card shadow-sm border-0 h-100'
+								style={{
+									borderRadius: '16px',
+									background: '#ffffff',
+									border: '1px solid #E4EAF2',
+									boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+								}}>
+								<div className='card-body p-6 d-flex flex-column justify-content-between'>
+									<div className='d-flex align-items-center justify-content-between mb-3'>
+										<span
+											className='fs-8 fw-bold text-uppercase'
+											style={{ color: '#71809A', letterSpacing: '0.04em' }}>
+											Pending Tasks
+										</span>
+										<div
+											className='d-flex align-items-center justify-content-center'
+											style={{
+												width: '42px',
+												height: '42px',
+												borderRadius: '10px',
+												background: '#FEF2F2',
+												color: '#DC2626',
+											}}>
+											<i className='bi bi-hourglass-split fs-3'></i>
+										</div>
 									</div>
-									<span className='kpi-label'>Pending Tasks</span>
-									<div className='kpi-value'>{pendingTasks}</div>
-								</div>
-								<div className='kpi-subtext'>
-									<span className='fw-bold text-danger'>{pendingRate}%</span>
-									<span>unresolved or overdue</span>
+									<div className='fs-2hx fw-bold mb-2' style={{ color: '#DC2626', lineHeight: 1 }}>
+										{pendingTasks}
+									</div>
+									<div className='d-flex align-items-center gap-1.5 fs-8'>
+										<span className='badge badge-light-danger fw-bold px-2 py-0.5'>{pendingRate}%</span>
+										<span className='text-muted'>unresolved or overdue</span>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -1375,8 +967,15 @@ const HRReports: React.FC = () => {
 					<div className='row g-6 mb-6'>
 						{/* Donut Chart Breakdown */}
 						<div className='col-12 col-lg-5'>
-							<div className='gz-rep-card p-6 h-100 d-flex flex-direction-column justify-content-between'>
-								<div>
+							<div
+								className='card shadow-sm border-0 h-100 d-flex flex-column justify-content-between'
+								style={{
+									borderRadius: '16px',
+									background: '#ffffff',
+									border: '1px solid #E4EAF2',
+									boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+								}}>
+								<div className='p-6'>
 									<div className='d-flex align-items-center justify-content-between mb-4'>
 										<div>
 											<h4 className='fw-bold fs-5 m-0' style={{ color: '#142447' }}>
@@ -1390,9 +989,23 @@ const HRReports: React.FC = () => {
 									{totalTasks > 0 ? (
 										<Charts1 rattingData={rattingData} className='mb-2' />
 									) : (
-										<div className='gz-rep-empty-state my-3'>
-											<div className='gz-rep-empty-icon'>
-												<i className='bi bi-pie-chart'></i>
+										<div
+											className='d-flex flex-column align-items-center justify-content-center p-8 my-4 text-center'
+											style={{
+												background: '#F8FAFD',
+												borderRadius: '12px',
+												border: '1px dashed #CBD5E1',
+											}}>
+											<div
+												className='d-flex align-items-center justify-content-center mb-3'
+												style={{
+													width: '48px',
+													height: '48px',
+													borderRadius: '12px',
+													background: '#EAF1FA',
+													color: '#172B4D',
+												}}>
+												<i className='bi bi-pie-chart fs-3'></i>
 											</div>
 											<h6 className='fw-bold text-gray-800 mb-1 fs-6'>No Tasks Logged</h6>
 											<span className='text-muted fs-8' style={{ maxWidth: '280px' }}>
@@ -1403,7 +1016,7 @@ const HRReports: React.FC = () => {
 								</div>
 
 								{totalTasks > 0 && (
-									<div className='border-top pt-4 mt-2' style={{ borderColor: '#E4EAF2' }}>
+									<div className='border-top p-6 pt-4' style={{ borderColor: '#E4EAF2' }}>
 										<div className='d-flex align-items-center justify-content-between fs-8' style={{ color: '#71809A' }}>
 											<span>On-time Rate: <strong className='text-success'>{completedRate}%</strong></span>
 											<span>Late Rate: <strong className='text-warning'>{lateRate}%</strong></span>
@@ -1416,270 +1029,291 @@ const HRReports: React.FC = () => {
 
 						{/* Itemized Scorecard Audit Table */}
 						<div className='col-12 col-lg-7'>
-							<div className='gz-rep-card p-6 h-100'>
-								<div className='d-flex align-items-center justify-content-between mb-4'>
-									<div>
-										<h4 className='fw-bold fs-5 m-0' style={{ color: '#142447' }}>
-											Itemized Performance Scorecard
-										</h4>
-										<span className='text-muted fs-7'>Detailed metrics and quality index</span>
+							<div
+								className='card shadow-sm border-0 h-100'
+								style={{
+									borderRadius: '16px',
+									background: '#ffffff',
+									border: '1px solid #E4EAF2',
+									boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+								}}>
+								<div className='p-6'>
+									<div className='d-flex align-items-center justify-content-between mb-4'>
+										<div>
+											<h4 className='fw-bold fs-5 m-0' style={{ color: '#142447' }}>
+												Itemized Performance Scorecard
+											</h4>
+											<span className='text-muted fs-7'>Detailed metrics and quality index</span>
+										</div>
+										<span className='badge badge-light-secondary text-dark fs-8 fw-bold border'>
+											Total: {totalTasks} Tasks
+										</span>
 									</div>
-									<span className='badge badge-light fs-8 text-gray-700 fw-bold border'>
-										Total: {totalTasks} Tasks
-									</span>
-								</div>
 
-								<div className='table-responsive'>
-									<table className='gz-scorecard-table'>
-										<thead>
-											<tr>
-												<th>Task Classification</th>
-												<th className='text-center'>Volume</th>
-												<th className='text-center'>Ratio</th>
-												<th className='text-end'>Evaluation</th>
-											</tr>
-										</thead>
-										<tbody>
-											{/* Completed on Time */}
-											<tr>
-												<td>
-													<div className='d-flex align-items-center gap-2'>
-														<i className='bi bi-check-circle-fill text-success fs-5'></i>
-														<div>
-															<span className='fw-bold text-gray-900 d-block'>
-																Completed on Time
-															</span>
-															<span className='text-muted fs-8'>Finished before deadline</span>
-														</div>
-													</div>
-												</td>
-												<td className='text-center fw-bold fs-6'>{completedTasks}</td>
-												<td className='text-center fw-semibold text-gray-700'>{completedRate}%</td>
-												<td className='text-end'>
-													<span className='gz-rep-badge is-success'>
-														<i className='bi bi-hand-thumbs-up'></i> Excellent
-													</span>
-												</td>
-											</tr>
-
-											{/* Late Completed */}
-											<tr>
-												<td>
-													<div className='d-flex align-items-center gap-2'>
-														<i className='bi bi-clock-history text-warning fs-5'></i>
-														<div>
-															<span className='fw-bold text-gray-900 d-block'>
-																Late Completed
-															</span>
-															<span className='text-muted fs-8'>Finished after target date</span>
-														</div>
-													</div>
-												</td>
-												<td className='text-center fw-bold fs-6'>{lateCompletedTasks}</td>
-												<td className='text-center fw-semibold text-gray-700'>{lateRate}%</td>
-												<td className='text-end'>
-													<span className='gz-rep-badge is-warning'>
-														<i className='bi bi-exclamation-triangle'></i> Delayed
-													</span>
-												</td>
-											</tr>
-
-											{/* Pending Tasks */}
-											<tr>
-												<td>
-													<div className='d-flex align-items-center gap-2'>
-														<i className='bi bi-hourglass-split text-danger fs-5'></i>
-														<div>
-															<span className='fw-bold text-gray-900 d-block'>
-																Pending Tasks
-															</span>
-															<span className='text-muted fs-8'>Awaiting completion or overdue</span>
-														</div>
-													</div>
-												</td>
-												<td className='text-center fw-bold fs-6'>{pendingTasks}</td>
-												<td className='text-center fw-semibold text-gray-700'>{pendingRate}%</td>
-												<td className='text-end'>
-													<span className='gz-rep-badge is-danger'>
-														<i className='bi bi-exclamation-octagon'></i> Overdue
-													</span>
-												</td>
-											</tr>
-
-											{/* Rejected Tasks if any */}
-											{rejectedTasks > 0 && (
+									<div className='table-responsive'>
+										<table className='table align-middle table-row-dashed fs-7 gy-4 mb-0'>
+											<thead>
+												<tr className='text-start text-muted fw-bolder fs-8 text-uppercase gs-0 border-bottom' style={{ borderColor: '#E4EAF2' }}>
+													<th className='min-w-150px' style={{ color: '#71809A' }}>Task Classification</th>
+													<th className='text-center min-w-70px' style={{ color: '#71809A' }}>Volume</th>
+													<th className='text-center min-w-70px' style={{ color: '#71809A' }}>Ratio</th>
+													<th className='text-end min-w-100px pe-2' style={{ color: '#71809A' }}>Evaluation</th>
+												</tr>
+											</thead>
+											<tbody className='text-gray-700 fw-semibold'>
+												{/* Completed on Time */}
 												<tr>
 													<td>
 														<div className='d-flex align-items-center gap-2'>
-															<i className='bi bi-x-circle text-muted fs-5'></i>
+															<i className='bi bi-check-circle-fill text-success fs-5'></i>
 															<div>
 																<span className='fw-bold text-gray-900 d-block'>
-																	Rejected Tasks
+																	Completed on Time
 																</span>
-																<span className='text-muted fs-8'>Returned by manager</span>
+																<span className='text-muted fs-8'>Finished before deadline</span>
 															</div>
 														</div>
 													</td>
-													<td className='text-center fw-bold fs-6'>{rejectedTasks}</td>
-													<td className='text-center fw-semibold text-gray-700'>{rejectedRate}%</td>
-													<td className='text-end'>
-														<span className='gz-rep-badge is-neutral'>
-															<i className='bi bi-arrow-counterclockwise'></i> Revision
+													<td className='text-center fw-bold fs-6 text-gray-900'>{completedTasks}</td>
+													<td className='text-center fw-semibold text-gray-700'>{completedRate}%</td>
+													<td className='text-end pe-2'>
+														<span className='badge badge-light-success text-success fw-bold px-3 py-1.5 fs-8'>
+															<i className='bi bi-hand-thumbs-up me-1'></i> Excellent
 														</span>
 													</td>
 												</tr>
-											)}
 
-											{/* Summary Row */}
-											<tr className='gz-scorecard-total-row'>
-												<td>
-													<span className='fw-bolder' style={{ color: '#142447' }}>
-														Total Tasks Audit
-													</span>
-												</td>
-												<td className='text-center fw-bolder fs-6' style={{ color: '#142447' }}>
-													{totalTasks}
-												</td>
-												<td className='text-center fw-bolder' style={{ color: '#142447' }}>
-													100%
-												</td>
-												<td className='text-end'>
-													<span className='fw-bold text-primary'>
-														Score: {ratingPercent}%
-													</span>
-												</td>
-											</tr>
-										</tbody>
-									</table>
+												{/* Late Completed */}
+												<tr>
+													<td>
+														<div className='d-flex align-items-center gap-2'>
+															<i className='bi bi-clock-history text-warning fs-5'></i>
+															<div>
+																<span className='fw-bold text-gray-900 d-block'>
+																	Late Completed
+																</span>
+																<span className='text-muted fs-8'>Finished after target date</span>
+															</div>
+														</div>
+													</td>
+													<td className='text-center fw-bold fs-6 text-gray-900'>{lateCompletedTasks}</td>
+													<td className='text-center fw-semibold text-gray-700'>{lateRate}%</td>
+													<td className='text-end pe-2'>
+														<span className='badge badge-light-warning text-warning fw-bold px-3 py-1.5 fs-8'>
+															<i className='bi bi-exclamation-triangle me-1'></i> Delayed
+														</span>
+													</td>
+												</tr>
+
+												{/* Pending Tasks */}
+												<tr>
+													<td>
+														<div className='d-flex align-items-center gap-2'>
+															<i className='bi bi-hourglass-split text-danger fs-5'></i>
+															<div>
+																<span className='fw-bold text-gray-900 d-block'>
+																	Pending Tasks
+																</span>
+																<span className='text-muted fs-8'>Awaiting completion or overdue</span>
+															</div>
+														</div>
+													</td>
+													<td className='text-center fw-bold fs-6 text-gray-900'>{pendingTasks}</td>
+													<td className='text-center fw-semibold text-gray-700'>{pendingRate}%</td>
+													<td className='text-end pe-2'>
+														<span className='badge badge-light-danger text-danger fw-bold px-3 py-1.5 fs-8'>
+															<i className='bi bi-exclamation-octagon me-1'></i> Overdue
+														</span>
+													</td>
+												</tr>
+
+												{/* Rejected Tasks if any */}
+												{rejectedTasks > 0 && (
+													<tr>
+														<td>
+															<div className='d-flex align-items-center gap-2'>
+																<i className='bi bi-x-circle text-muted fs-5'></i>
+																<div>
+																	<span className='fw-bold text-gray-900 d-block'>
+																		Rejected Tasks
+																	</span>
+																	<span className='text-muted fs-8'>Returned by manager</span>
+																</div>
+															</div>
+														</td>
+														<td className='text-center fw-bold fs-6 text-gray-900'>{rejectedTasks}</td>
+														<td className='text-center fw-semibold text-gray-700'>{rejectedRate}%</td>
+														<td className='text-end pe-2'>
+															<span className='badge badge-light-secondary text-dark fw-bold px-3 py-1.5 fs-8'>
+																<i className='bi bi-arrow-counterclockwise me-1'></i> Revision
+															</span>
+														</td>
+													</tr>
+												)}
+
+												{/* Summary Row */}
+												<tr style={{ borderTop: '2px solid #E4EAF2', background: '#F8FAFD' }}>
+													<td className='ps-2'>
+														<span className='fw-bolder' style={{ color: '#142447' }}>
+															Total Tasks Audit
+														</span>
+													</td>
+													<td className='text-center fw-bolder fs-6' style={{ color: '#142447' }}>
+														{totalTasks}
+													</td>
+													<td className='text-center fw-bolder' style={{ color: '#142447' }}>
+														100%
+													</td>
+													<td className='text-end pe-2'>
+														<span className='badge badge-light-primary fw-bolder fs-8 px-3 py-1.5'>
+															Score: {ratingPercent}%
+														</span>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</>
 			) : (
-				/* Table View rendered when no employee is selected */
-				<div className='gz-inv-table-card'>
-					<Table
-						data={paginatedEmployees}
-						columns={tableColumns}
-						sort={tableSort}
-						sortOrder={tableSortOrder}
-						onSortChange={handleTableSortChange}
-						disableSortFields={[]}
-						pagination={pagination}
-						setPagination={setPagination}
-						loading={loadingEmployees}
-						renderRow={(employee: EmployeeOption, index: number, actualIndex: number) => (
-							<tr
-								key={employee.id}
-								className='data-row'
-								onClick={() => handleViewEmployeeReport(employee)}
-								style={{ transition: 'background-color 0.15s ease', cursor: 'pointer' }}>
-								<td className='text-center ps-4'>
-									<span className='text-muted fw-bold fs-7'>{actualIndex}</span>
-								</td>
-								<td>
-									<div className='d-flex align-items-center gap-3'>
-										<div
-											className='symbol symbol-circle overflow-hidden flex-shrink-0'
-											style={{
-												width: '40px',
-												height: '40px',
-												minWidth: '40px',
-												minHeight: '40px',
-												borderRadius: '50%',
-												background: '#F1F5F9',
-												border: '2px solid #E2E8F0',
-												display: 'flex',
-												alignItems: 'center',
-												justifyContent: 'center',
-												overflow: 'hidden',
-											}}>
-											{employee.photo ? (
-												<img
-													src={`https://files.fggroup.in/${employee.photo}`}
-													alt={employee.name}
-													style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-													onError={(e: any) => {
-														e.target.style.display = 'none'
-													}}
-												/>
-											) : (
-												<span className='fw-bold text-gray-700 fs-7'>
-													{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+				/* Directory Table Card rendered when no employee is selected */
+				<div
+					className='card shadow-sm border-0'
+					style={{
+						borderRadius: '16px',
+						background: '#ffffff',
+						border: '1px solid #E4EAF2',
+						boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+						overflow: 'hidden',
+					}}>
+					<div className='card-body p-0'>
+						<Table
+							data={paginatedEmployees}
+							columns={tableColumns}
+							sort={tableSort}
+							sortOrder={tableSortOrder}
+							onSortChange={handleTableSortChange}
+							disableSortFields={[]}
+							pagination={pagination}
+							setPagination={setPagination}
+							loading={loadingEmployees}
+							renderRow={(employee: EmployeeOption, index: number, actualIndex: number) => (
+								<tr
+									key={employee.id}
+									className='data-row'
+									onClick={() => handleViewEmployeeReport(employee)}
+									style={{ transition: 'background-color 0.15s ease', cursor: 'pointer' }}>
+									<td className='text-center ps-4'>
+										<span className='text-muted fw-bold fs-7'>{actualIndex}</span>
+									</td>
+									<td>
+										<div className='d-flex align-items-center gap-3'>
+											<div
+												className='symbol symbol-circle overflow-hidden flex-shrink-0'
+												style={{
+													width: '40px',
+													height: '40px',
+													minWidth: '40px',
+													minHeight: '40px',
+													borderRadius: '50%',
+													background: '#F1F5F9',
+													border: '2px solid #E2E8F0',
+													display: 'flex',
+													alignItems: 'center',
+													justifyContent: 'center',
+													overflow: 'hidden',
+												}}>
+												{employee.photo ? (
+													<img
+														src={`https://files.fggroup.in/${employee.photo}`}
+														alt={employee.name}
+														style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+														onError={(e: any) => {
+															e.target.style.display = 'none'
+														}}
+													/>
+												) : (
+													<span className='fw-bold text-gray-700 fs-7'>
+														{employee.name ? employee.name.charAt(0).toUpperCase() : 'E'}
+													</span>
+												)}
+											</div>
+											<div className='d-flex flex-column'>
+												<span className='text-gray-900 fw-bold fs-6 text-hover-primary'>
+													{employee.name}
 												</span>
-											)}
+												<span className='text-muted fs-7'>
+													{employee.email || employee.mobile || 'No email specified'}
+												</span>
+											</div>
 										</div>
-										<div className='d-flex flex-column'>
-											<span className='text-gray-900 fw-bold fs-6 text-hover-primary'>
-												{employee.name}
-											</span>
-											<span className='text-muted fs-7'>
-												{employee.email || employee.mobile || 'No email specified'}
-											</span>
+									</td>
+									<td>
+										<span
+											className='badge badge-light-secondary text-dark fw-bold fs-7 px-3 py-2'
+											style={{ letterSpacing: '0.5px' }}>
+											{employee.employee_code || '-'}
+										</span>
+									</td>
+									<td>
+										<span className='badge badge-light-primary fw-semibold fs-7 px-3 py-2'>
+											{employee.position || 'Staff'}
+										</span>
+									</td>
+									<td>
+										<span className='text-gray-700 fw-semibold fs-7'>
+											{employee.mobile || '-'}
+										</span>
+									</td>
+									<td>
+										<span
+											className={`badge ${
+												employee.source === 'GLS'
+													? 'badge-light-warning text-warning'
+													: 'badge-light-success text-success'
+											} fw-bold fs-7 px-3 py-2`}>
+											{employee.source === 'GLS' ? 'GLS Staff' : 'Standard HR'}
+										</span>
+									</td>
+									<td className='text-center pe-4'>
+										<div className='d-flex align-items-center justify-content-center'>
+											<TableButton
+												action='view'
+												onClick={(e) => {
+													e?.stopPropagation?.()
+													handleViewEmployeeReport(employee)
+												}}
+												title='View Performance Report'
+											/>
 										</div>
-									</div>
-								</td>
-								<td>
-									<span
-										className='badge badge-light-secondary text-dark fw-bold fs-7 px-3 py-2'
-										style={{ letterSpacing: '0.5px' }}>
-										{employee.employee_code || '-'}
-									</span>
-								</td>
-								<td>
-									<span className='badge badge-light-primary fw-semibold fs-7 px-3 py-2'>
-										{employee.position || 'Staff'}
-									</span>
-								</td>
-								<td>
-									<span className='text-gray-700 fw-semibold fs-7'>
-										{employee.mobile || '-'}
-									</span>
-								</td>
-								<td>
-									<span
-										className={`badge ${
-											employee.source === 'GLS'
-												? 'badge-light-warning text-warning'
-												: 'badge-light-success text-success'
-										} fw-bold fs-7 px-3 py-2`}>
-										{employee.source === 'GLS' ? 'GLS Staff' : 'Standard HR'}
-									</span>
-								</td>
-								<td className='text-center pe-4'>
-									<div className='d-flex align-items-center justify-content-center'>
-										<TableButton
-											action='view'
-											onClick={(e) => {
-												e?.stopPropagation?.()
-												handleViewEmployeeReport(employee)
-											}}
-											title='View Performance Report'
-										/>
-									</div>
-								</td>
-							</tr>
-						)}
-					/>
-
-					{sortedEmployees.length === 0 && !loadingEmployees && (
-						<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
-							<i className='bi bi-people text-muted fs-2x mb-2'></i>
-							<span className='text-gray-700 fw-bold fs-6'>No employees found</span>
-							<span className='text-muted fs-7'>Try refining your search keyword or directory filter</span>
-						</div>
-					)}
-
-					{sortedEmployees.length > 0 && (
-						<UsersListPagination
-							totalPages={Math.ceil(sortedEmployees.length / pagination.itemsPerPage)}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-							totalRecords={sortedEmployees.length}
-							itemsPerPage={pagination.itemsPerPage}
+									</td>
+								</tr>
+							)}
 						/>
-					)}
+
+						{sortedEmployees.length === 0 && !loadingEmployees && (
+							<div className='d-flex flex-column text-center w-100 align-items-center justify-content-center py-12'>
+								<i className='bi bi-people text-muted fs-2x mb-2'></i>
+								<span className='text-gray-700 fw-bold fs-6'>No employees found</span>
+								<span className='text-muted fs-7'>Try refining your search keyword or directory filter</span>
+							</div>
+						)}
+
+						{sortedEmployees.length > 0 && (
+							<div className='p-4 border-top' style={{ borderColor: '#E4EAF2' }}>
+								<UsersListPagination
+									totalPages={Math.ceil(sortedEmployees.length / pagination.itemsPerPage)}
+									currentPage={pagination.page}
+									onPageChange={handlePageChange}
+									totalRecords={sortedEmployees.length}
+									itemsPerPage={pagination.itemsPerPage}
+								/>
+							</div>
+						)}
+					</div>
 				</div>
 			)}
 		</>

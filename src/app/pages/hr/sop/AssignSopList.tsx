@@ -28,6 +28,7 @@ import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { CreateSOP, DeleteSOP, GetSOP, UpdateSOP } from '../../../Functions/FGGroup/SOP'
+import { FG_GROUP_FILE_BASE_URL } from '../../../constants/base_URL'
 
 // Distinct deterministic avatar pastel colors for initial fallbacks
 const AVATAR_COLORS = [
@@ -48,6 +49,39 @@ const getAvatarColor = (name?: string) => {
 	}
 	const index = Math.abs(hash) % AVATAR_COLORS.length
 	return AVATAR_COLORS[index]
+}
+
+// Helper to resolve an absolute, well-formed file URL from an uploaded file key/path
+export const getFileUrl = (path: string | undefined | null): string => {
+	if (!path || typeof path !== 'string') return ''
+	const trimmed = path.trim()
+	if (!trimmed) return ''
+	if (
+		trimmed.startsWith('http://') ||
+		trimmed.startsWith('https://') ||
+		trimmed.startsWith('blob:') ||
+		trimmed.startsWith('data:')
+	) {
+		return trimmed
+	}
+	const cleanPath = trimmed.replace(/^\/+/, '')
+	const base = FG_GROUP_FILE_BASE_URL || 'https://files.fggroup.in'
+	return `${base}/${cleanPath}`
+}
+
+// Handler to safely open file attachment in a new tab without routing collisions
+export const handleOpenAttachment = (
+	e: React.MouseEvent,
+	rawUrl: string | undefined | null
+) => {
+	e.preventDefault()
+	e.stopPropagation()
+	const targetUrl = getFileUrl(rawUrl)
+	if (targetUrl) {
+		window.open(targetUrl, '_blank', 'noopener,noreferrer')
+	} else {
+		toast.error('No valid attachment file found')
+	}
 }
 
 // Modern overlapping employee avatar component with tooltip & initials fallback
@@ -116,7 +150,7 @@ const EmployeeAvatar: React.FC<{ emp: any; index: number; enableHoverScale?: boo
 			title={tooltip}>
 			{hasPhoto ? (
 				<img
-					src={`https://files.fggroup.in/${photoUrl}`}
+					src={getFileUrl(photoUrl)}
 					alt={fullName}
 					style={{ width: '100%', height: '100%', objectFit: 'cover' }}
 					onError={() => setImgError(true)}
@@ -251,7 +285,7 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 
 	// Viewport-safe coordinates calculation with strict vertical collision prevention
 	const [positioning] = useState(() => {
-		const POPOVER_WIDTH = 400
+		const POPOVER_WIDTH = 420
 		const SAFE_MARGIN = 16
 		const GAP = 8
 
@@ -323,7 +357,7 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 				top: positioning.top,
 				bottom: positioning.bottom,
 				left: positioning.left,
-				width: '400px',
+				width: '420px',
 				maxWidth: 'calc(100vw - 32px)',
 				maxHeight: `${positioning.maxHeight}px`,
 				backgroundColor: '#FFFFFF',
@@ -416,51 +450,60 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 
 			{/* Search Filter - Clean Integrated Search Bar */}
 			<div
-				className='px-3 pt-2.5 pb-2 flex-shrink-0'
+				className='px-3 pt-3 pb-2 flex-shrink-0'
 				style={{ background: '#FFFFFF' }}>
 				<div
+					className='selectfield-search-wrapper'
 					style={{
 						position: 'relative',
 						display: 'flex',
 						alignItems: 'center',
 						background: '#F8FAFD',
-						border: isSearchFocused ? '1.5px solid #172B4D' : '1px solid #E2E8F0',
-						borderRadius: '10px',
-						padding: '0 12px',
-						height: '38px',
+						border: isSearchFocused ? '1px solid #142447' : '1px solid #DFE7F0',
+						borderRadius: '8px',
+						padding: '0 10px',
+						height: '36px',
+						minHeight: '36px',
 						boxShadow: isSearchFocused
-							? '0 0 0 3px rgba(23, 43, 77, 0.12)'
-							: '0 1px 2px rgba(0,0,0,0.03)',
+							? '0 0 0 3px rgba(20, 36, 71, 0.08)'
+							: 'none',
 						transition: 'all 0.15s ease',
+						boxSizing: 'border-box',
+						gap: '8px',
 					}}>
 					<FontAwesomeIcon
 						icon={faSearch}
 						style={{
-							color: isSearchFocused ? '#172B4D' : '#94A3B8',
-							fontSize: '13px',
-							marginRight: '10px',
+							color: isSearchFocused ? '#142447' : '#94A3B8',
+							fontSize: '12px',
 							flexShrink: 0,
 							transition: 'color 0.15s ease',
 						}}
 					/>
 					<input
 						ref={searchInputRef}
-						type='text'
+						type='search'
 						value={searchTerm}
 						onFocus={() => setIsSearchFocused(true)}
 						onBlur={() => setIsSearchFocused(false)}
 						onChange={(e) => setSearchTerm(e.target.value)}
 						placeholder='Search employees by name or ID...'
+						className='selectfield-search-input gz-top-search-input'
+						autoComplete='off'
+						spellCheck={false}
 						style={{
 							border: 'none',
 							outline: 'none',
 							boxShadow: 'none',
 							width: '100%',
+							height: '100%',
+							minHeight: 0,
 							fontSize: '12.5px',
 							fontWeight: 500,
-							color: '#1E293B',
+							color: '#142447',
 							background: 'transparent',
 							padding: 0,
+							margin: 0,
 						}}
 					/>
 					{searchTerm && (
@@ -481,7 +524,6 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 								fontSize: '9px',
 								padding: 0,
 								flexShrink: 0,
-								marginLeft: '6px',
 							}}>
 							<FontAwesomeIcon icon={faXmark} />
 						</button>
@@ -489,67 +531,80 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 				</div>
 			</div>
 
-			{/* Status Filter Tabs - Sleek Pill Tabs */}
+			{/* Status Filter Tabs - Sleek Segmented Pill Control */}
 			<div
-				className='d-flex align-items-center gap-1.5 px-3 py-2 flex-shrink-0'
-				style={{ background: '#FFFFFF', borderBottom: '1px solid #EEF2F6' }}>
-				{(['All', 'Completed', 'Pending'] as const).map((tab) => {
-					const isSelected = statusFilter === tab
-					const count =
-						tab === 'All'
-							? employees.length
-							: tab === 'Completed'
-							? completedCount
-							: pendingCount
-					const badgeBg =
-						tab === 'Completed'
-							? isSelected ? 'rgba(255,255,255,0.25)' : '#DCFCE7'
-							: tab === 'Pending'
-							? isSelected ? 'rgba(255,255,255,0.25)' : '#FEF3C7'
-							: isSelected ? 'rgba(255,255,255,0.25)' : '#F1F5F9'
-					const badgeColor =
-						tab === 'Completed'
-							? isSelected ? '#FFFFFF' : '#15803D'
-							: tab === 'Pending'
-							? isSelected ? '#FFFFFF' : '#B45309'
-							: isSelected ? '#FFFFFF' : '#475569'
+				className='px-3 pb-2 flex-shrink-0'
+				style={{ background: '#FFFFFF', borderBottom: '1px solid #F1F5F9' }}>
+				<div
+					className='d-flex align-items-center p-1 '
+					style={{
+						background: '#F1F5F9',
+						gap: '4px',
+						borderRadius:"5px"
+					}}>
+					{(['All', 'Completed', 'Pending'] as const).map((tab) => {
+						const isSelected = statusFilter === tab
+						const count =
+							tab === 'All'
+								? employees.length
+								: tab === 'Completed'
+								? completedCount
+								: pendingCount
 
-					return (
-						<button
-							key={tab}
-							type='button'
-							onClick={() => setStatusFilter(tab)}
-							className='btn btn-sm d-flex align-items-center gap-1.5'
-							style={{
-								fontSize: '11.5px',
-								fontWeight: isSelected ? 700 : 600,
-								borderRadius: '20px',
-								border: isSelected ? '1px solid #172B4D' : '1px solid #E2E8F0',
-								background: isSelected ? '#172B4D' : '#F8FAFD',
-								color: isSelected ? '#FFFFFF' : '#64748B',
-								padding: '4px 10px',
-								transition: 'all 0.15s ease',
-								cursor: 'pointer',
-								boxShadow: isSelected ? '0 2px 4px rgba(23,43,77,0.2)' : 'none',
-							}}>
-							<span>{tab}</span>
-							<span
+						const badgeBg = isSelected
+							? tab === 'Completed'
+								? '#DCFCE7'
+								: tab === 'Pending'
+								? '#FEF3C7'
+								: '#E2E8F0'
+							: '#E2E8F0'
+
+						const badgeColor = isSelected
+							? tab === 'Completed'
+								? '#15803D'
+								: tab === 'Pending'
+								? '#B45309'
+								: '#142447'
+							: '#64748B'
+
+						return (
+							<button
+								key={tab}
+								type='button'
+								onClick={() => setStatusFilter(tab)}
+								className='btn btn-sm d-flex align-items-center justify-content-center gap-1 flex-grow-1'
 								style={{
-									fontSize: '10px',
-									fontWeight: 700,
-									padding: '1px 6px',
-									borderRadius: '10px',
-									background: badgeBg,
-									color: badgeColor,
+									fontSize: '12px',
+									fontWeight: isSelected ? 700 : 500,
+									borderRadius: '20px',
+									border: 'none',
+									background: isSelected ? '#FFFFFF' : 'transparent',
+									color: isSelected ? '#142447' : '#64748B',
+									padding: '5px 10px',
+									transition: 'all 0.15s ease',
+									cursor: 'pointer',
+									boxShadow: isSelected ? '0 1px 3px rgba(15, 23, 42, 0.1)' : 'none',
 								}}>
-								{count}
-							</span>
-						</button>
-					)
-				})}
+								<span>{tab}</span>
+								<span
+									style={{
+										fontSize: '10.5px',
+										fontWeight: 700,
+										padding: '1px 6px',
+										borderRadius: '10px',
+										background: badgeBg,
+										color: badgeColor,
+										lineHeight: 1.2,
+									}}>
+									{count}
+								</span>
+							</button>
+						)
+					})}
+				</div>
 			</div>
 
-			{/* Employee List with Proper Padding and Individual Cards */}
+			{/* Employee List with Enhanced Padding & Clean Cards */}
 			<div
 				className='custom-sop-popover-scroll'
 				style={{
@@ -557,8 +612,8 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 					overflowY: 'auto',
 					display: 'flex',
 					flexDirection: 'column',
-					gap: '6px',
-					padding: '10px 12px',
+					gap: '8px',
+					padding: '14px 14px',
 					minHeight: '80px',
 					background: '#F8FAFD',
 				}}>
@@ -598,25 +653,26 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 						return (
 							<div
 								key={emp._id || emp.id}
-								className='d-flex align-items-center justify-content-between p-2.5 rounded-3'
+								className='d-flex align-items-center justify-content-between rounded-3'
 								style={{
 									background: '#FFFFFF',
-									border: '1px solid #EBF1F6',
-									boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+									border: '1px solid #E8EEF5',
+									boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+									padding: '10px 12px',
 									cursor: 'default',
 									transition: 'all 0.15s ease',
 								}}
 								onMouseEnter={(e) => {
 									e.currentTarget.style.borderColor = '#CBD5E1'
-									e.currentTarget.style.boxShadow = '0 3px 8px rgba(0,0,0,0.06)'
+									e.currentTarget.style.boxShadow = '0 4px 10px rgba(15, 23, 42, 0.08)'
 									e.currentTarget.style.transform = 'translateY(-1px)'
 								}}
 								onMouseLeave={(e) => {
-									e.currentTarget.style.borderColor = '#EBF1F6'
-									e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)'
+									e.currentTarget.style.borderColor = '#E8EEF5'
+									e.currentTarget.style.boxShadow = '0 1px 2px rgba(15, 23, 42, 0.04)'
 									e.currentTarget.style.transform = 'translateY(0)'
 								}}>
-								<div className='d-flex align-items-center gap-2.5 text-truncate' style={{ flexGrow: 1 }}>
+								<div className='d-flex align-items-center gap-2 text-truncate' style={{ flexGrow: 1 }}>
 									{/* Circular Avatar */}
 									<div style={{ flexShrink: 0 }}>
 										<EmployeeAvatar emp={emp} index={0} enableHoverScale={false} />
@@ -634,15 +690,16 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 											className='text-truncate'>
 											{fullName}
 										</span>
-										<div className='d-flex align-items-center gap-1.5' style={{ marginTop: '2px' }}>
+										<div className='d-flex align-items-center gap-1' style={{ marginTop: '2px' }}>
 											{code && (
 												<span
 													style={{
 														fontSize: '10.5px',
 														fontWeight: 700,
-														color: '#172B4D',
+														color: '#142447',
 														background: '#F1F5F9',
-														padding: '1px 5px',
+														border: '1px solid #E2E8F0',
+														padding: '1px 6px',
 														borderRadius: '4px',
 													}}>
 													{code}
@@ -671,15 +728,16 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 									{isDone ? (
 										<div className='d-flex flex-column align-items-end'>
 											<span
-												className='badge badge-light-success text-success fw-bold d-inline-flex align-items-center gap-1'
+												className='badge fw-bold d-inline-flex align-items-center gap-1'
 												style={{
-													fontSize: '10.5px',
-													padding: '3px 8px',
+													fontSize: '11px',
+													padding: '4px 8px',
 													borderRadius: '6px',
 													background: '#DCFCE7',
 													color: '#15803D',
+													border: '1px solid #BBF7D0',
 												}}>
-												<FontAwesomeIcon icon={faCheckCircle} style={{ fontSize: '9.5px' }} />
+												<FontAwesomeIcon icon={faCheckCircle} style={{ fontSize: '10px' }} />
 												Completed
 											</span>
 											{completion.completed_at && (
@@ -687,18 +745,30 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 													{DayJS(completion.completed_at).format('DD/MM/YYYY')}
 												</span>
 											)}
+											{completion.file_url && (
+												<button
+													type='button'
+													className='d-inline-flex align-items-center gap-1 mt-1 text-primary fs-9 fw-bold border-0 bg-transparent p-0'
+													style={{ cursor: 'pointer' }}
+													title='Click to view uploaded attachment'
+													onClick={(e) => handleOpenAttachment(e, completion.file_url)}>
+													<FontAwesomeIcon icon={faFileAlt} style={{ fontSize: '9px' }} />
+													<span>Attachment</span>
+												</button>
+											)}
 										</div>
 									) : (
 										<span
-											className='badge badge-light-warning text-warning fw-bold d-inline-flex align-items-center gap-1'
+											className='badge fw-bold d-inline-flex align-items-center gap-1'
 											style={{
-												fontSize: '10.5px',
-												padding: '3px 8px',
+												fontSize: '11px',
+												padding: '4px 8px',
 												borderRadius: '6px',
 												background: '#FEF3C7',
 												color: '#B45309',
+												border: '1px solid #FDE68A',
 											}}>
-											<FontAwesomeIcon icon={faClock} style={{ fontSize: '9.5px' }} />
+											<FontAwesomeIcon icon={faClock} style={{ fontSize: '10px' }} />
 											Pending
 										</span>
 									)}
@@ -711,7 +781,7 @@ const AssignedEmployeesPopover: React.FC<PopoverProps> = ({
 
 			{/* Footer */}
 			<div
-				className='px-3.5 py-2.5 flex-shrink-0'
+				className='px-4 py-2 flex-shrink-0'
 				style={{
 					background: '#FFFFFF',
 					borderTop: '1px solid #EEF2F6',
@@ -1210,7 +1280,7 @@ const HRAssignSopList: React.FC = () => {
 						<h2 className='fw-bold fs-2 m-0' style={{ color: '#142447' }}>
 							SOP Management & Assignments
 						</h2>
-						<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
+						<span className='badge badge-light-primary fw-bold fs-8 px-2 py-1'>
 							{selectedEmployee ? baseEmployeeSOPs.length : assignSOPData.length} Total SOPs
 						</span>
 					</div>
@@ -1352,8 +1422,10 @@ const HRAssignSopList: React.FC = () => {
 						const isAllCompleted = totalAssigned > 0
 							? completedEmployeesCount === totalAssigned
 							: completedByList.length > 0
-						const isPartiallyCompleted = totalAssigned > 0 && completedEmployeesCount > 0 && completedEmployeesCount < totalAssigned
-						const latestFeedback = completedByList[0]
+						const isPartiallyCompleted =
+							totalAssigned > 0 && completedEmployeesCount > 0 && completedEmployeesCount < totalAssigned
+						const latestFeedback =
+							completedByList.find((c: any) => c?.file_url || c?.remarks) || completedByList[0]
 
 						return (
 							<React.Fragment key={sop._id || `${index}-${actualIndex}`}>
@@ -1512,15 +1584,15 @@ const HRAssignSopList: React.FC = () => {
 												)}
 											</span>
 											{latestFeedback?.file_url && (
-												<a
-													href={`https://files.fggroup.in${latestFeedback.file_url}`}
-													target='_blank'
-													rel='noopener noreferrer'
-													className='d-inline-flex align-items-center gap-1.5 mt-1 text-primary fs-8 fw-bold text-hover-underline'
-													onClick={(e) => e.stopPropagation()}>
+												<button
+													type='button'
+													className='d-inline-flex align-items-center gap-1 mt-1 text-primary fs-8 fw-bold text-hover-underline border-0 bg-transparent p-0'
+													style={{ cursor: 'pointer', textAlign: 'left', textDecoration: 'none' }}
+													title='Click to open attachment document in a new tab'
+													onClick={(e) => handleOpenAttachment(e, latestFeedback.file_url)}>
 													<FontAwesomeIcon icon={faFileAlt} className='fs-8' />
 													<span>View Attachment</span>
-												</a>
+												</button>
 											)}
 										</div>
 									</td>
@@ -1529,19 +1601,19 @@ const HRAssignSopList: React.FC = () => {
 									<td>
 										<div className='d-flex flex-column'>
 											{isAllCompleted ? (
-												<span className='badge badge-light-success fw-bold fs-8 px-2.5 py-1.5 mb-1 d-inline-flex align-items-center gap-1 w-fit'>
+												<span className='badge badge-light-success fw-bold fs-8 px-2 py-1 mb-1 d-inline-flex align-items-center gap-1 w-fit'>
 													<FontAwesomeIcon icon={faCheckCircle} className='fs-8 text-success' />
 													<span>Completed {totalAssigned > 0 ? `(${completedEmployeesCount}/${totalAssigned})` : ''}</span>
 												</span>
 											) : isPartiallyCompleted ? (
 												<span
-													className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1.5 mb-1 d-inline-flex align-items-center gap-1 w-fit'
+													className='badge badge-light-primary fw-bold fs-8 px-2 py-1 mb-1 d-inline-flex align-items-center gap-1 w-fit'
 													style={{ background: '#EFF6FF', color: '#1D4ED8' }}>
 													<FontAwesomeIcon icon={faClock} className='fs-8 text-primary' />
-													<span>In Progress ({completedEmployeesCount}/${totalAssigned})</span>
+													<span>In Progress ({completedEmployeesCount}/{totalAssigned})</span>
 												</span>
 											) : (
-												<span className='badge badge-light-warning fw-bold fs-8 px-2.5 py-1.5 mb-1 d-inline-flex align-items-center gap-1 w-fit text-warning'>
+												<span className='badge badge-light-warning fw-bold fs-8 px-2 py-1 mb-1 d-inline-flex align-items-center gap-1 w-fit text-warning'>
 													<FontAwesomeIcon icon={faClock} className='fs-8 text-warning' />
 													<span>Pending {totalAssigned > 0 ? `(0/${totalAssigned})` : ''}</span>
 												</span>

@@ -1,0 +1,87 @@
+/* Employee Add — new navy theme (visual-only, scoped to this page) */
+
+.gz-add-back-btn {
+	background-color: #ffffff !important;
+	border: 1px solid #e4eaf2 !important;
+	color: #172b4d !important;
+	border-radius: 8px !important;
+	height: 38px !important;
+	padding: 0 14px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+	transition: all 0.18s ease !important;
+}
+
+.gz-add-back-btn i,
+.gz-add-back-btn span,
+.gz-add-back-btn svg {
+	color: #172b4d !important;
+	transition: color 0.18s ease !important;
+}
+
+.gz-add-back-btn:hover,
+.gz-add-back-btn:focus,
+.gz-add-back-btn:active,
+.gz-add-back-btn:focus-visible {
+	background-color: #172b4d !important;
+	border-color: #172b4d !important;
+	color: #ffffff !important;
+	box-shadow: 0 4px 12px rgba(23, 43, 77, 0.28) !important;
+	transform: translateY(-1px) !important;
+	text-decoration: none !important;
+}
+
+.gz-add-back-btn:hover i,
+.gz-add-back-btn:hover span,
+.gz-add-back-btn:hover svg,
+.gz-add-back-btn:focus i,
+.gz-add-back-btn:focus span,
+.gz-add-back-btn:focus svg,
+.gz-add-back-btn:active i,
+.gz-add-back-btn:active span,
+.gz-add-back-btn:active svg {
+	color: #ffffff !important;
+}
+
+/* Secondary light action (Add family member) — navy fill + white text on hover */
+.gz-add-light-action:hover,
+.gz-add-light-action:focus,
+.gz-add-light-action:active {
+	background-color: #172b4d !important;
+	border-color: #172b4d !important;
+	color: #ffffff !important;
+}
+
+.gz-add-light-action:hover i,
+.gz-add-light-action:hover span,
+.gz-add-light-action:focus i,
+.gz-add-light-action:focus span {
+	color: #ffffff !important;
+}
+
+/* Section title with navy accent bar (matches gz-panel-title language) */
+.gz-add-panel-title {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 700;
+	color: #142447;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.gz-add-panel-title::before {
+	content: '';
+	width: 3px;
+	height: 14px;
+	border-radius: 2px;
+	background: #172b4d;
+	display: inline-block;
+}
+
+.gz-add-panel-sub {
+	margin: 2px 0 0;
+	font-size: 12px;
+	color: #71809a;
+}

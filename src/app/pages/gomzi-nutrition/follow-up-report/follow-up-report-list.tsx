@@ -16,6 +16,7 @@ import { KTCard } from '../../../../_metronic/helpers'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SearchFilter from '../../../components/SearchFilter'
 import SelectField from '../../../components/SelectField'
 import TableButton from '../../../components/TableButton'
@@ -1210,24 +1211,12 @@ const FollowUpReportList: React.FC = () => {
 						</div>
 
 						<div>
-							<button
-								type='button'
-								className='btn btn-primary d-flex align-items-center justify-content-center'
+							<DownloadExcelButton
 								onClick={downloadExcel}
 								disabled={loading || exporting || filteredData.length === 0}
-								style={{
-									width: '38px',
-									height: '38px',
-									padding: 0,
-									borderRadius: '8px',
-									fontSize: '14px',
-								}}
-								title='Download as Excel'>
-								<FontAwesomeIcon
-									icon={faDownload}
-									className='fs-5'
-								/>
-							</button>
+								loading={exporting}
+								title='Download as Excel'
+							/>
 						</div>
 
 						<div style={{ minWidth: '170px' }}>
@@ -1594,6 +1583,9 @@ const FollowUpReportList: React.FC = () => {
 								totalPages={metaData?.totalPages}
 								currentPage={pagination.page}
 								onPageChange={handlePageChange}
+								totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? filteredData.length}
+								itemsPerPage={pagination.itemsPerPage}
+								entityName='reports'
 							/>
 						</div>
 					)}

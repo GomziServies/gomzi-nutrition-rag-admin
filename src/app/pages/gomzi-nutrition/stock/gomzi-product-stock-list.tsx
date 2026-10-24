@@ -13,6 +13,8 @@ import { Link } from 'react-router-dom'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import { PlusIcon } from '../../../components/animated-icons'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -302,6 +304,15 @@ const GomziNutritionProductStock: React.FC = () => {
 							value={pagination.itemsPerPage}
 							className='me-0'
 						/>
+
+						{/* Download Excel Button */}
+						<div>
+							<DownloadExcelButton
+								data={productData}
+								columns={sortableFields}
+								filename='Product_Stock'
+							/>
+						</div>
 					</div>
 				</div>
 
@@ -427,7 +438,7 @@ const GomziNutritionProductStock: React.FC = () => {
 						totalPages={metaData?.totalPages}
 						currentPage={pagination.page}
 						onPageChange={handlePageChange}
-						totalRecords={metaData?.totalRecords || productData.length}
+						totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? productData.length}
 						itemsPerPage={pagination.itemsPerPage}
 						entityName='products'
 					/>
@@ -456,18 +467,19 @@ const GomziNutritionProductStock: React.FC = () => {
 				<div className='gz-inv-modal-body'>
 					<div className='mb-4'>
 						<label className='gz-inv-form-label required'>Product</label>
-						<select
-							className='form-select gz-prod-select w-100'
+						<SelectField
 							name='item_id'
 							value={formData.item_id}
-							onChange={handleInputChange}>
-							<option value=''>Select Product</option>
-							{product.map((item: any, idx: number) => (
-								<option key={idx} value={item?.label}>
-									{item?.label}
-								</option>
-							))}
-						</select>
+							onChange={handleInputChange}
+							options={product.map((item: any) => ({
+								label: item?.label,
+								value: item?.label,
+							}))}
+							defaultLabel='Select Product'
+							showLabel={false}
+							marginRemove={true}
+							searchable={true}
+						/>
 					</div>
 
 					<div>

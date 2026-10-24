@@ -28,6 +28,7 @@ import CopyableInput from '../../../components/CopyableInput'
 import SearchFilter from '../../../components/SearchFilter'
 import LengthMenu from '../../../components/LengthMenu'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
@@ -48,6 +49,43 @@ const HREmployeeDetail: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState(
 		() => localStorage.getItem('hr_employee_searchTerm') || ''
 	)
+	const [selectedPosition, setSelectedPosition] = useState<string>(
+		() => localStorage.getItem('hr_employee_position') || ''
+	)
+	const [availablePositions, setAvailablePositions] = useState<string[]>([
+		'Admin',
+		'Back Office',
+		'Branch Manager',
+		'Content Creator',
+		'Dietician',
+		'Digital marketing',
+		'Director',
+		'faculty',
+		'Fitness Counsellor',
+		'Franchise Owner',
+		'Graphics Designer',
+		'Human Resources',
+		'Junior Production Manager',
+		'Manager',
+		'Marketing',
+		'Principal Response Assistant',
+		'Production Manager',
+		'Receptionist',
+		'R&D and Procurement Jr. Manager',
+		'R&D and Procurement Manager',
+		'Sales Executive',
+		'Sales Manager',
+		'Sales Person',
+		'SEO',
+		'Social Media Assistant',
+		'Team Leader',
+		'Telecalling',
+		'Trainer',
+		'Video Editor',
+		'Web Designer',
+		'Web Developer',
+		'Worker',
+	])
 	const [showModal, setShowModal] = useState(false)
 	const [employeeData, setEmployeeData] = useState<any>([])
 	const [loading, setLoading] = useState(false)
@@ -100,13 +138,17 @@ const HREmployeeDetail: React.FC = () => {
 	const fetchEmployeeData = async (page?: number) => {
 		setLoading(true)
 		try {
-			const response: any = await GetEmployees({
+			const params: any = {
 				page: page || pagination.page,
 				limit: pagination.itemsPerPage,
 				sort: sort === 'name' ? 'full_name' : sort,
 				sortOrder,
 				search: searchTerm,
-			})
+			}
+			if (selectedPosition && selectedPosition !== 'All') {
+				params.position = selectedPosition
+			}
+			const response: any = await GetEmployees(params)
 
 			const employee = response?.data || []
 
@@ -135,12 +177,33 @@ const HREmployeeDetail: React.FC = () => {
 		setLoading(false)
 	}
 
+	// Fetch all distinct employee positions once on mount to guarantee every actual position is selectable
+	useEffect(() => {
+		const fetchDistinctPositions = async () => {
+			try {
+				const response: any = await GetEmployees({})
+				const list = response?.data || []
+				const gathered = new Set<string>(availablePositions)
+				list.forEach((item: any) => {
+					const pos = item?.employee?.position || item?.position
+					if (pos && typeof pos === 'string' && pos.trim()) {
+						gathered.add(pos.trim())
+					}
+				})
+				setAvailablePositions(Array.from(gathered).sort((a, b) => a.localeCompare(b)))
+			} catch (err) {
+				console.error('Failed to fetch distinct positions:', err)
+			}
+		}
+		fetchDistinctPositions()
+	}, [])
+
 	useEffect(() => {
 		const timeout = setTimeout(() => {
 			fetchEmployeeData()
 		}, 300)
 		return () => clearTimeout(timeout)
-	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder, searchTerm])
+	}, [pagination.itemsPerPage, pagination.page, sort, sortOrder, searchTerm, selectedPosition])
 
 	const isFirstRender = useRef(true)
 
@@ -256,6 +319,13 @@ const HREmployeeDetail: React.FC = () => {
 		})
 	}
 
+	const handlePositionChange = (e: any) => {
+		const val = e?.target?.value !== undefined ? e.target.value : (typeof e === 'string' ? e : '')
+		setSelectedPosition(val)
+		localStorage.setItem('hr_employee_position', val)
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}
+
 	const handleDeleteFeature = async (_id: string) => {
 		Swal.fire({
 			title: 'Are you sure?',
@@ -299,6 +369,14 @@ const HREmployeeDetail: React.FC = () => {
 		}
 	}
 
+	const paginatedEmployeeData = React.useMemo(() => {
+		if (employeeData && employeeData.length > pagination.itemsPerPage) {
+			const startIndex = (pagination.page - 1) * pagination.itemsPerPage
+			return employeeData.slice(startIndex, startIndex + pagination.itemsPerPage)
+		}
+		return employeeData || []
+	}, [employeeData, pagination.page, pagination.itemsPerPage])
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Team Members</PageTitle>
@@ -308,9 +386,9 @@ const HREmployeeDetail: React.FC = () => {
 				<div className='d-flex flex-column'>
 					<div className='d-flex align-items-center gap-2'>
 						<h2 className='text-gray-900 fw-bold fs-2 m-0'>Employee Directory</h2>
-						{employeeData?.length > 0 && (
+						{(totalRecords > 0 || employeeData?.length > 0) && (
 							<span className='badge badge-light-primary fw-bold fs-8 px-2.5 py-1'>
-								{employeeData.length} Total
+								{totalRecords || employeeData.length} Total
 							</span>
 						)}
 					</div>
@@ -328,15 +406,20 @@ const HREmployeeDetail: React.FC = () => {
 					background: '#ffffff',
 					border: '1px solid #E4EAF2',
 					boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+					position: 'relative',
+					zIndex: 20,
+					overflow: 'visible',
 				}}>
-				<div className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'>
+				<div
+					className='card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3'
+					style={{ overflow: 'visible' }}>
 					<div className='d-flex align-items-center flex-wrap gap-2 gap-md-3 py-1'>
 						{/* 1. Searchbar */}
 						<div>
 							<SearchFilter
 								searchTerm={searchTerm}
 								setSearchTerm={handleSearchChange}
-								placeholder='Search employee name, role...'
+								placeholder='Search name, code, email...'
 								className='me-0'
 							/>
 						</div>
@@ -359,6 +442,21 @@ const HREmployeeDetail: React.FC = () => {
 								filename='Employee_List'
 							/>
 						</div>
+
+						{/* 4. Position Filter */}
+						<div style={{ minWidth: '190px' }}>
+							<SelectField
+								showLabel={false}
+								marginRemove={true}
+								className='mb-0'
+								height='38px'
+								name='position'
+								value={selectedPosition}
+								defaultLabel='All Positions'
+								options={availablePositions}
+								onChange={handlePositionChange}
+							/>
+						</div>
 					</div>
 
 					{/* 6. End me right side Add Employee Button */}
@@ -379,7 +477,7 @@ const HREmployeeDetail: React.FC = () => {
 			{/* Main Table Card */}
 			<div className='gz-inv-table-card'>
 				<Table
-					data={employeeData}
+					data={paginatedEmployeeData}
 					columns={sortableFields}
 					sort={sort}
 							sortOrder={sortOrder}
@@ -562,78 +660,76 @@ const HREmployeeDetail: React.FC = () => {
 					show={showModal}
 					onHide={() => setShowModal(false)}
 					centered
-					className='gz-bank-modal'>
-					<div className='gz-bank-modal-header'>
-						<div className='gz-bank-modal-header-left'>
-							<div className='gz-bank-modal-header-icon'>
-								<FontAwesomeIcon icon={faWallet} />
-							</div>
-							<div>
-								<h4 className='gz-bank-modal-title'>Employee Bank Details</h4>
-								<p className='gz-bank-modal-subtitle'>
-									Settlement account &amp; UPI credentials for salary disbursement
-								</p>
-							</div>
+					dialogClassName='mw-650px'>
+					<div className='modal-content border-0' style={{ borderRadius: '12px', overflow: 'hidden' }}>
+						{/* Modal Header */}
+						<div
+							className='modal-header py-4 px-6 d-flex align-items-center justify-content-between'
+							style={{ borderBottom: '1px solid #E4EAF2' }}>
+							<h3 className='fw-bolder text-gray-900 m-0 fs-4'>
+								Employee Bank Details
+							</h3>
+							<button
+								type='button'
+								className='btn btn-sm btn-icon btn-active-light-primary'
+								onClick={() => setShowModal(false)}
+								aria-label='Close'>
+								<FontAwesomeIcon icon={faTimes} className='fs-4 text-gray-700' />
+							</button>
 						</div>
-						<button
-							type='button'
-							className='gz-bank-modal-close'
-							onClick={() => setShowModal(false)}
-							title='Close'
-							aria-label='Close'>
-							<FontAwesomeIcon icon={faTimes} />
-						</button>
-					</div>
 
-					<div className='gz-bank-modal-body'>
-						{/* Employee identity strip */}
-						<div className='gz-bank-identity'>
-							<div className='gz-bank-avatar'>
-								{employeeViewData?.name
-									? employeeViewData.name.trim().charAt(0).toUpperCase()
-									: 'E'}
-							</div>
-							<div className='gz-bank-identity-info'>
-								<span className='gz-bank-identity-name'>
-									{employeeViewData?.name || 'Unnamed Employee'}
-								</span>
-								<span className='gz-bank-identity-meta'>
+						{/* Modal Body */}
+						<div className='modal-body p-6'>
+							{/* Employee summary row */}
+							<div
+								className='p-4 mb-5 rounded d-flex align-items-center justify-content-between flex-wrap gap-3'
+								style={{ background: '#F8FAFD', border: '1px solid #E4EAF2' }}>
+								<div className='d-flex align-items-center gap-3'>
+									<div
+										style={{
+											width: '42px',
+											height: '42px',
+											borderRadius: '50%',
+											backgroundColor: '#1E3A5F',
+											color: '#ffffff',
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											fontSize: '15px',
+											fontWeight: 700,
+										}}>
+										{employeeViewData?.name?.trim().charAt(0).toUpperCase() || 'E'}
+									</div>
+									<div>
+										<div className='fw-bold text-gray-900 fs-6'>
+											{employeeViewData?.name || '—'}
+										</div>
+										<div className='text-muted fs-7'>
+											{employeeViewData?.email || employeeViewData?.mobile || 'No contact specified'}
+										</div>
+									</div>
+								</div>
+								<div className='d-flex align-items-center gap-2'>
 									{employeeViewData?.employee_code && (
-										<span className='gz-bank-code-pill'>
-											<FontAwesomeIcon icon={faHashtag} />
-											{employeeViewData.employee_code}
+										<span className='badge badge-light-secondary text-dark fw-bold fs-7 px-3 py-2'>
+											#{employeeViewData.employee_code}
 										</span>
 									)}
 									{employeeViewData?.position && (
-										<span className='meta-item'>
-											<FontAwesomeIcon icon={faBuilding} />
+										<span className='badge badge-light-primary fw-semibold fs-7 px-3 py-2'>
 											{employeeViewData.position}
 										</span>
 									)}
-									{employeeViewData?.email && (
-										<span className='meta-item'>
-											<FontAwesomeIcon icon={faEnvelope} />
-											{employeeViewData.email}
-										</span>
-									)}
-								</span>
+								</div>
 							</div>
-						</div>
 
-						{/* Bank credential rows */}
-						<div className='gz-bank-fields'>
-							<div className='gz-bank-field'>
-								<span className='gz-bank-field-label'>
-									<span className='gz-bank-field-icon'>
-										<FontAwesomeIcon icon={faBuilding} />
-									</span>
-									Bank Name
-								</span>
-								<div className='gz-bank-field-value'>
+							{/* Bank credentials grid */}
+							<div className='row g-4 mb-5'>
+								<div className='col-md-6'>
+									<label className='form-label fw-bold text-gray-800 fs-7 mb-1'>Bank Name</label>
 									<CopyableInput
 										placeholder='Not provided'
 										type='text'
-										className='col-12 fv-row'
 										name='bank_name'
 										label='Bank Name'
 										htmlFor='bank_name'
@@ -642,42 +738,24 @@ const HREmployeeDetail: React.FC = () => {
 										showLabel={false}
 									/>
 								</div>
-							</div>
-
-							<div className='gz-bank-field'>
-								<span className='gz-bank-field-label'>
-									<span className='gz-bank-field-icon'>
-										<FontAwesomeIcon icon={faCreditCard} />
-									</span>
-									Account No.
-								</span>
-								<div className='gz-bank-field-value'>
+								<div className='col-md-6'>
+									<label className='form-label fw-bold text-gray-800 fs-7 mb-1'>Account Number</label>
 									<CopyableInput
 										placeholder='Not provided'
 										type='text'
-										className='col-12 fv-row'
 										name='account_details'
-										label='Account No.'
+										label='Account Number'
 										htmlFor='account_details'
 										value={employeeViewData.account_details}
 										readOnly
 										showLabel={false}
 									/>
 								</div>
-							</div>
-
-							<div className='gz-bank-field'>
-								<span className='gz-bank-field-label'>
-									<span className='gz-bank-field-icon'>
-										<FontAwesomeIcon icon={faHashtag} />
-									</span>
-									IFSC Code
-								</span>
-								<div className='gz-bank-field-value'>
+								<div className='col-md-6'>
+									<label className='form-label fw-bold text-gray-800 fs-7 mb-1'>IFSC Code</label>
 									<CopyableInput
 										placeholder='Not provided'
 										type='text'
-										className='col-12 fv-row'
 										name='IFSC'
 										label='IFSC Code'
 										htmlFor='IFSC'
@@ -687,83 +765,101 @@ const HREmployeeDetail: React.FC = () => {
 									/>
 								</div>
 							</div>
-						</div>
 
-						{/* Google Pay / UPI QR block */}
-						<div className='gz-bank-qr-wrap'>
-							<div className='gz-bank-section-label'>
-								<FontAwesomeIcon icon={faQrcode} />
-								Google Pay / UPI QR Code
-							</div>
-
-							<div className='gz-bank-qr-layout'>
+							{/* Google Pay / UPI QR block */}
+							<div className='mb-2'>
+								<label className='form-label fw-bold text-gray-800 fs-7 mb-2 d-flex align-items-center gap-2'>
+									<FontAwesomeIcon icon={faQrcode} className='text-gray-600' />
+									<span>Google Pay / UPI QR Code</span>
+								</label>
 								{employeeViewData?.document?.fileUrl ? (
-									<a
-										href={employeeViewData.document.fileUrl}
-										target='_blank'
-										rel='noopener noreferrer'
-										className='gz-bank-qr-frame'>
-										{employeeViewData?.document?.isPdf ? (
-											<embed
-												src={employeeViewData.document.fileUrl}
-												type='application/pdf'
-											/>
-										) : (
-											<img src={employeeViewData.document.fileUrl} alt='Payment QR code' />
-										)}
-									</a>
-								) : (
-									<div className='gz-bank-qr-empty'>
-										<FontAwesomeIcon icon={faQrcode} />
-										<span>No QR code uploaded</span>
-									</div>
-								)}
-
-								<div className='gz-bank-qr-meta'>
-									<h5 className='gz-bank-qr-title'>Scan to Pay</h5>
-									<p className='gz-bank-qr-desc'>
-										Use this QR code to transfer salary or reimbursements directly to the
-										employee&rsquo;s registered UPI handle. Always verify the IFSC code
-										before initiating a transfer.
-									</p>
-									<div className='gz-bank-qr-actions'>
-										{employeeViewData?.document?.fileUrl && (
-											<>
+									<div
+										className='d-flex align-items-center gap-4 p-4 rounded'
+										style={{ background: '#F8FAFD', border: '1px solid #E4EAF2' }}>
+										<div
+											style={{
+												width: '120px',
+												height: '120px',
+												borderRadius: '8px',
+												border: '1px solid #DFE7F0',
+												background: '#ffffff',
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												overflow: 'hidden',
+												flexShrink: 0,
+											}}>
+											{employeeViewData?.document?.isPdf ? (
+												<embed
+													src={employeeViewData.document.fileUrl}
+													type='application/pdf'
+													width='100%'
+													height='100%'
+												/>
+											) : (
+												<img
+													src={employeeViewData.document.fileUrl}
+													alt='Payment QR'
+													style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+												/>
+											)}
+										</div>
+										<div className='d-flex flex-column gap-2'>
+											<span className='fw-bold text-gray-900 fs-6'>Payment QR Code</span>
+											<span className='text-muted fs-7'>
+												Uploaded payment QR for salary disbursement
+											</span>
+											<div className='d-flex align-items-center gap-2 mt-1'>
 												<a
 													href={employeeViewData.document.fileUrl}
 													target='_blank'
 													rel='noopener noreferrer'
-													className='gz-bank-qr-btn'>
-													<FontAwesomeIcon icon={faExternalLinkAlt} />
-													Open Full Size
+													className='btn btn-sm btn-primary d-inline-flex align-items-center gap-2'
+													style={{ borderRadius: '6px' }}>
+													<FontAwesomeIcon icon={faExternalLinkAlt} className='fs-8' />
+													<span>Open Full Size</span>
 												</a>
 												<CopyToClipboard
 													text={employeeViewData.document.fileUrl}
 													onCopy={() => toast.success('QR link copied to clipboard!')}>
-													<button type='button' className='gz-bank-qr-btn secondary'>
-														<FontAwesomeIcon icon={faCopy} />
-														Copy Link
+													<button
+														type='button'
+														className='btn btn-sm btn-light-primary d-inline-flex align-items-center gap-2'
+														style={{ borderRadius: '6px' }}>
+														<FontAwesomeIcon icon={faCopy} className='fs-8' />
+														<span>Copy Link</span>
 													</button>
 												</CopyToClipboard>
-											</>
-										)}
+											</div>
+										</div>
 									</div>
-								</div>
+								) : (
+									<div
+										className='d-flex flex-column align-items-center justify-content-center p-6 rounded text-center'
+										style={{
+											background: '#F8FAFD',
+											border: '1px dashed #DFE7F0',
+										}}>
+										<FontAwesomeIcon icon={faQrcode} className='text-muted fs-1 mb-2' />
+										<span className='text-gray-700 fw-semibold fs-6'>No QR Code Uploaded</span>
+										<span className='text-muted fs-7 mt-1'>Employee has not uploaded a UPI / Google Pay QR code</span>
+									</div>
+								)}
 							</div>
 						</div>
-					</div>
 
-					<div className='gz-bank-modal-footer'>
-						<span className='gz-bank-modal-hint'>
-							<FontAwesomeIcon icon={faLock} />
-							Bank credentials are confidential — handle with care
-						</span>
-						<button
-							type='button'
-							className='btn gz-bank-close-btn'
-							onClick={() => setShowModal(false)}>
-							Close
-						</button>
+						{/* Modal Footer */}
+						<div
+							className='modal-footer py-3 px-6 d-flex justify-content-end'
+							style={{ borderTop: '1px solid #E4EAF2' }}>
+							<button
+								type='button'
+								className='btn btn-light'
+								onClick={() => setShowModal(false)}
+								style={{ borderRadius: '8px', padding: '8px 24px', fontWeight: 600 }}>
+								Close
+							</button>
+						</div>
 					</div>
 				</Modal>
 		</>

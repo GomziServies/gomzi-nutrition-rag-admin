@@ -17,6 +17,8 @@ import * as XLSX from 'xlsx'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import NumberTicker from '../../../components/NumberTicker'
 import SearchFilter from '../../../components/SearchFilter'
 import GomziTablePagination from '../../../components/GomziTablePagination'
@@ -357,43 +359,54 @@ const NutritionProductFeedback: React.FC = () => {
 							handleItemsPerPageChange={handleItemsPerPageChange}
 							className='me-0'
 						/>
-					</div>
 
-					<div className='gz-prod-toolbar-right'>
+						<div>
+							<DownloadExcelButton
+								onClick={downloadExcel}
+								disabled={loading || filteredFeedback.length === 0}
+								title='Export Feedback to Excel'
+							/>
+						</div>
+
 						{/* Rating filter */}
-						<select
-							className='gz-prod-select'
-							value={ratingFilter}
-							onChange={(e) => setRatingFilter(e.target.value)}
-							aria-label='Filter by rating'>
-							<option value=''>All Ratings</option>
-							<option value='5'>5 Stars</option>
-							<option value='4'>4 Stars</option>
-							<option value='3'>3 Stars</option>
-							<option value='2'>2 Stars</option>
-							<option value='1'>1 Star</option>
-						</select>
+						<div style={{ minWidth: '140px' }}>
+							<SelectField
+								value={ratingFilter}
+								onChange={(e: any) => setRatingFilter(e.target.value)}
+								options={[
+									{ label: 'All Ratings', value: '' },
+									{ label: '5 Stars', value: '5' },
+									{ label: '4 Stars', value: '4' },
+									{ label: '3 Stars', value: '3' },
+									{ label: '2 Stars', value: '2' },
+									{ label: '1 Star', value: '1' },
+								]}
+								showLabel={false}
+								marginRemove={true}
+								hideDefaultOption={true}
+								searchable={false}
+								defaultLabel='All Ratings'
+							/>
+						</div>
 
 						{/* Status filter */}
-						<select
-							className='gz-prod-select'
-							value={statusFilter}
-							onChange={(e) => setStatusFilter(e.target.value)}
-							aria-label='Filter by status'>
-							<option value=''>All Status</option>
-							<option value='APPROVED'>Approved</option>
-							<option value='PENDING'>Pending</option>
-							<option value='REJECTED'>Rejected</option>
-						</select>
-
-						<button
-							type='button'
-							className='gz-prod-btn-icon-export'
-							onClick={downloadExcel}
-							disabled={loading || filteredFeedback.length === 0}
-							title='Export Feedback to Excel'>
-							<FontAwesomeIcon icon={faDownload} />
-						</button>
+						<div style={{ minWidth: '140px' }}>
+							<SelectField
+								value={statusFilter}
+								onChange={(e: any) => setStatusFilter(e.target.value)}
+								options={[
+									{ label: 'All Status', value: '' },
+									{ label: 'Approved', value: 'APPROVED' },
+									{ label: 'Pending', value: 'PENDING' },
+									{ label: 'Rejected', value: 'REJECTED' },
+								]}
+								showLabel={false}
+								marginRemove={true}
+								hideDefaultOption={true}
+								searchable={false}
+								defaultLabel='All Status'
+							/>
+						</div>
 					</div>
 				</div>
 

@@ -8,6 +8,7 @@ import { KTCard } from '../../../../../_metronic/helpers'
 import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../../_metronic/layout/core'
 import DateFilter from '../../../../components/DateRangePicker'
+import DownloadExcelButton from '../../../../components/DownloadExcelButton'
 import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
 import Table from '../../../../components/Table'
@@ -394,21 +395,7 @@ const GomziNutritionMaterialSuppliersInvoiceList: React.FC = () => {
 							</div>
 
 							<div>
-								<button
-									type='button'
-									className='btn btn-primary d-flex align-items-center justify-content-center'
-									onClick={downloadExcel}
-									disabled={loading || supplierData.length === 0}
-									style={{
-										width: '38px',
-										height: '38px',
-										padding: 0,
-										borderRadius: '8px',
-										fontSize: '14px',
-									}}
-									title='Download Excel'>
-									<FontAwesomeIcon icon={faDownload} />
-								</button>
+								<DownloadExcelButton onClick={downloadExcel} />
 							</div>
 
 							<div className='d-flex align-items-center flex-shrink-0'>
@@ -562,6 +549,9 @@ const GomziNutritionMaterialSuppliersInvoiceList: React.FC = () => {
 							totalPages={metaData?.totalPages}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={metaData?.totalDocs ?? metaData?.totalRecords ?? metaData?.totalCount ?? supplierData.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='invoices'
 						/>
 					)}
 				</div>

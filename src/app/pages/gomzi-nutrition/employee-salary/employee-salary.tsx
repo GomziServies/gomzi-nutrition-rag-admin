@@ -8,6 +8,7 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
@@ -288,27 +289,19 @@ const EmployeeSalary = () => {
 							value={pagination.itemsPerPage}
 							className='me-0'
 						/>
+						<div>
+							<DownloadExcelButton
+								onClick={downloadExcel}
+								disabled={exporting}
+								loading={exporting}
+								title='Download Excel'
+							/>
+						</div>
 						<DateFilter
 							onDateRangeChange={handleDateRangeChange}
 							rightValue='0'
 							lastMonth={true}
 						/>
-					</div>
-
-					<div className='gz-mgmt-toolbar-right'>
-						<button
-							type='button'
-							className='gz-mgmt-export-btn'
-							onClick={downloadExcel}
-							disabled={exporting}
-						>
-							{exporting ? (
-								<span className='spinner-border spinner-border-sm me-2' role='status' />
-							) : (
-								<FontAwesomeIcon icon={faDownload} />
-							)}
-							Export Excel
-						</button>
 					</div>
 				</div>
 
@@ -445,6 +438,9 @@ const EmployeeSalary = () => {
 							totalPages={Math.ceil(filteredAdminData.length / pagination.itemsPerPage) || 1}
 							currentPage={pagination.page}
 							onPageChange={handlePageChange}
+							totalRecords={filteredAdminData.length}
+							itemsPerPage={pagination.itemsPerPage}
+							entityName='salary records'
 						/>
 					)}
 				</div>

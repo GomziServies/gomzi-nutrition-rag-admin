@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import SelectField from '../../../components/SelectField'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
 import { CreateEmployeeMemo } from '../../../Functions/FGGroup/Employee'
 import { errorToast, successToast } from '../../../../_metronic/helpers/Utils'
@@ -85,10 +86,10 @@ const CreateMemo = () => {
 	})
 
 	// Handle employee selection
-	const handleEmployeeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const employeeId = e.target.value
-		formik.handleChange(e)
-		
+	const handleEmployeeChange = (e: any) => {
+		const employeeId = typeof e === 'object' && e?.target ? e.target.value : e
+		formik.setFieldValue('employee_id', employeeId)
+
 		// Find selected employee details
 		const employee = employees.find(emp => emp.employee_id === employeeId)
 		setSelectedEmployee(employee || null)
@@ -286,21 +287,22 @@ const CreateMemo = () => {
 							</div>
 							<form onSubmit={formik.handleSubmit}>
 								<div className='fv-row mb-5'>
-									<label htmlFor='memo-employee' className='form-label required fw-bold fs-7'>Select Employee</label>
-									<select
-										id='memo-employee'
-										className='gz-inv-select w-100'
-										style={{ height: '38px', borderRadius: '8px' }}
-										{...formik.getFieldProps('employee_id')}
+									<label htmlFor='memo-employee' className='form-label required fw-bold fs-7 mb-1'>Select Employee</label>
+									<SelectField
+										showLabel={false}
+										marginRemove={true}
+										className='mb-0'
+										height='38px'
+										name='employee_id'
+										value={formik.values.employee_id}
+										defaultLabel='Select an employee...'
+										disabled={loading}
+										options={employees.map((employee) => ({
+											label: `${employee.full_name} (${employee.employee?.employee_code || ''})`,
+											value: employee.employee_id,
+										}))}
 										onChange={handleEmployeeChange}
-										disabled={loading}>
-										<option value=''>Select an employee...</option>
-										{employees.map((employee) => (
-											<option key={employee.employee_id} value={employee.employee_id}>
-												{employee.full_name} ({employee.employee?.employee_code})
-											</option>
-										))}
-									</select>
+									/>
 									{formik.touched.employee_id && formik.errors.employee_id && (
 										<div className='fv-plugins-message-container mt-2'>
 											<div className='fv-help-block text-danger fs-7 fw-semibold'>

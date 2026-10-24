@@ -25,6 +25,7 @@ import { PageTitle } from '../../../../../_metronic/layout/core'
 import { DayJS } from '../../../../../_metronic/helpers/Utils'
 import LengthMenu from '../../../../components/LengthMenu'
 import SearchFilter from '../../../../components/SearchFilter'
+import DownloadExcelButton from '../../../../components/DownloadExcelButton'
 import GomziTablePagination from '../../../../components/GomziTablePagination'
 import CopyButton from '../../../../components/motion/CopyButton'
 import { PlusIcon } from '../../../../components/animated-icons'
@@ -345,21 +346,7 @@ const GomziNutritionMaterialSuppliersList: React.FC = () => {
 							value={pagination.itemsPerPage}
 							className='me-0'
 						/>
-					</div>
-
-					<div className='gz-prod-toolbar-right'>
-						<button
-							type='button'
-							className='gz-prod-btn-icon-export'
-							onClick={downloadExcel}
-							disabled={exporting || supplierData.length === 0}
-							title='Export Suppliers to Excel'>
-							{exporting ? (
-								<span className='spinner-border spinner-border-sm' role='status' aria-hidden='true'></span>
-							) : (
-								<FontAwesomeIcon icon={faDownload} />
-							)}
-						</button>
+						<DownloadExcelButton onClick={downloadExcel} />
 					</div>
 				</div>
 

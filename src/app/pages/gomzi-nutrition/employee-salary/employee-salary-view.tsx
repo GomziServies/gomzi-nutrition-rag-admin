@@ -9,6 +9,7 @@ import CopyableInput from '../../../components/CopyableInput'
 import DateFilter from '../../../components/DateRangePicker'
 import InputField from '../../../components/InputField'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetGlsSalary } from '../../../Functions/FGGroup/GlsSalary'
@@ -498,8 +499,13 @@ const EmployeeSalaryView = () => {
                             expenseData={salaryData}
                             handleItemsPerPageChange={handleItemsPerPageChange}
                         />
-                    </div>
-                    <div className='gz-mgmt-toolbar-right'>
+                        <div>
+                            <DownloadExcelButton
+                                data={salaryData}
+                                columns={sortableFields}
+                                filename='Attendance_Punch_Logs'
+                            />
+                        </div>
                         <DateFilter
                             onDateRangeChange={handleDateRangeChange}
                             rightValue='0'

@@ -1,4 +1,13 @@
-import { faPlusCircle, faStar } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCheck,
+	faDownload,
+	faEye,
+	faPlus,
+	faRotateLeft,
+	faStar,
+	faTimes,
+	faTrash,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Form, Modal } from 'react-bootstrap'
@@ -12,6 +21,7 @@ import DateFilter from '../../../components/DateRangePicker'
 import LengthMenu from '../../../components/LengthMenu'
 import SearchFilter from '../../../components/SearchFilter'
 import Table from '../../../components/Table'
+import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { FileUploadToFGGroup, GetEmployeeRating } from '../../../Functions/FGGroup'
 import {
@@ -63,7 +73,24 @@ const EmployeeTask: React.FC = () => {
 		if (storedRange) {
 			try {
 				const parsed = JSON.parse(storedRange)
-				return [new Date(parsed[0]), new Date(parsed[1])]
+				if (Array.isArray(parsed) && parsed.length >= 2) {
+					const start = new Date(parsed[0])
+					const end = new Date(parsed[1])
+					if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+						return [start, end]
+					}
+				} else if (parsed && typeof parsed === 'object') {
+					const s = parsed.startDate || parsed.start || parsed[0]
+					const e = parsed.endDate || parsed.end || parsed[1]
+					if (s && e) {
+						const start = new Date(s)
+						const end = new Date(e)
+						if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+							return [start, end]
+						}
+					}
+				}
+				return null
 			} catch (e) {
 				return null
 			}
@@ -116,8 +143,19 @@ const EmployeeTask: React.FC = () => {
 		let endDate: Date | null = null
 
 		if (selectedDateRange) {
-			;[startDate, endDate] = selectedDateRange
-			endDate = new Date(endDate.setHours(23, 59, 59, 999))
+			if (Array.isArray(selectedDateRange)) {
+				startDate = selectedDateRange[0] ? new Date(selectedDateRange[0]) : null
+				endDate = selectedDateRange[1] ? new Date(selectedDateRange[1]) : null
+			} else if (typeof selectedDateRange === 'object') {
+				const s = (selectedDateRange as any).startDate || (selectedDateRange as any).start || (selectedDateRange as any)[0]
+				const e = (selectedDateRange as any).endDate || (selectedDateRange as any).end || (selectedDateRange as any)[1]
+				startDate = s ? new Date(s) : null
+				endDate = e ? new Date(e) : null
+			}
+			if (endDate && !isNaN(endDate.getTime())) {
+				endDate = new Date(endDate)
+				endDate.setHours(23, 59, 59, 999)
+			}
 		} else {
 			const now = new Date()
 			startDate = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -182,8 +220,19 @@ const EmployeeTask: React.FC = () => {
 			let endDate: any = null
 
 			if (selectedDateRange) {
-				;[startDate, endDate] = selectedDateRange
-				endDate = new Date(endDate.setHours(23, 59, 59, 999))
+				if (Array.isArray(selectedDateRange)) {
+					startDate = selectedDateRange[0] ? new Date(selectedDateRange[0]) : null
+					endDate = selectedDateRange[1] ? new Date(selectedDateRange[1]) : null
+				} else if (typeof selectedDateRange === 'object') {
+					const s = (selectedDateRange as any).startDate || (selectedDateRange as any).start || (selectedDateRange as any)[0]
+					const e = (selectedDateRange as any).endDate || (selectedDateRange as any).end || (selectedDateRange as any)[1]
+					startDate = s ? new Date(s) : null
+					endDate = e ? new Date(e) : null
+				}
+				if (endDate && !isNaN(endDate.getTime())) {
+					endDate = new Date(endDate)
+					endDate.setHours(23, 59, 59, 999)
+				}
 			} else {
 				const now = new Date()
 				startDate = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -410,10 +459,10 @@ const EmployeeTask: React.FC = () => {
 
 		const isSame =
 			(!range && !selectedDateRange) ||
-			(range &&
-				selectedDateRange &&
-				range[0].getTime() === selectedDateRange[0].getTime() &&
-				range[1].getTime() === selectedDateRange[1].getTime())
+			(Array.isArray(range) &&
+				Array.isArray(selectedDateRange) &&
+				range[0]?.getTime?.() === selectedDateRange[0]?.getTime?.() &&
+				range[1]?.getTime?.() === selectedDateRange[1]?.getTime?.())
 
 		if (!isSame) {
 			setSelectedDateRange(range)
@@ -581,14 +630,29 @@ const EmployeeTask: React.FC = () => {
 							</span>
 						</div>
 
-						<button
-							type='button'
-							onClick={() => setShowModal(true)}
-							className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
-							style={{ height: '38px', borderRadius: '10px' }}>
-							<i className='bi bi-plus-lg fs-6'></i>
-							<span>Add Task</span>
-						</button>
+						<div className='d-flex align-items-center gap-2'>
+							<button
+								type='button'
+								className='btn btn-sm btn-light d-flex align-items-center gap-2 px-3'
+								style={{ height: '38px', borderRadius: '10px' }}
+								onClick={() => {
+									fetchAssignTaskData()
+									fetchRattingData()
+								}}
+								disabled={loading}>
+								<FontAwesomeIcon icon={faRotateLeft} className={loading ? 'fa-spin' : ''} />
+								<span>Refresh</span>
+							</button>
+
+							<button
+								type='button'
+								onClick={() => setShowModal(true)}
+								className='btn btn-sm btn-primary d-flex align-items-center gap-2 px-4'
+								style={{ height: '38px', borderRadius: '10px' }}>
+								<FontAwesomeIcon icon={faPlus} />
+								<span>Add Task</span>
+							</button>
+						</div>
 					</div>
 
 					{/* Header Bottom: Filter Bar */}
@@ -674,17 +738,10 @@ const EmployeeTask: React.FC = () => {
 									<tr
 										onClick={() => handleRowClick(task._id)}
 										className='data-row'>
-										<td className='text-center'>
-											<div className='d-flex'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='mx-2 ms-5 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
-												<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
-													{actualIndex}
-												</span>
-											</div>
+										<td>
+											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
+												{actualIndex}
+											</span>
 										</td>
 										<td>
 											<span className='text-dark fw-bold text-hover-primary d-block mb-1 fs-6'>
@@ -738,10 +795,10 @@ const EmployeeTask: React.FC = () => {
 										<td>
 											{task.status === 'PENDING' ? (
 												task.employee_status === 'accepted' ? (
-													<span className='badge badge-light-success px-2 py-1 fs-7 fw-semibold'>Accepted</span>
+													<span className='badge badge-light-success px-3 py-2 fs-7 fw-semibold'>Accepted</span>
 												) : task.employee_status === 'rejected' ? (
 													<div className='d-flex align-items-center gap-1'>
-														<span className='badge badge-light-danger px-2 py-1 fs-7 fw-semibold'>Rejected</span>
+														<span className='badge badge-light-danger px-3 py-2 fs-7 fw-semibold'>Rejected</span>
 														{task.reject_reason && (
 															<button
 																className='btn btn-icon btn-sm btn-light-danger'
@@ -761,10 +818,10 @@ const EmployeeTask: React.FC = () => {
 														)}
 													</div>
 												) : (
-													<span className='badge badge-light-warning px-2 py-1 fs-7 fw-semibold'>Pending</span>
+													<span className='badge badge-light-warning px-3 py-2 fs-7 fw-semibold'>Pending</span>
 												)
 											) : (
-												<span className='badge badge-light-primary px-2 py-1 fs-7 fw-semibold'>
+												<span className='badge badge-light-primary px-3 py-2 fs-7 fw-semibold'>
 													{task.status.charAt(0).toUpperCase() + task.status.slice(1).toLowerCase()}
 												</span>
 											)}
@@ -772,7 +829,7 @@ const EmployeeTask: React.FC = () => {
 
 										<td>
 											<span
-												className={`badge px-2 py-1 fs-7 fw-semibold ${
+												className={`badge px-3 py-2 fs-7 fw-semibold ${
 													task.hr_status === 'complete' ? 'badge-light-success' : 'badge-light-warning'
 												}`}>
 												{task.hr_status ? task.hr_status.charAt(0).toUpperCase() + task.hr_status.slice(1).toLowerCase() : 'Pending'}
@@ -786,15 +843,58 @@ const EmployeeTask: React.FC = () => {
 													: '-'}
 											</span>
 										</td>
-										<td>
-											<div className='d-flex align-items-center gap-2'>
-												<button
-													className='btn btn-icon btn-sm btn-light-primary'
-													style={{ width: '34px', height: '34px', borderRadius: '8px' }}
-													title='View Details'
-													onClick={() => handlenavigate(task._id)}>
-													<i className='bi bi-eye fs-6'></i>
-												</button>
+										<td className='text-center py-4'>
+											<div className='d-flex align-items-center justify-content-center gap-2'>
+												<TableButton
+													action='view'
+													title='View Task Details'
+													onClick={(e) => {
+														e.stopPropagation()
+														handlenavigate(task._id)
+													}}
+												/>
+												{task.status === 'PENDING' &&
+													task.employee_status !== 'accepted' &&
+													task.employee_status !== 'rejected' && (
+														<>
+															<TableButton
+																action='approve'
+																title='Accept Task'
+																onClick={(e) => {
+																	e.stopPropagation()
+																	handleAccept(task._id)
+																}}
+															/>
+															<TableButton
+																action='remove'
+																title='Reject Task'
+																onClick={(e) => {
+																	e.stopPropagation()
+																	handleReject(task._id)
+																}}
+															/>
+														</>
+													)}
+												{task.employee_status === 'accepted' && task.status !== 'COMPLETED' && (
+													<TableButton
+														action='approve'
+														title='Submit Task Completion'
+														onClick={(e) => {
+															e.stopPropagation()
+															openActionModal(task._id)
+														}}
+													/>
+												)}
+												{task.file_url && (
+													<TableButton
+														action='download'
+														title='View Attachment'
+														onClick={(e) => {
+															e.stopPropagation()
+															ShowDocument(task.file_url)
+														}}
+													/>
+												)}
 											</div>
 										</td>
 									</tr>

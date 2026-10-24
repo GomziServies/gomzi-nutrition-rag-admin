@@ -1,6 +1,6 @@
 import { faPlus, faPlusCircle, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useIntl } from 'react-intl'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -13,6 +13,7 @@ import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
+import DateFilter from '../../../components/DateRangePicker'
 import { CreateTarget, GetTarget, UpdateTarget } from '../../../Functions/FGGroup/Target'
 
 const HRTarget: React.FC = () => {
@@ -137,9 +138,80 @@ const HRTarget: React.FC = () => {
 		})
 	}
 
-	const filteredtargetData = targetData.filter((sale) =>
-		sale.target_title.toLowerCase().includes(searchTerm.toLowerCase())
-	)
+	const [dateRange, setDateRange] = useState<[Date, Date] | null>(null)
+	const [selectedPosition, setSelectedPosition] = useState<string>('')
+
+	const availablePositions = useMemo(() => {
+		const predefined = [
+			'Developer',
+			'Marketing',
+			'Franchise Owner',
+			'Graphic Designer',
+			'Sales Manager',
+			'Video Editor',
+			'Back Office',
+			'Trainer',
+			'Dietician',
+			'Telecalling',
+			'Branch Manager',
+			'Human Resources',
+			'Team Leader',
+			'Manager',
+			'Director',
+			'Social Media Assistant',
+		]
+		const set = new Set<string>(predefined)
+		targetData.forEach((item) => {
+			if (item.position) set.add(item.position)
+		})
+		return Array.from(set).sort()
+	}, [targetData])
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setDateRange(range)
+		setPagination((p) => ({ ...p, page: 1 }))
+	}
+
+	const filteredtargetData = targetData.filter((sale) => {
+		const matchesSearch =
+			!searchTerm ||
+			(sale.target_title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(sale.target_description || '').toLowerCase().includes(searchTerm.toLowerCase())
+
+		const matchesPosition =
+			!selectedPosition ||
+			(sale.position && sale.position.toLowerCase() === selectedPosition.toLowerCase())
+
+		let matchesDate = true
+		if (dateRange && dateRange[0] && dateRange[1]) {
+			const isAllDates = new Date(dateRange[0]).getFullYear() <= 2015
+			if (!isAllDates) {
+				const start = new Date(dateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(dateRange[1])
+				end.setHours(23, 59, 59, 999)
+
+				const targetStart = sale.from_date
+					? new Date(sale.from_date)
+					: sale.createdAt
+					? new Date(sale.createdAt)
+					: null
+				const targetEnd = sale.to_date
+					? new Date(sale.to_date)
+					: sale.updatedAt
+					? new Date(sale.updatedAt)
+					: targetStart
+
+				if (targetStart) {
+					matchesDate =
+						(targetStart >= start && targetStart <= end) ||
+						(targetEnd ? targetEnd >= start && targetEnd <= end : false)
+				}
+			}
+		}
+
+		return matchesSearch && matchesPosition && matchesDate
+	})
 	const paginatedtargetData = filteredtargetData.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
 		pagination.page * pagination.itemsPerPage
@@ -215,9 +287,40 @@ const HRTarget: React.FC = () => {
 						{/* 3. Download Excel Button */}
 						<div>
 							<DownloadExcelButton
-								data={targetData}
+								data={filteredtargetData}
 								columns={sortableFields}
 								filename='Employee_Targets'
+							/>
+						</div>
+
+						{/* 4. Position Filter (before datefilter) */}
+						<div style={{ minWidth: '180px' }}>
+							<SelectField
+								showLabel={false}
+								marginRemove={true}
+								className='mb-0'
+								height='38px'
+								name='position'
+								value={selectedPosition}
+								defaultLabel='All Positions'
+								options={[
+									{ label: 'All Positions', value: '' },
+									...availablePositions.map((p) => ({ label: p, value: p })),
+								]}
+								onChange={(e: any) => {
+									setSelectedPosition(e.target.value)
+									setPagination((p) => ({ ...p, page: 1 }))
+								}}
+							/>
+						</div>
+
+						{/* 5. Date Filter */}
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+								defaultAllDates={true}
+								storageKey='hr_target_date_range'
 							/>
 						</div>
 					</div>
@@ -239,9 +342,7 @@ const HRTarget: React.FC = () => {
 
 			{/* Main Table Card */}
 			<div className='gz-inv-table-card'>
-				<div className='py-4 card-body'>
-							<div className='table-responsive'>
-								<Table
+				<Table
 									data={paginatedtargetData}
 									columns={sortableFields}
 									sort={sort}
@@ -385,7 +486,6 @@ const HRTarget: React.FC = () => {
 									setPagination={setPagination}
 									loading={loading}
 								/>
-							</div>
 							{targetData.length === 0 && !loading && (
 								<div className='d-flex text-center w-100 align-content-center justify-content-center mt-5'>
 									<b>No records found</b>
@@ -400,8 +500,7 @@ const HRTarget: React.FC = () => {
 									onPageChange={handlePageChange}
 								/>
 							)}
-						</div>
-					</div>
+			</div>
 
 					{/* target add modal */}
 					<div
@@ -409,7 +508,7 @@ const HRTarget: React.FC = () => {
 						id='kt_modal_target_add'
 						aria-hidden='true'>
 						<div className='modal-dialog modal-dialog-centered mw-650px'>
-							<div className='modal-content'>
+							<div className='modal-content' style={{ overflow: 'visible' }}>
 								<div className='modal-header justify-content-between'>
 									<h2 className='fw-bolder'>Add New Target</h2>
 									<div
@@ -421,7 +520,7 @@ const HRTarget: React.FC = () => {
 										/>
 									</div>
 								</div>
-								<div className='modal-body scroll-y'>
+								<div className='modal-body' style={{ overflow: 'visible', position: 'relative', zIndex: 1055 }}>
 									<div className='col-md-12'>
 										<div className='row'>
 											<div className='col-md-6 fv-row mb-7'>
@@ -472,7 +571,7 @@ const HRTarget: React.FC = () => {
 													onChange={(e) => handleInputChange(e)}
 												/>
 											</div>
-											<div className='col-md-6 fv-row mb-7'>
+											<div className='col-md-6 fv-row mb-7' style={{ position: 'relative', zIndex: 1060 }}>
 												<SelectField
 													className='col-12 fv-row'
 													name='position'
@@ -503,7 +602,7 @@ const HRTarget: React.FC = () => {
 										</div>
 									</div>
 								</div>
-								<div className='modal-footer justify-content-end'>
+								<div className='modal-footer justify-content-end' style={{ position: 'relative', zIndex: 1 }}>
 									<button
 										className='btn btn-primary'
 										data-bs-dismiss='modal'
@@ -521,7 +620,7 @@ const HRTarget: React.FC = () => {
 						id='kt_modal_target_update'
 						aria-hidden='true'>
 						<div className='modal-dialog modal-dialog-centered mw-650px'>
-							<div className='modal-content'>
+							<div className='modal-content' style={{ overflow: 'visible' }}>
 								<div className='modal-header justify-content-between'>
 									<h2 className='fw-bolder'>Update Target</h2>
 									<div
@@ -533,7 +632,7 @@ const HRTarget: React.FC = () => {
 										/>
 									</div>
 								</div>
-								<div className='modal-body scroll-y'>
+								<div className='modal-body' style={{ overflow: 'visible', position: 'relative', zIndex: 1055 }}>
 									<div className='col-md-12'>
 										<div className='row'>
 											<div className='col-md-6 fv-row mb-7'>
@@ -584,7 +683,7 @@ const HRTarget: React.FC = () => {
 													onChange={(e) => handleUpdateInputChange(e)}
 												/>
 											</div>
-											<div className='col-md-6 fv-row mb-7'>
+											<div className='col-md-6 fv-row mb-7' style={{ position: 'relative', zIndex: 1060 }}>
 												<SelectField
 													className='col-12 fv-row'
 													name='position'
@@ -615,7 +714,7 @@ const HRTarget: React.FC = () => {
 										</div>
 									</div>
 								</div>
-								<div className='modal-footer justify-content-end'>
+								<div className='modal-footer justify-content-end' style={{ position: 'relative', zIndex: 1 }}>
 									<button
 										className='btn btn-primary'
 										data-bs-dismiss='modal'

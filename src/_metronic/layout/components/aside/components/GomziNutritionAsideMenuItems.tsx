@@ -1,31 +1,24 @@
 /* eslint-disable react/jsx-no-target-blank */
-import {
-	faBullhorn,
-	faCartShopping,
-	faChartLine,
-	faClipboardCheck,
-	faClipboardList,
-	faCoins,
-	faCreditCard,
-	faDumbbell,
-	faEnvelope,
-	faFileInvoice,
-	faHeadset,
-	faHome,
-	faImage,
-	faIndustry,
-	faJar,
-	faStar,
-	faTags,
-	faBookOpen,
-	faSliders,
-	faUserCog,
-	faUsers,
-	faUserTie,
-	faWarehouse,
-} from '@fortawesome/free-solid-svg-icons'
 import { AsideMenuItem } from '../AsideMenuItem'
 import { AsideMenuItemWithSub } from '../AsideMenuItemWithSub'
+import {
+	BicepsFlexedIcon,
+	BadgePercentIcon,
+	BarChart3Icon,
+	BoxesIcon,
+	CartIcon,
+	ClipboardListIcon,
+	HandCoinsIcon,
+	LayoutGridIcon,
+	LayersIcon,
+	PhoneCallIcon,
+	ReceiptIcon,
+	SendIcon,
+	ShieldCheckIcon,
+	TruckIcon,
+	UserPlusIcon,
+	UsersIcon,
+} from '../AnimatedAsideIcons'
 
 export function GomziNutritionAsideMenuItems() {
 	const currentPanel = localStorage.getItem('admin_type')
@@ -36,7 +29,7 @@ export function GomziNutritionAsideMenuItems() {
 			{/* 1. Dashboard */}
 			<AsideMenuItem
 				to='/rag/dashboard'
-				Icon={faHome}
+				Icon={LayoutGridIcon}
 				title='Dashboard'
 			/>
 
@@ -44,7 +37,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Content'
-				Icon={faImage}>
+				Icon={LayersIcon}>
 				<AsideMenuItem
 					to='/rag/hero-banner'
 					title='Hero Banners'
@@ -53,11 +46,6 @@ export function GomziNutritionAsideMenuItems() {
 				<AsideMenuItem
 					to='/rag/blogs'
 					title='Blogs'
-					hasBullet={true}
-				/>
-				<AsideMenuItem
-					to='/rag/deals'
-					title='Deals'
 					hasBullet={true}
 				/>
 				<AsideMenuItem
@@ -71,22 +59,16 @@ export function GomziNutritionAsideMenuItems() {
 					hasBullet={true}
 				/>
 				<AsideMenuItem
-					to='/rag/bank-offers'
-					title='Bank Offers'
+					to='/rag/ad-banners'
+					title='Ad Banners'
 					hasBullet={true}
 				/>
 			</AsideMenuItemWithSub>
 
-			<AsideMenuItem
-				to='/rag/company-ads'
-				Icon={faBullhorn}
-				title='Company Advertisements'
-			/>
-
 			{isMasterAdmin && (
 				<AsideMenuItem
 					to='/rag/admin'
-					Icon={faUserCog}
+					Icon={ShieldCheckIcon}
 					title='Admin User'
 				/>
 			)}
@@ -95,7 +77,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Products & Orders'
-				Icon={faJar}>
+				Icon={CartIcon}>
 				<AsideMenuItem
 					to='/rag/product-list'
 					title='All Products'
@@ -142,7 +124,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Invoices'
-				Icon={faFileInvoice}>
+				Icon={ReceiptIcon}>
 				<AsideMenuItem
 					to='/rag/create-invoice'
 					title='Create Invoice'
@@ -159,7 +141,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Quotations'
-				Icon={faCoins}>
+				Icon={HandCoinsIcon}>
 				<AsideMenuItem
 					to='/rag/create-quotation'
 					title='Create Quotation'
@@ -176,7 +158,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Inventory & Stock'
-				Icon={faWarehouse}>
+				Icon={BoxesIcon}>
 				<AsideMenuItem
 					to='/rag/manage-inventory'
 					title='Manage Inventory'
@@ -198,7 +180,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Raw Materials & Supply'
-				Icon={faIndustry}>
+				Icon={TruckIcon}>
 				<AsideMenuItem
 					to='/rag/gn-inventory/table-view'
 					title='Production Formula'
@@ -240,7 +222,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Sample Bookings'
-				Icon={faClipboardCheck}>
+				Icon={ClipboardListIcon}>
 				<AsideMenuItem
 					to='/rag/sample-booking'
 					title='Booking List'
@@ -257,7 +239,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Expenses'
-				Icon={faChartLine}>
+				Icon={BarChart3Icon}>
 				<AsideMenuItem
 					to='/rag/expense'
 					title='Expense Details'
@@ -274,7 +256,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Users'
-				Icon={faUsers}>
+				Icon={UsersIcon}>
 				<AsideMenuItem
 					to='/rag/users'
 					title='All Users'
@@ -291,7 +273,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Staff Management'
-				Icon={faUserTie}>
+				Icon={UserPlusIcon}>
 				<AsideMenuItem
 					to='/rag/employees'
 					title='Employee List'
@@ -323,7 +305,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Trainers'
-				Icon={faDumbbell}>
+				Icon={BicepsFlexedIcon}>
 				<AsideMenuItem
 					to='/rag/trainer-list'
 					title='Trainer List'
@@ -340,7 +322,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Reference Coupon'
-				Icon={faTags}>
+				Icon={BadgePercentIcon}>
 				<AsideMenuItem
 					to='/rag/manage-coupon'
 					title='Manage Coupons'
@@ -357,7 +339,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Follow Up & Helpdesk'
-				Icon={faHeadset}>
+				Icon={PhoneCallIcon}>
 				<AsideMenuItem
 					to='/rag/follow-up-report-dashboard'
 					title='Follow Up Dashboard'
@@ -379,7 +361,7 @@ export function GomziNutritionAsideMenuItems() {
 			<AsideMenuItemWithSub
 				to=''
 				title='Broadcast Marketing'
-				Icon={faBullhorn}>
+				Icon={SendIcon}>
 				<AsideMenuItem
 					to='/rag/automation/broadcast/list'
 					title='Broadcast List'
@@ -399,5 +381,3 @@ export function GomziNutritionAsideMenuItems() {
 		</>
 	)
 }
-
-

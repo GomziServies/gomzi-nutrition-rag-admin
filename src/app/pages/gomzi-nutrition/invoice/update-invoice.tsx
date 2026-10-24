@@ -23,6 +23,7 @@ import {
 import {
 	CompanyInvoiceDocument,
 } from './CompanyInvoiceDocument'
+import SelectField from '../../../components/SelectField'
 import './invoice-theme.css'
 
 interface PlanState {
@@ -670,16 +671,21 @@ const NutritionUpdateInvoice: React.FC = () => {
 
 									<div className='col-12 col-md-6'>
 										<label className='gz-inv-label'>Payment Terms</label>
-										<select
+										<SelectField
 											name='payment_terms'
-											className='gz-inv-select'
 											value={formData.payment_terms}
-											onChange={handleInputChange}>
-											<option value='Net 15 Days'>Net 15 Days</option>
-											<option value='Net 30 Days'>Net 30 Days</option>
-											<option value='Due on Receipt'>Due on Receipt</option>
-											<option value='Advance'>Advance Payment</option>
-										</select>
+											onChange={handleInputChange}
+											options={[
+												{ label: 'Net 15 Days', value: 'Net 15 Days' },
+												{ label: 'Net 30 Days', value: 'Net 30 Days' },
+												{ label: 'Due on Receipt', value: 'Due on Receipt' },
+												{ label: 'Advance Payment', value: 'Advance' },
+											]}
+											showLabel={false}
+											marginRemove={true}
+											hideDefaultOption={true}
+											searchable={false}
+										/>
 									</div>
 
 									<div className='col-12 col-md-6'>
@@ -695,35 +701,39 @@ const NutritionUpdateInvoice: React.FC = () => {
 
 									<div className='col-12 col-md-6'>
 										<label className='gz-inv-label'>Sales Person</label>
-										<select
+										<SelectField
 											name='sales_person'
-											className='gz-inv-select'
 											value={formData.sales_person}
-											onChange={handleInputChange}>
-											<option value=''>Select Sales Person</option>
-											{salesPersonList.map((emp) => (
-												<option key={emp._id} value={emp.employee_id || emp._id}>
-													{emp.full_name || emp.name || 'Unnamed'}
-												</option>
-											))}
-											<option value='N/A'>N/A / Other</option>
-										</select>
+											onChange={handleInputChange}
+											options={[
+												...salesPersonList.map((emp) => ({
+													label: emp.full_name || emp.name || 'Unnamed',
+													value: emp.employee_id || emp._id,
+												})),
+												{ label: 'N/A / Other', value: 'N/A' },
+											]}
+											defaultLabel='Select Sales Person'
+											showLabel={false}
+											marginRemove={true}
+											searchable={true}
+										/>
 									</div>
 
 									<div className='col-12 col-md-6'>
 										<label className='gz-inv-label'>Store / Branch</label>
-										<select
+										<SelectField
 											name='branch_name'
-											className='gz-inv-select'
 											value={formData.branch_name}
-											onChange={handleInputChange}>
-											<option value=''>Select Store / Branch</option>
-											{branchesData.map((b) => (
-												<option key={b} value={b}>
-													{b}
-												</option>
-											))}
-										</select>
+											onChange={handleInputChange}
+											options={branchesData.map((b) => ({
+												label: b,
+												value: b,
+											}))}
+											defaultLabel='Select Store / Branch'
+											showLabel={false}
+											marginRemove={true}
+											searchable={true}
+										/>
 									</div>
 
 									<div className='col-12'>
@@ -783,18 +793,21 @@ const NutritionUpdateInvoice: React.FC = () => {
 											<div className='row g-2 align-items-end'>
 												<div className='col-12 col-md-5'>
 													<label className='gz-inv-label'>Product</label>
-													<select
-														className='gz-inv-select'
+													<SelectField
 														value={plan.items}
-														onChange={(e) => handleProductChange(idx, e.target.value)}>
-														<option value=''>Select Product</option>
-														{productList.map((p) => (
-															<option key={p._id || p.product_name} value={p.product_name}>
-																{p.product_name} (₹{p.price || p.amount || 0})
-															</option>
-														))}
-														<option value='manual'>Other / Custom Item</option>
-													</select>
+														onChange={(e: any) => handleProductChange(idx, e.target.value)}
+														options={[
+															...productList.map((p) => ({
+																label: `${p.product_name} (₹${p.price || p.amount || 0})`,
+																value: p.product_name,
+															})),
+															{ label: 'Other / Custom Item', value: 'manual' },
+														]}
+														defaultLabel='Select Product'
+														showLabel={false}
+														marginRemove={true}
+														searchable={true}
+													/>
 												</div>
 
 												{plan.inputField && (
@@ -874,19 +887,18 @@ const NutritionUpdateInvoice: React.FC = () => {
 								<div className='row mt-4 pt-3 border-top g-3'>
 									<div className='col-12 col-md-6'>
 										<label className='gz-inv-label'>Payment Method</label>
-										<select
+										<SelectField
 											name='payment_method'
-											className='gz-inv-select'
 											value={formData.payment_method}
-											onChange={handleInputChange}>
-											{['UPI', 'Google Pay', 'PhonePe', 'Paytm', 'Cash', 'Bank Transfer', 'Credit Card', 'Debit Card', 'Cheque'].map(
-												(m) => (
-													<option key={m} value={m}>
-														{m}
-													</option>
-												)
+											onChange={handleInputChange}
+											options={['UPI', 'Google Pay', 'PhonePe', 'Paytm', 'Cash', 'Bank Transfer', 'Credit Card', 'Debit Card', 'Cheque'].map(
+												(m) => ({ label: m, value: m })
 											)}
-										</select>
+											showLabel={false}
+											marginRemove={true}
+											hideDefaultOption={true}
+											searchable={false}
+										/>
 									</div>
 
 									<div className='col-12 col-md-6'>

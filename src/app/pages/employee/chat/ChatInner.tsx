@@ -2,21 +2,34 @@ import {
 	faAngleDown,
 	faAngleUp,
 	faChevronDown,
+	faChevronLeft,
+	faChevronRight,
+	faCloudUploadAlt,
 	faCopy,
+	faCrop,
+	faDownload,
+	faFileAlt,
+	faFilePdf,
 	faInfoCircle,
 	faLink,
+	faMagic,
 	faMicrophone,
 	faPaperclip,
 	faPaperPlane,
 	faPause,
+	faPen,
 	faPlay,
+	faPlus,
 	faReply,
 	faSmile,
+	faSquare,
+	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import Picker, { Categories, Emoji, SuggestionMode } from 'emoji-picker-react'
-import React, { FC, useEffect, useRef, useState } from 'react'
+import Picker, { Categories, Emoji, EmojiStyle, SuggestionMode, Theme } from 'emoji-picker-react'
+import rawEmojiData from 'emoji-picker-react/dist/data/emojis-en.json'
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useAudioRecorder } from 'react-audio-voice-recorder'
 import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
@@ -32,10 +45,27 @@ type Props = {
 
 type ChatInnerProps = {
 	id?: string
+	userName?: string
 }
 
 interface ProfileData {
 	_id: string
+}
+
+interface WaveformSample {
+	id: number
+	amp: number
+}
+
+interface StagedItem {
+	id: string
+	file: File
+	previewUrl: string
+	isImage: boolean
+	isPdf: boolean
+	fileName: string
+	fileSizeStr: string
+	caption: string
 }
 
 // 6 standard emojis using emoji-picker-react unified codes (exact match with picker)
@@ -47,6 +77,41 @@ const REACTION_EMOJIS = [
 	{ emoji: '😢', unified: '1f622' },
 	{ emoji: '🙏', unified: '1f64f' },
 ]
+
+// Convert emoji char to unified hex for apple emoji component
+const toUnifiedHex = (emoji: string) => {
+	return Array.from(emoji)
+		.map((char) => char.codePointAt(0)?.toString(16))
+		.filter(Boolean)
+		.join('-')
+		.replace(/-fe0f$/, '')
+}
+
+// Enriched emoji data mapping: ensures category keywords (e.g. 'food', 'drink') match all food items
+const ENRICHED_EMOJI_DATA: any = (() => {
+	try {
+		const data = JSON.parse(JSON.stringify(rawEmojiData))
+		if (data?.emojis?.food_drink && Array.isArray(data.emojis.food_drink)) {
+			data.emojis.food_drink.forEach((item: any) => {
+				if (Array.isArray(item.n) && !item.n.includes('food')) {
+					item.n.push('food')
+				}
+			})
+		}
+		return data
+	} catch (e) {
+		return undefined
+	}
+})()
+
+// Helper to format file sizes
+const formatFileSize = (bytes: number) => {
+	if (!bytes || bytes === 0) return '0 B'
+	const k = 1024
+	const sizes = ['B', 'KB', 'MB', 'GB']
+	const i = Math.floor(Math.log(bytes) / Math.log(k))
+	return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
+}
 
 const CUSTOM_EMOJI_CATEGORIES = [
 	{
@@ -188,7 +253,7 @@ const CustomAudioPlayer: React.FC<{
 				</button>
 
 				{/* Waveform Visualization & Scrubber */}
-				<div className='d-flex flex-column flex-grow-1' style={{ minWidth: '170px' }}>
+				<div className='d-flex flex-column flex-grow-1' style={{ minWidth: 0 }}>
 					<div
 						className='gz-audio-waveform'
 						onClick={handleSeek}
@@ -238,6 +303,7 @@ const CustomAudioPlayer: React.FC<{
 const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 	isDrawer = false,
 	id,
+	userName,
 }: Props & ChatInnerProps) => {
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 	const [featureIcon, setFeatureIcon] = useState(false)
@@ -252,13 +318,30 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 	const messagesEndRef = useRef<HTMLDivElement | null>(null)
 	const [loading, setLoading] = useState(false)
 
+	// Drag & Drop and Staged Media state
+	const [isDragging, setIsDragging] = useState(false)
+	const dragCounterRef = useRef(0)
+	// Staged Media state (WhatsApp Web Batch Staging)
+	const [stagedFiles, setStagedFiles] = useState<StagedItem[]>([])
+	const [activeStagedIndex, setActiveStagedIndex] = useState<number>(0)
+	const [isUploadingStagedFile, setIsUploadingStagedFile] = useState(false)
+	const [showStagedEmojiPicker, setShowStagedEmojiPicker] = useState(false)
+	const stagedFileInputRef = useRef<HTMLInputElement | null>(null)
+
 	// Context menu & reaction states
 	const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null)
 	const [activeReactionMenuId, setActiveReactionMenuId] = useState<string | null>(null)
 	const [isReactionExpanded, setIsReactionExpanded] = useState<boolean>(false)
-	const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
+	const [popupPosition, setPopupPosition] = useState<{ top: number; left: number; maxHeight?: number } | null>(null)
 	const [actionMenuPosition, setActionMenuPosition] = useState<{ top: number; left: number } | null>(null)
 	const activeAnchorRef = useRef<HTMLElement | null>(null)
+
+	// In-app Lightbox image viewer modal (WhatsApp Web Style)
+	const [activeLightbox, setActiveLightbox] = useState<{
+		urls: string[]
+		index: number
+		time?: string
+	} | null>(null)
 
 	const [messageReactions, setMessageReactions] = useState<{ [msgId: string]: string }>({})
 	const [replyMessage, setReplyMessage] = useState<any>(null)
@@ -268,37 +351,41 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 		const viewportWidth = window.innerWidth
 		const viewportHeight = window.innerHeight
 
-		const popupWidth = isExpanded ? 324 : 284
-		const popupHeight = isExpanded ? 380 : 46
+		const popupWidth = isExpanded ? 320 : 284
+		const popupHeight = isExpanded ? 340 : 46
 
 		// Header & Composer boundaries
 		const headerEl = document.querySelector('.gz-emp-workspace-header')
 		const headerBottom = headerEl ? headerEl.getBoundingClientRect().bottom : 72
 		const composerEl = document.querySelector('.gz-emp-composer-bar')
 		const composerTop = composerEl ? composerEl.getBoundingClientRect().top : viewportHeight - 74
-
-		const spaceAbove = rect.top - headerBottom - 8
-		const spaceBelow = composerTop - rect.bottom - 8
+		const safeBottom = Math.min(viewportHeight - 16, composerTop - 8)
 
 		let top = 0
+
 		if (isExpanded) {
+			const spaceAbove = rect.top - headerBottom - 8
+			const spaceBelow = safeBottom - rect.bottom - 8
+
 			if (spaceAbove >= popupHeight) {
-				// Sits above bubble, keeping bubble completely visible
+				// Sits cleanly above message bubble
 				top = rect.top - popupHeight - 8
 			} else if (spaceBelow >= popupHeight) {
-				// Sits below bubble, keeping bubble completely visible
+				// Sits cleanly below message bubble
 				top = rect.bottom + 8
 			} else {
-				// Tight space: place on side with more room, clamping inside boundaries
-				if (spaceAbove >= spaceBelow) {
-					top = Math.max(headerBottom + 8, rect.top - popupHeight - 8)
-				} else {
-					top = rect.bottom + 8
-				}
+				// Fallback: anchor within safe canvas zone without stretching
+				top = Math.max(headerBottom + 8, Math.min(rect.top - 60, safeBottom - popupHeight))
 			}
-			top = Math.max(headerBottom + 8, Math.min(composerTop - 180, top))
+
+			// Strict Viewport Safety Clamp: Ensure top + popupHeight never exceeds safeBottom or taskbar
+			if (top + popupHeight > safeBottom) {
+				top = safeBottom - popupHeight
+			}
+			top = Math.max(headerBottom + 8, top)
 		} else {
 			// Compact pill (46px height): prefer above, fallback to below
+			const spaceAbove = rect.top - headerBottom - 8
 			if (spaceAbove >= 50) {
 				top = rect.top - 50
 			} else {
@@ -316,7 +403,7 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 		const maxLeft = viewportWidth - popupWidth - 16
 		left = Math.max(minLeft, Math.min(maxLeft, left))
 
-		return { top, left }
+		return { top, left, maxHeight: popupHeight }
 	}
 
 	const closeAllPopups = () => {
@@ -324,9 +411,11 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 		setIsReactionExpanded(false)
 		setActiveActionMenuId(null)
 		setShowEmojiPicker(false)
+		setShowStagedEmojiPicker(false)
 		setPopupPosition(null)
 		setActionMenuPosition(null)
 		activeAnchorRef.current = null
+		setActiveLightbox(null)
 	}
 
 	// Audio voice recorder hook
@@ -348,10 +437,12 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 	}, [isPaused])
 
 	// Real-time microphone audio visualizer state & refs
-	const [recordingWaveform, setRecordingWaveform] = useState<number[]>([])
+	const [recordingWaveform, setRecordingWaveform] = useState<WaveformSample[]>([])
+	const sampleCounterRef = useRef(0)
 	const visualizerAudioCtxRef = useRef<AudioContext | null>(null)
 	const visualizerStreamRef = useRef<MediaStream | null>(null)
 	const visualizerAnimFrameRef = useRef<number | null>(null)
+	const waveformContainerRef = useRef<HTMLDivElement | null>(null)
 
 	// Newly sent message IDs for subtle slide-in animation
 	const [newlySentMsgIds, setNewlySentMsgIds] = useState<Set<string>>(new Set())
@@ -390,13 +481,17 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 					const dataArray = new Uint8Array(bufferLength)
 
 					let lastSample = Date.now()
-					const sampleInterval = 90 // sample every 90ms
+					const sampleInterval = 75 // sample every 75ms for responsive rolling waveform
 
 					const sampleAudio = () => {
 						if (!isMounted) return
 
 						// When paused, immediately freeze bar generation!
 						if (!isPausedRef.current) {
+							if (audioContext && audioContext.state === 'suspended') {
+								audioContext.resume().catch(() => {})
+							}
+
 							const now = Date.now()
 							if (now - lastSample >= sampleInterval) {
 								lastSample = now
@@ -408,12 +503,28 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 								}
 								const average = sum / bufferLength
 								// Normalized amplitude between 0.12 and 1.0
-								const normalized = Math.max(0.12, Math.min(1.0, average / 100))
+								const normalized = Math.max(0.12, Math.min(1.0, average / 90))
+
+								const container = waveformContainerRef.current
+								let contentWidth = 320
+								if (container) {
+									const rect = container.getBoundingClientRect()
+									if (rect.width > 20) {
+										contentWidth = rect.width - 20
+									}
+								}
+								// Each bar is 3px width + 3px gap = 6px
+								const maxBars = Math.max(15, Math.floor((contentWidth + 3) / 6))
+
+								const newSample: WaveformSample = {
+									id: sampleCounterRef.current++,
+									amp: normalized,
+								}
 
 								setRecordingWaveform((prev) => {
-									const maxBars = 45
-									const next = [...prev, normalized]
+									const next = [...prev, newSample]
 									if (next.length > maxBars) {
+										// Smooth left-to-right rolling: remove oldest from left, append new on right
 										return next.slice(next.length - maxBars)
 									}
 									return next
@@ -449,6 +560,7 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 			}
 		} else {
 			setRecordingWaveform([])
+			sampleCounterRef.current = 0
 			if (visualizerAnimFrameRef.current) {
 				cancelAnimationFrame(visualizerAnimFrameRef.current)
 				visualizerAnimFrameRef.current = null
@@ -487,8 +599,8 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 				const rect = activeAnchorRef.current.getBoundingClientRect()
 				const viewportWidth = window.innerWidth
 				const viewportHeight = window.innerHeight
-				const menuWidth = 145
-				const menuHeight = 160
+				const menuWidth = 236
+				const menuHeight = 220
 
 				let top = rect.bottom + 6
 				if (top + menuHeight > viewportHeight - 80) {
@@ -514,11 +626,33 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 		}
 	}, [activeReactionMenuId, activeActionMenuId, isReactionExpanded])
 
-	// Robust Click Outside & Escape Handler to close popups
+	// Robust Click Outside & Keyboard Navigation Handler (WhatsApp Web Style)
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') {
-				closeAllPopups()
+				if (activeLightbox) {
+					setActiveLightbox(null)
+				} else {
+					closeAllPopups()
+				}
+			} else if (e.key === 'ArrowLeft' && activeLightbox && activeLightbox.urls.length > 1) {
+				setActiveLightbox((prev) =>
+					prev
+						? {
+								...prev,
+								index: (prev.index - 1 + prev.urls.length) % prev.urls.length,
+						  }
+						: null
+				)
+			} else if (e.key === 'ArrowRight' && activeLightbox && activeLightbox.urls.length > 1) {
+				setActiveLightbox((prev) =>
+					prev
+						? {
+								...prev,
+								index: (prev.index + 1) % prev.urls.length,
+						  }
+						: null
+				)
 			}
 		}
 
@@ -526,15 +660,28 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 			const target = e.target as HTMLElement
 			if (!target) return
 
-			// If clicked inside any open popup or trigger button, DO NOT close
+			// If clicked outside staged emoji picker and its toggle button, close staged emoji picker
+			if (
+				!target.closest('.gz-staged-emoji-picker-container') &&
+				!target.closest('.gz-staged-emoji-toggle')
+			) {
+				setShowStagedEmojiPicker(false)
+			}
+
+			// If clicked inside any open popup, trigger button, or lightbox, DO NOT close
 			if (
 				target.closest('.gz-floating-reaction-container') ||
 				target.closest('.gz-floating-action-menu') ||
 				target.closest('.gz-composer-emoji-picker') ||
+				target.closest('.gz-staged-emoji-picker-container') ||
 				target.closest('.EmojiPickerReact') ||
 				target.closest('.gz-msg-action-trigger') ||
 				target.closest('.gz-msg-dropdown-trigger') ||
-				target.closest('.gz-emp-composer-action-btn')
+				target.closest('.gz-emp-composer-action-btn') ||
+				target.closest('.gz-staged-emoji-toggle') ||
+				target.closest('.gz-lightbox-header') ||
+				target.closest('.gz-lightbox-body') ||
+				target.closest('.gz-lightbox-filmstrip')
 			) {
 				return
 			}
@@ -548,7 +695,7 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 			document.removeEventListener('mousedown', handleMouseDownOutside)
 			document.removeEventListener('keydown', handleKeyDown)
 		}
-	}, [])
+	}, [activeLightbox])
 
 	const fetchAdminData = async () => {
 		try {
@@ -674,6 +821,166 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 		toast('Recording cancelled', { icon: '🗑️' })
 	}
 
+	const stageMultipleFiles = (files: FileList | File[]) => {
+		const newItems: StagedItem[] = []
+		Array.from(files).forEach((file) => {
+			const isImage = file.type.startsWith('image/')
+			const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+			const previewUrl = isImage ? URL.createObjectURL(file) : ''
+			const fileSizeStr = formatFileSize(file.size)
+			newItems.push({
+				id: `staged-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+				file,
+				previewUrl,
+				isImage,
+				isPdf,
+				fileName: file.name,
+				fileSizeStr,
+				caption: '',
+			})
+		})
+
+		if (newItems.length > 0) {
+			setStagedFiles((prev) => {
+				const next = [...prev, ...newItems]
+				setActiveStagedIndex(next.length - 1)
+				return next
+			})
+			closeAllPopups()
+		}
+	}
+
+	const cancelAllStagedFiles = () => {
+		stagedFiles.forEach((item) => {
+			if (item.previewUrl) {
+				URL.revokeObjectURL(item.previewUrl)
+			}
+		})
+		setStagedFiles([])
+		setActiveStagedIndex(0)
+		setIsUploadingStagedFile(false)
+		setShowStagedEmojiPicker(false)
+	}
+
+	const removeStagedItem = (indexToRemove: number, e?: React.MouseEvent) => {
+		if (e) {
+			e.stopPropagation()
+		}
+		const itemToRemove = stagedFiles[indexToRemove]
+		if (itemToRemove?.previewUrl) {
+			URL.revokeObjectURL(itemToRemove.previewUrl)
+		}
+
+		setStagedFiles((prev) => {
+			const next = prev.filter((_, idx) => idx !== indexToRemove)
+			if (next.length === 0) {
+				setActiveStagedIndex(0)
+				setShowStagedEmojiPicker(false)
+			} else if (activeStagedIndex >= next.length) {
+				setActiveStagedIndex(next.length - 1)
+			}
+			return next
+		})
+	}
+
+	const handleSendStagedFiles = async () => {
+		if (stagedFiles.length === 0 || isUploadingStagedFile) return
+		setIsUploadingStagedFile(true)
+		try {
+			const uploadedUrls: string[] = []
+			for (const item of stagedFiles) {
+				const uploadRes: any = await FileUploadToFGGroup([item.file], {
+					directory: 'chat-document',
+				})
+				const uploadedUrl = uploadRes.data?.fileURLs?.[0]
+				if (uploadedUrl) {
+					uploadedUrls.push(uploadedUrl)
+				}
+			}
+
+			if (uploadedUrls.length === 0) {
+				toast.error('Failed to upload file(s)')
+				setIsUploadingStagedFile(false)
+				return
+			}
+
+			const allImages = stagedFiles.every((item) => item.isImage)
+			const typeData = allImages ? 'image' : 'file'
+			const captions = stagedFiles
+				.map((item) => item.caption.trim())
+				.filter(Boolean)
+			const combinedCaption = captions.join('\n')
+
+			const clientMsgId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`
+			const messageData = {
+				_id: clientMsgId,
+				message: combinedCaption,
+				file_url: uploadedUrls[0],
+				files: uploadedUrls,
+				type: typeData,
+				from: adminID,
+				to: id,
+				createdAt: new Date().toISOString(),
+			}
+
+			socket?.emit('SendEmployeeMessage', messageData)
+			setMessages((prev) => [...prev, messageData])
+			setNewlySentMsgIds((prev) => new Set(prev).add(clientMsgId))
+
+			toast.success(
+				`${uploadedUrls.length} ${uploadedUrls.length === 1 ? 'file' : 'photos'} sent!`
+			)
+			cancelAllStagedFiles()
+			scrollToBottom()
+		} catch (error) {
+			console.error('Error sending staged files:', error)
+			toast.error('Failed to send files')
+		} finally {
+			setIsUploadingStagedFile(false)
+		}
+	}
+
+	const handleDragEnter = (e: React.DragEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		dragCounterRef.current += 1
+		if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+			setIsDragging(true)
+		}
+	}
+
+	const handleDragOver = (e: React.DragEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		e.dataTransfer.dropEffect = 'copy'
+	}
+
+	const handleDragLeave = (e: React.DragEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		dragCounterRef.current -= 1
+		if (dragCounterRef.current <= 0) {
+			dragCounterRef.current = 0
+			setIsDragging(false)
+		}
+	}
+
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		dragCounterRef.current = 0
+		setIsDragging(false)
+		if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+			stageMultipleFiles(e.dataTransfer.files)
+		}
+	}
+
+	const handlePaste = (e: React.ClipboardEvent) => {
+		if (e.clipboardData.files && e.clipboardData.files.length > 0) {
+			stageMultipleFiles(e.clipboardData.files)
+		}
+	}
+
 	const handleSendMessage = async () => {
 		try {
 			let fileData = ''
@@ -761,12 +1068,10 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 		const { id, name, value } = event.target
 
 		if (id === 'fileInput' && event.target instanceof HTMLInputElement && event.target.files) {
-			const file = event.target.files[0]
-			setFormData((prevData: any) => ({
-				...prevData,
-				selectedFile: file,
-				img: URL.createObjectURL(file),
-			}))
+			if (event.target.files.length > 0) {
+				stageMultipleFiles(event.target.files)
+				event.target.value = ''
+			}
 		} else {
 			setFormData((prevData: any) => ({
 				...prevData,
@@ -815,7 +1120,8 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 	}
 
 	const handleDeleteMessage = (msgId: string) => {
-		setMessages((prev) => prev.filter((m, i) => (m._id || `msg-${i}`) !== msgId))
+		const idsToDelete = new Set(msgId.split('-'))
+		setMessages((prev) => prev.filter((m, i) => !idsToDelete.has(m._id || `msg-${i}`)))
 		toast.success('Message removed')
 		setActiveActionMenuId(null)
 	}
@@ -830,7 +1136,180 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 		return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`
 	}
 
+	// Helper to group consecutive images or multi-file image messages into albums
+	const groupMessagesWithAlbums = (rawMessages: any[]) => {
+		const result: any[] = []
+		let i = 0
+
+		while (i < rawMessages.length) {
+			const msg = rawMessages[i]
+			const isImageMsg =
+				msg.type === 'image' ||
+				(msg.files && msg.files[0] && /\.(jpg|jpeg|png|webp|gif)$/i.test(msg.files[0]))
+
+			// Case 1: Message itself contains multiple images in files array
+			if (isImageMsg && msg.files && msg.files.length > 1) {
+				result.push({
+					...msg,
+					isAlbum: true,
+					albumUrls: msg.files,
+				})
+				i++
+				continue
+			}
+
+			// Case 2: Consecutive single-image messages from same sender within 2 minutes
+			if (isImageMsg) {
+				const albumGroup = [msg]
+				let j = i + 1
+				while (j < rawMessages.length) {
+					const nextMsg = rawMessages[j]
+					const isNextImage =
+						nextMsg.type === 'image' ||
+						(nextMsg.files && nextMsg.files[0] && /\.(jpg|jpeg|png|webp|gif)$/i.test(nextMsg.files[0]))
+
+					if (
+						isNextImage &&
+						nextMsg.from === msg.from &&
+						Math.abs(new Date(nextMsg.createdAt).getTime() - new Date(msg.createdAt).getTime()) <= 120000
+					) {
+						albumGroup.push(nextMsg)
+						j++
+					} else {
+						break
+					}
+				}
+
+				if (albumGroup.length > 1) {
+					const allUrls: string[] = []
+					const captions: string[] = []
+					albumGroup.forEach((m) => {
+						if (m.files && m.files.length > 0) {
+							allUrls.push(...m.files)
+						} else if (m.file_url) {
+							allUrls.push(m.file_url)
+						}
+						if (m.message && m.message.trim()) {
+							captions.push(m.message.trim())
+						}
+					})
+
+					result.push({
+						...albumGroup[0],
+						isAlbum: true,
+						albumUrls: allUrls,
+						message: captions.join('\n'),
+						createdAt: albumGroup[albumGroup.length - 1].createdAt,
+						_id: albumGroup.map((m) => m._id || `temp-${Math.random()}`).join('-'),
+					})
+					i = j
+					continue
+				}
+			}
+
+			result.push(msg)
+			i++
+		}
+
+		return result
+	}
+
+	const groupedMessages = useMemo(() => groupMessagesWithAlbums(messages), [messages])
+
 	const renderMessageContent = (message: any, isMe: boolean) => {
+		const EMOJI_MATCH_REGEX = new RegExp('([\\p{Extended_Pictographic}\\u{1F3FB}-\\u{1F3FF}\\u{FE0F}\\u{200D}]+)', 'u')
+
+		const renderTextWithAppleEmojis = (content: string, isOnlyEmojis = false) => {
+			const parts = content.split(EMOJI_MATCH_REGEX)
+			return parts.map((part, index) => {
+				if (part && EMOJI_MATCH_REGEX.test(part)) {
+					const unified = toUnifiedHex(part)
+					return (
+						<span key={index} className='gz-inline-emoji-wrapper'>
+							<Emoji unified={unified} size={isOnlyEmojis ? 26 : 20} emojiStyle={EmojiStyle.APPLE} />
+						</span>
+					)
+				}
+				return part
+			})
+		}
+
+		// Multi-Image Album Grid check (WhatsApp style)
+		const albumImages = message.isAlbum
+			? message.albumUrls
+			: message.files && message.files.length > 1
+			? message.files
+			: null
+
+		if (albumImages && albumImages.length > 1) {
+			const count = albumImages.length
+			const gridClass =
+				count === 2
+					? 'is-count-2'
+					: count === 3
+					? 'is-count-3'
+					: count === 4
+					? 'is-count-4'
+					: 'is-count-more'
+			const displayedImgs = albumImages.slice(0, 4)
+			const extraCount = count - 4
+			const caption =
+				message.message && typeof message.message === 'string'
+					? message.message
+					: ''
+
+			const allFullUrls = albumImages.map((u: string) =>
+				u.startsWith('http') ? u : `https://files.fggroup.in/${u}`
+			)
+
+			return (
+				<div className='d-flex flex-column w-100'>
+					<div className={`gz-media-album-grid ${gridClass}`}>
+						{displayedImgs.map((img: string, idx: number) => {
+							const isLastOverlay = idx === 3 && extraCount > 0
+							const imgSrc = img.startsWith('http')
+								? img
+								: `https://files.fggroup.in/${img}`
+							return (
+								<div
+									key={idx}
+									className='gz-album-img-wrap'
+									onClick={() =>
+										setActiveLightbox({
+											urls: allFullUrls,
+											index: idx,
+											time: DayJS(message.createdAt).format('h:mm A'),
+										})
+									}
+									title='Click to view full image'>
+									<img src={imgSrc} alt={`Album media ${idx + 1}`} />
+									{isLastOverlay && (
+										<div className='gz-album-more-overlay'>
+											+{extraCount + 1}
+										</div>
+									)}
+								</div>
+							)
+						})}
+					</div>
+					{caption && (
+						<div className='gz-media-bubble-caption' style={{ marginTop: '4px' }}>
+							{renderTextWithAppleEmojis(caption)}
+						</div>
+					)}
+					<div
+						className={
+							isMe
+								? 'gz-emp-bubble-time-sender'
+								: 'gz-emp-bubble-time-receiver'
+						}>
+						<span>{DayJS(message.createdAt).format('h:mm A')}</span>
+						{isMe && <span className='gz-emp-check-receipt'>✓✓</span>}
+					</div>
+				</div>
+			)
+		}
+
 		// Audio message check
 		if (
 			message.type === 'audio' ||
@@ -855,41 +1334,100 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 			(message.files && message.files[0] && /\.(jpg|jpeg|png|webp|gif)$/i.test(message.files[0]))
 		) {
 			const imgSrc = message.file_url || `https://files.fggroup.in/` + message.files[0]
+			const caption = message.message && typeof message.message === 'string' ? message.message : ''
 			return (
-				<>
+				<div className='d-flex flex-column w-100'>
 					<img
 						src={imgSrc}
 						alt='attachment'
 						className='img-fluid rounded'
-						style={{ maxHeight: '280px', objectFit: 'contain' }}
+						style={{ maxHeight: '280px', width: '100%', objectFit: 'contain', cursor: 'pointer' }}
+						onClick={() =>
+							setActiveLightbox({
+								urls: [imgSrc],
+								index: 0,
+								time: DayJS(message.createdAt).format('h:mm A'),
+							})
+						}
 					/>
+					{caption && (
+						<div className='gz-media-bubble-caption'>
+							{renderTextWithAppleEmojis(caption)}
+						</div>
+					)}
 					<div className={isMe ? 'gz-emp-bubble-time-sender' : 'gz-emp-bubble-time-receiver'}>
 						<span>{DayJS(message.createdAt).format('h:mm A')}</span>
 						{isMe && <span className='gz-emp-check-receipt'>✓✓</span>}
 					</div>
-				</>
+				</div>
+			)
+		}
+
+		// File/Document message check
+		if (
+			message.type === 'file' ||
+			(message.files && message.files[0] && !message.files[0].endsWith('.mp3')) ||
+			message.file_url
+		) {
+			const fileSrc = message.file_url || `https://files.fggroup.in/` + message.files[0]
+			const fileName = fileSrc.split('/').pop() || 'Document'
+			const isPdf = /\.pdf$/i.test(fileName)
+			const caption = message.message && typeof message.message === 'string' ? message.message : ''
+
+			return (
+				<div className='d-flex flex-column w-100'>
+					<a
+						href={fileSrc}
+						target='_blank'
+						rel='noopener noreferrer'
+						className='gz-doc-bubble-card'>
+						<div className={`gz-doc-bubble-icon ${isPdf ? 'is-pdf' : 'is-other'}`}>
+							<FontAwesomeIcon icon={isPdf ? faFilePdf : faFileAlt} />
+						</div>
+						<div className='gz-doc-bubble-details'>
+							<span className='gz-doc-bubble-name' title={fileName}>{fileName}</span>
+							<span className='gz-doc-bubble-sub'>{isPdf ? 'PDF Document' : 'Attachment'}</span>
+						</div>
+						<div className='gz-doc-bubble-dl'>
+							<FontAwesomeIcon icon={faDownload} />
+						</div>
+					</a>
+					{caption && (
+						<div className='gz-media-bubble-caption'>
+							{renderTextWithAppleEmojis(caption)}
+						</div>
+					)}
+					<div className={isMe ? 'gz-emp-bubble-time-sender' : 'gz-emp-bubble-time-receiver'}>
+						<span>{DayJS(message.createdAt).format('h:mm A')}</span>
+						{isMe && <span className='gz-emp-check-receipt'>✓✓</span>}
+					</div>
+				</div>
 			)
 		}
 
 		// Text message fallback (works even if type is undefined/empty)
 		const text = message.message || (typeof message === 'string' ? message : '')
 		if (text) {
-			const containsAlphabetic = (t: string) => /[a-zA-Z1oO]/.test(t)
+			const containsAlphabetic = (t: string) => /[a-zA-Z0-9]/.test(t)
+			const isOnlyEmojis = !containsAlphabetic(text)
+
 			return (
-				<>
-					<div
+				<div className='gz-emp-msg-bubble-content'>
+					<span
+						className='gz-emp-msg-text'
 						style={{
-							fontSize: containsAlphabetic(text) ? '14.5px' : '22px',
-							lineHeight: 1.5,
+							fontSize: isOnlyEmojis ? '20px' : '14px',
+							lineHeight: 1.45,
 							whiteSpace: 'pre-wrap',
+							wordBreak: 'break-word',
 						}}>
-						{text}
-					</div>
-					<div className={isMe ? 'gz-emp-bubble-time-sender' : 'gz-emp-bubble-time-receiver'}>
+						{renderTextWithAppleEmojis(text, isOnlyEmojis)}
+					</span>
+					<span className={isMe ? 'gz-emp-bubble-time-sender' : 'gz-emp-bubble-time-receiver'}>
 						<span>{DayJS(message.createdAt).format('h:mm A')}</span>
 						{isMe && <span className='gz-emp-check-receipt'>✓✓</span>}
-					</div>
-				</>
+					</span>
+				</div>
 			)
 		}
 
@@ -897,6 +1435,7 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 	}
 
 	const handleOpenReaction = (e: React.MouseEvent, messageId: string) => {
+		e.preventDefault()
 		e.stopPropagation()
 		if (activeReactionMenuId === messageId) {
 			closeAllPopups()
@@ -916,6 +1455,7 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 	}
 
 	const handleExpandReaction = (e: React.MouseEvent) => {
+		e.preventDefault()
 		e.stopPropagation()
 		if (activeAnchorRef.current) {
 			setIsReactionExpanded(true)
@@ -932,6 +1472,7 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 	}
 
 	const handleOpenActionMenu = (e: React.MouseEvent, messageId: string) => {
+		e.preventDefault()
 		e.stopPropagation()
 		if (activeActionMenuId === messageId) {
 			closeAllPopups()
@@ -944,8 +1485,8 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 		const rect = triggerEl.getBoundingClientRect()
 		const viewportWidth = window.innerWidth
 		const viewportHeight = window.innerHeight
-		const menuWidth = 145
-		const menuHeight = 160
+		const menuWidth = 236
+		const menuHeight = 220
 
 		let top = rect.bottom + 6
 		if (top + menuHeight > viewportHeight - 80) {
@@ -959,7 +1500,286 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 	}
 
 	return (
-		<div className='d-flex flex-column h-100' style={{ height: 'calc(100vh - 72px)' }}>
+		<div
+			className='d-flex flex-column h-100 position-relative'
+			style={{ height: 'calc(100vh - 72px)' }}
+			onDragEnter={handleDragEnter}
+			onDragOver={handleDragOver}
+			onDragLeave={handleDragLeave}
+			onDrop={handleDrop}
+			onPaste={handlePaste}>
+			{/* Fullscreen Drag & Drop Overlay (WhatsApp Web Style) */}
+			{isDragging && (
+				<div className='gz-drag-drop-overlay'>
+					<div className='gz-drag-drop-card'>
+						<div className='gz-drag-drop-icon'>
+							<FontAwesomeIcon icon={faCloudUploadAlt} />
+						</div>
+						<div className='gz-drag-drop-title'>Drop file here</div>
+						<div className='gz-drag-drop-subtitle'>
+							Send to {userName || 'contact'}
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* WhatsApp Web Staged Media & Document Preview Modal */}
+			{stagedFiles.length > 0 && (() => {
+				const currentStaged = stagedFiles[activeStagedIndex] || stagedFiles[0]
+				return (
+					<div
+						className='gz-staged-media-overlay'
+						onDragOver={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							e.dataTransfer.dropEffect = 'copy'
+						}}
+						onDrop={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+								stageMultipleFiles(e.dataTransfer.files)
+							}
+						}}>
+						{/* Top Header Toolbar */}
+						<div className='gz-staged-media-header'>
+							<button
+								type='button'
+								className='gz-staged-header-btn'
+								title='Close and discard (Esc)'
+								onClick={cancelAllStagedFiles}>
+								<FontAwesomeIcon icon={faTimes} />
+							</button>
+
+							{/* Center WhatsApp Media Editing Tools */}
+							<div className='gz-staged-tools-center'>
+								<button type='button' className='gz-staged-tool-btn' title='Crop and rotate'>
+									<FontAwesomeIcon icon={faCrop} />
+								</button>
+								<button type='button' className='gz-staged-tool-btn' title='Filter'>
+									<FontAwesomeIcon icon={faMagic} />
+								</button>
+								<button type='button' className='gz-staged-tool-btn' title='Draw'>
+									<FontAwesomeIcon icon={faPen} />
+								</button>
+								<button
+									type='button'
+									className='gz-staged-tool-btn'
+									title='Text'
+									style={{ fontWeight: 700, fontSize: '15px' }}>
+									Aa
+								</button>
+								<button type='button' className='gz-staged-tool-btn' title='Stickers'>
+									<FontAwesomeIcon icon={faSquare} />
+								</button>
+								<button
+									type='button'
+									className='gz-staged-tool-btn'
+									title='Emoji'
+									onClick={() => setShowStagedEmojiPicker((prev) => !prev)}>
+									<FontAwesomeIcon icon={faSmile} />
+								</button>
+								<button type='button' className='gz-staged-tool-btn' title='Quality'>
+									<span className='gz-staged-tool-hd'>HD</span>
+								</button>
+							</div>
+
+							{/* Right: Download Action */}
+							{currentStaged && (
+								<a
+									href={currentStaged.previewUrl}
+									download={currentStaged.fileName}
+									className='gz-staged-header-btn'
+									title='Download'>
+									<FontAwesomeIcon icon={faDownload} />
+								</a>
+							)}
+						</div>
+
+						{/* Center Media / Document Body */}
+						<div className='gz-staged-media-body'>
+							{currentStaged?.isImage ? (
+								<img
+									src={currentStaged.previewUrl}
+									alt={currentStaged.fileName}
+									className='gz-staged-image-preview'
+								/>
+							) : (
+								<div className='gz-staged-doc-card'>
+									<div className={`gz-staged-doc-icon ${currentStaged?.isPdf ? 'is-pdf' : 'is-other'}`}>
+										<FontAwesomeIcon icon={currentStaged?.isPdf ? faFilePdf : faFileAlt} />
+									</div>
+									<div className='gz-staged-file-name mb-1' style={{ fontSize: '16px', color: '#0f172a' }}>
+										{currentStaged?.fileName}
+									</div>
+									<span className='badge bg-light-primary text-primary px-3 py-1 fs-7 fw-bold'>
+										{currentStaged?.isPdf ? 'PDF Document' : 'Attachment'} · {currentStaged?.fileSizeStr}
+									</span>
+								</div>
+							)}
+						</div>
+
+						{/* Bottom Wrapper: Emoji Picker + Capsule Input + Thumbnails + Floating Send Button */}
+						<div className='gz-staged-bottom-wrapper'>
+							{/* Clean Light Emoji Picker (Matching Chat Section) */}
+							{showStagedEmojiPicker && (
+								<div className='gz-staged-emoji-picker-container'>
+									<Picker
+										emojiStyle={EmojiStyle.APPLE}
+										emojiData={ENRICHED_EMOJI_DATA}
+										suggestedEmojisMode={SuggestionMode.RECENT}
+										lazyLoadEmojis={true}
+										searchDisabled={false}
+										previewConfig={{ showPreview: false }}
+										onEmojiClick={(emojiData) => {
+											setStagedFiles((prev) =>
+												prev.map((item, idx) =>
+													idx === activeStagedIndex
+														? { ...item, caption: (item.caption || '') + emojiData.emoji }
+														: item
+												)
+											)
+										}}
+										width={340}
+										height={380}
+										style={{
+											'--epr-bg-color': '#ffffff',
+											'--epr-category-label-bg-color': '#ffffff',
+											'--epr-picker-border-radius': '18px',
+										} as React.CSSProperties}
+									/>
+								</div>
+							)}
+
+							{/* Caption Input Capsule ("Type a message") */}
+							<div className='gz-staged-caption-capsule'>
+								<input
+									type='text'
+									className='gz-staged-caption-input'
+									placeholder='Add a caption...'
+									value={currentStaged?.caption || ''}
+									onChange={(e) => {
+										const val = e.target.value
+										setStagedFiles((prev) =>
+											prev.map((item, idx) =>
+												idx === activeStagedIndex ? { ...item, caption: val } : item
+											)
+										)
+									}}
+									onKeyDown={(e) => {
+										if (e.key === 'Enter' && !e.shiftKey) {
+											e.preventDefault()
+											handleSendStagedFiles()
+										} else if (e.key === 'Escape') {
+											cancelAllStagedFiles()
+										}
+									}}
+									autoFocus
+									style={{
+										all: 'unset',
+										flex: '1 1 auto',
+										flexGrow: 1,
+										display: 'block',
+										background: 'transparent',
+										border: '0px none transparent',
+										outline: 'none',
+										outlineOffset: '0px',
+										boxShadow: 'none',
+										WebkitBoxShadow: 'none',
+										color: '#0f172a',
+										fontSize: '15px',
+										fontWeight: 500,
+										padding: '0 8px',
+										height: '100%',
+										minHeight: 'unset',
+										borderRadius: '0px',
+										lineHeight: '44px',
+										cursor: 'text',
+										boxSizing: 'border-box',
+									}}
+								/>
+								<button
+									type='button'
+									className='gz-staged-emoji-toggle'
+									title='Add emoji'
+									onClick={() => setShowStagedEmojiPicker((prev) => !prev)}>
+									<FontAwesomeIcon icon={faSmile} />
+								</button>
+							</div>
+
+							{/* Thumbnail Strip (WhatsApp Web Multi-Media Strip) */}
+							<div className='gz-staged-thumbnails-row'>
+								{stagedFiles.map((item, idx) => {
+									const isActive = idx === activeStagedIndex
+									return (
+										<div
+											key={item.id}
+											className={`gz-staged-thumb-item ${isActive ? 'is-active' : ''}`}
+											onClick={() => setActiveStagedIndex(idx)}
+											title={item.fileName}>
+											{item.isImage ? (
+												<img src={item.previewUrl} alt={item.fileName} />
+											) : (
+												<div className='gz-staged-thumb-doc'>
+													<FontAwesomeIcon icon={item.isPdf ? faFilePdf : faFileAlt} />
+												</div>
+											)}
+											{stagedFiles.length > 1 && (
+												<button
+													type='button'
+													className='gz-staged-thumb-remove-btn'
+													title='Remove this file'
+													onClick={(e) => removeStagedItem(idx, e)}>
+													<FontAwesomeIcon icon={faTimes} />
+												</button>
+											)}
+										</div>
+									)
+								})}
+								<button
+									type='button'
+									className='gz-staged-thumb-add-btn'
+									title='Add photos or documents'
+									onClick={() => stagedFileInputRef.current?.click()}>
+									<FontAwesomeIcon icon={faPlus} />
+								</button>
+								<input
+									type='file'
+									multiple
+									ref={stagedFileInputRef}
+									style={{ display: 'none' }}
+									onChange={(e) => {
+										if (e.target.files && e.target.files.length > 0) {
+											stageMultipleFiles(e.target.files)
+										}
+										e.target.value = ''
+									}}
+								/>
+							</div>
+
+							{/* Floating Signature Green Send Button with Counter Badge */}
+							<button
+								type='button'
+								className='gz-staged-whatsapp-send-btn'
+								title={`Send ${stagedFiles.length} ${stagedFiles.length === 1 ? 'file' : 'files'} (Enter)`}
+								disabled={isUploadingStagedFile}
+								onClick={handleSendStagedFiles}>
+								{isUploadingStagedFile ? (
+									<div className='spinner-border spinner-border-sm text-dark' role='status' />
+								) : (
+									<>
+										<FontAwesomeIcon icon={faPaperPlane} />
+										{stagedFiles.length > 1 && (
+											<span className='gz-staged-send-badge'>{stagedFiles.length}</span>
+										)}
+									</>
+								)}
+							</button>
+						</div>
+					</div>
+				)
+			})()}
+
 			{/* Chat Canvas with Sweeping Organic Lavender Waves Background */}
 			<div className='gz-emp-canvas' data-kt-element='messages'>
 				{!loading ? (
@@ -973,7 +1793,7 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 							</div>
 						) : (
 							<>
-								{messages.map((message: any, index: number) => {
+								{groupedMessages.map((message: any, index: number, arr: any[]) => {
 									const isMe = message.from === adminID
 									const messageId = message._id || `msg-${index}`
 									const messageContent = renderMessageContent(message, isMe)
@@ -983,9 +1803,16 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 										return null
 									}
 
+									const isMedia = Boolean(
+										message.isAlbum ||
+										(message.files && message.files.length > 1) ||
+										message.type === 'image' ||
+										(message.files && message.files[0] && /\.(jpg|jpeg|png|webp|gif)$/i.test(message.files[0]))
+									)
+
 									const isFirstMessage =
 										index === 0 ||
-										formatDate(messages[index - 1].createdAt) !== formatDate(message.createdAt)
+										formatDate(arr[index - 1].createdAt) !== formatDate(message.createdAt)
 
 									const isReactionOpen = activeReactionMenuId === messageId
 									const isActionOpen = activeActionMenuId === messageId
@@ -994,48 +1821,57 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 									return (
 										<React.Fragment key={messageId}>
 											{isFirstMessage && (
-												<div className='text-center my-3'>
+												<div className='text-center my-2'>
 													<span className='gz-emp-date-pill'>
 														{formatDate(message.createdAt)}
 													</span>
 												</div>
 											)}
 
-											<div className={`gz-message-row ${isMe ? 'is-sender' : 'is-receiver'}`}>
-												{/* Hover target strictly wraps bubble + action icons */}
+											<div
+												className={`gz-message-row ${isMe ? 'is-sender' : 'is-receiver'} ${
+													messageReactions[messageId] ? 'has-reaction' : ''
+												}`}>
+												{/* Hover target strictly wraps bubble content */}
 												<div
 													className={`gz-message-bubble-group ${
 														isMe ? 'is-sender' : 'is-receiver'
-													} ${isReactionOpen || isActionOpen ? 'has-active-menu' : ''} ${
-														isNewMessage ? 'gz-new-message-anim' : ''
-													}`}>
-													{/* Hover Action Triggers (for Sender on left: React button only) */}
-													{isMe && (
-														<div className='gz-msg-hover-actions'>
-															<button
-																type='button'
-																className='gz-msg-action-trigger'
-																title='React'
-																onClick={(e) => handleOpenReaction(e, messageId)}>
-																<FontAwesomeIcon icon={faSmile} />
-															</button>
-														</div>
-													)}
+													} ${isReactionOpen || isActionOpen ? 'has-active-menu' : ''}`}>
+													{/* Hover Action Trigger (Reaction icon button beside bubble) */}
+													<div className='gz-msg-hover-actions'>
+														<button
+															type='button'
+															className='gz-msg-action-trigger'
+															tabIndex={-1}
+															title='React'
+															onMouseDown={(e) => {
+																e.preventDefault()
+																e.stopPropagation()
+															}}
+															onClick={(e) => handleOpenReaction(e, messageId)}>
+															<FontAwesomeIcon icon={faSmile} />
+														</button>
+													</div>
 
 													{/* Message Bubble (Sized strictly to fit content) */}
 													<div
-														className={
+														className={`${
 															isMe
 																? 'gz-emp-bubble-sender'
 																: 'gz-emp-bubble-receiver'
-														}>
+														} ${isMedia ? 'is-media-bubble' : ''}`}>
 														{/* Dropdown Options Button positioned at upper corner of bubble */}
 														<button
 															type='button'
 															className={`gz-msg-dropdown-trigger ${
 																isMe ? 'is-sender' : 'is-receiver'
 															}`}
+															tabIndex={-1}
 															title='Options'
+															onMouseDown={(e) => {
+																e.preventDefault()
+																e.stopPropagation()
+															}}
 															onClick={(e) => handleOpenActionMenu(e, messageId)}>
 															<FontAwesomeIcon icon={faChevronDown} />
 														</button>
@@ -1055,23 +1891,14 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 																	)
 																}
 																title='Remove reaction'>
-																<span>{messageReactions[messageId]}</span>
+																<Emoji
+																	unified={toUnifiedHex(messageReactions[messageId])}
+																	size={15}
+																	emojiStyle={EmojiStyle.APPLE}
+																/>
 															</div>
 														)}
 													</div>
-
-													{/* Hover Action Triggers (for Receiver on right: React button only) */}
-													{!isMe && (
-														<div className='gz-msg-hover-actions'>
-															<button
-																type='button'
-																className='gz-msg-action-trigger'
-																title='React'
-																onClick={(e) => handleOpenReaction(e, messageId)}>
-																<FontAwesomeIcon icon={faSmile} />
-															</button>
-														</div>
-													)}
 												</div>
 											</div>
 										</React.Fragment>
@@ -1102,6 +1929,8 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 						position: 'fixed',
 						top: `${popupPosition.top}px`,
 						left: `${popupPosition.left}px`,
+						width: isReactionExpanded ? '320px' : undefined,
+						height: isReactionExpanded ? '340px' : undefined,
 						zIndex: 1050,
 					}}
 					onClick={(e) => e.stopPropagation()}>
@@ -1112,15 +1941,13 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 									key={item.unified}
 									type='button'
 									className='gz-reaction-emoji-btn'
-									onClick={() => handleReactionSelect(item.emoji)}
-									title={item.emoji}>
-									<Emoji unified={item.unified} size={22} />
+									onClick={() => handleReactionSelect(item.emoji)}>
+									<Emoji unified={item.unified} size={22} emojiStyle={EmojiStyle.APPLE} />
 								</button>
 							))}
 							<button
 								type='button'
 								className='gz-reaction-emoji-btn is-plus'
-								title='More emojis'
 								onClick={handleExpandReaction}>
 								+
 							</button>
@@ -1129,23 +1956,27 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 						<div className='gz-reaction-expanded-content'>
 							<Picker
 								onEmojiClick={(emojiData) => handleReactionSelect(emojiData.emoji)}
-								width='100%'
-								height='100%'
+								width={320}
+								height={340}
 								previewConfig={{ showPreview: false }}
 								searchPlaceholder='Search...'
+								skinTonesDisabled={true}
 								categories={CUSTOM_EMOJI_CATEGORIES}
 								suggestedEmojisMode={SuggestionMode.RECENT}
+								emojiStyle={EmojiStyle.APPLE}
+								emojiData={ENRICHED_EMOJI_DATA}
 								style={{
 									'--epr-search-input-padding': '0 16px 0 44px',
 									'--epr-search-input-border-radius': '9999px',
-									'--epr-search-input-height': '38px',
+									'--epr-search-input-height': '40px',
 									'--epr-search-input-bg-color': '#f1f5f9',
 									'--epr-search-input-bg-color-active': '#ffffff',
 									'--epr-search-border-color': '#e2e8f0',
 									'--epr-search-border-color-active': '#cbd5e1',
 									'--epr-highlight-color': '#172b4d',
 									'--epr-search-input-placeholder-color': '#94a3b8',
-									'--epr-search-bar-inner-padding': '14px',
+									'--epr-search-bar-inner-padding': '15px',
+									'--epr-header-padding': '12px 14px 8px 14px',
 									'--epr-picker-border-radius': '18px',
 								} as React.CSSProperties}
 							/>
@@ -1166,14 +1997,59 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 					}}
 					onClick={(e) => e.stopPropagation()}>
 					{(() => {
-						const targetMsg = messages.find(
-							(m: any, i: number) => (m._id || `msg-${i}`) === activeActionMenuId
-						)
+						const targetMsg =
+							groupedMessages.find(
+								(m: any, i: number) => (m._id || `msg-${i}`) === activeActionMenuId
+							) ||
+							messages.find(
+								(m: any, i: number) => (m._id || `msg-${i}`) === activeActionMenuId
+							)
 						if (!targetMsg) return null
 						const isTargetMe = targetMsg.from === adminID
 
 						return (
 							<>
+								{/* Quick Reaction Strip at Top of Context Menu (WhatsApp Web Style) */}
+								<div className='gz-ctx-reaction-strip'>
+									{REACTION_EMOJIS.map((item) => (
+										<button
+											key={item.unified}
+											type='button'
+											className='gz-ctx-reaction-btn'
+											onClick={(e) => {
+												e.preventDefault()
+												e.stopPropagation()
+												handleToggleReaction(activeActionMenuId, item.emoji)
+												closeAllPopups()
+											}}>
+											<Emoji unified={item.unified} size={18} emojiStyle={EmojiStyle.APPLE} />
+										</button>
+									))}
+									<button
+										type='button'
+										className='gz-ctx-reaction-btn is-plus'
+										title='More reactions'
+										onClick={(e) => {
+											e.preventDefault()
+											e.stopPropagation()
+											const groupEl = activeAnchorRef.current?.closest('.gz-message-bubble-group')
+											const targetBubble = (groupEl?.querySelector('.gz-emp-bubble-sender, .gz-emp-bubble-receiver') || groupEl) as HTMLElement | null
+											if (targetBubble) {
+												activeAnchorRef.current = targetBubble
+												const pos = calculateReactionPosition(targetBubble, true)
+												setPopupPosition(pos)
+												setIsReactionExpanded(true)
+												setActiveReactionMenuId(activeActionMenuId)
+												setActiveActionMenuId(null)
+												setActionMenuPosition(null)
+											}
+										}}>
+										+
+									</button>
+								</div>
+
+								<div className='gz-ctx-divider' />
+
 								<button
 									type='button'
 									className='gz-ctx-menu-item'
@@ -1182,11 +2058,15 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 									<span>Reply</span>
 								</button>
 
-								{targetMsg.message && (
+								{(targetMsg.message || targetMsg.albumUrls) && (
 									<button
 										type='button'
 										className='gz-ctx-menu-item'
-										onClick={() => handleCopy(targetMsg.message)}>
+										onClick={() =>
+											handleCopy(
+												targetMsg.message || targetMsg.albumUrls?.join('\n') || ''
+											)
+										}>
 										<FontAwesomeIcon icon={faCopy} style={{ fontSize: '13px' }} />
 										<span>Copy</span>
 									</button>
@@ -1245,32 +2125,6 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 			<div
 				className='gz-emp-composer-bar'
 				id={isDrawer ? 'kt_drawer_chat_messenger_footer' : 'kt_chat_messenger_footer'}>
-				{/* Image Preview Overlay if attached */}
-				{formData.img && (
-					<div
-						className='position-absolute'
-						style={{ bottom: '74px', left: '20px', zIndex: 100 }}>
-						<div
-							className='p-3 rounded-3 border shadow-sm'
-							style={{ background: '#FFFFFF', maxWidth: '320px' }}>
-							<div className='d-flex justify-content-between align-items-center mb-2'>
-								<span className='fs-7 fw-bold text-gray-700'>Image Preview</span>
-								<button
-									className='btn btn-xs btn-light-danger py-1 px-2'
-									type='button'
-									onClick={() => setFormData({ ...formData, selectedFile: null, img: '' })}>
-									Cancel
-								</button>
-							</div>
-							<img
-								alt='Preview'
-								src={formData.img}
-								className='img-fluid rounded'
-								style={{ maxHeight: '160px', width: '100%', objectFit: 'contain' }}
-							/>
-						</div>
-					</div>
-				)}
 
 				{/* Emoji Picker Modal / Popup */}
 				{showEmojiPicker && (
@@ -1282,19 +2136,23 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 							width={320}
 							height={360}
 							searchPlaceholder='Search...'
+							skinTonesDisabled={true}
 							categories={CUSTOM_EMOJI_CATEGORIES}
 							suggestedEmojisMode={SuggestionMode.RECENT}
+							emojiStyle={EmojiStyle.APPLE}
+							emojiData={ENRICHED_EMOJI_DATA}
 							style={{
 								'--epr-search-input-padding': '0 16px 0 44px',
 								'--epr-search-input-border-radius': '9999px',
-								'--epr-search-input-height': '38px',
+								'--epr-search-input-height': '40px',
 								'--epr-search-input-bg-color': '#f1f5f9',
 								'--epr-search-input-bg-color-active': '#ffffff',
 								'--epr-search-border-color': '#e2e8f0',
 								'--epr-search-border-color-active': '#cbd5e1',
 								'--epr-highlight-color': '#172b4d',
 								'--epr-search-input-placeholder-color': '#94a3b8',
-								'--epr-search-bar-inner-padding': '14px',
+								'--epr-search-bar-inner-padding': '15px',
+								'--epr-header-padding': '12px 14px 8px 14px',
 								'--epr-picker-border-radius': '18px',
 							} as React.CSSProperties}
 						/>
@@ -1313,14 +2171,14 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 							</div>
 
 							{/* Real-Time Microphone Waveform */}
-							<div className='gz-recording-live-waveform'>
+							<div className='gz-recording-live-waveform' ref={waveformContainerRef}>
 								{recordingWaveform.length > 0 ? (
-									recordingWaveform.map((amp, idx) => (
+									recordingWaveform.map((sample) => (
 										<span
-											key={idx}
+											key={sample.id}
 											className={`gz-live-wave-bar ${isPaused ? 'is-paused' : ''}`}
 											style={{
-												height: `${Math.round(amp * 24 + 4)}px`,
+												height: `${Math.round(sample.amp * 24 + 4)}px`,
 											}}
 										/>
 									))
@@ -1334,18 +2192,10 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 							</div>
 
 							{/* Stable Recording Controls - Borderless */}
-							<div
-								className='gz-recording-controls'
-								style={{
-									border: 'none',
-									outline: 'none',
-									boxShadow: 'none',
-									background: 'transparent',
-								}}>
+							<div className='gz-recording-controls'>
 								<button
 									type='button'
 									className={`gz-recording-ctrl-btn ${isPaused ? 'is-paused-play' : ''}`}
-									style={{ border: 'none', outline: 'none' }}
 									onClick={togglePauseResume}
 									title={isPaused ? 'Resume recording' : 'Pause recording'}>
 									<FontAwesomeIcon icon={isPaused ? faPlay : faPause} />
@@ -1354,7 +2204,6 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 								<button
 									type='button'
 									className='gz-recording-ctrl-btn is-cancel'
-									style={{ border: 'none', outline: 'none' }}
 									onClick={handleCancelRecording}
 									title='Cancel recording'>
 									<FontAwesomeIcon icon={faTrash} />
@@ -1363,7 +2212,6 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 								<button
 									type='button'
 									className='gz-emp-send-btn'
-									style={{ border: 'none', outline: 'none' }}
 									onClick={handleFinishAndSendRecording}
 									title='Send voice message'>
 									<FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: '15px' }} />
@@ -1371,10 +2219,18 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 							</div>
 						</>
 					) : (
-						/* Regular WhatsApp Message Input Row */
+						/* Regular WhatsApp Message Input Row (Strictly Matching WhatsApp Web Reference) */
 						<>
-							{/* Left Action Controls: Emoji & Attachments */}
+							{/* Left Action Controls: Attachments (📎) & Emoji (😊) in WhatsApp Order */}
 							<div className='gz-composer-left-actions'>
+								<button
+									type='button'
+									className='gz-emp-composer-action-btn'
+									title='Attach photos or documents'
+									onClick={handleFileButtonClick}>
+									<FontAwesomeIcon icon={faPaperclip} style={{ fontSize: '17px' }} />
+								</button>
+
 								<button
 									type='button'
 									className='gz-emp-composer-action-btn'
@@ -1386,64 +2242,160 @@ const EmployeeChatInner: FC<Props & ChatInnerProps> = ({
 									}}>
 									<FontAwesomeIcon icon={faSmile} style={{ fontSize: '18px' }} />
 								</button>
-
-								<button
-									type='button'
-									className='gz-emp-composer-action-btn'
-									title='Attach file'
-									onClick={handleFileButtonClick}>
-									<FontAwesomeIcon icon={faPaperclip} style={{ fontSize: '16px' }} />
-								</button>
-
-								<button
-									type='button'
-									className='gz-emp-composer-action-btn d-none d-sm-flex'
-									title='Attach link or document'
-									onClick={handleFileButtonClick}>
-									<FontAwesomeIcon icon={faLink} style={{ fontSize: '15px' }} />
-								</button>
 							</div>
 
 							<input
 								type='file'
 								id='fileInput'
+								multiple
 								className='d-none'
 								onChange={handleInputChange}
 							/>
 
-							{/* Center: Flexible Message Text Area */}
+							{/* Center: Message Text Area */}
 							<textarea
 								className='gz-emp-composer-input'
 								value={formData.message}
 								name='message'
 								onChange={handleMessagesChange}
 								onKeyDown={(e: any) => handleEnterMessage(e)}
-								placeholder='Type a message...'
+								placeholder='Type a message'
 								rows={1}
 							/>
 
-							{/* Right: Voice Recording & Send Controls */}
+							{/* Right: Dynamic WhatsApp Action - Microphone when empty, Send button when text is typed */}
 							<div className='gz-composer-right-actions'>
-								<button
-									type='button'
-									className='gz-emp-composer-action-btn'
-									title='Record voice message'
-									onClick={handleStartRecording}>
-									<FontAwesomeIcon icon={faMicrophone} style={{ fontSize: '16px' }} />
-								</button>
-
-								<button
-									className='gz-emp-send-btn'
-									type='button'
-									title='Send Message'
-									onClick={handleSendMessage}>
-									<FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: '16px' }} />
-								</button>
+								{formData.message.trim().length > 0 ? (
+									<button
+										className='gz-emp-send-btn'
+										type='button'
+										title='Send Message (Enter)'
+										onClick={handleSendMessage}>
+										<FontAwesomeIcon icon={faPaperPlane} style={{ fontSize: '15px' }} />
+									</button>
+								) : (
+									<button
+										type='button'
+										className='gz-emp-composer-action-btn gz-mic-action-btn'
+										title='Record voice message'
+										onClick={handleStartRecording}>
+										<FontAwesomeIcon icon={faMicrophone} style={{ fontSize: '17px' }} />
+									</button>
+								)}
 							</div>
 						</>
 					)}
 				</div>
 			</div>
+
+			{/* WhatsApp-Style Fullscreen Lightbox Modal */}
+			{activeLightbox && (
+				<div
+					className='gz-lightbox-backdrop'
+					onClick={() => setActiveLightbox(null)}>
+					<div className='gz-lightbox-header' onClick={(e) => e.stopPropagation()}>
+						<div className='gz-lightbox-info'>
+							<span className='gz-lightbox-title'>{userName || 'Photo'}</span>
+							{activeLightbox.time && (
+								<span className='gz-lightbox-sub'>{activeLightbox.time}</span>
+							)}
+						</div>
+						<div className='gz-lightbox-counter'>
+							{activeLightbox.urls.length > 1 &&
+								`${activeLightbox.index + 1} of ${activeLightbox.urls.length}`}
+						</div>
+						<div className='gz-lightbox-actions'>
+							<a
+								href={activeLightbox.urls[activeLightbox.index]}
+								download
+								target='_blank'
+								rel='noopener noreferrer'
+								className='gz-lightbox-btn'
+								title='Download photo'>
+								<FontAwesomeIcon icon={faDownload} />
+							</a>
+							<button
+								type='button'
+								className='gz-lightbox-btn is-close'
+								title='Close (Esc)'
+								onClick={() => setActiveLightbox(null)}>
+								<FontAwesomeIcon icon={faTimes} />
+							</button>
+						</div>
+					</div>
+
+					<div className='gz-lightbox-body' onClick={(e) => e.stopPropagation()}>
+						{activeLightbox.urls.length > 1 && (
+							<button
+								type='button'
+								className='gz-lightbox-nav-btn is-prev'
+								title='Previous photo (Left arrow)'
+								onClick={() =>
+									setActiveLightbox((prev) =>
+										prev
+											? {
+													...prev,
+													index:
+														(prev.index - 1 + prev.urls.length) %
+														prev.urls.length,
+											  }
+											: null
+									)
+								}>
+								<FontAwesomeIcon icon={faChevronLeft} />
+							</button>
+						)}
+
+						<div className='gz-lightbox-image-wrap'>
+							<img
+								src={activeLightbox.urls[activeLightbox.index]}
+								alt={`Photo ${activeLightbox.index + 1}`}
+								className='gz-lightbox-img'
+							/>
+						</div>
+
+						{activeLightbox.urls.length > 1 && (
+							<button
+								type='button'
+								className='gz-lightbox-nav-btn is-next'
+								title='Next photo (Right arrow)'
+								onClick={() =>
+									setActiveLightbox((prev) =>
+										prev
+											? {
+													...prev,
+													index: (prev.index + 1) % prev.urls.length,
+											  }
+											: null
+									)
+								}>
+								<FontAwesomeIcon icon={faChevronRight} />
+							</button>
+						)}
+					</div>
+
+					{activeLightbox.urls.length > 1 && (
+						<div
+							className='gz-lightbox-filmstrip'
+							onClick={(e) => e.stopPropagation()}>
+							{activeLightbox.urls.map((url, i) => (
+								<div
+									key={i}
+									className={`gz-lightbox-thumb ${
+										i === activeLightbox.index ? 'is-active' : ''
+									}`}
+									onClick={() =>
+										setActiveLightbox((prev) =>
+											prev ? { ...prev, index: i } : null
+										)
+									}>
+									<img src={url} alt={`Thumb ${i + 1}`} />
+								</div>
+							))}
+						</div>
+					)}
+				</div>
+			)}
 		</div>
 	)
 }

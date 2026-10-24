@@ -32,6 +32,8 @@ export const HRDashboardPage: React.FC = () => {
 	const [todayAnniversariesCount, setTodayAnniversariesCount] = useState(0)
 	const [expiringAgreementsCount, setExpiringAgreementsCount] = useState(0)
 	const [expiredAgreementsCount, setExpiredAgreementsCount] = useState(0)
+	const [tableAnniversariesCount, setTableAnniversariesCount] = useState(0)
+	const [tableAgreementsCount, setTableAgreementsCount] = useState(0)
 	const [pendingLeavesCount, setPendingLeavesCount] = useState(0)
 	const [pendingTasksCount, setPendingTasksCount] = useState(0)
 
@@ -226,6 +228,17 @@ export const HRDashboardPage: React.FC = () => {
 				setExpiringDocuments(expList)
 				setExpiringAgreementsCount(expCount + pastExpiredCount)
 				setExpiredAgreementsCount(pastExpiredCount)
+
+				// Calculate exact table row counts matching tables
+				const totalAnniversariesInTable = emps.filter(
+					(item: any) => item.employee && item.employee.joining_date
+				).length
+				const totalAgreementsInTable = emps.filter((item: any) => {
+					if (!item.employee || !item.employee.document || !item.employee.document.length) return false
+					return item.employee.document.some((doc: any) => doc.expiry_date)
+				}).length
+				setTableAnniversariesCount(totalAnniversariesInTable)
+				setTableAgreementsCount(totalAgreementsInTable)
 			}
 
 			// 2. Fetch Pending Leaves
@@ -1082,8 +1095,8 @@ export const HRDashboardPage: React.FC = () => {
 							className={`gz-hr-tab-btn ${fullTableTab === 'anniversaries' ? 'is-active' : ''}`}>
 							<i className='bi bi-award me-1'></i>
 							<span>Anniversaries</span>
-							<span className='badge badge-light-warning py-0 px-2 fs-9 ms-1'>
-								{upcomingAnniversariesCount}
+							<span className='badge badge-light-warning py-1 px-2 fs-9 ms-1'>
+								{tableAnniversariesCount || upcomingAnniversariesCount}
 							</span>
 						</button>
 
@@ -1093,8 +1106,8 @@ export const HRDashboardPage: React.FC = () => {
 							className={`gz-hr-tab-btn ${fullTableTab === 'documents' ? 'is-active' : ''}`}>
 							<i className='bi bi-file-earmark-check me-1'></i>
 							<span>Agreements &amp; Expiries</span>
-							<span className='badge badge-light-danger py-0 px-2 fs-9 ms-1'>
-								{expiringAgreementsCount}
+							<span className='badge badge-light-danger py-1 px-2 fs-9 ms-1'>
+								{tableAgreementsCount || expiringAgreementsCount}
 							</span>
 						</button>
 
@@ -1104,7 +1117,7 @@ export const HRDashboardPage: React.FC = () => {
 							className={`gz-hr-tab-btn ${fullTableTab === 'directory' ? 'is-active' : ''}`}>
 							<i className='bi bi-person-lines-fill me-1'></i>
 							<span>Employee Directory</span>
-							<span className='badge badge-light-primary py-0 px-2 fs-9 ms-1'>
+							<span className='badge badge-light-primary py-1 px-2 fs-9 ms-1'>
 								{totalEmployees}
 							</span>
 						</button>
@@ -1113,10 +1126,16 @@ export const HRDashboardPage: React.FC = () => {
 
 				<div className='p-3'>
 					{fullTableTab === 'anniversaries' && (
-						<EmployeeAnniversaryTable className='gz-hr-action-card' />
+						<EmployeeAnniversaryTable
+							className='gz-hr-action-card'
+							onCountChange={setTableAnniversariesCount}
+						/>
 					)}
 					{fullTableTab === 'documents' && (
-						<ExpiredEmployeeTable className='gz-hr-action-card' />
+						<ExpiredEmployeeTable
+							className='gz-hr-action-card'
+							onCountChange={setTableAgreementsCount}
+						/>
 					)}
 					{fullTableTab === 'directory' && (
 						<TablesWidget className='gz-hr-action-card' />

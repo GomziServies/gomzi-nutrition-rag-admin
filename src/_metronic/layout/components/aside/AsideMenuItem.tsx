@@ -75,6 +75,8 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 
 	const tipId = `aside-tip-${(to || title).replace(/[^a-zA-Z0-9_-]/g, '')}`
 
+	const iconRef = React.useRef<any>(null)
+
 	const renderIcon = () => {
 		if (!Icon) return null
 		if (React.isValidElement(Icon)) return Icon
@@ -82,7 +84,7 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 			return <FontAwesomeIcon icon={Icon as any} className='fs-2' />
 		}
 		if (typeof Icon === 'function' || (typeof Icon === 'object' && Icon !== null && (Icon.$$typeof || Icon.render))) {
-			return React.createElement(Icon as any)
+			return React.createElement(Icon as any, { ref: iconRef, size: 18 })
 		}
 		return <FontAwesomeIcon icon={Icon as any} className='fs-2' />
 	}
@@ -90,7 +92,9 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 	const linkContent = (
 		<Link
 			className={clsx('menu-link without-sub', { active: isActive })}
-			to={to}>
+			to={to}
+			onMouseEnter={() => iconRef.current?.startAnimation?.()}
+			onMouseLeave={() => iconRef.current?.stopAnimation?.()}>
 			{hasBullet && (
 				<span className='menu-bullet'>
 					<span className='bullet bullet-dot'></span>
@@ -105,6 +109,25 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 		</Link>
 	)
 
+const asidePopperConfig = {
+	strategy: 'fixed' as const,
+	modifiers: [
+		{
+			name: 'offset',
+			options: {
+				offset: [0, 10],
+			},
+		},
+		{
+			name: 'preventOverflow',
+			options: {
+				boundary: 'viewport' as const,
+				padding: 8,
+			},
+		},
+	],
+}
+
 	return (
 		<div className='menu-item'>
 			{hasBullet ? (
@@ -112,7 +135,8 @@ const AsideMenuItem: FC<Props & WithChildren> = ({
 			) : (
 				<OverlayTrigger
 					placement='right'
-					delay={{ show: 120, hide: 50 }}
+					popperConfig={asidePopperConfig}
+					delay={{ show: 50, hide: 0 }}
 					overlay={
 						<Tooltip id={tipId} className='gz-aside-tooltip'>
 							{title}

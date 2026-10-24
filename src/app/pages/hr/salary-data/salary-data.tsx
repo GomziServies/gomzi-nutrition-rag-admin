@@ -10,6 +10,7 @@ import SearchFilter from '../../../components/SearchFilter'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
+import SelectField from '../../../components/SelectField'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetSalaryData, SyncSalaryData } from '../../../Functions/FGGroup/Attendance'
 
@@ -563,37 +564,45 @@ const HREmployeeSalary = () => {
 						</div>
 						<div className='col-md-3 mb-4'>
 							<label className='form-label'>Month</label>
-							<select
-								className='form-select'
+							<SelectField
 								value={selectedMonth}
-								onChange={(e) => setSelectedMonth(e.target.value)}>
-								<option value=''>Select Month</option>
-								<option value='01'>January</option>
-								<option value='02'>February</option>
-								<option value='03'>March</option>
-								<option value='04'>April</option>
-								<option value='05'>May</option>
-								<option value='06'>June</option>
-								<option value='07'>July</option>
-								<option value='08'>August</option>
-								<option value='09'>September</option>
-								<option value='10'>October</option>
-								<option value='11'>November</option>
-								<option value='12'>December</option>
-							</select>
+								onChange={(val: any) => {
+									const value = typeof val === 'object' && val?.target ? val.target.value : val
+									setSelectedMonth(value)
+								}}
+								options={[
+									{ value: '', label: 'Select Month' },
+									{ value: '01', label: 'January' },
+									{ value: '02', label: 'February' },
+									{ value: '03', label: 'March' },
+									{ value: '04', label: 'April' },
+									{ value: '05', label: 'May' },
+									{ value: '06', label: 'June' },
+									{ value: '07', label: 'July' },
+									{ value: '08', label: 'August' },
+									{ value: '09', label: 'September' },
+									{ value: '10', label: 'October' },
+									{ value: '11', label: 'November' },
+									{ value: '12', label: 'December' },
+								]}
+							/>
 						</div>
 						<div className='col-md-3 mb-4'>
 							<label className='form-label'>Year</label>
-							<select
-								className='form-select'
+							<SelectField
 								value={selectedYear}
-								onChange={(e) => setSelectedYear(e.target.value)}>
-								<option value=''>Select Year</option>
-								<option value='2023'>2023</option>
-								<option value='2024'>2024</option>
-								<option value='2025'>2025</option>
-								<option value='2026'>2026</option>
-							</select>
+								onChange={(val: any) => {
+									const value = typeof val === 'object' && val?.target ? val.target.value : val
+									setSelectedYear(value)
+								}}
+								options={[
+									{ value: '', label: 'Select Year' },
+									{ value: '2023', label: '2023' },
+									{ value: '2024', label: '2024' },
+									{ value: '2025', label: '2025' },
+									{ value: '2026', label: '2026' },
+								]}
+							/>
 						</div>
 					</div>
 					<div className='row'>
@@ -608,14 +617,18 @@ const HREmployeeSalary = () => {
 						</div>
 						<div className='col-md-6 mb-4'>
 							<label className='form-label'>Transaction Type</label>
-							<select
-								className='form-select'
+							<SelectField
 								value={transactionType}
-								onChange={(e) => setTransactionType(e.target.value)}>
-								<option value='IMPS'>IMPS</option>
-								<option value='RTGS'>RTGS</option>
-								<option value='NEFT'>NEFT</option>
-							</select>
+								onChange={(val: any) => {
+									const value = typeof val === 'object' && val?.target ? val.target.value : val
+									setTransactionType(value)
+								}}
+								options={[
+									{ value: 'IMPS', label: 'IMPS' },
+									{ value: 'RTGS', label: 'RTGS' },
+									{ value: 'NEFT', label: 'NEFT' },
+								]}
+							/>
 						</div>
 					</div>
 					<div className='col-12'>

@@ -23,6 +23,8 @@ import toast from 'react-hot-toast'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import InputField from '../../../components/InputField'
+import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SearchFilter from '../../../components/SearchFilter'
 import SelectFieldManual from '../../../components/SelectFieldManual'
 import UsersListPagination from '../../../components/TablePagination'
@@ -227,6 +229,10 @@ const ManageCoupon: React.FC = () => {
 		setPagination({ ...pagination, page })
 	}
 
+	const handleItemsPerPageChange = (itemsPerPage: number) => {
+		setPagination((prev) => ({ ...prev, itemsPerPage, page: 1 }))
+	}
+
 	const filteredCouponData = referenceData.filter((data: any) =>
 		(data.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
 		(data.coupon_code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -365,11 +371,30 @@ const ManageCoupon: React.FC = () => {
 			<div className='gz-prod-card'>
 				{/* Toolbar */}
 				<div className='gz-prod-toolbar'>
-					<div className='d-flex align-items-center gap-3 flex-wrap flex-grow-1'>
-						<div style={{ minWidth: '280px', maxWidth: '420px', flexGrow: 1 }}>
-							<SearchFilter
-								searchTerm={searchTerm}
-								setSearchTerm={setSearchTerm}
+					<div className='d-flex align-items-center gap-3 flex-wrap'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
+						<LengthMenu
+							expenseData={filteredCouponData}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
+						<div>
+							<DownloadExcelButton
+								data={filteredCouponData.map((c: any) => ({
+									Title: c.title || '',
+									'Coupon Code': c.coupon_code || '',
+									'Assigned Trainer': c.assign_trainer?.name || 'All Trainers',
+									'Max Usage': c.max_usage || '',
+									Discount: c.discount || '',
+									'Discount Type': c.discount_type || '',
+									'Expiry Date': c.expired_at ? DayJS(c.expired_at).format('DD-MM-YYYY') : 'Never',
+								}))}
+								filename='Coupons_List'
 							/>
 						</div>
 					</div>

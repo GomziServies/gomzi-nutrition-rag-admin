@@ -11,7 +11,7 @@ import {
 	IToolbar,
 } from './LayoutModels'
 
-const LAYOUT_CONFIG_KEY = 'metronic-react-demo1-8120' || 'LayoutConfig'
+const LAYOUT_CONFIG_KEY = 'metronic-react-demo1-8120'
 
 export function getLayout(): ILayout {
 	const ls = localStorage.getItem(LAYOUT_CONFIG_KEY)

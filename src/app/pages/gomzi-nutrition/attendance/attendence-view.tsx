@@ -9,6 +9,7 @@ import CopyableInput from '../../../components/CopyableInput'
 import DateFilter from '../../../components/DateRangePicker'
 import InputField from '../../../components/InputField'
 import LengthMenu from '../../../components/LengthMenu'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import SelectField from '../../../components/SelectField'
 import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
@@ -333,8 +334,12 @@ const AttendenceView = () => {
                             expenseData={attendanceData}
                             handleItemsPerPageChange={handleItemsPerPageChange}
                         />
-                        <div style={{ minWidth: '220px' }}>
-                            <DateFilter onDateRangeChange={handleDateRangeChange} rightValue='0' />
+                        <div>
+                            <DownloadExcelButton
+                                onClick={downloadExcel}
+                                disabled={loading}
+                                title='Export Excel'
+                            />
                         </div>
                         <div style={{ minWidth: '160px' }}>
                             <SelectField
@@ -348,17 +353,9 @@ const AttendenceView = () => {
                                 options={['Present', 'Absent', 'Leave']}
                             />
                         </div>
-                    </div>
-                    <div className='gz-mgmt-toolbar-right'>
-                        <button
-                            type='button'
-                            className='gz-mgmt-export-btn'
-                            onClick={downloadExcel}
-                            disabled={loading}
-                        >
-                            <FontAwesomeIcon icon={faDownload} />
-                            Export Excel
-                        </button>
+                        <div style={{ minWidth: '220px' }}>
+                            <DateFilter onDateRangeChange={handleDateRangeChange} rightValue='0' />
+                        </div>
                     </div>
                 </div>
 

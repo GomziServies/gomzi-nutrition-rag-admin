@@ -13,6 +13,7 @@ import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
+import DateFilter from '../../../components/DateRangePicker'
 import {
 	ActionEmployeeLeave,
 	CreateEmployeeLeave,
@@ -135,11 +136,35 @@ const HRManualLeave: React.FC = () => {
 			await CreateEmployeeLeave(payload)
 			toast.success('Leave Added Successfully')
 			fetchLeaveData()
-			setShowModal(false)
+			handleCloseAddModal()
 		} catch (error: any) {
 			toast.error(error.message)
 			console.error(error)
 		}
+	}
+
+	const resetFormFields = () => {
+		setFromDate('')
+		setToDate('')
+		setReason('')
+		setNotes('')
+		setLeaveType('full')
+		setHalfDayPeriod('')
+	}
+
+	const handleShowAddModal = () => {
+		resetFormFields()
+		setShowModal(true)
+	}
+
+	const handleCloseAddModal = () => {
+		resetFormFields()
+		setShowModal(false)
+	}
+
+	const handleCloseUpdateModal = () => {
+		resetFormFields()
+		setShowUpdateModal(false)
 	}
 
 	const handleUpdateLeave = async (leave_id?: string) => {
@@ -184,7 +209,7 @@ const HRManualLeave: React.FC = () => {
 			await ActionEmployeeLeave(payload)
 			toast.success('Leave Updated Successfully')
 			fetchLeaveData()
-			setShowUpdateModal(false)
+			handleCloseUpdateModal()
 		} catch (error: any) {
 			toast.error(error.message)
 			console.error(error)
@@ -195,14 +220,14 @@ const HRManualLeave: React.FC = () => {
 		setUpdateLeaveData(data)
 		setShowUpdateModal(true)
 
-		setLeaveType(data.leave_type)
+		setLeaveType(data.leave_type || 'full')
 		setHalfDayPeriod(data.half_day_period || '')
 
-		setFromDate(data.from_date)
-		setToDate(data.to_date)
+		setFromDate(data.from_date || '')
+		setToDate(data.to_date || '')
 
-		setReason(data.reason)
-		setNotes(data.notes)
+		setReason(data.reason || '')
+		setNotes(data.notes || '')
 	}
 
 	const sortableFields = [
@@ -289,12 +314,34 @@ const HRManualLeave: React.FC = () => {
 		}
 	}
 
+	const [dateRange, setDateRange] = useState<[Date, Date] | null>(null)
+
+	const handleDateRangeChange = (range: [Date, Date] | null) => {
+		setDateRange(range)
+		setPagination((prev) => ({ ...prev, page: 1 }))
+	}
+
 	const filteredAdminData = leaveData.filter((admin: any) => {
-		return (
+		const matchesSearch =
 			admin?.admin_id?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			admin?.reason?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			admin?.notes?.toLowerCase().includes(searchTerm.toLowerCase())
-		)
+
+		let matchesDate = true
+		if (dateRange && dateRange[0] && dateRange[1]) {
+			const isAllDates = new Date(dateRange[0]).getFullYear() <= 2015
+			if (!isAllDates && (admin?.from_date || admin?.createdAt)) {
+				const start = new Date(dateRange[0])
+				start.setHours(0, 0, 0, 0)
+				const end = new Date(dateRange[1])
+				end.setHours(23, 59, 59, 999)
+
+				const d = new Date(admin?.from_date || admin?.createdAt)
+				matchesDate = d >= start && d <= end
+			}
+		}
+
+		return matchesSearch && matchesDate
 	})
 
 	const paginatedAdminData = filteredAdminData.slice(
@@ -364,9 +411,19 @@ const HRManualLeave: React.FC = () => {
 						{/* 3. Download Excel Button */}
 						<div>
 							<DownloadExcelButton
-								data={leaveData}
+								data={filteredAdminData}
 								columns={sortableFields}
 								filename='Festival_Leaves'
+							/>
+						</div>
+
+						{/* 4. Date Filter */}
+						<div>
+							<DateFilter
+								onDateRangeChange={handleDateRangeChange}
+								rightValue='0'
+								defaultAllDates={true}
+								storageKey='hr_manual_leave_date_range'
 							/>
 						</div>
 					</div>
@@ -376,7 +433,7 @@ const HRManualLeave: React.FC = () => {
 						<TableButton
 							action='add'
 							text='Add Leave'
-							onClick={() => setShowModal(true)}
+							onClick={handleShowAddModal}
 						/>
 					</div>
 				</div>
@@ -384,8 +441,7 @@ const HRManualLeave: React.FC = () => {
 
 			{/* Main Table Card */}
 			<div className='gz-inv-table-card'>
-				<div className='table-responsive'>
-								<Table
+				<Table
 									data={paginatedAdminData}
 									columns={sortableFields}
 									sort={sort}
@@ -538,7 +594,6 @@ const HRManualLeave: React.FC = () => {
 									setPagination={setPagination}
 									loading={loading}
 								/>
-							</div>
 				{paginatedAdminData.length === 0 && !loading && (
 					<div className='d-flex text-center w-100 align-content-center justify-content-center py-12'>
 						<b>No records found</b>
@@ -558,7 +613,7 @@ const HRManualLeave: React.FC = () => {
 			<Modal
 				show={showModal}
 				centered
-				onHide={() => setShowModal(false)}>
+				onHide={handleCloseAddModal}>
 				<Modal.Header closeButton>
 					<Modal.Title>Add Leave</Modal.Title>
 				</Modal.Header>
@@ -737,7 +792,7 @@ const HRManualLeave: React.FC = () => {
 				<Modal.Footer>
 					<Button
 						variant='secondary'
-						onClick={() => setShowModal(false)}>
+						onClick={handleCloseAddModal}>
 						Close
 					</Button>
 					<Button
@@ -751,7 +806,7 @@ const HRManualLeave: React.FC = () => {
 			<Modal
 				show={showUpdateModal}
 				centered
-				onHide={() => setShowUpdateModal(false)}>
+				onHide={handleCloseUpdateModal}>
 				<Modal.Header closeButton>
 					<Modal.Title>Update Leave</Modal.Title>
 				</Modal.Header>
@@ -812,7 +867,7 @@ const HRManualLeave: React.FC = () => {
 				<Modal.Footer>
 					<Button
 						variant='secondary'
-						onClick={() => setShowUpdateModal(false)}>
+						onClick={handleCloseUpdateModal}>
 						Close
 					</Button>
 					<Button

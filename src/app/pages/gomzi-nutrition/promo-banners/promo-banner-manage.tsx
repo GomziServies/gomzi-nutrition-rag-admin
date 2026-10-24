@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import SelectField from '../../../components/SelectField'
 import { GetCompaniesAdmin } from '../../../Functions/FGGroup/Company'
 import {
 	PromoBannerItem,
@@ -608,17 +609,18 @@ export default function PromoBannerManage() {
 										<label className='form-label fw-bold text-gray-800 required'>
 											Select Company / Brand
 										</label>
-										<select
-											className='form-select form-select-solid'
+										<SelectField
 											value={formData.brand}
-											onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-										>
-											{availableCompanies.map((cName) => (
-												<option key={cName} value={cName}>
-													{cName}
-												</option>
-											))}
-										</select>
+											onChange={(e: any) => setFormData({ ...formData, brand: e.target.value })}
+											options={availableCompanies.map((cName) => ({
+												label: cName,
+												value: cName,
+											}))}
+											showLabel={false}
+											marginRemove={true}
+											hideDefaultOption={true}
+											searchable={availableCompanies.length > 5}
+										/>
 										<div className='form-text text-muted'>
 											Select which nutrition company this advertisement banner will represent on the homepage showcase.
 										</div>

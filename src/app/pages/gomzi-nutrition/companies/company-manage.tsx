@@ -6,7 +6,6 @@ import Swal from 'sweetalert2'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faPlus,
-	faBullhorn,
 	faTrash,
 	faEdit,
 	faArrowUp,
@@ -28,6 +27,8 @@ import {
 	faIndustry,
 } from '@fortawesome/free-solid-svg-icons'
 import { PageTitle } from '../../../../_metronic/layout/core'
+import DownloadExcelButton from '../../../components/DownloadExcelButton'
+import SelectField from '../../../components/SelectField'
 import {
 	CompanyItem,
 	GetCompaniesAdmin,
@@ -306,10 +307,6 @@ export const CompanyManage: React.FC = () => {
 					</p>
 				</div>
 				<div className='d-flex align-items-center gap-3'>
-					<Link to='/rag/company-ads' className='btn btn-sm btn-light-warning d-inline-flex align-items-center gap-2 py-2 px-3 fw-bold'>
-						<FontAwesomeIcon icon={faBullhorn} />
-						<span>Company Ads</span>
-					</Link>
 					<Link to='/rag/product-add' className='gz-prod-btn-cancel text-decoration-none'>
 						+ Add Product
 					</Link>
@@ -391,15 +388,36 @@ export const CompanyManage: React.FC = () => {
 						/>
 					</div>
 
-					<select
-						className='gz-prod-select'
-						value={statusFilter}
-						onChange={(e) => setStatusFilter(e.target.value)}
-						title='Filter by Status'>
-						<option value='All'>All Status</option>
-						<option value='Active'>Active Only</option>
-						<option value='Inactive'>Inactive Only</option>
-					</select>
+					<DownloadExcelButton
+						data={filteredCompanies}
+						columns={[
+							{ title: 'Company Name', field: 'name' },
+							{ title: 'Manufacturer', field: 'manufacturer' },
+							{ title: 'Tagline', field: 'tagline' },
+							{ title: 'Country of Origin', field: 'countryOfOrigin' },
+							{ title: 'Website', field: 'website' },
+							{ title: 'FSSAI License', field: 'fssaiLicense' },
+							{ title: 'Status', field: 'status' },
+						]}
+						filename='companies-list'
+					/>
+
+					<div style={{ minWidth: '140px' }}>
+						<SelectField
+							value={statusFilter}
+							onChange={(e: any) => setStatusFilter(e.target.value)}
+							options={[
+								{ label: 'All Status', value: 'All' },
+								{ label: 'Active Only', value: 'Active' },
+								{ label: 'Inactive Only', value: 'Inactive' },
+							]}
+							showLabel={false}
+							marginRemove={true}
+							hideDefaultOption={true}
+							searchable={false}
+							defaultLabel='All Status'
+						/>
+					</div>
 				</div>
 
 				<div className='gz-prod-toolbar-right'>
@@ -728,20 +746,25 @@ export const CompanyManage: React.FC = () => {
 										<div className='col-12 col-md-6'>
 											<div className='gz-prod-field-group'>
 												<label className='gz-prod-label'>Country of Origin</label>
-												<select
-													className='gz-prod-select'
+												<SelectField
 													value={formData.countryOfOrigin || 'India'}
-													onChange={(e) =>
+													onChange={(e: any) =>
 														setFormData((prev) => ({ ...prev, countryOfOrigin: e.target.value }))
-													}>
-													<option value='India'>India</option>
-													<option value='USA'>USA</option>
-													<option value='UK'>United Kingdom</option>
-													<option value='Germany'>Germany</option>
-													<option value='Canada'>Canada</option>
-													<option value='Australia'>Australia</option>
-													<option value='Other'>Other</option>
-												</select>
+													}
+													options={[
+														{ label: 'India', value: 'India' },
+														{ label: 'USA', value: 'USA' },
+														{ label: 'United Kingdom', value: 'UK' },
+														{ label: 'Germany', value: 'Germany' },
+														{ label: 'Canada', value: 'Canada' },
+														{ label: 'Australia', value: 'Australia' },
+														{ label: 'Other', value: 'Other' },
+													]}
+													showLabel={false}
+													marginRemove={true}
+													hideDefaultOption={true}
+													searchable={false}
+												/>
 											</div>
 										</div>
 
