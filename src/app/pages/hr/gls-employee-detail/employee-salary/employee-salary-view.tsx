@@ -15,6 +15,155 @@ import { GetExpenseReports } from '../../../../Functions/FGGroup/ExpenseReport'
 import { GetAdminUsers } from '../../../../Functions/FGGroup/AdminUsers'
 import '../../salary/employee-salary-view.css'
 
+const GlsEmployeeSalaryViewSkeleton: React.FC = () => {
+    return (
+        <div className='gz-salary-view-skeleton'>
+            <div className='d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5'>
+                <div className='gz-skeleton' style={{ width: '220px', height: '38px', borderRadius: '8px' }}></div>
+                <div className='d-flex align-items-center gap-2'>
+                    <div className='gz-skeleton' style={{ width: '110px', height: '32px', borderRadius: '9999px' }}></div>
+                    <div className='gz-skeleton' style={{ width: '130px', height: '32px', borderRadius: '9999px' }}></div>
+                </div>
+            </div>
+
+            <div
+                className='card shadow-sm border-0 mb-6'
+                style={{
+                    borderRadius: '14px',
+                    border: '1px solid #E4EAF2',
+                    background: '#ffffff',
+                }}>
+                <div className='card-body p-6'>
+                    <div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
+                        <div className='d-flex align-items-center gap-4'>
+                            <div
+                                className='gz-skeleton'
+                                style={{
+                                    width: '64px',
+                                    height: '64px',
+                                    borderRadius: '50%',
+                                    flexShrink: 0,
+                                }}
+                            />
+                            <div>
+                                <div className='gz-skeleton mb-2' style={{ width: '240px', height: '24px', borderRadius: '6px' }} />
+                                <div className='d-flex align-items-center gap-3'>
+                                    <div className='gz-skeleton' style={{ width: '90px', height: '14px', borderRadius: '4px' }} />
+                                    <div className='gz-skeleton' style={{ width: '110px', height: '14px', borderRadius: '4px' }} />
+                                    <div className='gz-skeleton' style={{ width: '140px', height: '14px', borderRadius: '4px' }} />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className='d-flex align-items-center flex-wrap ms-auto' style={{ gap: '14px' }}>
+                            {Array.from({ length: 4 }).map((_, idx) => (
+                                <div
+                                    key={`stat-pill-skel-${idx}`}
+                                    className='gz-salary-stat-pill d-flex flex-column align-items-center justify-content-center'
+                                    style={{ minWidth: '130px', height: '70px' }}>
+                                    <div className='gz-skeleton mb-2' style={{ width: '70px', height: '12px', borderRadius: '4px' }} />
+                                    <div className='gz-skeleton' style={{ width: '90px', height: '22px', borderRadius: '6px' }} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                className='card shadow-sm border-0 mb-6'
+                style={{
+                    borderRadius: '14px',
+                    border: '1px solid #E4EAF2',
+                    background: '#ffffff',
+                }}>
+                <div className='card-header border-0 pt-6 px-6 pb-2 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+                    <div>
+                        <div className='gz-skeleton mb-2' style={{ width: '260px', height: '22px', borderRadius: '6px' }} />
+                        <div className='gz-skeleton' style={{ width: '380px', height: '14px', borderRadius: '4px' }} />
+                    </div>
+                    <div className='gz-skeleton' style={{ width: '220px', height: '38px', borderRadius: '8px' }} />
+                </div>
+                <div className='card-body p-6 pt-3'>
+                    <div className='table-responsive'>
+                        <table className='gz-calc-table'>
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '68%' }}>Description / Adjustment Reason</th>
+                                    <th className='text-end' style={{ width: '32%' }}>Amount (INR)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Array.from({ length: 5 }).map((_, idx) => (
+                                    <tr key={`calc-skel-row-${idx}`}>
+                                        <td className='py-4'>
+                                            <div className='d-flex align-items-center gap-3'>
+                                                <div className='gz-skeleton' style={{ width: '20px', height: '20px', borderRadius: '4px' }} />
+                                                <div className='gz-skeleton' style={{ width: `${50 + (idx % 3) * 15}%`, height: '16px', borderRadius: '4px' }} />
+                                            </div>
+                                        </td>
+                                        <td className='text-end py-4'>
+                                            <div className='gz-skeleton ms-auto' style={{ width: '90px', height: '18px', borderRadius: '4px' }} />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div className='gz-filter-card mb-4'>
+                <div className='d-flex align-items-center flex-wrap gap-3 w-100'>
+                    <div className='gz-skeleton' style={{ width: '280px', height: '42px', borderRadius: '8px' }} />
+                    <div className='gz-skeleton' style={{ width: '100px', height: '42px', borderRadius: '8px' }} />
+                    <div className='d-none d-md-block ms-auto' />
+                    <div className='gz-skeleton' style={{ width: '180px', height: '36px', borderRadius: '9999px' }} />
+                </div>
+            </div>
+
+            <div className='gz-inv-table-card'>
+                <div className='card-header border-0 pt-5 px-6 pb-2 d-flex align-items-center justify-content-between'>
+                    <div>
+                        <div className='gz-skeleton mb-2' style={{ width: '280px', height: '20px', borderRadius: '6px' }} />
+                        <div className='gz-skeleton' style={{ width: '360px', height: '13px', borderRadius: '4px' }} />
+                    </div>
+                </div>
+                <div className='py-4 card-body px-6'>
+                    <div className='table-responsive'>
+                        <table className='table align-middle table-row-dashed fs-6 gy-4 mb-0'>
+                            <thead>
+                                <tr className='text-start text-muted fw-bold fs-7 text-uppercase gs-0 border-bottom border-gray-200'>
+                                    <th className='w-40px text-center ps-4'>#</th>
+                                    <th>Over Time</th>
+                                    <th>Work Time</th>
+                                    <th>Date</th>
+                                    <th>Half Day</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Array.from({ length: 6 }).map((_, idx) => (
+                                    <tr key={`att-skel-tr-${idx}`} className='gz-skeleton-tr'>
+                                        <td className='text-center ps-4'>
+                                            <div className='gz-skeleton' style={{ width: '20px', height: '16px', borderRadius: '4px' }} />
+                                        </td>
+                                        <td><div className='gz-skeleton' style={{ width: '80px', height: '16px', borderRadius: '4px' }} /></td>
+                                        <td><div className='gz-skeleton' style={{ width: '90px', height: '16px', borderRadius: '4px' }} /></td>
+                                        <td><div className='gz-skeleton' style={{ width: '110px', height: '16px', borderRadius: '4px' }} /></td>
+                                        <td><div className='gz-skeleton' style={{ width: '70px', height: '16px', borderRadius: '4px' }} /></td>
+                                        <td><div className='gz-skeleton' style={{ width: '85px', height: '22px', borderRadius: '9999px' }} /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 const GlsEmployeeSalaryView = () => {
     const location = useLocation()
     const searchParams = new URLSearchParams(location.search)
@@ -23,7 +172,7 @@ const GlsEmployeeSalaryView = () => {
     const [searchTerm, setSearchTerm] = useState('')
     const [salaryData, setSalaryData] = useState<any>([])
     const [employeeData, setEmployeeData] = useState<any>({})
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [sort, setSort] = useState('date')
     const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
     const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
@@ -217,6 +366,15 @@ const GlsEmployeeSalaryView = () => {
     const oneDaySalary = Math.round(baseSalary / 30)
     const deductedSalary = Number(employeeData?.deducted_salary) || 0
     const finalSalary = Number(employeeData?.final_salary) || 0
+
+    if (loading && (!employeeData || Object.keys(employeeData).length === 0)) {
+        return (
+            <>
+                <PageTitle breadcrumbs={[]}>GLS Employee Salary Details</PageTitle>
+                <GlsEmployeeSalaryViewSkeleton />
+            </>
+        )
+    }
 
     return (
         <>
@@ -588,10 +746,13 @@ const GlsEmployeeSalaryView = () => {
 
                     {/* Total Count Badge */}
                     <div>
-                        <span className='badge badge-light-secondary text-dark fw-bold fs-7 px-3 py-2'>
-                            <i className='bi bi-calendar3 text-muted me-1.5'></i>
-                            {filteredSalaryData?.length || 0} Attendance Records
-                        </span>
+                        <div className='gz-attendance-count-badge'>
+                            <span className='badge-icon-box'>
+                                <i className='bi bi-calendar3'></i>
+                            </span>
+                            <span className='badge-count'>{filteredSalaryData?.length || 0}</span>
+                            <span className='badge-label'>Attendance Records</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -612,6 +773,7 @@ const GlsEmployeeSalaryView = () => {
                 <div className='py-4 card-body px-6'>
                     <div className='table-responsive'>
                         <Table
+                            loading={loading}
                             data={paginatedSalaryData}
                             columns={sortableFields}
                             sort={sort}

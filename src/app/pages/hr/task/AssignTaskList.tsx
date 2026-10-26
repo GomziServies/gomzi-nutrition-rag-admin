@@ -41,6 +41,23 @@ const HRAssignTaskList: React.FC = () => {
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
 	const employeeId: any = searchParams.get('employeeId')
+	const urlStatus = searchParams.get('status')
+	const urlFilter = searchParams.get('filter')
+	const urlAll = searchParams.get('all')
+	const urlScope = searchParams.get('scope')
+
+	const [dataScope, setDataScope] = useState<'rag' | 'all'>(() => {
+		if (urlScope === 'all') return 'all'
+		return 'rag' // default to RAG in RAG portal
+	})
+
+	const [activeSpecialFilter, setActiveSpecialFilter] = useState<'all' | 'kpi' | 'overdue' | 'p1'>(() => {
+		if (urlFilter === 'kpi') return 'kpi'
+		if (urlFilter === 'overdue') return 'overdue'
+		if (urlFilter === 'p1') return 'p1'
+		return 'all'
+	})
+
 	const [searchTerm, setSearchTerm] = useState(() => {
 		return localStorage.getItem('hr_assign_task_search') || ''
 	})
@@ -57,6 +74,9 @@ const HRAssignTaskList: React.FC = () => {
 	})
 	const [hrStatus, setHrStatus] = useState<'Select' | 'Pending' | 'Employee Done' | 'HR Done'>(
 		() => {
+			if (urlStatus === 'Pending' || urlStatus === 'Employee Done' || urlStatus === 'HR Done') {
+				return urlStatus
+			}
 			try {
 				const savedStatus = localStorage.getItem('hr_assign_task_status')
 				return savedStatus
@@ -88,6 +108,9 @@ const HRAssignTaskList: React.FC = () => {
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
 	const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>(() => {
+		if (urlAll === 'true' || urlFilter === 'overdue' || urlFilter === 'kpi') {
+			return null
+		}
 		try {
 			const savedDateRange = localStorage.getItem('selectedDateRange')
 			if (savedDateRange && savedDateRange !== 'undefined') {
@@ -133,13 +156,87 @@ const HRAssignTaskList: React.FC = () => {
 		})
 	})
 
+	// React to URL changes (e.g. from Dashboard view links)
+	useEffect(() => {
+		const params = new URLSearchParams(location.search)
+		const st = params.get('status')
+		const fl = params.get('filter')
+		const all = params.get('all')
+		const sc = params.get('scope')
+		if (st && ['Pending', 'Employee Done', 'HR Done'].includes(st)) {
+			setHrStatus(st as any)
+		}
+		if (fl && ['kpi', 'overdue', 'p1'].includes(fl)) {
+			setActiveSpecialFilter(fl as any)
+		} else if (!fl) {
+			setActiveSpecialFilter('all')
+		}
+		if (sc === 'all') {
+			setDataScope('all')
+		} else if (sc === 'rag') {
+			setDataScope('rag')
+		}
+		if (all === 'true' || fl === 'overdue' || fl === 'kpi') {
+			setSelectedDateRange(null)
+		}
+	}, [location.search])
+
 	const filteredTaskData = React.useMemo(() => {
 		if (!assignTaskData) return []
-		if (!searchTerm) return assignTaskData
-		return assignTaskData.filter((data: any) =>
-			data?.task_title?.toLowerCase().includes(searchTerm.toLowerCase())
-		)
-	}, [assignTaskData, searchTerm])
+		let list = assignTaskData
+
+		// RAG Data Scope filter
+		if (dataScope === 'rag') {
+			list = list.filter((task: any) => {
+				const title = (task?.task_title || '').toLowerCase()
+				const remark = (task?.remark_by_hr || task?.remark_by_employee || '').toLowerCase()
+				const text = `${title} ${remark}`
+				const emp = employeeData?.find((e: any) => e.id === task?.admin_id)
+				const empName = (emp?.name || '').toLowerCase()
+				return (
+					text.includes('rag') ||
+					text.includes('gomzi') ||
+					text.includes('gn ') ||
+					text.includes('gn-') ||
+					text.includes('nutrition') ||
+					text.includes('supplement') ||
+					text.includes('protein') ||
+					text.includes('creatine') ||
+					text.includes('whey') ||
+					text.includes('b2b') ||
+					empName.includes('rag') ||
+					empName.includes('gomzi')
+				)
+			})
+		}
+
+		if (activeSpecialFilter === 'kpi') {
+			list = list.filter(
+				(data: any) =>
+					data?.is_kpi ||
+					data?.kpi ||
+					data?.priority === 'KPI' ||
+					data?.financial_worth ||
+					data?.social_worth
+			)
+		} else if (activeSpecialFilter === 'overdue') {
+			list = list.filter((data: any) => {
+				const isPending = data?.status === 'PENDING' || data?.status === 'pending'
+				return isPending && data?.end_date && DayJS(data.end_date).isBefore(DayJS())
+			})
+		} else if (activeSpecialFilter === 'p1') {
+			list = list.filter(
+				(data: any) => data?.status === 'PENDING' || data?.status === 'pending'
+			)
+		}
+
+		if (searchTerm) {
+			list = list.filter((data: any) =>
+				data?.task_title?.toLowerCase().includes(searchTerm.toLowerCase())
+			)
+		}
+		return list
+	}, [assignTaskData, searchTerm, activeSpecialFilter, dataScope, employeeData])
 
 	const { totalPages, totalRecords } = React.useMemo(
 		() => resolvePaginationMeta(metaData, filteredTaskData.length, pagination.itemsPerPage),
@@ -910,6 +1007,54 @@ const HRAssignTaskList: React.FC = () => {
 			</div>
 
 			<div className='gz-inv-table-card'>
+				{/* Active Filter Banner when navigated from HR Dashboard or in RAG Scope */}
+				{(activeSpecialFilter !== 'all' || dataScope === 'rag') && (
+					<div className='d-flex align-items-center justify-content-between p-3 mx-4 mt-4 bg-light-primary rounded border border-primary border-opacity-25 flex-wrap gap-2'>
+						<div className='d-flex align-items-center gap-2 flex-wrap'>
+							<span className='badge badge-success fs-8'>
+								<i className='bi bi-shield-check me-1'></i>
+								Scope: {dataScope === 'rag' ? 'RAG Tasks Only' : 'All Group Tasks'}
+							</span>
+							{activeSpecialFilter !== 'all' && (
+								<span className='fs-7 text-dark fw-bold'>
+									Filter Active:{' '}
+									<span className='badge badge-primary fs-8 text-capitalize ms-1'>
+										{activeSpecialFilter === 'p1'
+											? 'Priority 1 (Pending Tasks)'
+											: activeSpecialFilter === 'kpi'
+											? 'KPI Flagged Tasks'
+											: 'Overdue Tasks'}
+									</span>
+								</span>
+							)}
+							<span className='text-muted fs-8 ms-1'>
+								({filteredTaskData.length} task{filteredTaskData.length !== 1 ? 's' : ''} found)
+							</span>
+						</div>
+						<div className='d-flex align-items-center gap-2'>
+							<button
+								type='button'
+								className='btn btn-xs btn-outline-primary py-1 px-2 fs-8'
+								onClick={() => {
+									setDataScope((prev) => (prev === 'rag' ? 'all' : 'rag'))
+								}}>
+								{dataScope === 'rag' ? 'Show All Group Tasks' : 'Show RAG Tasks Only'}
+							</button>
+							{activeSpecialFilter !== 'all' && (
+								<button
+									type='button'
+									className='btn btn-sm btn-light-danger py-1 px-3 fs-8 fw-semibold'
+									onClick={() => {
+										setActiveSpecialFilter('all')
+										setHrStatus('Select')
+										Navigate('/hr/task-list' + (dataScope === 'rag' ? '?scope=rag' : ''))
+									}}>
+									&times; Clear Filter
+								</button>
+							)}
+						</div>
+					</div>
+				)}
 
 				{/* Bulk Actions Section */}
 				{filteredTaskData.some(

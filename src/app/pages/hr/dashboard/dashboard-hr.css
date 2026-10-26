@@ -1,344 +1,359 @@
 /* =========================================================================
-   GOMZI HR BENTO DASHBOARD 2026 - APPROVED LAVENDER, NAVY & WHITE THEME
+   GOMZI HR CLEAN & MINIMAL DASHBOARD
+   Matches exact approved design: Light background, 8 KPI cards,
+   Team Birthday Celebrations, Team Leave Status & Memo Watchlist
    ========================================================================= */
 
-.gz-hr-bento-dashboard {
-	background-color: #f7f6fd;
-	padding: 24px 28px;
+.gz-hr-simple-dashboard {
+	background-color: #f8fafc;
 	min-height: 100vh;
-	font-family: inherit;
+	padding: 24px 28px;
 	color: #0f172a;
+	font-family: inherit;
 }
 
 @media (max-width: 768px) {
-	.gz-hr-bento-dashboard {
+	.gz-hr-simple-dashboard {
 		padding: 16px 12px;
 	}
 }
 
-/* General Bento Card System */
-.gz-bento-card {
-	background: #ffffff;
-	border: 1px solid rgba(226, 232, 240, 0.9);
-	border-radius: 28px;
-	box-shadow: 0 4px 20px -2px rgba(124, 58, 237, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-	position: relative;
-	overflow: hidden;
-	transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
-}
-
-.gz-bento-card:hover {
-	box-shadow: 0 8px 28px -4px rgba(124, 58, 237, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-}
-
-.gz-bento-card-header {
-	padding: 22px 24px 14px 24px;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.gz-bento-card-title {
-	font-size: 16px;
-	font-weight: 700;
-	color: #0f172a;
-	margin: 0;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.gz-bento-card-subtitle {
-	font-size: 12.5px;
-	color: #64748b;
-	margin: 2px 0 0 0;
-	font-weight: 500;
-}
-
-.gz-bento-view-all {
-	font-size: 13px;
-	font-weight: 600;
-	color: #2563eb;
-	text-decoration: none;
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	transition: color 0.15s ease, transform 0.15s ease;
-}
-
-.gz-bento-view-all:hover {
-	color: #1d4ed8;
-	transform: translateX(2px);
-}
-
-/* -------------------------------------------------------------------------
-   SECTION 1: TOP ROW (HERO + KPI STRIP)
-   ------------------------------------------------------------------------- */
-.gz-bento-hero {
-	background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
-	border: 1px solid rgba(221, 214, 254, 0.95);
-	border-radius: 36px 18px 36px 36px;
-	padding: 28px 32px;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	position: relative;
-	overflow: hidden;
-	box-shadow: 0 6px 22px -3px rgba(124, 58, 237, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-}
-
-.gz-bento-hero::before {
-	content: '';
-	position: absolute;
-	top: -60px;
-	right: -60px;
-	width: 220px;
-	height: 220px;
-	border-radius: 50%;
-	background: radial-gradient(circle, rgba(167, 139, 250, 0.35) 0%, rgba(221, 214, 254, 0) 70%);
-	pointer-events: none;
-}
-
-.gz-bento-hero-date-badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	background: rgba(255, 255, 255, 0.7);
-	backdrop-filter: blur(8px);
-	border: 1px solid rgba(255, 255, 255, 0.9);
-	color: #5b21b6;
-	font-size: 11px;
-	font-weight: 800;
-	letter-spacing: 0.05em;
-	padding: 5px 14px;
-	border-radius: 20px;
-	margin-bottom: 18px;
-	width: fit-content;
-}
-
-.gz-bento-hero-title {
-	font-size: 32px;
-	font-weight: 800;
-	color: #0f172a;
-	line-height: 1.15;
-	margin-bottom: 10px;
-	letter-spacing: -0.02em;
-}
-
-.gz-bento-hero-title .gz-wave {
-	display: inline-block;
-	animation: gzWaveHand 2.2s infinite ease-in-out;
-	transform-origin: 70% 70%;
-}
-
-@keyframes gzWaveHand {
-	0%, 60%, 100% { transform: rotate(0deg); }
-	10%, 30% { transform: rotate(14deg); }
-	20% { transform: rotate(-8deg); }
-	40% { transform: rotate(-4deg); }
-	50% { transform: rotate(10deg); }
-}
-
-.gz-bento-hero-desc {
-	font-size: 14px;
-	color: #475569;
-	margin: 0;
-	font-weight: 500;
-	max-width: 320px;
-}
-
-.gz-bento-hero-action-btn {
-	position: absolute;
-	right: 28px;
-	bottom: 28px;
-	width: 50px;
-	height: 50px;
-	border-radius: 50%;
-	background: #0f172a;
-	color: #ffffff;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 18px;
-	box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
-	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-	border: none;
-	cursor: pointer;
-	text-decoration: none;
-}
-
-.gz-bento-hero-action-btn:hover {
-	background: #1e293b;
-	color: #ffffff;
-	transform: scale(1.08) rotate(45deg);
-}
-
-/* KPI Strip */
-.gz-bento-kpi-strip {
-	border-radius: 32px 36px 32px 32px;
-	padding: 24px 28px;
-	height: 100%;
-	display: flex;
-	align-items: center;
-}
-
-.gz-kpi-col {
-	padding: 0 18px;
-	/* border-right: 1px solid #eef2f6; */
-}
-
-.gz-kpi-col:last-child {
-	border-right: none;
-}
-
-@media (max-width: 991px) {
-	.gz-kpi-col {
-		border-right: none;
-		border-bottom: 1px solid #f1f5f9;
-		padding: 14px 0;
-	}
-	.gz-kpi-col:last-child {
-		border-bottom: none;
-	}
-}
-
-.gz-kpi-icon-box {
-	width: 44px;
-	height: 44px;
-	border-radius: 14px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 19px;
-	margin-bottom: 12px;
-	transition: transform 0.2s ease;
-}
-
-.gz-kpi-col:hover .gz-kpi-icon-box {
-	transform: scale(1.08);
-}
-
-.gz-kpi-label {
-	font-size: 12.5px;
-	font-weight: 600;
-	color: #64748b;
-	margin-bottom: 4px;
-	letter-spacing: -0.01em;
-}
-
-.gz-kpi-val {
-	font-size: 32px;
-	font-weight: 800;
-	color: #0f172a;
-	line-height: 1.1;
-	letter-spacing: -0.03em;
-	margin-bottom: 6px;
-	font-variant-numeric: tabular-nums;
-	display: flex;
-	align-items: center;
-}
-
-.gz-kpi-sub {
-	font-size: 11.5px;
-	color: #64748b;
-	font-weight: 500;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-}
-
-/* Skeleton Loading Shimmer */
-.gz-hr-skeleton {
-	background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-	background-size: 200% 100%;
-	animation: gzSkeletonShimmer 1.5s infinite;
-	border-radius: 6px;
-}
-
-@keyframes gzSkeletonShimmer {
-	0% { background-position: 200% 0; }
-	100% { background-position: -200% 0; }
-}
-
-/* -------------------------------------------------------------------------
-   SECTION 2: CELEBRATIONS (BIRTHDAYS & ANNIVERSARIES)
-   ------------------------------------------------------------------------- */
-.gz-celebration-card {
-	padding: 24px 26px;
-	min-height: 255px;
-	position: relative;
-	overflow: hidden;
-}
-
-.gz-celebration-card.is-birthday-card {
-	border-radius: 32px 56px 32px 32px;
-	background: #ffffff;
-}
-
-.gz-celebration-card.is-birthday-card::after {
-	content: '';
-	position: absolute;
-	right: -25px;
-	bottom: -25px;
-	width: 250px;
-	height: 190px;
-	border-radius: 50%;
-	background: radial-gradient(ellipse at center, rgba(254, 205, 211, 0.38) 0%, rgba(255, 255, 255, 0) 70%);
-	pointer-events: none;
-	z-index: 0;
-}
-
-.gz-celebration-card.is-anniversary-card {
-	border-radius: 56px 32px 32px 32px;
-	background: #ffffff;
-}
-
-.gz-celebration-card.is-anniversary-card::after {
-	content: '';
-	position: absolute;
-	right: -25px;
-	bottom: -25px;
-	width: 250px;
-	height: 190px;
-	border-radius: 50%;
-	background: radial-gradient(ellipse at center, rgba(253, 230, 138, 0.35) 0%, rgba(255, 255, 255, 0) 70%);
-	pointer-events: none;
-	z-index: 0;
-}
-
-.gz-celebration-badge-icon {
-	width: 36px;
-	height: 36px;
-	border-radius: 10px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 17px;
-	flex-shrink: 0;
-}
-
-.gz-celebration-body-grid {
+/* =========================================================================
+   SECTION 1: 8 KPI METRIC CARDS GRID (2x4)
+   ========================================================================= */
+.gz-stats-grid {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) 215px;
+	grid-template-columns: repeat(4, 1fr);
 	gap: 16px;
-	align-items: end;
-	margin-top: 8px;
-	position: relative;
-	z-index: 1;
+	margin-bottom: 24px;
+}
+
+@media (max-width: 1200px) {
+	.gz-stats-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
 }
 
 @media (max-width: 576px) {
-	.gz-celebration-body-grid {
+	.gz-stats-grid {
 		grid-template-columns: 1fr;
 	}
 }
 
-.gz-celebration-person-row {
+.gz-stat-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 16px;
+	padding: 20px 22px;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.gz-stat-card:hover {
+	transform: translateY(-2px);
+	border-color: #cbd5e1;
+	box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.06);
+}
+
+.gz-stat-icon-wrap {
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: #eefbf2;
+	color: #16a34a;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	margin-bottom: 12px;
+}
+
+.gz-stat-label {
+	font-size: 13px;
+	font-weight: 500;
+	color: #64748b;
+	margin-bottom: 4px;
+}
+
+.gz-stat-value {
+	font-size: 32px;
+	font-weight: 800;
+	color: #0f172a;
+	line-height: 1.15;
+	margin-bottom: 12px;
+}
+
+.gz-stat-footer {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 7px 0;
+	padding-top: 4px;
+}
+
+.gz-stat-subtext {
+	font-size: 12px;
+	color: #94a3b8;
+	font-weight: 400;
+}
+
+.gz-stat-link {
+	font-size: 12px;
+	font-weight: 600;
+	color: #64748b;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	transition: color 0.15s ease;
+}
+
+.gz-stat-link:hover {
+	color: #16a34a;
+}
+
+/* =========================================================================
+   SECTIONS: TEAM CELEBRATIONS & LEAVE STATUS
+   ========================================================================= */
+.gz-section-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 18px;
+	padding: 24px;
+	margin-bottom: 24px;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+}
+
+.gz-section-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-bottom: 18px;
+}
+
+.gz-section-title-wrap {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.gz-section-icon-box {
+	width: 38px;
+	height: 38px;
+	border-radius: 10px;
+	background: #eefbf2;
+	color: #16a34a;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	flex-shrink: 0;
+}
+
+.gz-section-icon-box.is-teal {
+	background: #f0fdfa;
+	color: #0d9488;
+}
+
+.gz-section-title {
+	font-size: 17px;
+	font-weight: 700;
+	color: #0f172a;
+	margin: 0;
+}
+
+/* Segmented Tabs */
+.gz-pill-tabs {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	padding: 3px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.gz-pill-tab {
+	background: transparent;
+	border: none;
+	border-radius: 8px;
+	padding: 6px 12px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #64748b;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	transition: all 0.15s ease;
+}
+
+.gz-pill-tab:hover {
+	color: #0f172a;
+}
+
+.gz-pill-tab.active {
+	background: #ffffff;
+	color: #0f172a;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.gz-pill-badge {
+	font-size: 11px;
+	font-weight: 700;
+	padding: 1px 6px;
+	border-radius: 10px;
+	background: #f1f5f9;
+	color: #64748b;
+}
+
+.gz-pill-tab.active .gz-pill-badge {
+	background: #e2e8f0;
+	color: #0f172a;
+}
+
+.gz-pill-badge.is-warning {
+	background: #fef3c7;
+	color: #d97706;
+}
+
+/* 2-Column Split inside Section */
+.gz-card-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 20px;
+}
+
+@media (max-width: 991px) {
+	.gz-card-grid-2 {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Left Box: Dashed Empty / Highlight Box */
+.gz-empty-box-dashed {
+	border: 1.5px dashed #cbd5e1;
+	border-radius: 14px;
+	padding: 44px 24px;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 260px;
+	background: #fafbfe;
+}
+
+.gz-empty-icon {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: #eefbf2;
+	color: #16a34a;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	margin-bottom: 14px;
+}
+
+.gz-empty-icon.is-teal {
+	background: #f0fdfa;
+	color: #0d9488;
+}
+
+.gz-empty-title {
+	font-size: 15px;
+	font-weight: 700;
+	color: #0f172a;
+	margin: 0 0 6px 0;
+}
+
+.gz-empty-desc {
+	font-size: 12.5px;
+	color: #64748b;
+	max-width: 330px;
+	margin: 0;
+	line-height: 1.5;
+}
+
+/* Right Box: Solid Bordered List Box */
+.gz-list-box-bordered {
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	padding: 18px 20px;
+	background: #ffffff;
+	display: flex;
+	flex-direction: column;
+	min-height: 260px;
+}
+
+.gz-list-box-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 14px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #f1f5f9;
+}
+
+.gz-list-box-title {
+	font-size: 14px;
+	font-weight: 700;
+	color: #0f172a;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+}
+
+.gz-list-box-title i {
+	color: #16a34a;
+	font-size: 15px;
+}
+
+.gz-list-box-title.is-teal i {
+	color: #0d9488;
+}
+
+.gz-list-badge {
+	background: #f1f5f9;
+	color: #64748b;
+	font-size: 11.5px;
+	font-weight: 600;
+	padding: 3px 10px;
+	border-radius: 12px;
+}
+
+.gz-list-scroll {
+	max-height: 220px;
+	overflow-y: auto;
+	padding-right: 4px;
+}
+
+.gz-list-scroll::-webkit-scrollbar {
+	width: 5px;
+}
+.gz-list-scroll::-webkit-scrollbar-thumb {
+	background: #cbd5e1;
+	border-radius: 4px;
+}
+
+/* List Row */
+.gz-person-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 0;
+	border-bottom: 1px solid #f8fafc;
+}
+
+.gz-person-item:last-child {
+	border-bottom: none;
 }
 
 .gz-person-avatar {
@@ -353,11 +368,13 @@
 	width: 38px;
 	height: 38px;
 	border-radius: 50%;
+	background: #eefbf2;
+	color: #16a34a;
+	font-weight: 700;
+	font-size: 14px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-weight: 700;
-	font-size: 14px;
 	flex-shrink: 0;
 }
 
@@ -369,581 +386,103 @@
 }
 
 .gz-person-role {
-	font-size: 11.5px;
+	font-size: 11px;
+	font-weight: 600;
 	color: #64748b;
+	text-transform: uppercase;
 	margin-top: 2px;
+	letter-spacing: 0.3px;
 }
 
-.gz-pill-today {
-	background: #ffe4e6;
-	color: #e11d48;
-	font-size: 11px;
-	font-weight: 700;
-	padding: 3px 9px;
-	border-radius: 12px;
-}
-
-.gz-pill-tenure {
-	background: #fef3c7;
-	border: 1px solid #fde68a;
-	color: #b45309;
-	font-size: 11px;
-	font-weight: 700;
-	padding: 3px 9px;
-	border-radius: 12px;
+.gz-person-meta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
 
 .gz-person-date {
 	font-size: 12px;
 	font-weight: 600;
-	color: #64748b;
-	margin-left: 8px;
-}
-
-.gz-celebration-footer-link {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-top: 12px;
-	font-size: 12px;
-	font-weight: 600;
-	color: #64748b;
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.gz-celebration-footer-link:hover {
-	color: #2563eb;
-}
-
-.gz-avatar-overlap-group {
-	display: flex;
-	align-items: center;
-}
-
-.gz-avatar-overlap-group .gz-avatar-thumb {
-	width: 24px;
-	height: 24px;
-	border-radius: 50%;
-	border: 2px solid #ffffff;
-	margin-left: -8px;
-	object-fit: cover;
-}
-
-.gz-avatar-overlap-group .gz-avatar-thumb:first-child {
-	margin-left: 0;
-}
-
-.gz-cake-wrapper,
-.gz-trophy-wrapper {
-	display: flex;
-	align-items: flex-end;
-	justify-content: flex-end;
-	min-height: 175px;
-	cursor: pointer;
-	position: relative;
-	user-select: none;
-	outline: none;
-}
-
-.gz-celebration-cake-img,
-.gz-celebration-trophy-img {
-	width: auto;
-	max-width: 100%;
-	height: auto;
-	max-height: 180px;
-	object-fit: contain;
-	mix-blend-mode: multiply;
-	filter: drop-shadow(0 12px 24px rgba(124, 58, 237, 0.14));
-	transform-origin: bottom center;
-	transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-	pointer-events: auto;
-}
-
-.gz-cake-wrapper:hover .gz-celebration-cake-img,
-.gz-trophy-wrapper:hover .gz-celebration-trophy-img,
-.gz-cake-wrapper:focus-visible .gz-celebration-cake-img,
-.gz-trophy-wrapper:focus-visible .gz-celebration-trophy-img {
-	transform: scale(1.06) translateY(-4px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.gz-celebration-cake-img,
-	.gz-celebration-trophy-img {
-		transition: none !important;
-		transform: none !important;
-	}
-	.gz-cake-wrapper:hover .gz-celebration-cake-img,
-	.gz-trophy-wrapper:hover .gz-celebration-trophy-img {
-		transform: none !important;
-	}
-	.gz-bento-hero-title .gz-wave {
-		animation: none !important;
-	}
-}
-
-/* -------------------------------------------------------------------------
-   SECTION 3: OPERATIONS ROW (SCHEDULE, LEAVES, TASKS)
-   ------------------------------------------------------------------------- */
-/* Today's Schedule Timeline */
-.gz-schedule-timeline {
-	position: relative;
-	padding-left: 70px;
-}
-
-.gz-schedule-timeline::before {
-	content: '';
-	position: absolute;
-	left: 80px;
-	top: 10px;
-	bottom: 10px;
-	width: 2px;
-	background: #e2e8f0;
-}
-
-.gz-schedule-item {
-	position: relative;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 9px 0;
-}
-
-.gz-schedule-time {
-	position: absolute;
-	left: -70px;
-	top: 50%;
-	transform: translateY(-50%);
-	font-size: 11.5px;
-	font-weight: 700;
-	color: #64748b;
-	width: 58px;
-	text-align: right;
-}
-
-.gz-schedule-dot {
-	position: absolute;
-	left: 6px;
-	top: 50%;
-	transform: translateY(-50%);
-	width: 10px;
-	height: 10px;
-	border-radius: 50%;
-	background: #2563eb;
-	box-shadow: 0 0 0 3px #ffffff;
-	z-index: 2;
-}
-
-.gz-schedule-icon-box {
-	width: 32px;
-	height: 32px;
-	border-radius: 8px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 14px;
-	flex-shrink: 0;
-	margin-left: 24px;
-}
-
-.gz-schedule-content {
-	flex: 1;
-	margin-left: 10px;
-	overflow: hidden;
-}
-
-.gz-schedule-title {
-	font-size: 13px;
-	font-weight: 700;
 	color: #0f172a;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
 }
 
-.gz-schedule-sub {
-	font-size: 11.5px;
-	color: #64748b;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-/* Schedule Card Shape */
-.gz-bento-card.is-schedule-card {
-	border-radius: 32px 32px 32px 36px;
-}
-
-/* Leave Requests (Lavender Bento Card) */
-.gz-bento-lavender {
-	background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-	border: 1px solid rgba(221, 214, 254, 0.95);
-	border-radius: 28px;
-	box-shadow: 0 4px 20px -2px rgba(124, 58, 237, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-	position: relative;
-	overflow: hidden;
-	transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
-}
-
-.gz-bento-lavender:hover {
-	box-shadow: 0 8px 28px -4px rgba(124, 58, 237, 0.1), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-}
-
-.gz-bento-lavender.is-leave-card {
-	border-radius: 32px 36px 32px 32px;
-}
-
-.gz-leave-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 9px 0;
-	border-bottom: 1px solid rgba(226, 220, 250, 0.7);
-}
-
-.gz-leave-row:last-child {
-	border-bottom: none;
-}
-
-.gz-btn-circle-approve {
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	background: #dcfce7;
+.gz-days-badge {
+	background: #f0fdf4;
+	border: 1px solid #dcfce7;
 	color: #16a34a;
-	border: none;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 14px;
-	font-weight: 800;
-	cursor: pointer;
-	transition: all 0.15s ease;
-}
-
-.gz-btn-circle-approve:hover {
-	background: #16a34a;
-	color: #ffffff;
-	transform: scale(1.08);
-}
-
-.gz-btn-circle-reject {
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	background: #ffe4e6;
-	color: #e11d48;
-	border: none;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 13px;
-	font-weight: 800;
-	cursor: pointer;
-	transition: all 0.15s ease;
-}
-
-.gz-btn-circle-reject:hover {
-	background: #e11d48;
-	color: #ffffff;
-	transform: scale(1.08);
-}
-
-/* Pending Tasks (Dark Navy Card) */
-.gz-bento-navy {
-	background: #0f172a;
-	border: 1px solid #1e293b;
-	border-radius: 28px;
-	color: #ffffff;
-	box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.35);
-	position: relative;
-	overflow: hidden;
-}
-
-.gz-bento-navy.is-task-card {
-	border-radius: 36px 32px 48px 32px;
-	box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.42);
-}
-
-.gz-bento-navy .gz-bento-card-title {
-	color: #ffffff;
-}
-
-.gz-bento-navy .gz-bento-view-all {
-	color: #94a3b8;
-}
-
-.gz-bento-navy .gz-bento-view-all:hover {
-	color: #e2e8f0;
-}
-
-.gz-task-dark-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 8px 10px;
-	border-radius: 12px;
-	background: rgba(30, 41, 59, 0.4);
-	margin-bottom: 8px;
-	transition: background 0.15s ease;
-}
-
-.gz-task-dark-row:hover {
-	background: rgba(30, 41, 59, 0.8);
-}
-
-.gz-task-dark-icon {
-	width: 32px;
-	height: 32px;
-	border-radius: 8px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 14px;
-	flex-shrink: 0;
-}
-
-.gz-task-dark-title {
-	font-size: 13px;
+	font-size: 11px;
 	font-weight: 700;
-	color: #f8fafc;
+	padding: 2px 7px;
+	border-radius: 6px;
 	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
 }
 
-.gz-task-dark-sub {
-	font-size: 11px;
-	color: #94a3b8;
+/* =========================================================================
+   SECTION 4: MEMO WATCHLIST
+   ========================================================================= */
+.gz-memo-section {
+	margin-top: 8px;
+	margin-bottom: 30px;
 }
 
-.gz-pill-priority-high {
-	background: rgba(239, 68, 68, 0.2);
-	color: #f87171;
-	border: 1px solid rgba(239, 68, 68, 0.3);
-	font-size: 11px;
-	font-weight: 700;
-	padding: 2px 8px;
-	border-radius: 8px;
-}
-
-.gz-pill-priority-med {
-	background: rgba(245, 158, 11, 0.2);
-	color: #fbbf24;
-	border: 1px solid rgba(245, 158, 11, 0.3);
-	font-size: 11px;
-	font-weight: 700;
-	padding: 2px 8px;
-	border-radius: 8px;
-}
-
-/* -------------------------------------------------------------------------
-   SECTION 4: INSIGHTS & ACTIONS (DEPT, ACTIVITY, QUICK ACTIONS)
-   ------------------------------------------------------------------------- */
-/* Department Overview Donut */
-.gz-dept-overview-layout {
+.gz-memo-header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 16px;
-	padding: 6px 0;
+	margin-bottom: 12px;
 }
 
-.gz-donut-container {
-	position: relative;
-	width: 125px;
-	height: 125px;
-	flex-shrink: 0;
-}
-
-.gz-donut-center {
-	position: absolute;
-	inset: 0;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-}
-
-.gz-donut-center-val {
-	font-size: 24px;
-	font-weight: 800;
+.gz-memo-title {
+	font-size: 16px;
+	font-weight: 700;
 	color: #0f172a;
-	line-height: 1;
+	margin: 0;
 }
 
-.gz-donut-center-lbl {
-	font-size: 11px;
+.gz-memo-view-all {
+	font-size: 13px;
 	font-weight: 600;
-	color: #64748b;
-	margin-top: 3px;
-}
-
-.gz-dept-legend-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	font-size: 12.5px;
-	padding: 3px 0;
-}
-
-.gz-dept-dot {
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
-
-.gz-dept-name {
-	color: #64748b;
-	font-weight: 500;
-	margin-left: 6px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	max-width: 90px;
-}
-
-.gz-dept-count {
-	font-weight: 700;
-	color: #0f172a;
-}
-
-/* Recent Activity */
-.gz-activity-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 8px 0;
-}
-
-.gz-activity-icon-sq {
-	width: 34px;
-	height: 34px;
-	border-radius: 9px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 15px;
-	flex-shrink: 0;
-}
-
-.gz-activity-pill {
-	font-size: 11px;
-	font-weight: 700;
-	padding: 3px 10px;
-	border-radius: 12px;
-	flex-shrink: 0;
-}
-
-.gz-activity-pill.is-leave {
-	background: #ecfdf5;
-	color: #059669;
-}
-
-.gz-activity-pill.is-agreement {
-	background: #fef3c7;
-	color: #d97706;
-}
-
-.gz-activity-pill.is-employee {
-	background: #eff6ff;
-	color: #2563eb;
-}
-
-.gz-activity-pill.is-task {
-	background: #f5f3ff;
-	color: #7c3aed;
-}
-
-/* Department & Activity Card Shapes */
-.gz-bento-card.is-dept-card {
-	border-radius: 32px 36px 32px 32px;
-}
-
-.gz-bento-card.is-activity-card {
-	border-radius: 32px 32px 36px 32px;
-}
-
-/* Quick Actions (Lavender Organic Card & 2x2 Grid) */
-.gz-bento-lavender.is-quick-actions {
-	border-radius: 32px 52px 32px 32px;
-	position: relative;
-	overflow: hidden;
-}
-
-.gz-bento-lavender.is-quick-actions::before {
-	content: '';
-	position: absolute;
-	top: -40px;
-	right: -40px;
-	width: 180px;
-	height: 180px;
-	border-radius: 50%;
-	background: radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, rgba(221, 214, 254, 0) 70%);
-	pointer-events: none;
-}
-
-.gz-quick-actions-bento-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 12px;
-	padding: 4px 0;
-	position: relative;
-	z-index: 1;
-}
-
-.gz-quick-action-pill-btn {
-	background: #ffffff;
-	border: 1px solid rgba(226, 232, 240, 0.8);
-	border-radius: 16px;
-	padding: 14px 16px;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
+	color: #16a34a;
 	text-decoration: none;
-	color: #0f172a;
-	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-	box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
+	cursor: pointer;
 }
 
-.gz-quick-action-pill-btn:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 6px 16px rgba(124, 58, 237, 0.08);
-	color: #0f172a;
+.gz-memo-view-all:hover {
+	text-decoration: underline;
+}
+
+.gz-memo-item {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 14px 20px;
+	margin-bottom: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gz-memo-item:hover {
 	border-color: #cbd5e1;
+	box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
-.gz-qa-left {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-}
-
-.gz-qa-icon-sq {
-	width: 32px;
-	height: 32px;
-	border-radius: 8px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+.gz-memo-name {
 	font-size: 14px;
-	flex-shrink: 0;
-}
-
-.gz-qa-title {
-	font-size: 13px;
 	font-weight: 700;
 	color: #0f172a;
+	margin-bottom: 2px;
 }
 
-.gz-qa-arrow {
-	font-size: 14px;
-	color: #94a3b8;
-	transition: transform 0.15s ease, color 0.15s ease;
+.gz-memo-sub {
+	font-size: 12px;
+	color: #64748b;
 }
 
-.gz-quick-action-pill-btn:hover .gz-qa-arrow {
-	transform: translateX(3px);
-	color: #2563eb;
+.gz-memo-count {
+	font-size: 13.5px;
+	font-weight: 700;
+	color: #0f172a;
+	white-space: nowrap;
 }

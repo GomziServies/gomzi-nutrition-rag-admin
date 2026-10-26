@@ -34,14 +34,14 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 	}
 
 	const getPaginationItems = (page: number, total: number): (number | '...')[] => {
-		if (total <= 7) {
+		if (total <= 4) {
 			return Array.from({ length: total }, (_, i) => i + 1)
 		}
-		if (page <= 4) {
-			return [1, 2, 3, 4, 5, '...', total]
+		if (page <= 3) {
+			return [1, 2, 3, '...', total]
 		}
-		if (page >= total - 3) {
-			return [1, '...', total - 4, total - 3, total - 2, total - 1, total]
+		if (page >= total - 2) {
+			return [1, '...', total - 2, total - 1, total]
 		}
 		return [1, '...', page - 1, page, page + 1, '...', total]
 	}
@@ -63,27 +63,28 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 				display: 'flex',
 				alignItems: 'center',
 				justifyContent: 'space-between',
-				padding: '18px 24px',
+				padding: '16px 24px',
 				borderTop: '1px solid #E4EAF2',
 				background: '#FFFFFF',
 				fontSize: '13px',
 				color: '#71809A',
 				flexWrap: 'wrap',
-				gap: '16px',
+				gap: '12px',
 				width: '100%',
 			}}>
 			{/* Left: Showing count (x-y of z) */}
-			<div style={{ flex: '1 1 0', minWidth: '160px', color: '#556987', fontSize: '13px', textAlign: 'left' }}>
+			<div style={{ color: '#556987', fontSize: '13px', textAlign: 'left', fontWeight: 500 }}>
 				Showing <strong>{displayStart}</strong>–<strong>{displayEnd}</strong> of <strong>{displayTotal}</strong> {entityName}
 			</div>
 
-			{/* Middle: Numbered pagination group */}
+			{/* Right: Numbered pagination group */}
 			<div
 				className='gz-inv-pages-group'
 				style={{
 					display: 'flex',
 					alignItems: 'center',
 					gap: '6px',
+					marginLeft: 'auto',
 				}}>
 				<button
 					type='button'
@@ -180,11 +181,6 @@ const UsersListPagination: React.FC<PaginationProps> = ({
 					}}>
 					<FontAwesomeIcon icon={faAngleRight} />
 				</button>
-			</div>
-
-			{/* Right: Page X of Y */}
-			<div style={{ flex: '1 1 0', minWidth: '160px', color: '#71809A', fontSize: '13px', fontWeight: 500, textAlign: 'right' }}>
-				Page {safePage} of {safeTotalPages}
 			</div>
 		</div>
 	)

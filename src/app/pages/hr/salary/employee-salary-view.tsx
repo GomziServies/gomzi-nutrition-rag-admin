@@ -16,6 +16,162 @@ import { GetExpenseReports } from '../../../Functions/FGGroup/ExpenseReport'
 import { GetAdminUsers } from '../../../Functions/FGGroup/AdminUsers'
 import './employee-salary-view.css'
 
+const EmployeeSalaryViewSkeleton: React.FC = () => {
+	return (
+		<div className='gz-salary-view-skeleton'>
+			{/* 1. Top Navigation Bar Skeleton */}
+			<div className='d-flex flex-wrap align-items-center justify-content-between gap-3 mb-5'>
+				<div className='gz-skeleton' style={{ width: '220px', height: '38px', borderRadius: '8px' }}></div>
+				<div className='d-flex align-items-center gap-2'>
+					<div className='gz-skeleton' style={{ width: '110px', height: '32px', borderRadius: '9999px' }}></div>
+					<div className='gz-skeleton' style={{ width: '130px', height: '32px', borderRadius: '9999px' }}></div>
+				</div>
+			</div>
+
+			{/* 2. Employee Profile Header Card Skeleton */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '14px',
+					border: '1px solid #E4EAF2',
+					background: '#ffffff',
+				}}>
+				<div className='card-body p-6'>
+					<div className='d-flex flex-wrap align-items-center justify-content-between gap-4'>
+						{/* Avatar & Info */}
+						<div className='d-flex align-items-center gap-4'>
+							<div
+								className='gz-skeleton'
+								style={{
+									width: '64px',
+									height: '64px',
+									borderRadius: '50%',
+									flexShrink: 0,
+								}}
+							/>
+							<div>
+								<div className='gz-skeleton mb-2' style={{ width: '240px', height: '24px', borderRadius: '6px' }} />
+								<div className='d-flex align-items-center gap-3'>
+									<div className='gz-skeleton' style={{ width: '90px', height: '14px', borderRadius: '4px' }} />
+									<div className='gz-skeleton' style={{ width: '110px', height: '14px', borderRadius: '4px' }} />
+									<div className='gz-skeleton' style={{ width: '140px', height: '14px', borderRadius: '4px' }} />
+								</div>
+							</div>
+						</div>
+
+						{/* 4 Stat Pills Skeleton */}
+						<div className='d-flex align-items-center flex-wrap ms-auto' style={{ gap: '14px' }}>
+							{Array.from({ length: 4 }).map((_, idx) => (
+								<div
+									key={`stat-pill-skel-${idx}`}
+									className='gz-salary-stat-pill d-flex flex-column align-items-center justify-content-center'
+									style={{ minWidth: '130px', height: '70px' }}>
+									<div className='gz-skeleton mb-2' style={{ width: '70px', height: '12px', borderRadius: '4px' }} />
+									<div className='gz-skeleton' style={{ width: '90px', height: '22px', borderRadius: '6px' }} />
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* 3. Salary Calculation Breakdown Card Skeleton */}
+			<div
+				className='card shadow-sm border-0 mb-6'
+				style={{
+					borderRadius: '14px',
+					border: '1px solid #E4EAF2',
+					background: '#ffffff',
+				}}>
+				<div className='card-header border-0 pt-6 px-6 pb-2 d-flex flex-wrap align-items-center justify-content-between gap-3'>
+					<div>
+						<div className='gz-skeleton mb-2' style={{ width: '260px', height: '22px', borderRadius: '6px' }} />
+						<div className='gz-skeleton' style={{ width: '380px', height: '14px', borderRadius: '4px' }} />
+					</div>
+					<div className='gz-skeleton' style={{ width: '220px', height: '38px', borderRadius: '8px' }} />
+				</div>
+				<div className='card-body p-6 pt-3'>
+					<div className='table-responsive'>
+						<table className='gz-calc-table'>
+							<thead>
+								<tr>
+									<th style={{ width: '68%' }}>Description / Adjustment Reason</th>
+									<th className='text-end' style={{ width: '32%' }}>Amount (INR)</th>
+								</tr>
+							</thead>
+							<tbody>
+								{Array.from({ length: 5 }).map((_, idx) => (
+									<tr key={`calc-skel-row-${idx}`}>
+										<td className='py-4'>
+											<div className='d-flex align-items-center gap-3'>
+												<div className='gz-skeleton' style={{ width: '20px', height: '20px', borderRadius: '4px' }} />
+												<div className='gz-skeleton' style={{ width: `${50 + (idx % 3) * 15}%`, height: '16px', borderRadius: '4px' }} />
+											</div>
+										</td>
+										<td className='text-end py-4'>
+											<div className='gz-skeleton ms-auto' style={{ width: '90px', height: '18px', borderRadius: '4px' }} />
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			{/* 4. Filter Toolbar Skeleton */}
+			<div className='gz-filter-card mb-4'>
+				<div className='d-flex align-items-center flex-wrap gap-3 w-100'>
+					<div className='gz-skeleton' style={{ width: '280px', height: '42px', borderRadius: '8px' }} />
+					<div className='gz-skeleton' style={{ width: '100px', height: '42px', borderRadius: '8px' }} />
+					<div className='d-none d-md-block ms-auto' />
+					<div className='gz-skeleton' style={{ width: '180px', height: '36px', borderRadius: '9999px' }} />
+				</div>
+			</div>
+
+			{/* 5. Attendance & Working Hours Table Skeleton Card */}
+			<div className='gz-inv-table-card'>
+				<div className='card-header border-0 pt-5 px-6 pb-2 d-flex align-items-center justify-content-between'>
+					<div>
+						<div className='gz-skeleton mb-2' style={{ width: '280px', height: '20px', borderRadius: '6px' }} />
+						<div className='gz-skeleton' style={{ width: '360px', height: '13px', borderRadius: '4px' }} />
+					</div>
+				</div>
+				<div className='py-4 card-body px-6'>
+					<div className='table-responsive'>
+						<table className='table align-middle table-row-dashed fs-6 gy-4 mb-0'>
+							<thead>
+								<tr className='text-start text-muted fw-bold fs-7 text-uppercase gs-0 border-bottom border-gray-200'>
+									<th className='w-40px text-center ps-4'>#</th>
+									<th>Over Time</th>
+									<th>Work Time</th>
+									<th>Date</th>
+									<th>Half Day</th>
+									<th>Status</th>
+								</tr>
+							</thead>
+							<tbody>
+								{Array.from({ length: 6 }).map((_, idx) => (
+									<tr key={`att-skel-tr-${idx}`} className='gz-skeleton-tr'>
+										<td className='text-center ps-4'>
+											<div className='gz-skeleton' style={{ width: '20px', height: '16px', borderRadius: '4px' }} />
+										</td>
+										<td><div className='gz-skeleton' style={{ width: '80px', height: '16px', borderRadius: '4px' }} /></td>
+										<td><div className='gz-skeleton' style={{ width: '90px', height: '16px', borderRadius: '4px' }} /></td>
+										<td><div className='gz-skeleton' style={{ width: '110px', height: '16px', borderRadius: '4px' }} /></td>
+										<td><div className='gz-skeleton' style={{ width: '70px', height: '16px', borderRadius: '4px' }} /></td>
+										<td><div className='gz-skeleton' style={{ width: '85px', height: '22px', borderRadius: '9999px' }} /></td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}
+
 const HREmployeeSalaryView = () => {
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
@@ -24,7 +180,7 @@ const HREmployeeSalaryView = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [salaryData, setSalaryData] = useState<any>([])
 	const [employeeData, setEmployeeData] = useState<any>({})
-	const [loading, setLoading] = useState(false)
+	const [loading, setLoading] = useState(true)
 	const [sort, setSort] = useState('date')
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
@@ -221,6 +377,15 @@ const HREmployeeSalaryView = () => {
 	const deductedSalary = Number(employeeData?.deducted_salary) || 0
 	const finalSalary = Number(employeeData?.final_salary) || 0
 
+	if (loading && (!employeeData || Object.keys(employeeData).length === 0)) {
+		return (
+			<>
+				<PageTitle breadcrumbs={[]}>Employee Salary Details</PageTitle>
+				<EmployeeSalaryViewSkeleton />
+			</>
+		)
+	}
+
 	return (
 		<>
 			<PageTitle breadcrumbs={[]}>Employee Salary Details</PageTitle>
@@ -237,16 +402,16 @@ const HREmployeeSalaryView = () => {
 				<div className='d-flex align-items-center flex-wrap gap-2'>
 					{employeeData?.employee_code && (
 						<span
-							className='badge badge-light-secondary text-dark fw-bold px-3 py-2 fs-7'
+							className='badge badge-light text-gray-800 border fw-bold px-3 py-2 fs-7 d-inline-flex align-items-center gap-2'
 							style={{ letterSpacing: '0.5px' }}>
-							<i className='bi bi-person-badge text-muted me-1.5'></i>
-							{employeeData.employee_code}
+							<i className='bi bi-person-badge text-primary fs-6'></i>
+							<span>{employeeData.employee_code}</span>
 						</span>
 					)}
 					{joiningTime && (
-						<span className='badge badge-light-success fw-bold px-3 py-2 fs-7'>
-							<i className='bi bi-clock-history me-1'></i>
-							Tenure: {joiningTime}
+						<span className='badge badge-light-success border border-success border-opacity-25 fw-bold px-3 py-2 fs-7 d-inline-flex align-items-center gap-2'>
+							<i className='bi bi-clock-history fs-6'></i>
+							<span>Tenure: {joiningTime}</span>
 						</span>
 					)}
 				</div>
@@ -591,10 +756,13 @@ const HREmployeeSalaryView = () => {
 
 					{/* Total Count Badge */}
 					<div>
-						<span className='badge badge-light-secondary text-dark fw-bold fs-7 px-3 py-2'>
-							<i className='bi bi-calendar3 text-muted me-1.5'></i>
-							{filteredSalaryData?.length || 0} Attendance Records
-						</span>
+						<div className='gz-attendance-count-badge'>
+							<span className='badge-icon-box'>
+								<i className='bi bi-calendar3'></i>
+							</span>
+							<span className='badge-count'>{filteredSalaryData?.length || 0}</span>
+							<span className='badge-label'>Attendance Records</span>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -616,6 +784,7 @@ const HREmployeeSalaryView = () => {
 				<div className='py-4 card-body px-6'>
 					<div className='table-responsive'>
 						<Table
+							loading={loading}
 							data={paginatedSalaryData}
 							columns={sortableFields}
 							sort={sort}

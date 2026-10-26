@@ -164,3 +164,66 @@
 	border-top: 2px solid #e4eaf2 !important;
 	font-weight: 700;
 }
+
+/* Attendance Record Count Badge in Filter Toolbar */
+.gz-attendance-count-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 14px;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 9999px;
+	font-size: 13px;
+	font-weight: 500;
+	color: #64748b;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+	transition: all 0.18s ease;
+}
+
+.gz-attendance-count-badge:hover {
+	background: #f8fafc;
+	border-color: #cbd5e1;
+	box-shadow: 0 2px 6px rgba(15, 23, 42, 0.07);
+}
+
+.gz-attendance-count-badge .badge-icon-box {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: #eff6ff;
+	color: #2563eb;
+	font-size: 12px;
+	flex-shrink: 0;
+}
+
+.gz-attendance-count-badge .badge-count {
+	font-weight: 700;
+	color: #0f172a;
+	font-size: 13.5px;
+}
+
+.gz-attendance-count-badge .badge-label {
+	color: #64748b;
+	font-weight: 500;
+	font-size: 13px;
+}
+
+/* Salary View Skeleton Shimmer States */
+.gz-salary-view-skeleton {
+	animation: gz-fade-in 0.25s ease-in-out;
+}
+
+@keyframes gz-fade-in {
+	from {
+		opacity: 0.6;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+

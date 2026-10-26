@@ -398,19 +398,7 @@ const ExpiredEmployeeTable: React.FC<Props> = ({ className, onCountChange }) => 
 
 			{/* Pagination Footer */}
 			{filteredEmployees.length > 0 && (
-				<div className='card-footer border-0 py-3 px-6 d-flex align-items-center justify-content-between flex-wrap gap-2'>
-					{/* <div className='text-muted fs-7'>
-						Showing{' '}
-						<span className='fw-bold text-dark'>
-							{filteredEmployees.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}
-						</span>{' '}
-						to{' '}
-						<span className='fw-bold text-dark'>
-							{Math.min(currentPage * itemsPerPage, filteredEmployees.length)}
-						</span>{' '}
-						of{' '}
-						<span className='fw-bold text-dark'>{filteredEmployees.length}</span> entries
-					</div> */}
+				<div className='card-footer border-0 p-0'>
 					<UsersListPagination
 						totalPages={totalPages}
 						currentPage={currentPage}

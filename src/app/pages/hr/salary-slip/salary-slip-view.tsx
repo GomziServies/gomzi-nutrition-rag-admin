@@ -5,6 +5,271 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import { GetSalarySlips } from '../../../Functions/FGGroup/SalarySlip'
 import './salary-slip.css'
 
+const SalarySlipViewSkeleton: React.FC = () => {
+	return (
+		<div className='salary-slip-skeleton'>
+			{/* Top Action Bar Skeleton */}
+			<div className='d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3 d-print-none'>
+				<div className='gz-skeleton' style={{ width: '180px', height: '38px', borderRadius: '8px' }} />
+				<div className='gz-skeleton' style={{ width: '120px', height: '38px', borderRadius: '8px' }} />
+			</div>
+
+			{/* Paper Container Skeleton */}
+			<div className='salary-slip-container shadow-sm' style={{ borderRadius: '4px' }}>
+				{/* Header Skeleton */}
+				<div className='kesar-header'>
+					<div className='d-flex align-items-center w-100'>
+						<div className='kesar-logo-section'>
+							<div
+								className='gz-skeleton'
+								style={{ width: '120px', height: '60px', borderRadius: '6px' }}
+							/>
+						</div>
+						<div className='kesar-company-section flex-grow-1'>
+							<div
+								className='gz-skeleton mb-2'
+								style={{ width: '280px', height: '24px', borderRadius: '4px' }}
+							/>
+							<div
+								className='gz-skeleton mb-2'
+								style={{ width: '160px', height: '14px', borderRadius: '4px' }}
+							/>
+							<div
+								className='gz-skeleton mb-2'
+								style={{ width: '360px', height: '12px', borderRadius: '4px' }}
+							/>
+							<div
+								className='gz-skeleton'
+								style={{ width: '220px', height: '12px', borderRadius: '4px' }}
+							/>
+						</div>
+					</div>
+				</div>
+
+				{/* Title Section Skeleton */}
+				<div className='d-flex justify-content-center my-3'>
+					<div
+						className='gz-skeleton'
+						style={{ width: '200px', height: '28px', borderRadius: '4px' }}
+					/>
+				</div>
+
+				{/* Banner Bar Skeleton */}
+				<div
+					className='d-flex justify-content-between align-items-center px-4 py-3 mb-0'
+					style={{ background: '#2F5597', borderRadius: '0' }}>
+					<div
+						className='gz-skeleton'
+						style={{
+							width: '140px',
+							height: '18px',
+							borderRadius: '4px',
+							background: 'rgba(255,255,255,0.25)',
+						}}
+					/>
+					<div
+						className='gz-skeleton'
+						style={{
+							width: '160px',
+							height: '22px',
+							borderRadius: '4px',
+							background: 'rgba(255,255,255,0.3)',
+						}}
+					/>
+				</div>
+
+				{/* Info Grid Skeleton */}
+				<table className='kesar-info-grid'>
+					<tbody>
+						{Array.from({ length: 5 }).map((_, rIdx) => (
+							<tr key={`info-skel-row-${rIdx}`}>
+								<td style={{ width: '50%', padding: '10px 15px' }}>
+									<div className='row align-items-center'>
+										<div className='col-5'>
+											<div
+												className='gz-skeleton'
+												style={{ width: '100px', height: '14px', borderRadius: '4px' }}
+											/>
+										</div>
+										<div className='col-7'>
+											<div
+												className='gz-skeleton'
+												style={{
+													width: `${75 + (rIdx % 2) * 20}%`,
+													height: '14px',
+													borderRadius: '4px',
+												}}
+											/>
+										</div>
+									</div>
+								</td>
+								<td style={{ width: '50%', padding: '10px 15px' }}>
+									<div className='row align-items-center'>
+										<div className='col-5'>
+											<div
+												className='gz-skeleton'
+												style={{ width: '100px', height: '14px', borderRadius: '4px' }}
+											/>
+										</div>
+										<div className='col-7'>
+											<div
+												className='gz-skeleton'
+												style={{
+													width: `${70 + (rIdx % 3) * 15}%`,
+													height: '14px',
+													borderRadius: '4px',
+												}}
+											/>
+										</div>
+									</div>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+
+				{/* Calculations Table Skeleton */}
+				<table className='kesar-table' style={{ marginTop: '0' }}>
+					<thead>
+						<tr>
+							<th style={{ width: '35%' }} className='text-center'>Earnings</th>
+							<th style={{ width: '15%' }} className='text-center'>Amount</th>
+							<th style={{ width: '35%' }} className='text-center border-divider'>Deductions</th>
+							<th style={{ width: '15%' }} className='text-center'>Amount</th>
+						</tr>
+					</thead>
+					<tbody>
+						{Array.from({ length: 7 }).map((_, rIdx) => (
+							<tr key={`calc-skel-row-${rIdx}`}>
+								<td style={{ padding: '10px 15px' }}>
+									<div
+										className='gz-skeleton'
+										style={{
+											width: `${60 + (rIdx % 3) * 15}%`,
+											height: '14px',
+											borderRadius: '4px',
+										}}
+									/>
+								</td>
+								<td className='text-right pe-3' style={{ padding: '10px 15px' }}>
+									<div
+										className='gz-skeleton ms-auto'
+										style={{ width: '65px', height: '14px', borderRadius: '4px' }}
+									/>
+								</td>
+								<td className='border-divider' style={{ padding: '10px 15px' }}>
+									<div
+										className='gz-skeleton'
+										style={{
+											width: `${55 + (rIdx % 2) * 20}%`,
+											height: '14px',
+											borderRadius: '4px',
+										}}
+									/>
+								</td>
+								<td className='text-right pe-3' style={{ padding: '10px 15px' }}>
+									<div
+										className='gz-skeleton ms-auto'
+										style={{ width: '65px', height: '14px', borderRadius: '4px' }}
+									/>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+
+				{/* Summary Bar Skeleton */}
+				<div className='kesar-summary-bar'>
+					<span style={{ width: '35%' }} className='ps-4'>
+						<div
+							className='gz-skeleton'
+							style={{ width: '90px', height: '14px', borderRadius: '4px' }}
+						/>
+					</span>
+					<span style={{ width: '15%' }} className='text-right pe-4'>
+						<div
+							className='gz-skeleton ms-auto'
+							style={{ width: '70px', height: '14px', borderRadius: '4px' }}
+						/>
+					</span>
+					<span style={{ width: '35%' }} className='border-divider ps-4'>
+						<div
+							className='gz-skeleton'
+							style={{ width: '110px', height: '14px', borderRadius: '4px' }}
+						/>
+					</span>
+					<span style={{ width: '15%' }} className='text-right pe-4'>
+						<div
+							className='gz-skeleton ms-auto'
+							style={{ width: '70px', height: '14px', borderRadius: '4px' }}
+						/>
+					</span>
+				</div>
+
+				{/* Net Bar Skeleton */}
+				<div
+					className='kesar-summary-bar kesar-net-bar'
+					style={{ justifyContent: 'space-between', padding: '10px 20px' }}>
+					<div
+						className='gz-skeleton'
+						style={{
+							width: '100px',
+							height: '16px',
+							borderRadius: '4px',
+							background: 'rgba(255,255,255,0.3)',
+						}}
+					/>
+					<div
+						className='gz-skeleton'
+						style={{
+							width: '120px',
+							height: '20px',
+							borderRadius: '4px',
+							background: 'rgba(255,255,255,0.35)',
+						}}
+					/>
+				</div>
+
+				{/* Bottom Note & Signatures Skeleton */}
+				<div className='d-flex flex-wrap align-items-center justify-content-between mt-8 pt-6 border-top'>
+					<div className='d-flex flex-column gap-2'>
+						<div
+							className='gz-skeleton'
+							style={{ width: '260px', height: '12px', borderRadius: '4px' }}
+						/>
+						<div
+							className='gz-skeleton'
+							style={{ width: '180px', height: '11px', borderRadius: '4px' }}
+						/>
+					</div>
+					<div className='d-flex align-items-center gap-6 mt-4 mt-sm-0'>
+						<div className='text-center'>
+							<div
+								className='gz-skeleton mb-2'
+								style={{ width: '110px', height: '36px', borderRadius: '4px' }}
+							/>
+							<div
+								className='gz-skeleton'
+								style={{ width: '120px', height: '12px', borderRadius: '4px' }}
+							/>
+						</div>
+						<div className='text-center'>
+							<div
+								className='gz-skeleton mb-2'
+								style={{ width: '110px', height: '36px', borderRadius: '4px' }}
+							/>
+							<div
+								className='gz-skeleton'
+								style={{ width: '130px', height: '12px', borderRadius: '4px' }}
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}
+
 const SalarySlipView = () => {
 	const [data, setData] = useState<any>(null)
 	const [loading, setLoading] = useState(true)
@@ -114,8 +379,36 @@ const SalarySlipView = () => {
 		fetchSlip()
 	}, [])
 
-	if (loading) return <div className='p-10'>Loading Salary Slip...</div>
-	if (!data) return <div className='p-10 text-danger'>Salary Slip not found.</div>
+	if (loading) {
+		return (
+			<>
+				<PageTitle breadcrumbs={[]}>Salary Slip View</PageTitle>
+				<SalarySlipViewSkeleton />
+			</>
+		)
+	}
+
+	if (!data) {
+		return (
+			<>
+				<PageTitle breadcrumbs={[]}>Salary Slip View</PageTitle>
+				<div
+					className='card shadow-sm border-0 p-10 text-center my-6'
+					style={{ borderRadius: '14px', border: '1px solid #E4EAF2' }}>
+					<div className='d-flex flex-column align-items-center justify-content-center'>
+						<i className='bi bi-file-earmark-x text-danger fs-3x mb-3'></i>
+						<h3 className='fw-bold text-gray-900 mb-2'>Salary Slip Not Found</h3>
+						<p className='text-muted fs-7 mb-4'>
+							The requested salary slip record does not exist or could not be loaded.
+						</p>
+						<Link to='/hr/salary-slip' className='btn btn-sm btn-primary'>
+							Back to Salary Slips
+						</Link>
+					</div>
+				</div>
+			</>
+		)
+	}
 
 	return (
 		<>

@@ -1,113 +1,149 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useIntl } from 'react-intl'
-import { Modal, Form, Button, Dropdown } from 'react-bootstrap'
-import toast from 'react-hot-toast'
+import duration from 'dayjs/plugin/duration'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
-import NumberTicker from '../../../components/NumberTicker'
 import { GetEmployees } from '../../../Functions/FGGroup/Employee'
-import {
-	GetEmployeeLeaves,
-	ActionEmployeeLeave,
-} from '../../../Functions/FGGroup/EmployeeLeaveManagement'
+import { GetEmployeeLeaves } from '../../../Functions/FGGroup/EmployeeLeaveManagement'
 import { GetTask } from '../../../Functions/FGGroup/TaskManagement'
+import { GetJobPlacement } from '../../../Functions/FGGroup/Jobs'
 import { EmployeeAnniversaryTable } from './EmployeeAnniversaryTable'
 import { ExpiredEmployeeTable } from './ExpiredEmployeeTable'
 import { TablesWidget } from './TablesWidget'
 import './dashboard-hr.css'
-import { CelebrationConfetti } from './CelebrationConfetti'
-import {
-	BirthdayCakeIllustration,
-	WorkAnniversaryTrophyIllustration,
-} from './CelebrationIllustrations'
+
+DayJS.extend(duration)
+
+const calculateLeaveDuration = (from_date?: string, to_date?: string) => {
+	if (!from_date || !to_date) return '—'
+	const fromDate = DayJS(from_date)
+	let toDate = DayJS(to_date)
+
+	const diff = DayJS.duration(toDate.diff(fromDate))
+	let days = diff.days()
+	const hours = diff.hours()
+	const minutes = diff.minutes()
+
+	if (toDate.format('HH:mm') === '00:00') {
+		days += 1
+	}
+
+	if (days === 0 && hours === 0 && minutes === 0) {
+		return '0 hours'
+	} else if (days === 0) {
+		return `${hours}:${minutes < 10 ? '0' + minutes : minutes} hrs`
+	} else if (hours === 0 && minutes === 0) {
+		return `${days} day${days !== 1 ? 's' : ''}`
+	} else {
+		return `${days} day${days !== 1 ? 's' : ''} ${hours}:${minutes < 10 ? '0' + minutes : minutes} hrs`
+	}
+}
+
+const getLeaveEmployeeName = (l: any) => {
+	if (l?.admin_id && typeof l.admin_id === 'object' && l.admin_id.full_name) {
+		return l.admin_id.full_name
+	}
+	if (l?.employee?.full_name) {
+		return l.employee.full_name
+	}
+	return 'Team Member'
+}
 
 export const HRDashboardPage: React.FC = () => {
 	const [loading, setLoading] = useState(true)
-	const [userName, setUserName] = useState('HR Team')
 
-	// Real Metric Totals
+	// Section 1: 8 KPI Metric Counts
 	const [totalEmployees, setTotalEmployees] = useState(0)
-	const [upcomingAnniversariesCount, setUpcomingAnniversariesCount] = useState(0)
-	const [todayAnniversariesCount, setTodayAnniversariesCount] = useState(0)
-	const [expiringAgreementsCount, setExpiringAgreementsCount] = useState(0)
-	const [expiredAgreementsCount, setExpiredAgreementsCount] = useState(0)
-	const [tableAnniversariesCount, setTableAnniversariesCount] = useState(0)
-	const [tableAgreementsCount, setTableAgreementsCount] = useState(0)
-	const [pendingLeavesCount, setPendingLeavesCount] = useState(0)
-	const [pendingTasksCount, setPendingTasksCount] = useState(0)
+	const [activeEmployees, setActiveEmployees] = useState(0)
+	const [inactiveEmployees, setInactiveEmployees] = useState(0)
+	const [onLeaveTodayCount, setOnLeaveTodayCount] = useState(0)
+	const [kpiTasksCount, setKpiTasksCount] = useState(0)
+	const [p1TasksCount, setP1TasksCount] = useState(0)
+	const [careersCount, setCareersCount] = useState(0)
+	const [overdueTasksCount, setOverdueTasksCount] = useState(0)
 
-	// Real Data Collections
-	const [allEmployees, setAllEmployees] = useState<any[]>([])
-	const [pendingLeaves, setPendingLeaves] = useState<any[]>([])
-	const [pendingTasks, setPendingTasks] = useState<any[]>([])
-	const [upcomingAnniversaries, setUpcomingAnniversaries] = useState<any[]>([])
+	// Section 2: Team Birthday Celebrations
+	const [todayBirthdays, setTodayBirthdays] = useState<any[]>([])
 	const [upcomingBirthdays, setUpcomingBirthdays] = useState<any[]>([])
-	const [expiringDocuments, setExpiringDocuments] = useState<any[]>([])
-	const [newJoiners, setNewJoiners] = useState<any[]>([])
-	const [departmentStats, setDepartmentStats] = useState<{ name: string; count: number; percent: number }[]>([])
+	const [birthdayTab, setBirthdayTab] = useState<'all' | 'today' | 'upcoming'>('all')
 
-	// UI Interactive States
+	// Section 3: Team Leave Status
+	const [todayLeaves, setTodayLeaves] = useState<any[]>([])
+	const [upcomingLeaves, setUpcomingLeaves] = useState<any[]>([])
+	const [pendingLeaves, setPendingLeaves] = useState<any[]>([])
+	const [pendingLeavesCount, setPendingLeavesCount] = useState(0)
+	const [leaveTab, setLeaveTab] = useState<'all' | 'today' | 'upcoming' | 'pending'>('all')
+
+	// Section 4: Memo Watchlist
+	const [memoList, setMemoList] = useState<any[]>([])
+
+	// Detail tables toggle if needed
 	const [showFullTables, setShowFullTables] = useState(false)
-	const [fullTableTab, setFullTableTab] = useState<'anniversaries' | 'documents' | 'directory'>('anniversaries')
 
-	// Celebration Trigger Counts (triggers confetti burst once on load, and on illustration click)
-	const [birthdayTriggerCount, setBirthdayTriggerCount] = useState(1)
-	const [anniversaryTriggerCount, setAnniversaryTriggerCount] = useState(1)
+	// Scope state: default to 'rag'
+	const [dataScope, setDataScope] = useState<'rag' | 'all'>('rag')
 
-	// Modal States for Leave Approval
-	const [selectedLeaveId, setSelectedLeaveId] = useState<string | null>(null)
-	const [showLeaveModal, setShowLeaveModal] = useState(false)
-	const [leaveStatus, setLeaveStatus] = useState<'APPROVED' | 'REJECTED'>('APPROVED')
-	const [leaveRemarks, setLeaveRemarks] = useState('')
-
-	// Modal State for Announcement
-	const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
-	const [announcementText, setAnnouncementText] = useState('')
-
-	const loadAllData = async () => {
+	const loadDashboardData = async (scopeOverride?: 'rag' | 'all') => {
+		const currentScope = scopeOverride || dataScope
 		setLoading(true)
 		try {
 			const today = new Date()
-			const todayStart = DayJS().startOf('day')
+			const todayStr = DayJS().format('YYYY-MM-DD')
 
-			// 1. Fetch Employees
-			const empRes: any = await GetEmployees()
+			// Helper to check if an employee belongs to RAG (Gomzi Nutrition / RAG)
+			const isRagEmployee = (item: any) => {
+				const branch = (item.employee?.branch_name || item.branch_name || '').toLowerCase()
+				if (branch.includes('gomzi') || branch.includes('rag') || branch.includes('nutrition')) {
+					return true
+				}
+				const authorities = item.employee?.authorities || item.authorities || []
+				if (Array.isArray(authorities)) {
+					const hasRagPanel = authorities.some((a: any) => {
+						const pName = (a.panel_id?.name || a.panel_name || a.name || '').toLowerCase()
+						return pName.includes('gomzi') || pName.includes('rag')
+					})
+					if (hasRagPanel) return true
+				}
+				const email = (item.email || '').toLowerCase()
+				if (email.includes('rag') || email.includes('gomzi') || email.includes('nutrition')) {
+					return true
+				}
+				return false
+			}
+
+			// 1. Fetch Employees (aligned with /hr/employee-detail)
+			let ragAdminIds = new Set<string>()
+			const empRes: any = await GetEmployees({ limit: 1000 })
 			if (empRes?.data && Array.isArray(empRes.data)) {
-				const emps = empRes.data
-				setAllEmployees(emps)
-				setTotalEmployees(emps.length)
-
-				// Department / Role Headcount Breakdown
-				const posMap: { [key: string]: number } = {}
-				emps.forEach((item: any) => {
-					const pos = item.employee?.position?.trim() || 'General Staff'
-					posMap[pos] = (posMap[pos] || 0) + 1
+				const rawEmps = empRes.data
+				rawEmps.forEach((e: any) => {
+					if (isRagEmployee(e) && e._id) {
+						ragAdminIds.add(e._id.toString())
+					}
 				})
-				const deptList = Object.keys(posMap)
-					.map((key) => ({
-						name: key,
-						count: posMap[key],
-						percent: Math.round((posMap[key] / emps.length) * 100),
-					}))
-					.sort((a, b) => b.count - a.count)
-					.slice(0, 6)
-				setDepartmentStats(deptList)
 
-				// Anniversaries, Birthdays & Milestones
-				const annList: any[] = []
-				const bdayList: any[] = []
-				const joinList: any[] = []
-				let upCount = 0
-				let todCount = 0
+				const emps = currentScope === 'rag' ? rawEmps.filter(isRagEmployee) : rawEmps
+				const totalCount = emps.length
+				setTotalEmployees(totalCount)
+
+				const active = emps.filter(
+					(e: any) => e.status === 'Active' || e.is_active === true || e.employee?.status === 'Active'
+				).length
+				const inactive = totalCount >= active ? totalCount - active : 0
+				setActiveEmployees(active)
+				setInactiveEmployees(inactive)
+
+				// Calculate Birthdays
+				const todayBdays: any[] = []
+				const upBdays: any[] = []
 
 				emps.forEach((item: any) => {
-					// Check Birthday (dob / date_of_birth if present)
 					const rawDob = item.employee?.dob || item.employee?.date_of_birth || item.dob
 					if (rawDob) {
 						const bdate = new Date(rawDob)
 						const bdayThisYear = new Date(today.getFullYear(), bdate.getMonth(), bdate.getDate())
-						const isTodayBday =
+						const isToday =
 							bdayThisYear.getDate() === today.getDate() &&
 							bdayThisYear.getMonth() === today.getMonth()
 
@@ -119,1154 +155,798 @@ export const HRDashboardPage: React.FC = () => {
 						const diffTime = nextBday.getTime() - today.getTime()
 						const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-						if ((diffDays <= 45 && diffDays >= 0) || isTodayBday) {
-							bdayList.push({
-								_id: item._id,
-								name: item.full_name,
-								position: item.employee?.position || 'Team Member',
-								photo: item.employee?.photo,
-								isToday: isTodayBday,
-								diffDays,
-								dateStr: isTodayBday ? 'Today' : DayJS(nextBday).format('DD MMM'),
-							})
-						}
-					}
-
-					// Check Work Anniversary
-					if (item.employee?.joining_date) {
-						const joiningDate = new Date(item.employee.joining_date)
-						const anniversaryThisYear = new Date(
-							today.getFullYear(),
-							joiningDate.getMonth(),
-							joiningDate.getDate()
-						)
-						const isToday =
-							anniversaryThisYear.getDate() === today.getDate() &&
-							anniversaryThisYear.getMonth() === today.getMonth()
-
-						if (isToday) todCount++
-
-						const nextAnniversary =
-							anniversaryThisYear < today
-								? new Date(today.getFullYear() + 1, joiningDate.getMonth(), joiningDate.getDate())
-								: anniversaryThisYear
-
-						const diffTime = nextAnniversary.getTime() - today.getTime()
-						const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-						// Calculate tenure in years
-						let yearsOfService = today.getFullYear() - joiningDate.getFullYear()
-						if (anniversaryThisYear > today) yearsOfService -= 1
-						if (yearsOfService < 0) yearsOfService = 0
-
-						// Check if new joiner (joined in last 60 days)
-						const daysSinceJoined = Math.floor((today.getTime() - joiningDate.getTime()) / (1000 * 60 * 60 * 24))
-						if (daysSinceJoined >= 0 && daysSinceJoined <= 60) {
-							joinList.push({
-								...item,
-								daysSinceJoined,
-								joiningDateStr: DayJS(item.employee.joining_date).format('DD MMM YYYY'),
-							})
+						const bdayObj = {
+							_id: item._id,
+							name: item.full_name || 'Team Member',
+							position: item.employee?.position || 'Team Member',
+							photo: item.employee?.photo,
+							dateStr: DayJS(nextBday).format('DD MMM'),
+							diffDays,
+							inDaysStr: `In ${diffDays}d`,
 						}
 
-						if ((diffDays <= 60 && diffDays >= 0) || isToday) {
-							upCount++
-							annList.push({
-								_id: item._id,
-								name: item.full_name,
-								position: item.employee?.position || 'Team Member',
-								photo: item.employee?.photo,
-								mobile: item.mobile,
-								yearsOfService: Math.max(1, yearsOfService + (isToday ? 0 : 1)),
-								diffDays,
-								isToday,
-								dateStr: isToday ? 'Today' : DayJS(nextAnniversary).format('DD MMM'),
-							})
+						if (isToday) {
+							todayBdays.push(bdayObj)
+						} else if (diffDays <= 90 && diffDays > 0) {
+							upBdays.push(bdayObj)
 						}
 					}
 				})
 
-				annList.sort((a, b) => a.diffDays - b.diffDays)
-				bdayList.sort((a, b) => a.diffDays - b.diffDays)
-				setUpcomingAnniversaries(annList)
-				setUpcomingBirthdays(bdayList)
-				setUpcomingAnniversariesCount(upCount)
-				setTodayAnniversariesCount(todCount)
-				setNewJoiners(joinList)
+				upBdays.sort((a, b) => a.diffDays - b.diffDays)
+				setUpcomingBirthdays(upBdays)
+				setTodayBirthdays(todayBdays)
 
-				// Expiring Agreements
-				const expList: any[] = []
-				let expCount = 0
-				let pastExpiredCount = 0
-
-				emps.forEach((item: any) => {
-					const docs = item.employee?.document || []
-					docs.forEach((doc: any) => {
-						if (!doc.expiry_date) return
-						const exp = DayJS(doc.expiry_date).startOf('day')
-						const diff = exp.diff(todayStart, 'day')
-
-						if (diff <= 60) {
-							if (diff <= 60 && diff >= 0) expCount++
-							if (diff < 0) pastExpiredCount++
-
-							expList.push({
-								employeeId: item._id,
-								name: item.full_name,
-								position: item.employee?.position || 'Team Member',
-								photo: item.employee?.photo,
-								documentType: doc.document_type || 'HR Agreement',
-								expiryDate: doc.expiry_date,
-								diffDays: diff,
-								isExpired: diff < 0,
-							})
-						}
-					})
+				// Extract Memos
+				const extractedMemos: any[] = []
+				emps.forEach((emp: any) => {
+					if (emp.employee?.memo && Array.isArray(emp.employee.memo) && emp.employee.memo.length > 0) {
+						extractedMemos.push({
+							_id: emp._id,
+							name: emp.full_name,
+							position: emp.employee?.position || 'Team Member',
+							rating: emp.employee?.rating ? `rating ${emp.employee.rating}` : 'Memo Issued',
+							count: emp.employee.memo.length,
+						})
+					}
 				})
 
-				expList.sort((a, b) => a.diffDays - b.diffDays)
-				setExpiringDocuments(expList)
-				setExpiringAgreementsCount(expCount + pastExpiredCount)
-				setExpiredAgreementsCount(pastExpiredCount)
-
-				// Calculate exact table row counts matching tables
-				const totalAnniversariesInTable = emps.filter(
-					(item: any) => item.employee && item.employee.joining_date
-				).length
-				const totalAgreementsInTable = emps.filter((item: any) => {
-					if (!item.employee || !item.employee.document || !item.employee.document.length) return false
-					return item.employee.document.some((doc: any) => doc.expiry_date)
-				}).length
-				setTableAnniversariesCount(totalAnniversariesInTable)
-				setTableAgreementsCount(totalAgreementsInTable)
+				setMemoList(extractedMemos)
 			}
 
-			// 2. Fetch Pending Leaves
+			// 2. Fetch Leaves (aligned with http://localhost:3000/hr/leave)
 			try {
-				const leaveRes: any = await GetEmployeeLeaves()
+				const leaveRes: any = await GetEmployeeLeaves({ limit: 1000 })
 				if (leaveRes?.data && Array.isArray(leaveRes.data)) {
-					const pending = leaveRes.data.filter((l: any) => l.status === 'PENDING')
-					setPendingLeaves(pending)
-					setPendingLeavesCount(pending.length)
-				}
-			} catch (e) {}
+					const rawLeaves = leaveRes.data
+					const getLeaveAdminId = (l: any) => {
+						if (!l.admin_id) return ''
+						if (typeof l.admin_id === 'object' && l.admin_id._id) {
+							return l.admin_id._id.toString()
+						}
+						return l.admin_id.toString()
+					}
 
-			// 3. Fetch Pending Tasks
-			try {
-				const taskRes: any = await GetTask({})
-				if (taskRes?.data && Array.isArray(taskRes.data)) {
-					const pending = taskRes.data.filter((t: any) => t.status === 'PENDING')
-					setPendingTasks(pending)
-					setPendingTasksCount(pending.length)
+					const allLeaves =
+						currentScope === 'rag'
+							? rawLeaves.filter((l: any) => {
+								const admId = getLeaveAdminId(l)
+								return admId && ragAdminIds.has(admId)
+							})
+							: rawLeaves
+
+					const pending = allLeaves.filter(
+						(l: any) => (l.status || '').toUpperCase() === 'PENDING'
+					)
+					setPendingLeavesCount(pending.length)
+					setPendingLeaves(pending)
+
+					const approvedToday = allLeaves.filter((l: any) => {
+						if ((l.status || '').toUpperCase() !== 'APPROVED') return false
+						const from = DayJS(l.from_date).format('YYYY-MM-DD')
+						const to = DayJS(l.to_date || l.from_date).format('YYYY-MM-DD')
+						return todayStr >= from && todayStr <= to
+					})
+					setOnLeaveTodayCount(approvedToday.length)
+					setTodayLeaves(approvedToday)
+
+					const upcoming = allLeaves.filter((l: any) => {
+						if ((l.status || '').toUpperCase() !== 'APPROVED') return false
+						const from = DayJS(l.from_date).format('YYYY-MM-DD')
+						return from > todayStr
+					})
+					setUpcomingLeaves(upcoming)
 				}
-			} catch (e) {}
+			} catch (e) {
+				console.error('Error fetching leaves from /hr/leave source:', e)
+			}
+
+			// 3. Fetch Tasks (filtered strictly to RAG data)
+			try {
+				const taskRes: any = await GetTask({ limit: 1000 })
+				if (taskRes?.data && Array.isArray(taskRes.data)) {
+					const rawTasks = taskRes.data
+
+					// Helper to check if task is RAG related
+					const isRagTask = (task: any) => {
+						if (task.admin_id && ragAdminIds.has(task.admin_id.toString())) {
+							return true
+						}
+						const title = (task.task_title || '').toLowerCase()
+						const remark = (task.remark_by_hr || task.remark_by_employee || '').toLowerCase()
+						const text = `${title} ${remark}`
+						return (
+							text.includes('rag') ||
+							text.includes('gomzi') ||
+							text.includes('gn ') ||
+							text.includes('gn-') ||
+							text.includes('nutrition') ||
+							text.includes('supplement') ||
+							text.includes('protein') ||
+							text.includes('creatine') ||
+							text.includes('whey') ||
+							text.includes('b2b')
+						)
+					}
+
+					const allTasks = currentScope === 'rag' ? rawTasks.filter(isRagTask) : rawTasks
+
+					// Priority 1 (Highest): Pending tasks in /hr/task-list
+					const p1 = allTasks.filter(
+						(t: any) =>
+							t.status === 'PENDING' ||
+							t.status === 'pending' ||
+							t.priority === 'P1' ||
+							t.priority === 'High' ||
+							t.priority === 1
+					).length
+
+					// KPI Tasks: Key Performance Indicator tasks
+					const kpi = allTasks.filter(
+						(t: any) =>
+							t.is_kpi ||
+							t.kpi ||
+							t.priority === 'KPI' ||
+							t.financial_worth ||
+							t.social_worth
+					).length
+
+					// Overdue Tasks: Pending tasks past deadline
+					const overdue = allTasks.filter((t: any) => {
+						if (t.status === 'COMPLETED' || t.status === 'DONE' || t.hr_status === 'complete')
+							return false
+						return t.end_date && DayJS(t.end_date).isBefore(DayJS())
+					}).length
+
+					setKpiTasksCount(kpi)
+					setP1TasksCount(p1)
+					setOverdueTasksCount(overdue)
+				}
+			} catch (e) {
+				console.error('Error fetching tasks from task-list source:', e)
+			}
+
+			// 4. Fetch Careers
+			try {
+				const jobRes: any = await GetJobPlacement({ limit: 100 })
+				if (jobRes?.data && Array.isArray(jobRes.data)) {
+					const rawJobs = jobRes.data
+					const isRagJob = (j: any) => {
+						const text = `${j.company_name || ''} ${j.title || ''}`.toLowerCase()
+						return text.includes('rag') || text.includes('gomzi') || text.includes('nutrition')
+					}
+					const allJobs = currentScope === 'rag' ? rawJobs.filter(isRagJob) : rawJobs
+					setCareersCount(allJobs.length)
+				}
+			} catch (e) {
+				console.error('Error fetching careers:', e)
+			}
 		} catch (err) {
-			console.error('Failed to load HR metrics', err)
+			console.error('Failed to load simple HR dashboard data', err)
 		} finally {
 			setLoading(false)
 		}
 	}
 
 	useEffect(() => {
-		try {
-			const info =
-				localStorage.getItem('fg_group_user_info') || localStorage.getItem('fg_group_info')
-			if (info) {
-				const parsed = JSON.parse(info)
-				const name = parsed?.full_name || parsed?.name || parsed?.userName
-				if (name) setUserName(name.split(' ')[0])
-			}
-		} catch (e) {}
-
-		loadAllData()
+		loadDashboardData('rag')
 	}, [])
 
-	const handleOpenLeaveModal = (leaveId: string, preStatus: 'APPROVED' | 'REJECTED') => {
-		setSelectedLeaveId(leaveId)
-		setLeaveStatus(preStatus)
-		setLeaveRemarks('')
-		setShowLeaveModal(true)
-	}
-
-	const handleSubmitLeaveAction = async () => {
-		if (!selectedLeaveId) return
-		try {
-			await ActionEmployeeLeave({
-				leave_id: selectedLeaveId,
-				status: leaveStatus,
-				remarks: leaveRemarks,
-			})
-			toast.success(`Leave request ${leaveStatus === 'APPROVED' ? 'Approved' : 'Rejected'} successfully`)
-			setShowLeaveModal(false)
-			loadAllData()
-		} catch (e: any) {
-			toast.error(e?.message || 'Failed to update leave')
-		}
-	}
-
-	const handleSendAnnouncement = (e: React.FormEvent) => {
-		e.preventDefault()
-		if (!announcementText.trim()) {
-			toast.error('Please enter announcement text')
-			return
-		}
-		toast.success('Announcement broadcasted to workforce!')
-		setShowAnnouncementModal(false)
-		setAnnouncementText('')
-	}
-
-	const currentDayStamp = DayJS().format('ddd, MMM DD, YYYY').toUpperCase()
-	const pendingApprovalsTotal = pendingLeavesCount + pendingTasksCount
-
-	// Fallback celebrations if specific dob is not yet set in database
-	const displayBirthdays =
-		upcomingBirthdays.length > 0
-			? upcomingBirthdays
-			: upcomingAnniversaries.length > 0
-			? upcomingAnniversaries.slice(0, 4).map((ann, i) => ({
-					_id: ann._id,
-					name: ann.name,
-					position: ann.position,
-					photo: ann.photo,
-					isToday: i === 0,
-					diffDays: ann.diffDays,
-					dateStr: i === 0 ? 'Today' : ann.dateStr,
-			  }))
-			: []
-
 	return (
-		<div className='gz-hr-bento-dashboard'>
-			<PageTitle breadcrumbs={[]}>HR Dashboard</PageTitle>
-
-			{/* =========================================================================
-			    ROW 1: BENTO HERO (GOOD DAY, GOMZI HR) + WORKFORCE KPI STRIP
-			========================================================================= */}
-			<div className='row g-4 mb-4'>
-				{/* 1. HERO BENTO CARD */}
-				<div className='col-12 col-xl-5'>
-					<div className='gz-bento-hero'>
-						<div>
-							<div className='gz-bento-hero-date-badge'>
-								<span>PEOPLE OPERATIONS &bull; {DayJS().format('ddd, DD MMM YYYY').toUpperCase()}</span>
-							</div>
-							<h1 className='gz-bento-hero-title'>
-								Good day,<br />
-								GOMZI HR <span className='gz-wave'>👋</span>
-							</h1>
-							<p className='gz-bento-hero-desc'>
-								Here&apos;s what&apos;s happening across your workforce today.
-							</p>
-						</div>
-
-						{/* Action Button: 45-degree arrow */}
-						<Link
-							to='/hr/employee-view'
-							className='gz-bento-hero-action-btn'
-							title='View Workforce'>
-							<i className='bi bi-arrow-up-right'></i>
-						</Link>
+		<div className='gz-hr-simple-dashboard'>
+			{/* View Full Tables Toggle Bar if user drilled down */}
+			{showFullTables && (
+				<div className='d-flex align-items-center justify-content-between mb-4 bg-white p-4 rounded-3 border'>
+					<div className='d-flex align-items-center gap-2'>
+						<button
+							type='button'
+							className='btn btn-sm btn-outline-secondary'
+							onClick={() => setShowFullTables(false)}>
+							&larr; Back to Dashboard
+						</button>
+						<span className='fw-bold text-dark fs-5 ms-2'>HR Tables Directory</span>
 					</div>
 				</div>
+			)}
 
-				{/* 2. WORKFORCE KPI STRIP (4 METRICS) */}
-				<div className='col-12 col-xl-7'>
-					<div className='gz-bento-card gz-bento-kpi-strip'>
-						<div className='row w-100 g-0'>
-							{/* 1. Total Employees */}
-							<div className='col-6 col-lg-3 gz-kpi-col'>
-								<div className='gz-kpi-icon-box' style={{ background: '#eff6ff', color: '#2563eb' }}>
-									<i className='bi bi-people-fill'></i>
-								</div>
-								<div className='gz-kpi-label'>Total Employees</div>
-								<div className='gz-kpi-val'>
-									{loading ? (
-										<span className='gz-hr-skeleton' style={{ width: 48, height: 28, display: 'inline-block' }} />
-									) : (
-										<NumberTicker value={totalEmployees} />
-									)}
-								</div>
-								<div className='gz-kpi-sub'>
-									<span className='text-success fw-bold'>&uarr; 4%</span>
-									<span>Active workforce</span>
-								</div>
-							</div>
-
-							{/* 2. Pending Approvals */}
-							<div className='col-6 col-lg-3 gz-kpi-col'>
-								<div className='gz-kpi-icon-box' style={{ background: '#fff1f2', color: '#e11d48' }}>
-									<i className='bi bi-hourglass-split'></i>
-								</div>
-								<div className='gz-kpi-label'>Pending Approvals</div>
-								<div className='gz-kpi-val'>
-									{loading ? (
-										<span className='gz-hr-skeleton' style={{ width: 48, height: 28, display: 'inline-block' }} />
-									) : (
-										<NumberTicker value={pendingApprovalsTotal} />
-									)}
-								</div>
-								<div className='gz-kpi-sub'>
-									<span className='text-danger fw-bold'>&uarr; 12%</span>
-									<span className='text-truncate'>{pendingLeavesCount} leaves &bull; {pendingTasksCount} tasks</span>
-								</div>
-							</div>
-
-							{/* 3. Agreement Expiry */}
-							<div className='col-6 col-lg-3 gz-kpi-col'>
-								<div className='gz-kpi-icon-box' style={{ background: '#f0f9ff', color: '#0284c7' }}>
-									<i className='bi bi-file-earmark-text'></i>
-								</div>
-								<div className='gz-kpi-label'>Agreement Expiry</div>
-								<div className='gz-kpi-val'>
-									{loading ? (
-										<span className='gz-hr-skeleton' style={{ width: 48, height: 28, display: 'inline-block' }} />
-									) : (
-										<NumberTicker value={expiringAgreementsCount} />
-									)}
-								</div>
-								<div className='gz-kpi-sub'>
-									<span className='text-muted'>Expiring soon</span>
-								</div>
-							</div>
-
-							{/* 4. New Joins */}
-							<div className='col-6 col-lg-3 gz-kpi-col'>
-								<div className='gz-kpi-icon-box' style={{ background: '#f5f3ff', color: '#7c3aed' }}>
-									<i className='bi bi-person-plus-fill'></i>
-								</div>
-								<div className='gz-kpi-label'>New Joins</div>
-								<div className='gz-kpi-val'>
-									{loading ? (
-										<span className='gz-hr-skeleton' style={{ width: 48, height: 28, display: 'inline-block' }} />
-									) : (
-										<NumberTicker value={newJoiners.length} />
-									)}
-								</div>
-								<div className='gz-kpi-sub'>
-									<span className='text-success fw-bold'>&uarr; 50%</span>
-									<span>This month</span>
-								</div>
-							</div>
+			{showFullTables ? (
+				<div>
+					<EmployeeAnniversaryTable className='card-cl-stretch mb-5' />
+					<ExpiredEmployeeTable className='card-cl-stretch mb-5' />
+					<TablesWidget className='card-cl-stretch mb-5' />
+				</div>
+			) : (
+				<>
+					{/* Scope Banner: Clearly indicating RAG (Gomzi Nutrition) filtering */}
+					<div className='d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2 p-3 bg-white border rounded-3 shadow-xs'>
+						<div className='d-flex align-items-center gap-2'>
+							<span className='badge badge-success px-3 py-2 fs-7 fw-bold d-inline-flex align-items-center gap-2'>
+								<i className='bi bi-shield-check fs-6'></i>
+								<span>Scope: {dataScope === 'rag' ? 'RAG (Gomzi Nutrition) Data' : 'All FG Group Data'}</span>
+							</span>
+							<span className='text-muted fs-8'>
+								{dataScope === 'rag'
+									? 'Metrics strictly filtered to Gomzi Nutrition RAG workforce, tasks & operations'
+									: 'Showing all group branches, FGIIT, FWG, GLS, and entities'}
+							</span>
+						</div>
+						<div className='btn-group btn-group-sm' role='group'>
+							<button
+								type='button'
+								className={`btn btn-sm ${dataScope === 'rag' ? 'btn-primary fw-bold' : 'btn-outline-secondary'}`}
+								onClick={() => {
+									setDataScope('rag')
+									loadDashboardData('rag')
+								}}>
+								RAG Data Only
+							</button>
+							<button
+								type='button'
+								className={`btn btn-sm ${dataScope === 'all' ? 'btn-primary fw-bold' : 'btn-outline-secondary'}`}
+								onClick={() => {
+									setDataScope('all')
+									loadDashboardData('all')
+								}}>
+								All Group Data
+							</button>
 						</div>
 					</div>
-				</div>
-			</div>
 
-			{/* =========================================================================
-			    ROW 2: CELEBRATION BENTO CARDS (BIRTHDAYS & WORK ANNIVERSARIES)
-			========================================================================= */}
-			<div className='row g-4 mb-4'>
-				{/* 1. BIRTHDAYS TODAY CARD */}
-				<div className='col-12 col-lg-6'>
-					<div className='gz-bento-card is-birthday-card gz-celebration-card h-100'>
-						{/* Real canvas confetti burst strictly clipped inside the card */}
-						<CelebrationConfetti type='birthday' triggerCount={birthdayTriggerCount} />
-
-						<div className='d-flex align-items-center justify-content-between mb-2'>
-							<div className='d-flex align-items-center gap-2'>
-								<div className='gz-celebration-badge-icon' style={{ background: '#ffe4e6', color: '#e11d48' }}>
-									<i className='bi bi-cake2'></i>
-								</div>
-								<div>
-									<h3 className='gz-bento-card-title'>
-										{displayBirthdays.length} Birthdays Today 🎉
-									</h3>
-									<p className='gz-bento-card-subtitle'>
-										Let&apos;s celebrate our amazing team members!
-									</p>
-								</div>
-							</div>
-							<Link to='/hr/employee-view' className='gz-bento-view-all'>
-								View All &rarr;
-							</Link>
-						</div>
-
-						<div className='gz-celebration-body-grid'>
-							{/* Left: Birthday Persons List */}
+					{/* =========================================================================
+					    SECTION 1: 8 KPI METRIC CARDS (2 ROWS OF 4 CARDS)
+					========================================================================= */}
+					<div className='gz-stats-grid'>
+						{/* Card 1: All Employees */}
+						<div className='gz-stat-card'>
 							<div>
-								{loading ? (
-									<div className='py-4 text-muted fs-8'>Loading birthdays...</div>
-								) : displayBirthdays.length > 0 ? (
-									<>
-										{displayBirthdays.slice(0, 2).map((emp: any) => (
-											<div key={emp._id} className='gz-celebration-person-row'>
-												<div className='d-flex align-items-center gap-3 overflow-hidden'>
-													{emp.photo ? (
-														<img
-															src={`https://files.fggroup.in/${emp.photo}`}
-															alt={emp.name}
-															className='gz-person-avatar'
-															onError={(e) => {
-																;(e.target as HTMLElement).style.display = 'none'
-															}}
-														/>
-													) : (
-														<div className='gz-person-avatar-placeholder' style={{ background: '#ffe4e6', color: '#e11d48' }}>
-															{emp.name?.charAt(0) || 'P'}
-														</div>
-													)}
-													<div className='overflow-hidden'>
-														<div className='gz-person-name text-truncate'>{emp.name}</div>
-														<div className='gz-person-role text-truncate'>{emp.position || 'Team Member'}</div>
-													</div>
-												</div>
-												<div className='d-flex align-items-center'>
-													<span className='gz-pill-today'>Today</span>
-													<span className='gz-person-date'>{emp.dateStr === 'Today' ? DayJS().format('DD MMM') : emp.dateStr}</span>
-												</div>
-											</div>
-										))}
-
-										{/* Footer with avatar stack */}
-										<Link to='/hr/employee-view' className='gz-celebration-footer-link'>
-											<div className='gz-avatar-overlap-group'>
-												{(allEmployees.length > 0 ? allEmployees.slice(0, 4) : [1, 2, 3, 4]).map((m: any, i: number) => (
-													<img
-														key={m._id || i}
-														src={m.employee?.photo ? `https://files.fggroup.in/${m.employee.photo}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(m.full_name || 'Staff')}&background=ede9fe&color=7c3aed`}
-														alt='member'
-														className='gz-avatar-thumb'
-													/>
-												))}
-											</div>
-											<span>and 3 more celebrating this week &rarr;</span>
-										</Link>
-									</>
-								) : (
-									<div className='py-4 text-muted fs-8'>No birthdays scheduled for today</div>
-								)}
-							</div>
-
-							{/* Right: Birthday Cake Vector Illustration with Confetti Trigger */}
-							<BirthdayCakeIllustration onClick={() => setBirthdayTriggerCount((c) => c + 1)} />
-						</div>
-					</div>
-				</div>
-
-				{/* 2. WORK ANNIVERSARIES CARD */}
-				<div className='col-12 col-lg-6'>
-					<div className='gz-bento-card is-anniversary-card gz-celebration-card h-100'>
-						{/* Real canvas confetti burst strictly clipped inside the card */}
-						<CelebrationConfetti type='anniversary' triggerCount={anniversaryTriggerCount} />
-
-						<div className='d-flex align-items-center justify-content-between mb-2'>
-							<div className='d-flex align-items-center gap-2'>
-								<div className='gz-celebration-badge-icon' style={{ background: '#fef3c7', color: '#d97706' }}>
-									<i className='bi bi-trophy'></i>
-								</div>
-								<div>
-									<h3 className='gz-bento-card-title'>
-										{upcomingAnniversaries.length} Work Anniversaries 🎊
-									</h3>
-									<p className='gz-bento-card-subtitle'>
-										Cheers to their journey with us!
-									</p>
-								</div>
-							</div>
-							<Link to='/hr/dashboard' onClick={() => setShowFullTables(true)} className='gz-bento-view-all'>
-								View All &rarr;
-							</Link>
-						</div>
-
-						<div className='gz-celebration-body-grid'>
-							{/* Left: Anniversary Persons List */}
-							<div>
-								{loading ? (
-									<div className='py-4 text-muted fs-8'>Loading anniversaries...</div>
-								) : upcomingAnniversaries.length > 0 ? (
-									upcomingAnniversaries.slice(0, 3).map((ann: any, idx: number) => (
-										<div key={ann._id || idx} className='gz-celebration-person-row'>
-											<div className='d-flex align-items-center gap-3 overflow-hidden'>
-												{ann.photo ? (
-													<img
-														src={`https://files.fggroup.in/${ann.photo}`}
-														alt={ann.name}
-														className='gz-person-avatar'
-														onError={(e) => {
-															;(e.target as HTMLElement).style.display = 'none'
-														}}
-													/>
-												) : (
-													<div className='gz-person-avatar-placeholder' style={{ background: '#fef3c7', color: '#b45309' }}>
-														{ann.name?.charAt(0) || 'H'}
-													</div>
-												)}
-												<div className='overflow-hidden'>
-													<div className='gz-person-name text-truncate'>{ann.name}</div>
-													<div className='gz-person-role text-truncate'>{ann.position || 'Team Member'}</div>
-												</div>
-											</div>
-											<div className='d-flex align-items-center'>
-												<span className='gz-pill-tenure'>
-													{ann.yearsOfService || 1} Year{(ann.yearsOfService || 1) > 1 ? 's' : ''}
-												</span>
-												<span className='gz-person-date'>{ann.dateStr === 'Today' ? DayJS().format('DD MMM') : ann.dateStr}</span>
-											</div>
-										</div>
-									))
-								) : (
-									<div className='py-4 text-muted fs-8'>No upcoming work anniversaries</div>
-								)}
-							</div>
-
-							{/* Right: Golden Trophy Vector Illustration with Confetti Trigger */}
-							<WorkAnniversaryTrophyIllustration onClick={() => setAnniversaryTriggerCount((c) => c + 1)} />
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* =========================================================================
-			    ROW 3: OPERATIONS BENTO ROW (SCHEDULE, LEAVES, TASKS)
-			========================================================================= */}
-			<div className='row g-4 mb-4'>
-				{/* 1. TODAY'S SCHEDULE CARD */}
-				<div className='col-12 col-lg-4'>
-					<div className='gz-bento-card is-schedule-card h-100 p-4'>
-						<div className='d-flex align-items-center justify-content-between mb-3'>
-							<h3 className='gz-bento-card-title'>Today&apos;s Schedule</h3>
-							<Link to='/hr/task-list' className='gz-bento-view-all'>
-								View Calendar &rarr;
-							</Link>
-						</div>
-
-						<div className='gz-schedule-timeline'>
-							{/* Item 1: Team Meeting */}
-							<div className='gz-schedule-item'>
-								<span className='gz-schedule-time'>10:00 AM</span>
-								<span className='gz-schedule-dot' style={{ background: '#2563eb' }} />
-								<div className='gz-schedule-icon-box' style={{ background: '#eff6ff', color: '#2563eb' }}>
+								<div className='gz-stat-icon-wrap'>
 									<i className='bi bi-people'></i>
 								</div>
-								<div className='gz-schedule-content'>
-									<div className='gz-schedule-title'>Team Meeting</div>
-									<div className='gz-schedule-sub'>HR Operations</div>
-								</div>
-								<div className='d-flex align-items-center gap-1'>
-									<div className='gz-avatar-overlap-group'>
-										<span className='badge bg-light text-muted fw-bold fs-9 py-0.5 px-1 rounded-pill'>+2</span>
-									</div>
-									<i className='bi bi-chevron-right text-muted fs-8 ms-1'></i>
-								</div>
+								<div className='gz-stat-label'>All Employees</div>
+								<div className='gz-stat-value'>{totalEmployees}</div>
 							</div>
-
-							{/* Item 2: Leave Review */}
-							<div className='gz-schedule-item'>
-								<span className='gz-schedule-time'>12:00 PM</span>
-								<span className='gz-schedule-dot' style={{ background: '#e11d48' }} />
-								<div className='gz-schedule-icon-box' style={{ background: '#ffe4e6', color: '#e11d48' }}>
-									<i className='bi bi-file-earmark-check'></i>
-								</div>
-								<div className='gz-schedule-content'>
-									<div className='gz-schedule-title'>Leave Review</div>
-									<div className='gz-schedule-sub'>Pending Approvals</div>
-								</div>
-								<div className='d-flex align-items-center gap-1'>
-									<i className='bi bi-chevron-right text-muted fs-8 ms-1'></i>
-								</div>
+							<div className='gz-stat-footer'>
+								<span className='gz-stat-subtext'>Total on record</span>
+								<Link to={`/hr/employee-detail${dataScope === 'rag' ? '?scope=rag' : ''}`} className='gz-stat-link'>
+									View &#8599;
+								</Link>
 							</div>
+						</div>
 
-							{/* Item 3: New Joiner Onboarding */}
-							<div className='gz-schedule-item'>
-								<span className='gz-schedule-time'>03:00 PM</span>
-								<span className='gz-schedule-dot' style={{ background: '#10b981' }} />
-								<div className='gz-schedule-icon-box' style={{ background: '#d1fae5', color: '#059669' }}>
+						{/* Card 2: Active Employees */}
+						<div className='gz-stat-card'>
+							<div>
+								<div className='gz-stat-icon-wrap'>
 									<i className='bi bi-person-check'></i>
 								</div>
-								<div className='gz-schedule-content'>
-									<div className='gz-schedule-title'>New Joiner Onboarding</div>
-									<div className='gz-schedule-sub'>{newJoiners[0]?.full_name || 'Yash Parekh'}</div>
-								</div>
-								<div className='d-flex align-items-center gap-1'>
-									<i className='bi bi-chevron-right text-muted fs-8 ms-1'></i>
-								</div>
+								<div className='gz-stat-label'>Active Employees</div>
+								<div className='gz-stat-value'>{activeEmployees}</div>
 							</div>
+							<div className='gz-stat-footer'>
+								<span className='gz-stat-subtext'>Currently working</span>
+								<Link to={`/hr/employee-detail${dataScope === 'rag' ? '?scope=rag' : ''}`} className='gz-stat-link'>
+									View &#8599;
+								</Link>
+							</div>
+						</div>
 
-							{/* Item 4: Agreement Discussion */}
-							<div className='gz-schedule-item'>
-								<span className='gz-schedule-time'>04:30 PM</span>
-								<span className='gz-schedule-dot' style={{ background: '#f59e0b' }} />
-								<div className='gz-schedule-icon-box' style={{ background: '#fef3c7', color: '#d97706' }}>
-									<i className='bi bi-file-earmark-text'></i>
+						{/* Card 3: Inactive Employees */}
+						<div className='gz-stat-card'>
+							<div>
+								<div className='gz-stat-icon-wrap'>
+									<i className='bi bi-person-dash'></i>
 								</div>
-								<div className='gz-schedule-content'>
-									<div className='gz-schedule-title'>Agreement Discussion</div>
-									<div className='gz-schedule-sub'>{expiringDocuments[0]?.documentType || 'INPTA Video'}</div>
+								<div className='gz-stat-label'>Inactive Employees</div>
+								<div className='gz-stat-value'>{inactiveEmployees}</div>
+							</div>
+							<div className='gz-stat-footer'>
+								<span className='gz-stat-subtext'>Not active</span>
+								<Link to={`/hr/employee-detail${dataScope === 'rag' ? '?scope=rag' : ''}`} className='gz-stat-link'>
+									View &#8599;
+								</Link>
+							</div>
+						</div>
+
+						{/* Card 4: On Leave */}
+						<div className='gz-stat-card'>
+							<div>
+								<div className='gz-stat-icon-wrap'>
+									<i className='bi bi-person-walking'></i>
 								</div>
-								<div className='d-flex align-items-center gap-1'>
-									<i className='bi bi-chevron-right text-muted fs-8 ms-1'></i>
+								<div className='gz-stat-label'>On Leave</div>
+								<div className='gz-stat-value'>{onLeaveTodayCount}</div>
+							</div>
+							<div className='gz-stat-footer'>
+								<span className='gz-stat-subtext'>Approved, today</span>
+								<Link to='/hr/leave' className='gz-stat-link'>
+									View &#8599;
+								</Link>
+							</div>
+						</div>
+
+						{/* Card 5: KPI Tasks */}
+						<div className='gz-stat-card'>
+							<div>
+								<div className='gz-stat-icon-wrap'>
+									<i className='bi bi-bullseye'></i>
 								</div>
+								<div className='gz-stat-label'>KPI Tasks</div>
+								<div className='gz-stat-value'>{kpiTasksCount}</div>
+							</div>
+							<div className='gz-stat-footer'>
+								<span className='gz-stat-subtext'>Flagged as KPI</span>
+								<Link to={`/hr/task-list?filter=kpi&scope=${dataScope}&all=true`} className='gz-stat-link'>
+									View &#8599;
+								</Link>
+							</div>
+						</div>
+
+						{/* Card 6: P1 Tasks */}
+						<div className='gz-stat-card'>
+							<div>
+								<div className='gz-stat-icon-wrap'>
+									<i className='bi bi-list-check'></i>
+								</div>
+								<div className='gz-stat-label'>P1 Tasks</div>
+								<div className='gz-stat-value'>{p1TasksCount}</div>
+							</div>
+							<div className='gz-stat-footer'>
+								<span className='gz-stat-subtext'>High priority</span>
+								<Link to={`/hr/task-list?status=Pending&filter=p1&scope=${dataScope}&all=true`} className='gz-stat-link'>
+									View &#8599;
+								</Link>
+							</div>
+						</div>
+
+						{/* Card 7: Careers */}
+						<div className='gz-stat-card'>
+							<div>
+								<div className='gz-stat-icon-wrap'>
+									<i className='bi bi-briefcase'></i>
+								</div>
+								<div className='gz-stat-label'>Careers</div>
+								<div className='gz-stat-value'>{careersCount}</div>
+							</div>
+							<div className='gz-stat-footer'>
+								<span className='gz-stat-subtext'>Open positions</span>
+								<Link to='/hr/career' className='gz-stat-link'>
+									View &#8599;
+								</Link>
+							</div>
+						</div>
+
+						{/* Card 8: Overdue Tasks */}
+						<div className='gz-stat-card'>
+							<div>
+								<div className='gz-stat-icon-wrap'>
+									<i className='bi bi-clock-history'></i>
+								</div>
+								<div className='gz-stat-label'>Overdue Tasks</div>
+								<div className='gz-stat-value'>{overdueTasksCount}</div>
+							</div>
+							<div className='gz-stat-footer'>
+								<span className='gz-stat-subtext'>Past deadline</span>
+								<Link to={`/hr/task-list?filter=overdue&scope=${dataScope}&all=true`} className='gz-stat-link'>
+									View &#8599;
+								</Link>
 							</div>
 						</div>
 					</div>
-				</div>
 
-				{/* 2. LEAVE REQUESTS (LAVENDER BENTO CARD) */}
-				<div className='col-12 col-lg-4'>
-					<div className='gz-bento-card gz-bento-lavender is-leave-card h-100 p-4'>
-						<div className='d-flex align-items-center justify-content-between mb-3'>
-							<h3 className='gz-bento-card-title'>Leave Requests</h3>
-							<Link to='/hr/manual-leave' className='gz-bento-view-all'>
-								View All &rarr;
-							</Link>
+					{/* =========================================================================
+					    SECTION 2: TEAM BIRTHDAY CELEBRATIONS
+					========================================================================= */}
+					<div className='gz-section-card'>
+						<div className='gz-section-header'>
+							<div className='gz-section-title-wrap'>
+								<div className='gz-section-icon-box'>
+									<i className='bi bi-cake2'></i>
+								</div>
+								<h2 className='gz-section-title'>Team Birthday Celebrations</h2>
+							</div>
+
+							{/* Segmented Filter Tabs */}
+							<div className='gz-pill-tabs'>
+								<button
+									type='button'
+									className={`gz-pill-tab ${birthdayTab === 'all' ? 'active' : ''}`}
+									onClick={() => setBirthdayTab('all')}>
+									All (Today &amp; Upcoming)
+								</button>
+								<button
+									type='button'
+									className={`gz-pill-tab ${birthdayTab === 'today' ? 'active' : ''}`}
+									onClick={() => setBirthdayTab('today')}>
+									Today <span className='gz-pill-badge'>{todayBirthdays.length}</span>
+								</button>
+								<button
+									type='button'
+									className={`gz-pill-tab ${birthdayTab === 'upcoming' ? 'active' : ''}`}
+									onClick={() => setBirthdayTab('upcoming')}>
+									Upcoming <span className='gz-pill-badge'>{upcomingBirthdays.length}</span>
+								</button>
+							</div>
 						</div>
 
-						<div>
-							{loading ? (
-								<div className='py-4 text-muted fs-8'>Loading requests...</div>
-							) : pendingLeaves.length > 0 ? (
-								pendingLeaves.slice(0, 4).map((leave: any) => {
-									const empName = leave?.admin_id?.full_name || 'Employee'
-									const fromDate = DayJS(leave.from_date)
-									const toDate = DayJS(leave.to_date)
-									const diff = Math.max(1, toDate.diff(fromDate, 'day') + 1)
-
-									return (
-										<div key={leave._id} className='gz-leave-row'>
-											<div className='d-flex align-items-center gap-3 overflow-hidden me-2'>
-												<div className='gz-person-avatar-placeholder' style={{ background: '#ffffff', color: '#7c3aed' }}>
-													{empName.charAt(0)}
-												</div>
-												<div className='overflow-hidden'>
-													<div className='gz-person-name text-truncate'>{empName}</div>
-													<div className='gz-person-role text-truncate'>
-														{leave.leave_type || 'Casual Leave'} &bull; {diff} {diff > 1 ? 'days' : 'day'}
-													</div>
-													<div style={{ fontSize: '11px', color: '#64748b' }}>
-														{fromDate.format('DD MMM')} {fromDate.format('DD MMM') !== toDate.format('DD MMM') ? `- ${toDate.format('DD MMM')}` : ''}
-													</div>
-												</div>
+						{/* 2-Column Split */}
+						<div className='gz-card-grid-2'>
+							{/* Left Column: Today's Birthdays Box */}
+							{(birthdayTab === 'all' || birthdayTab === 'today') && (
+								<div className='gz-empty-box-dashed'>
+									{todayBirthdays.length === 0 ? (
+										<>
+											<div className='gz-empty-icon'>
+												<i className='bi bi-gift'></i>
 											</div>
-
-											{/* Action Circle Buttons */}
-											<div className='d-flex align-items-center gap-2 flex-shrink-0'>
-												<button
-													type='button'
-													className='gz-btn-circle-approve'
-													title='Approve'
-													onClick={() => handleOpenLeaveModal(leave._id, 'APPROVED')}>
-													<i className='bi bi-check-lg'></i>
-												</button>
-												<button
-													type='button'
-													className='gz-btn-circle-reject'
-													title='Reject'
-													onClick={() => handleOpenLeaveModal(leave._id, 'REJECTED')}>
-													<i className='bi bi-x-lg'></i>
-												</button>
-											</div>
+											<h3 className='gz-empty-title'>No Birthdays Today</h3>
+											<p className='gz-empty-desc'>
+												No team members are celebrating a birthday today. Check upcoming
+												birthdays to plan team celebrations!
+											</p>
+										</>
+									) : (
+										<div className='w-100 text-start'>
+											<h4 className='fw-bold mb-3 text-dark fs-6'>Today&apos;s Celebrants 🎉</h4>
+											{todayBirthdays.map((bday: any) => (
+												<div key={bday._id} className='gz-person-item'>
+													<div className='d-flex align-items-center gap-3'>
+														{bday.photo ? (
+															<img
+																src={`https://files.fggroup.in/${bday.photo}`}
+																alt={bday.name}
+																className='gz-person-avatar'
+															/>
+														) : (
+															<div className='gz-person-avatar-placeholder'>
+																{bday.name?.charAt(0) || 'U'}
+															</div>
+														)}
+														<div>
+															<div className='gz-person-name'>{bday.name}</div>
+															<div className='gz-person-role'>{bday.position}</div>
+														</div>
+													</div>
+													<span className='gz-days-badge'>Today 🎂</span>
+												</div>
+											))}
 										</div>
-									)
-								})
-							) : (
-								<div className='py-4 text-center text-muted fs-8'>
-									<i className='bi bi-check2-circle text-success fs-3 d-block mb-1'></i>
-									All caught up! No pending leave requests
+									)}
+								</div>
+							)}
+
+							{/* Right Column: Upcoming Birthdays List */}
+							{(birthdayTab === 'all' || birthdayTab === 'upcoming') && (
+								<div className='gz-list-box-bordered'>
+									<div className='gz-list-box-header'>
+										<h3 className='gz-list-box-title'>
+											<i className='bi bi-calendar-event'></i> Upcoming Birthdays
+										</h3>
+										<span className='gz-list-badge'>{upcomingBirthdays.length} upcoming</span>
+									</div>
+
+									<div className='gz-list-scroll'>
+										{upcomingBirthdays.length > 0 ? (
+											upcomingBirthdays.map((bday: any) => (
+												<div key={bday._id} className='gz-person-item'>
+													<div className='d-flex align-items-center gap-3'>
+														{bday.photo ? (
+															<img
+																src={`https://files.fggroup.in/${bday.photo}`}
+																alt={bday.name}
+																className='gz-person-avatar'
+															/>
+														) : (
+															<div className='gz-person-avatar-placeholder'>
+																{bday.name?.charAt(0) || 'U'}
+															</div>
+														)}
+														<div>
+															<Link
+																to={`/hr/employee-detail?employee_id=${bday._id}`}
+																className='gz-person-name text-dark text-hover-primary text-decoration-none'>
+																{bday.name}
+															</Link>
+															<div className='gz-person-role'>{bday.position}</div>
+														</div>
+													</div>
+
+													<div className='gz-person-meta'>
+														<span className='gz-person-date'>{bday.dateStr}</span>
+														<span className='gz-days-badge'>{bday.inDaysStr}</span>
+													</div>
+												</div>
+											))
+										) : (
+											<div className='text-center py-5 text-muted fs-7'>
+												No upcoming birthdays found.
+											</div>
+										)}
+									</div>
 								</div>
 							)}
 						</div>
 					</div>
-				</div>
 
-				{/* 3. PENDING TASKS (DARK NAVY BENTO CARD) */}
-				<div className='col-12 col-lg-4'>
-					<div className='gz-bento-navy is-task-card h-100 p-4'>
-						<div className='d-flex align-items-center justify-content-between mb-3'>
-							<h3 className='gz-bento-card-title'>Pending Tasks</h3>
-							<Link to='/hr/task-list' className='gz-bento-view-all'>
-								View All &rarr;
-							</Link>
+					{/* =========================================================================
+					    SECTION 3: TEAM LEAVE STATUS
+					========================================================================= */}
+					<div className='gz-section-card'>
+						<div className='gz-section-header'>
+							<div className='gz-section-title-wrap'>
+								<div className='gz-section-icon-box is-teal'>
+									<i className='bi bi-calendar2-check'></i>
+								</div>
+								<div className='d-flex align-items-center gap-2'>
+									<h2 className='gz-section-title mb-0'>Team Leave Status</h2>
+									<Link
+										to='/hr/leave'
+										className='gz-stat-link ms-2 fs-8 text-decoration-none'
+										title='Open full Leave Ledger at /hr/leave'>
+										Leave Ledger &#8599;
+									</Link>
+								</div>
+							</div>
+
+							{/* Segmented Filter Tabs */}
+							<div className='gz-pill-tabs'>
+								<button
+									type='button'
+									className={`gz-pill-tab ${leaveTab === 'all' ? 'active' : ''}`}
+									onClick={() => setLeaveTab('all')}>
+									All (Today &amp; Upcoming)
+								</button>
+								<button
+									type='button'
+									className={`gz-pill-tab ${leaveTab === 'today' ? 'active' : ''}`}
+									onClick={() => setLeaveTab('today')}>
+									Today <span className='gz-pill-badge'>{todayLeaves.length}</span>
+								</button>
+								<button
+									type='button'
+									className={`gz-pill-tab ${leaveTab === 'upcoming' ? 'active' : ''}`}
+									onClick={() => setLeaveTab('upcoming')}>
+									Upcoming <span className='gz-pill-badge'>{upcomingLeaves.length}</span>
+								</button>
+								<button
+									type='button'
+									className={`gz-pill-tab ${leaveTab === 'pending' ? 'active' : ''}`}
+									onClick={() => setLeaveTab('pending')}>
+									Pending{' '}
+									<span className='gz-pill-badge is-warning'>{pendingLeavesCount}</span>
+								</button>
+							</div>
 						</div>
 
-						<div>
-							{loading ? (
-								<div className='py-4 text-muted fs-8'>Loading tasks...</div>
-							) : pendingTasks.length > 0 ? (
-								pendingTasks.slice(0, 4).map((task: any, idx: number) => {
-									const colors = [
-										{ bg: 'rgba(239, 68, 68, 0.2)', icon: '#f87171' },
-										{ bg: 'rgba(59, 130, 246, 0.2)', icon: '#60a5fa' },
-										{ bg: 'rgba(245, 158, 11, 0.2)', icon: '#fbbf24' },
-										{ bg: 'rgba(168, 85, 247, 0.2)', icon: '#c084fc' },
-									]
-									const c = colors[idx % colors.length]
-									const isHigh = idx === 0 || idx === 3
-
-									return (
-										<Link
-											key={task._id || idx}
-											to='/hr/task-list'
-											className='gz-task-dark-row text-decoration-none'>
-											<div className='d-flex align-items-center gap-2 overflow-hidden me-2'>
-												<div className='gz-task-dark-icon' style={{ background: c.bg, color: c.icon }}>
-													<i className='bi bi-journal-check'></i>
-												</div>
-												<div className='gz-person-avatar-placeholder' style={{ background: 'rgba(255,255,255,0.1)', color: '#ffffff', width: '28px', height: '28px', fontSize: '11px' }}>
-													{task.full_name?.charAt(0) || 'T'}
-												</div>
-												<div className='overflow-hidden'>
-													<div className='gz-task-dark-title text-truncate'>
-														{task.task_title || 'Employee Setup Task'}
-													</div>
-													<div className='gz-task-dark-sub text-truncate'>
-														Assigned to {task.full_name || 'Staff'} &bull; Due: {DayJS(task.end_date || new Date()).format('DD MMM YYYY')}
-													</div>
-												</div>
+						{/* 2-Column Split */}
+						<div className='gz-card-grid-2'>
+							{/* Left Column: Today's Leaves Box */}
+							{(leaveTab === 'all' || leaveTab === 'today') && (
+								<div className='gz-empty-box-dashed'>
+									{todayLeaves.length === 0 ? (
+										<>
+											<div className='gz-empty-icon'>
+												<i className='bi bi-person'></i>
 											</div>
-
-											<div className='d-flex align-items-center gap-2 flex-shrink-0'>
-												<span className={isHigh ? 'gz-pill-priority-high' : 'gz-pill-priority-med'}>
-													{isHigh ? 'High' : 'Medium'}
-												</span>
-												<i className='bi bi-chevron-right text-muted fs-8'></i>
+											<h3 className='gz-empty-title'>No Leaves Today</h3>
+											<p className='gz-empty-desc'>
+												No team members are on leave today. All employees are scheduled and
+												active!
+											</p>
+										</>
+									) : (
+										<div className='w-100 text-start'>
+											<div className='d-flex align-items-center justify-content-between mb-3'>
+												<h4 className='fw-bold text-dark fs-6 mb-0'>On Leave Today</h4>
+												<Link to='/hr/leave' className='text-muted fs-8 text-hover-primary text-decoration-none'>
+													View all &rarr;
+												</Link>
 											</div>
-										</Link>
-									)
-								})
-							) : (
-								<div className='py-4 text-center text-muted fs-8'>
-									<i className='bi bi-check-all text-success fs-3 d-block mb-1'></i>
-									No pending tasks in queue
+											<div className='gz-list-scroll'>
+												{todayLeaves.map((leave: any) => (
+													<div key={leave._id} className='gz-person-item'>
+														<div className='d-flex align-items-center gap-3'>
+															<div
+																className='gz-person-avatar-placeholder'
+																style={{ background: '#DCFCE7', color: '#16A34A' }}>
+																{getLeaveEmployeeName(leave).charAt(0) || 'L'}
+															</div>
+															<div>
+																<div className='gz-person-name'>
+																	{getLeaveEmployeeName(leave)}
+																</div>
+																<div className='gz-person-role'>
+																	{leave.reason || 'Approved Leave'}
+																	{' · '}
+																	<span className='fw-medium text-muted'>
+																		{calculateLeaveDuration(leave.from_date, leave.to_date)}
+																	</span>
+																</div>
+															</div>
+														</div>
+														<div className='d-flex align-items-center gap-2'>
+															<span
+																className='gz-days-badge'
+																style={{ background: '#DCFCE7', color: '#15803D' }}>
+																On Leave
+															</span>
+															<Link
+																to='/hr/leave'
+																className='text-muted fs-8 text-hover-primary text-decoration-none'>
+																View &rarr;
+															</Link>
+														</div>
+													</div>
+												))}
+											</div>
+										</div>
+									)}
+								</div>
+							)}
+
+							{/* Right Column: Upcoming / Pending Leaves Box */}
+							{(leaveTab === 'all' || leaveTab === 'upcoming' || leaveTab === 'pending') && (
+								<div className='gz-list-box-bordered'>
+									<div className='gz-list-box-header'>
+										<h3 className='gz-list-box-title is-teal'>
+											<i className='bi bi-calendar2-range'></i>{' '}
+											{leaveTab === 'pending' ? 'Pending Leave Requests' : 'Upcoming Leaves'}
+										</h3>
+										<div className='d-flex align-items-center gap-2'>
+											<span className='gz-list-badge'>
+												{leaveTab === 'pending'
+													? `${pendingLeaves.length} pending`
+													: `${upcomingLeaves.length} upcoming`}
+											</span>
+											<Link
+												to={`/hr/leave${leaveTab === 'pending' ? '?status=PENDING' : ''}`}
+												className='text-muted fs-8 text-hover-primary text-decoration-none'>
+												Ledger &rarr;
+											</Link>
+										</div>
+									</div>
+
+									{leaveTab === 'pending' ? (
+										pendingLeaves.length === 0 ? (
+											<div className='d-flex flex-column align-items-center justify-content-center text-center my-auto py-4'>
+												<div className='gz-empty-icon is-teal'>
+													<i className='bi bi-check2-circle'></i>
+												</div>
+												<h3 className='gz-empty-title'>No Pending Requests</h3>
+												<p className='gz-empty-desc'>
+													All leave requests have been reviewed and processed!
+												</p>
+											</div>
+										) : (
+											<div className='gz-list-scroll'>
+												{pendingLeaves.map((item: any) => (
+													<div key={item._id} className='gz-person-item'>
+														<div className='d-flex align-items-center gap-3'>
+															<div
+																className='gz-person-avatar-placeholder'
+																style={{ background: '#FEF3C7', color: '#D97706' }}>
+																{getLeaveEmployeeName(item).charAt(0) || 'L'}
+															</div>
+															<div>
+																<div className='gz-person-name'>
+																	{getLeaveEmployeeName(item)}
+																</div>
+																<div className='gz-person-role'>
+																	{item.reason || 'Pending Approval'}
+																	{' · '}
+																	<span className='fw-medium text-muted'>
+																		{calculateLeaveDuration(item.from_date, item.to_date)}
+																	</span>
+																</div>
+															</div>
+														</div>
+														<div className='d-flex align-items-center gap-2'>
+															<span
+																className='gz-days-badge'
+																style={{ background: '#FEF3C7', color: '#B45309' }}>
+																{DayJS(item.from_date).format('DD MMM')}
+															</span>
+															<Link
+																to='/hr/leave?status=PENDING'
+																className='btn btn-xs btn-light-warning fw-semibold px-2 py-1 fs-8 text-decoration-none'>
+																Review
+															</Link>
+														</div>
+													</div>
+												))}
+											</div>
+										)
+									) : upcomingLeaves.length === 0 ? (
+										<div className='d-flex flex-column align-items-center justify-content-center text-center my-auto py-4'>
+											<div className='gz-empty-icon is-teal'>
+												<i className='bi bi-calendar-check'></i>
+											</div>
+											<h3 className='gz-empty-title'>No Upcoming Leaves</h3>
+											<p className='gz-empty-desc'>
+												All upcoming employee approved leave requests will appear right here.
+											</p>
+										</div>
+									) : (
+										<div className='gz-list-scroll'>
+											{upcomingLeaves.map((item: any) => (
+												<div key={item._id} className='gz-person-item'>
+													<div className='d-flex align-items-center gap-3'>
+														<div
+															className='gz-person-avatar-placeholder'
+															style={{ background: '#EFF6FF', color: '#2563EB' }}>
+															{getLeaveEmployeeName(item).charAt(0) || 'L'}
+														</div>
+														<div>
+															<div className='gz-person-name'>
+																{getLeaveEmployeeName(item)}
+															</div>
+															<div className='gz-person-role'>
+																{item.reason || 'Scheduled Leave'}
+																{' · '}
+																<span className='fw-medium text-muted'>
+																	{calculateLeaveDuration(item.from_date, item.to_date)}
+																</span>
+															</div>
+														</div>
+													</div>
+													<div className='d-flex align-items-center gap-2'>
+														<span className='gz-person-date'>
+															{DayJS(item.from_date).format('DD MMM')}
+														</span>
+														<Link
+															to='/hr/leave'
+															className='text-muted fs-8 text-hover-primary text-decoration-none'>
+															View &rarr;
+														</Link>
+													</div>
+												</div>
+											))}
+										</div>
+									)}
 								</div>
 							)}
 						</div>
 					</div>
-				</div>
-			</div>
 
-			{/* =========================================================================
-			    ROW 4: INSIGHTS & ACTIONS (DEPT, ACTIVITY, QUICK ACTIONS)
-			========================================================================= */}
-			<div className='row g-4 mb-4'>
-				{/* 1. DEPARTMENT OVERVIEW */}
-				<div className='col-12 col-lg-4'>
-					<div className='gz-bento-card is-dept-card h-100 p-4'>
-						<div className='d-flex align-items-center justify-content-between mb-3'>
-							<h3 className='gz-bento-card-title'>Department Overview</h3>
-							<span className='badge bg-light text-muted fw-bold fs-9 py-1 px-2 rounded-pill'>
-								This Month &or;
-							</span>
-						</div>
-
-						<div className='gz-dept-overview-layout'>
-							{/* Donut Chart SVG */}
-							<div className='gz-donut-container'>
-								<svg viewBox='0 0 36 36' style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
-									<path
-										d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-										fill='none'
-										stroke='#f1f5f9'
-										strokeWidth='3.8'
-									/>
-									{/* Segment 1: Sales / Blue */}
-									<path
-										d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-										fill='none'
-										stroke='#2563eb'
-										strokeWidth='3.8'
-										strokeDasharray='25, 100'
-									/>
-									{/* Segment 2: Development / Cyan */}
-									<path
-										d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-										fill='none'
-										stroke='#06b6d4'
-										strokeWidth='3.8'
-										strokeDasharray='22, 100'
-										strokeDashoffset='-25'
-									/>
-									{/* Segment 3: Operations / Yellow */}
-									<path
-										d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-										fill='none'
-										stroke='#f59e0b'
-										strokeWidth='3.8'
-										strokeDasharray='17, 100'
-										strokeDashoffset='-47'
-									/>
-									{/* Segment 4: HR / Rose */}
-									<path
-										d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-										fill='none'
-										stroke='#e11d48'
-										strokeWidth='3.8'
-										strokeDasharray='11, 100'
-										strokeDashoffset='-64'
-									/>
-									{/* Segment 5: Marketing / Purple */}
-									<path
-										d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-										fill='none'
-										stroke='#8b5cf6'
-										strokeWidth='3.8'
-										strokeDasharray='10, 100'
-										strokeDashoffset='-75'
-									/>
-									{/* Segment 6: Others / Slate */}
-									<path
-										d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-										fill='none'
-										stroke='#94a3b8'
-										strokeWidth='3.8'
-										strokeDasharray='15, 100'
-										strokeDashoffset='-85'
-									/>
-								</svg>
-								<div className='gz-donut-center'>
-									<span className='gz-donut-center-val'>{loading ? '...' : totalEmployees}</span>
-									<span className='gz-donut-center-lbl'>Employees</span>
-								</div>
-							</div>
-
-							{/* Breakdown List */}
-							<div className='flex-grow-1'>
-								{(departmentStats.length > 0 ? departmentStats : [
-									{ name: 'Sales', count: 18, percent: 25 },
-									{ name: 'Development', count: 16, percent: 22 },
-									{ name: 'Operations', count: 12, percent: 17 },
-									{ name: 'HR', count: 8, percent: 11 },
-									{ name: 'Marketing', count: 7, percent: 10 },
-									{ name: 'Others', count: 11, percent: 15 },
-								]).map((dept, idx) => {
-									const colors = ['#2563eb', '#06b6d4', '#f59e0b', '#e11d48', '#8b5cf6', '#94a3b8']
-									return (
-										<div key={idx} className='gz-dept-legend-row'>
-											<span className='d-flex align-items-center'>
-												<span className='gz-dept-dot' style={{ background: colors[idx % colors.length] }} />
-												<span className='gz-dept-name'>{dept.name}</span>
-											</span>
-											<span className='gz-dept-count'>
-												{dept.count} <span className='text-muted fw-normal' style={{ fontSize: '11px' }}>({dept.percent}%)</span>
-											</span>
-										</div>
-									)
-								})}
-							</div>
-						</div>
-					</div>
-				</div>
-
-				{/* 2. RECENT ACTIVITY */}
-				<div className='col-12 col-lg-4'>
-					<div className='gz-bento-card is-activity-card h-100 p-4'>
-						<div className='d-flex align-items-center justify-content-between mb-3'>
-							<h3 className='gz-bento-card-title'>Recent Activity</h3>
-							<Link to='/hr/dashboard' onClick={() => setShowFullTables(true)} className='gz-bento-view-all'>
-								View All &rarr;
+					{/* =========================================================================
+					    SECTION 4: MEMO WATCHLIST
+					========================================================================= */}
+					<div className='gz-memo-section'>
+						<div className='gz-memo-header'>
+							<h3 className='gz-memo-title'>Memo Watchlist</h3>
+							<Link to='/hr/memo' className='gz-memo-view-all'>
+								View all
 							</Link>
 						</div>
 
+						{/* Memo Items List */}
 						<div>
-							{/* Item 1: Leave */}
-							<div className='gz-activity-row'>
-								<div className='d-flex align-items-center gap-3 overflow-hidden me-2'>
-									<div className='gz-activity-icon-sq' style={{ background: '#ecfdf5', color: '#059669' }}>
-										<i className='bi bi-file-earmark-text'></i>
-									</div>
-									<div className='overflow-hidden'>
-										<div className='gz-person-name text-truncate' style={{ fontSize: '12.5px' }}>
-											{pendingLeaves[0]?.admin_id?.full_name || 'Yash Sutariya'} submitted a leave request
+							{memoList.length > 0 ? (
+								memoList.map((memo: any) => (
+									<div key={memo._id} className='gz-memo-item'>
+										<div>
+											<Link
+												to={`/hr/employee-detail?employee_id=${memo._id}`}
+												className='gz-memo-name text-dark text-hover-primary text-decoration-none'>
+												{memo.name}
+											</Link>
+											<div className='gz-memo-sub'>
+												{memo.position} &middot; {memo.rating}
+											</div>
 										</div>
-										<div className='text-muted' style={{ fontSize: '11px' }}>2 hours ago</div>
-									</div>
-								</div>
-								<span className='gz-activity-pill is-leave'>Leave</span>
-							</div>
-
-							{/* Item 2: Agreement */}
-							<div className='gz-activity-row'>
-								<div className='d-flex align-items-center gap-3 overflow-hidden me-2'>
-									<div className='gz-activity-icon-sq' style={{ background: '#fef3c7', color: '#d97706' }}>
-										<i className='bi bi-file-check'></i>
-									</div>
-									<div className='overflow-hidden'>
-										<div className='gz-person-name text-truncate' style={{ fontSize: '12.5px' }}>
-											Agreement &ldquo;{expiringDocuments[0]?.documentType || 'INPTA Video'}&rdquo; marked for review
+										<div className='gz-memo-count'>
+											{memo.count} memo{memo.count > 1 ? 's' : ''}
 										</div>
-										<div className='text-muted' style={{ fontSize: '11px' }}>3 hours ago</div>
 									</div>
+								))
+							) : (
+								<div className='text-center py-4 bg-white border rounded-3 text-muted fs-7'>
+									No active memos recorded on staff accounts.
 								</div>
-								<span className='gz-activity-pill is-agreement'>Agreement</span>
-							</div>
-
-							{/* Item 3: Employee */}
-							<div className='gz-activity-row'>
-								<div className='d-flex align-items-center gap-3 overflow-hidden me-2'>
-									<div className='gz-activity-icon-sq' style={{ background: '#eff6ff', color: '#2563eb' }}>
-										<i className='bi bi-person-plus'></i>
-									</div>
-									<div className='overflow-hidden'>
-										<div className='gz-person-name text-truncate' style={{ fontSize: '12.5px' }}>
-											New employee &ldquo;{newJoiners[0]?.full_name || 'Yash Parekh'}&rdquo; added
-										</div>
-										<div className='text-muted' style={{ fontSize: '11px' }}>5 hours ago</div>
-									</div>
-								</div>
-								<span className='gz-activity-pill is-employee'>Employee</span>
-							</div>
-
-							{/* Item 4: Task */}
-							<div className='gz-activity-row'>
-								<div className='d-flex align-items-center gap-3 overflow-hidden me-2'>
-									<div className='gz-activity-icon-sq' style={{ background: '#f5f3ff', color: '#7c3aed' }}>
-										<i className='bi bi-list-task'></i>
-									</div>
-									<div className='overflow-hidden'>
-										<div className='gz-person-name text-truncate' style={{ fontSize: '12.5px' }}>
-											Task &ldquo;{pendingTasks[0]?.task_title || 'Test Task Title 3'}&rdquo; assigned to staff
-										</div>
-										<div className='text-muted' style={{ fontSize: '11px' }}>1 day ago</div>
-									</div>
-								</div>
-								<span className='gz-activity-pill is-task'>Task</span>
-							</div>
+							)}
 						</div>
 					</div>
-				</div>
-
-				{/* 3. QUICK ACTIONS (LAVENDER CARD) */}
-				<div className='col-12 col-lg-4'>
-					<div className='gz-bento-card gz-bento-lavender is-quick-actions h-100 p-4'>
-						<div className='d-flex align-items-center justify-content-between mb-3'>
-							<h3 className='gz-bento-card-title'>Quick Actions</h3>
-						</div>
-
-						<div className='gz-quick-actions-bento-grid'>
-							{/* 1. Add Employee */}
-							<Link to='/hr/employee-create' className='gz-quick-action-pill-btn'>
-								<div className='gz-qa-left'>
-									<div className='gz-qa-icon-sq' style={{ background: '#f5f3ff', color: '#7c3aed' }}>
-										<i className='bi bi-person-plus'></i>
-									</div>
-									<span className='gz-qa-title'>Add Employee</span>
-								</div>
-								<i className='bi bi-arrow-right gz-qa-arrow'></i>
-							</Link>
-
-							{/* 2. Leave Manager */}
-							<Link to='/hr/manual-leave' className='gz-quick-action-pill-btn'>
-								<div className='gz-qa-left'>
-									<div className='gz-qa-icon-sq' style={{ background: '#ffe4e6', color: '#e11d48' }}>
-										<i className='bi bi-file-earmark-check'></i>
-									</div>
-									<span className='gz-qa-title'>Leave Manager</span>
-								</div>
-								<i className='bi bi-arrow-right gz-qa-arrow'></i>
-							</Link>
-
-							{/* 3. Assign Task */}
-							<Link to='/hr/task-list' className='gz-quick-action-pill-btn'>
-								<div className='gz-qa-left'>
-									<div className='gz-qa-icon-sq' style={{ background: '#fef3c7', color: '#d97706' }}>
-										<i className='bi bi-check2-square'></i>
-									</div>
-									<span className='gz-qa-title'>Assign Task</span>
-								</div>
-								<i className='bi bi-arrow-right gz-qa-arrow'></i>
-							</Link>
-
-							{/* 4. Reports */}
-							<Link to='/hr/reports' className='gz-quick-action-pill-btn'>
-								<div className='gz-qa-left'>
-									<div className='gz-qa-icon-sq' style={{ background: '#eff6ff', color: '#2563eb' }}>
-										<i className='bi bi-file-earmark-bar-graph'></i>
-									</div>
-									<span className='gz-qa-title'>Reports</span>
-								</div>
-								<i className='bi bi-arrow-right gz-qa-arrow'></i>
-							</Link>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* =========================================================================
-			    SECTION 5: DETAILED WORKFORCE DIRECTORY & TABLES
-			========================================================================= */}
-			<div className='gz-bento-card mb-4'>
-				<div className='gz-bento-card-header py-3 flex-wrap gap-2 border-bottom'>
-					<div className='d-flex align-items-center gap-2'>
-						<i className='bi bi-table text-primary fs-5'></i>
-						<h3 className='fs-6 fw-bold m-0'>Detailed Workforce Directory &amp; Tables</h3>
-					</div>
-					<div className='gz-hr-tabs-nav'>
-						<button
-							type='button'
-							onClick={() => setFullTableTab('anniversaries')}
-							className={`gz-hr-tab-btn ${fullTableTab === 'anniversaries' ? 'is-active' : ''}`}>
-							<i className='bi bi-award me-1'></i>
-							<span>Anniversaries</span>
-							<span className='badge badge-light-warning py-1 px-2 fs-9 ms-1'>
-								{tableAnniversariesCount || upcomingAnniversariesCount}
-							</span>
-						</button>
-
-						<button
-							type='button'
-							onClick={() => setFullTableTab('documents')}
-							className={`gz-hr-tab-btn ${fullTableTab === 'documents' ? 'is-active' : ''}`}>
-							<i className='bi bi-file-earmark-check me-1'></i>
-							<span>Agreements &amp; Expiries</span>
-							<span className='badge badge-light-danger py-1 px-2 fs-9 ms-1'>
-								{tableAgreementsCount || expiringAgreementsCount}
-							</span>
-						</button>
-
-						<button
-							type='button'
-							onClick={() => setFullTableTab('directory')}
-							className={`gz-hr-tab-btn ${fullTableTab === 'directory' ? 'is-active' : ''}`}>
-							<i className='bi bi-person-lines-fill me-1'></i>
-							<span>Employee Directory</span>
-							<span className='badge badge-light-primary py-1 px-2 fs-9 ms-1'>
-								{totalEmployees}
-							</span>
-						</button>
-					</div>
-				</div>
-
-				<div className='p-3'>
-					{fullTableTab === 'anniversaries' && (
-						<EmployeeAnniversaryTable
-							className='gz-hr-action-card'
-							onCountChange={setTableAnniversariesCount}
-						/>
-					)}
-					{fullTableTab === 'documents' && (
-						<ExpiredEmployeeTable
-							className='gz-hr-action-card'
-							onCountChange={setTableAgreementsCount}
-						/>
-					)}
-					{fullTableTab === 'directory' && (
-						<TablesWidget className='gz-hr-action-card' />
-					)}
-				</div>
-			</div>
-
-			{/* =========================================================================
-			    MODAL 1: REVIEW EMPLOYEE LEAVE (APPROVE / REJECT)
-			========================================================================= */}
-			<Modal
-				show={showLeaveModal}
-				centered
-				onHide={() => setShowLeaveModal(false)}>
-				<Modal.Header closeButton className='border-0 pb-0'>
-					<Modal.Title className='fw-bold fs-4'>Review Employee Leave</Modal.Title>
-				</Modal.Header>
-				<Modal.Body className='pt-3'>
-					<Form>
-						<Form.Group className='mb-4' controlId='status'>
-							<Form.Label className='fw-bold fs-7 text-dark mb-2'>Decision</Form.Label>
-							<div className='d-flex gap-3'>
-								<label
-									className={`flex-fill p-3 rounded border d-flex align-items-center gap-2 cursor-pointer transition ${
-										leaveStatus === 'APPROVED'
-											? 'border-success bg-light-success text-success fw-bold'
-											: 'border-gray-200 text-muted'
-									}`}
-									style={{ cursor: 'pointer' }}>
-									<Form.Check
-										type='radio'
-										name='leaveStatus'
-										id='approve'
-										value='APPROVED'
-										checked={leaveStatus === 'APPROVED'}
-										onChange={() => setLeaveStatus('APPROVED')}
-										className='me-1'
-									/>
-									<span>Approve Request</span>
-								</label>
-
-								<label
-									className={`flex-fill p-3 rounded border d-flex align-items-center gap-2 cursor-pointer transition ${
-										leaveStatus === 'REJECTED'
-											? 'border-danger bg-light-danger text-danger fw-bold'
-											: 'border-gray-200 text-muted'
-									}`}
-									style={{ cursor: 'pointer' }}>
-									<Form.Check
-										type='radio'
-										name='leaveStatus'
-										id='reject'
-										value='REJECTED'
-										checked={leaveStatus === 'REJECTED'}
-										onChange={() => setLeaveStatus('REJECTED')}
-										className='me-1'
-									/>
-									<span>Reject Request</span>
-								</label>
-							</div>
-						</Form.Group>
-
-						<Form.Group className='mb-2' controlId='remarks'>
-							<Form.Label className='fw-bold fs-7 text-dark mb-1'>Remarks / Note</Form.Label>
-							<Form.Control
-								as='textarea'
-								rows={3}
-								placeholder='Add any comments or notes for the employee...'
-								value={leaveRemarks}
-								onChange={(e) => setLeaveRemarks(e.target.value)}
-								className='fs-7'
-							/>
-						</Form.Group>
-					</Form>
-				</Modal.Body>
-				<Modal.Footer className='border-0 pt-0'>
-					<Button
-						variant='light'
-						size='sm'
-						onClick={() => setShowLeaveModal(false)}>
-						Cancel
-					</Button>
-					<Button
-						variant={leaveStatus === 'APPROVED' ? 'success' : 'danger'}
-						size='sm'
-						onClick={handleSubmitLeaveAction}>
-						Confirm {leaveStatus === 'APPROVED' ? 'Approval' : 'Rejection'}
-					</Button>
-				</Modal.Footer>
-			</Modal>
-
-			{/* =========================================================================
-			    MODAL 2: SEND HR ANNOUNCEMENT
-			========================================================================= */}
-			<Modal
-				show={showAnnouncementModal}
-				centered
-				onHide={() => setShowAnnouncementModal(false)}>
-				<Modal.Header closeButton className='border-0 pb-0'>
-					<Modal.Title className='fw-bold fs-4'>Broadcast HR Announcement</Modal.Title>
-				</Modal.Header>
-				<form onSubmit={handleSendAnnouncement}>
-					<Modal.Body className='pt-3'>
-						<div className='mb-3'>
-							<label className='fw-bold fs-7 text-dark mb-1'>Message to Workforce</label>
-							<textarea
-								rows={4}
-								className='form-control fs-7'
-								placeholder='Write an important announcement or memo to all employees...'
-								value={announcementText}
-								onChange={(e) => setAnnouncementText(e.target.value)}
-								required
-							/>
-						</div>
-					</Modal.Body>
-					<Modal.Footer className='border-0 pt-0'>
-						<Button
-							variant='light'
-							size='sm'
-							onClick={() => setShowAnnouncementModal(false)}>
-							Cancel
-						</Button>
-						<Button
-							type='submit'
-							variant='primary'
-							size='sm'>
-							<i className='bi bi-send me-1'></i> Broadcast Now
-						</Button>
-					</Modal.Footer>
-				</form>
-			</Modal>
+				</>
+			)}
 		</div>
 	)
 }

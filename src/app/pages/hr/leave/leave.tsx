@@ -9,6 +9,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import duration from 'dayjs/plugin/duration'
 import React, { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
@@ -53,6 +54,11 @@ const calculateLeaveDuration = (from_date?: string, to_date?: string) => {
 }
 
 const HRLeave: React.FC = () => {
+	const location = useLocation()
+	const navigate = useNavigate()
+	const searchParams = new URLSearchParams(location.search)
+	const statusParam = searchParams.get('status')?.toUpperCase() || null
+
 	const [searchTerm, setSearchTerm] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [sort, setSort] = useState('createdAt')
@@ -200,6 +206,10 @@ const HRLeave: React.FC = () => {
 	}
 
 	const filteredData = leaveData.filter((sale: any) => {
+		if (statusParam && (sale?.status || '').toUpperCase() !== statusParam) {
+			return false
+		}
+
 		const matchesSearch =
 			(sale?.admin_id?.full_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
 			(sale?.reason || '').toLowerCase().includes((searchTerm || '').toLowerCase())
@@ -289,6 +299,39 @@ const HRLeave: React.FC = () => {
 					</span>
 				</div>
 			</div>
+
+			{/* Active URL Status Filter Banner */}
+			{statusParam && (
+				<div
+					className='alert d-flex flex-wrap align-items-center justify-content-between p-3 mb-5 rounded border'
+					style={{
+						backgroundColor: statusParam === 'PENDING' ? '#FFFBEB' : '#EFF6FF',
+						borderColor: statusParam === 'PENDING' ? '#FDE68A' : '#BFDBFE',
+					}}>
+					<div className='d-flex align-items-center gap-2'>
+						<span
+							className='badge'
+							style={{
+								backgroundColor: statusParam === 'PENDING' ? '#D97706' : '#2563EB',
+								color: '#ffffff',
+								fontSize: '11px',
+								textTransform: 'uppercase',
+								letterSpacing: '0.04em',
+							}}>
+							{statusParam}
+						</span>
+						<span className='fs-7 fw-semibold text-gray-800'>
+							Showing filtered leaves ({filteredData.length} total)
+						</span>
+					</div>
+					<button
+						type='button'
+						className='btn btn-sm btn-light fw-bold fs-8 py-1 px-3'
+						onClick={() => navigate('/hr/leave')}>
+						&times; Clear Filter
+					</button>
+				</div>
+			)}
 
 			{/* Filter Toolbar (Order: SearchFilter -> LengthMenu) */}
 			<div

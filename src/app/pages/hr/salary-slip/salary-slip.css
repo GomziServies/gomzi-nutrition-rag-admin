@@ -325,3 +325,29 @@
 	border-bottom-width: 0 !important;
 	border-bottom-style: none !important;
 }
+
+/* Salary Slip View Skeleton Styles */
+.salary-slip-skeleton {
+	width: 100%;
+	animation: gz-slip-fade-in 0.2s ease-in-out;
+}
+
+@keyframes gz-slip-fade-in {
+	from {
+		opacity: 0.6;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.salary-slip-skeleton .kesar-info-grid td {
+	padding: 10px 15px;
+	border: 1px solid #e2e8f0;
+}
+
+.salary-slip-skeleton .kesar-table td {
+	padding: 11px 15px;
+	border: 1px solid #e2e8f0;
+}
+

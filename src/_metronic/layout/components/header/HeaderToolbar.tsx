@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import DateFilter from '../../../../app/components/DateRangePicker'
 import { GetMyAuthority } from '../../../../app/Functions/FGGroup/RBAC'
 import { toAbsoluteUrl } from '../../../helpers'
 import { HeaderUserMenu } from '../../../partials'
@@ -7,7 +6,6 @@ import { useLayout } from '../../core'
 
 const HeaderToolbar = () => {
 	const { classes } = useLayout()
-	const [searchQuery, setSearchQuery] = useState('')
 	const [showUserMenu, setShowUserMenu] = useState(false)
 	const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const [userProfile, setUserProfile] = useState<any>(null)
@@ -114,16 +112,11 @@ const HeaderToolbar = () => {
 	const userRole = userProfile?.type || 'Employee'
 
 	const userMenuRef = useRef<HTMLDivElement>(null)
-	const searchInputRef = useRef<HTMLInputElement>(null)
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-				e.preventDefault()
-				searchInputRef.current?.focus()
-			} else if (e.key === 'Escape') {
+			if (e.key === 'Escape') {
 				setShowUserMenu(false)
-				searchInputRef.current?.blur()
 			}
 		}
 
@@ -143,30 +136,9 @@ const HeaderToolbar = () => {
 	}, [])
 
 	return (
-		<div className='gz-topbar-wrapper d-flex align-items-center justify-content-between w-100 px-4'>
-			{/* Left: Search anything... with ⌘ K */}
-			<div className='gz-top-search-bar'>
-				<i className='bi bi-search gz-top-search-icon'></i>
-				<input
-					ref={searchInputRef}
-					type='text'
-					className='gz-top-search-input'
-					placeholder='Search anything...'
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-				/>
-				<span className='gz-top-search-kbd'>⌘ K</span>
-			</div>
-
-			{/* Right: Date range filter + Notification bell + Profile pill */}
+		<div className='gz-topbar-wrapper d-flex align-items-center justify-content-end w-100 px-4'>
+			{/* Right: Notification bell + Profile pill */}
 			<div className='d-flex align-items-center gap-3'>
-				{/* Date Range Picker Pill */}
-				<div className='gz-top-date-wrap'>
-					<DateFilter
-						onDateRangeChange={() => {}}
-						rightValue='0'
-					/>
-				</div>
 
 				{/* Notifications Bell */}
 				<button
