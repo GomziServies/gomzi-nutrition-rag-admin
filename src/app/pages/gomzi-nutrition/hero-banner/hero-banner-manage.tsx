@@ -19,6 +19,7 @@ import {
 	faFilePdf,
 	faImage,
 	faLink,
+	faMobileScreenButton,
 	faPlus,
 	faRotateLeft,
 	faTrash,
@@ -76,6 +77,9 @@ export default function HeroBannerManage() {
 	// Current active slide editing state
 	const [desktopFile, setDesktopFile] = useState<File | null>(null)
 	const [desktopPreview, setDesktopPreview] = useState<string>('')
+	const [mobileFile, setMobileFile] = useState<File | null>(null)
+	const [mobilePreview, setMobilePreview] = useState<string>('')
+	const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
 
 	const currentSlide: BannerSlide = slides[activeSlideIndex] || DEFAULT_BANNER
 
@@ -114,6 +118,8 @@ export default function HeroBannerManage() {
 	const initSlideForm = (slide: BannerSlide) => {
 		setDesktopFile(null)
 		setDesktopPreview(getPreviewUrl(slide?.desktop_image || DEFAULT_BANNER.desktop_image))
+		setMobileFile(null)
+		setMobilePreview(getPreviewUrl(slide?.mobile_image || ''))
 	}
 
 	const handleSelectSlide = (index: number) => {
@@ -183,6 +189,14 @@ export default function HeroBannerManage() {
 		}
 	}
 
+	const handleMobileFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (e.target.files && e.target.files[0]) {
+			const file = e.target.files[0]
+			setMobileFile(file)
+			setMobilePreview(URL.createObjectURL(file))
+		}
+	}
+
 	const handleFieldChange = (field: keyof BannerSlide, value: any) => {
 		const updated = [...slides]
 		updated[activeSlideIndex] = {
@@ -209,6 +223,18 @@ export default function HeroBannerManage() {
 				if (uploadedKey) {
 					finalDesktop = uploadedKey
 					setDesktopPreview(getPreviewUrl(uploadedKey))
+				}
+			}
+
+			// Upload Mobile File if new file selected
+			if (mobileFile) {
+				const uploadRes: any = await FileUploadToFGGroup([mobileFile], {
+					directory: 'hero-banner',
+				})
+				const uploadedKey = uploadRes?.data?.fileURLs?.[0]
+				if (uploadedKey) {
+					finalMobile = uploadedKey
+					setMobilePreview(getPreviewUrl(uploadedKey))
 				}
 			}
 
@@ -249,6 +275,7 @@ export default function HeroBannerManage() {
 					setSlides(updated)
 				}
 				setDesktopFile(null)
+				setMobileFile(null)
 			} else {
 				toast.error(res?.message || 'Failed to save banner slide')
 			}
@@ -383,14 +410,17 @@ export default function HeroBannerManage() {
 							</div>
 						</div>
 
-						<div className='gz-prod-summary-card purple'>
+						<div
+							className='gz-prod-summary-card purple'
+							onClick={() => setPreviewMode(previewMode === 'desktop' ? 'mobile' : 'desktop')}
+							style={{ cursor: 'pointer' }}>
 							<div className='gz-prod-summary-icon'>
-								<FontAwesomeIcon icon={faDesktop} />
+								<FontAwesomeIcon icon={previewMode === 'desktop' ? faDesktop : faMobileScreenButton} />
 							</div>
 							<div className='gz-prod-summary-info'>
 								<span className='gz-prod-summary-label'>Preview Viewport</span>
 								<span className='gz-prod-summary-value' style={{ fontSize: '1.1rem', textTransform: 'capitalize', color: '#7C3AED' }}>
-									Desktop
+									{previewMode}
 								</span>
 							</div>
 						</div>
@@ -678,6 +708,83 @@ export default function HeroBannerManage() {
 							</div>
 						</div>
 
+						{/* Card: Mobile Image */}
+						<div className='gz-mgmt-card mb-6'>
+							<div
+								className='p-5 border-bottom d-flex align-items-center justify-content-between'
+								style={{ backgroundColor: '#F8FAFD' }}>
+								<div className='d-flex align-items-center gap-3'>
+									<div
+										className='d-flex align-items-center justify-content-center rounded-3'
+										style={{ width: '40px', height: '40px', backgroundColor: '#F5F3FF', color: '#7C3AED' }}>
+										<FontAwesomeIcon icon={faMobileScreenButton} />
+									</div>
+									<div>
+										<h3 className='fs-5 fw-bolder text-dark mb-0'>
+											Slide #{activeSlideIndex + 1}: Mobile Banner Image
+										</h3>
+										<span className='text-muted fs-8'>
+											Recommended: 768 &times; 800px or 640 &times; 640px (WebP or JPG) for mobile viewports (&le; 640px)
+										</span>
+									</div>
+								</div>
+								<span className='badge bg-light-info text-info fw-bold px-3 py-1'>Mobile View</span>
+							</div>
+
+							<div className='p-6'>
+								<div className='mb-4'>
+									<label className='form-label fw-bold fs-7 text-dark mb-2'>
+										Upload Mobile Graphic
+									</label>
+									<div className='input-group'>
+										<input
+											type='file'
+											accept='image/webp,image/png,image/jpeg,image/jpg'
+											onChange={handleMobileFileChange}
+											className='form-control'
+											id='mobileFileInput'
+											style={{ borderRadius: '10px 0 0 10px', height: '44px' }}
+										/>
+										<label
+											className='input-group-text bg-light text-dark fw-bold'
+											htmlFor='mobileFileInput'
+											style={{ borderRadius: '0 10px 10px 0', cursor: 'pointer' }}>
+											<FontAwesomeIcon icon={faUpload} className='me-2' /> Browse
+										</label>
+									</div>
+									{mobileFile && (
+										<div className='text-success fs-8 mt-2 fw-semibold'>
+											Selected: {mobileFile.name} ({(mobileFile.size / 1024).toFixed(1)} KB)
+										</div>
+									)}
+								</div>
+
+								<div className='mb-0'>
+									<label className='form-label fw-bold fs-7 text-dark mb-2'>
+										Or Direct Image URL / S3 Asset Key
+									</label>
+									<div className='input-group'>
+										<span
+											className='input-group-text text-muted'
+											style={{ backgroundColor: '#F8FAFD', borderRadius: '10px 0 0 10px' }}>
+											<FontAwesomeIcon icon={faLink} />
+										</span>
+										<input
+											type='text'
+											value={currentSlide.mobile_image || ''}
+											onChange={(e) => {
+												handleFieldChange('mobile_image', e.target.value)
+												if (!mobileFile) setMobilePreview(getPreviewUrl(e.target.value))
+											}}
+											placeholder='/images/banner-(gls)-mobile-view.webp'
+											className='form-control'
+											style={{ borderRadius: '0 10px 10px 0', height: '44px' }}
+										/>
+									</div>
+								</div>
+							</div>
+						</div>
+
 						{/* Card: Slide Configuration */}
 						<div className='gz-mgmt-card mb-6'>
 							<div
@@ -803,31 +910,47 @@ export default function HeroBannerManage() {
 										</button>
 									</div>
 
-									{/* Desktop View Badge */}
-									<span
-										className='badge px-3 py-2 fw-bold text-dark d-inline-flex align-items-center'
-										style={{ backgroundColor: '#EEF2F7', borderRadius: '8px' }}>
-										<FontAwesomeIcon icon={faDesktop} className='me-1.5 text-primary' /> Desktop Preview
-									</span>
+									{/* Viewport Preview Toggle */}
+									<div className='btn-group btn-group-sm' role='group'>
+										<button
+											type='button'
+											onClick={() => setPreviewMode('desktop')}
+											className={`btn btn-sm px-3 py-1.5 fw-bold ${previewMode === 'desktop' ? 'btn-primary' : 'btn-light'}`}
+											style={{ borderRadius: '8px 0 0 8px' }}>
+											<FontAwesomeIcon icon={faDesktop} className='me-1' /> Desktop
+										</button>
+										<button
+											type='button'
+											onClick={() => setPreviewMode('mobile')}
+											className={`btn btn-sm px-3 py-1.5 fw-bold ${previewMode === 'mobile' ? 'btn-primary' : 'btn-light'}`}
+											style={{ borderRadius: '0 8px 8px 0' }}>
+											<FontAwesomeIcon icon={faMobileScreenButton} className='me-1' /> Mobile
+										</button>
+									</div>
 								</div>
 							</div>
 
 							<div className='p-6'>
 								<div className='text-muted fs-8 mb-3 fw-semibold'>
-									Slide #{activeSlideIndex + 1} live storefront composition:
+									Slide #{activeSlideIndex + 1} live storefront composition ({previewMode}):
 								</div>
 
 								{/* Simulated Device Stage */}
 								<div
 									className='overflow-hidden shadow-sm position-relative mx-auto bg-dark'
 									style={{
-										maxWidth: '100%',
+										maxWidth: previewMode === 'mobile' ? '300px' : '100%',
 										borderRadius: '14px',
 										border: '2px solid #0F172A',
+										transition: 'max-width 0.3s ease',
 									}}>
 									<div className='position-relative w-100'>
 										<img
-											src={desktopPreview || getPreviewUrl(currentSlide.desktop_image)}
+											src={
+												previewMode === 'mobile'
+													? mobilePreview || desktopPreview || getPreviewUrl(currentSlide.mobile_image || currentSlide.desktop_image)
+													: desktopPreview || getPreviewUrl(currentSlide.desktop_image)
+											}
 											alt='Hero Slide Preview'
 											className='w-100 h-auto d-block object-fit-cover'
 											onError={(e: any) => {
