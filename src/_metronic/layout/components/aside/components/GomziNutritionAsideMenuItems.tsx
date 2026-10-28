@@ -44,6 +44,11 @@ export function GomziNutritionAsideMenuItems() {
 					hasBullet={true}
 				/>
 				<AsideMenuItem
+					to='/rag/deals'
+					title='Homepage Deals'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
 					to='/rag/blogs'
 					title='Blogs'
 					hasBullet={true}

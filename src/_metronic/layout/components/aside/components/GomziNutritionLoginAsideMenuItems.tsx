@@ -29,6 +29,11 @@ export function GomziNutritionLoginAsideMenuItems() {
 				title='Hero Banner'
 			/>
 			<AsideMenuItem
+				to='/rag/deals'
+				title='Homepage Deals'
+				Icon={faImage}
+			/>
+			<AsideMenuItem
 				to='/rag/blogs'
 				Icon={faBookOpen}
 				title='Blogs & Journal'
