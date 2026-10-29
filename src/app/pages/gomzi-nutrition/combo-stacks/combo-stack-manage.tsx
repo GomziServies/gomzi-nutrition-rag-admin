@@ -150,9 +150,9 @@ export default function ComboStackManage() {
 			setSlots(
 				catalogProducts.length >= 2
 					? [
-						{ productId: catalogProducts[0]._id, label: 'Component 1' },
-						{ productId: catalogProducts[1]._id, label: 'Component 2' },
-					]
+							{ productId: catalogProducts[0]._id, label: 'Component 1' },
+							{ productId: catalogProducts[1]._id, label: 'Component 2' },
+					  ]
 					: []
 			)
 		}
@@ -235,8 +235,8 @@ export default function ComboStackManage() {
 			originalPrice !== '' && Number(originalPrice) > 0
 				? Number(originalPrice)
 				: selectedSummary.sumMrp > 0
-					? selectedSummary.sumMrp
-					: Number(comboPrice)
+				? selectedSummary.sumMrp
+				: Number(comboPrice)
 
 		setBusy(true)
 		try {
@@ -297,7 +297,7 @@ export default function ComboStackManage() {
 		const next = index + delta
 		if (next < 0 || next >= stacks.length) return
 		const reordered = [...stacks]
-			;[reordered[index], reordered[next]] = [reordered[next], reordered[index]]
+		;[reordered[index], reordered[next]] = [reordered[next], reordered[index]]
 		setBusy(true)
 		try {
 			requireSuccess(await ReorderComboStacksAdmin(reordered))
@@ -428,8 +428,9 @@ export default function ComboStackManage() {
 												</td>
 												<td>
 													<span
-														className={`badge ${stack.status ? 'badge-light-success' : 'badge-light-secondary'
-															}`}
+														className={`badge ${
+															stack.status ? 'badge-light-success' : 'badge-light-secondary'
+														}`}
 													>
 														{stack.status ? 'Active' : 'Hidden'}
 													</span>
