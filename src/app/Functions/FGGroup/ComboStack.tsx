@@ -2,13 +2,22 @@ import { getAPIHeaders } from '../../../_metronic/helpers/AuthToken'
 import { APIGet, APIPost } from '../../../_metronic/helpers/Utils'
 import * as FGGroupEndpoints from '../../constants/fg_group_endpoints'
 
+export interface ComboStackProductItem {
+	product: any
+	label?: string
+}
+
 export interface ComboStackItem {
 	_id?: string
 	id?: string
 	name: string
 	tagline?: string
-	categories: string[]
-	labels: string[]
+	company?: string
+	comboPrice: number
+	originalPrice?: number
+	products?: ComboStackProductItem[]
+	categories?: string[]
+	labels?: string[]
 	order?: number
 	status?: boolean
 	createdAt?: string
@@ -40,4 +49,3 @@ export function ReorderComboStacksAdmin(comboStacks: ComboStackItem[]): Promise<
 		comboStacks,
 	})
 }
-
