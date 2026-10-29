@@ -65,6 +65,8 @@ export * from './Blog'
 
 export * from './Deal'
 
+export * from './ComboStack'
+
 export * from './PromoBanner'
 
 export * from './NutritionPromoBanner'

@@ -34,6 +34,11 @@ export function GomziNutritionLoginAsideMenuItems() {
 				Icon={faImage}
 			/>
 			<AsideMenuItem
+				to='/rag/combo-stacks'
+				title='Combo Stacks'
+				Icon={faImage}
+			/>
+			<AsideMenuItem
 				to='/rag/blogs'
 				Icon={faBookOpen}
 				title='Blogs & Journal'

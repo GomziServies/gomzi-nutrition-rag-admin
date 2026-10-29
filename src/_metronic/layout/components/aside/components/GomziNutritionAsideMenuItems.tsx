@@ -49,6 +49,11 @@ export function GomziNutritionAsideMenuItems() {
 					hasBullet={true}
 				/>
 				<AsideMenuItem
+					to='/rag/combo-stacks'
+					title='Combo Stacks'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
 					to='/rag/blogs'
 					title='Blogs'
 					hasBullet={true}

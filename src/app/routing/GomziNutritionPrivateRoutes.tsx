@@ -100,6 +100,7 @@ import { GomziNutritionAddTrainer } from '../pages/gomzi-nutrition/trainers/add-
 import GomziNutritionTrainerDetail from '../pages/gomzi-nutrition/trainers/trainer-list'
 import HeroBannerManage from '../pages/gomzi-nutrition/hero-banner/hero-banner-manage'
 import DealManage from '../pages/gomzi-nutrition/deals/deal-manage'
+import ComboStackManage from '../pages/gomzi-nutrition/combo-stacks/combo-stack-manage'
 import CategoryManage from '../pages/gomzi-nutrition/categories/category-manage'
 import CompanyManage from '../pages/gomzi-nutrition/companies/company-manage'
 import BlogManage from '../pages/gomzi-nutrition/blogs/blog-manage'
@@ -116,6 +117,7 @@ const GomziNutritionPrivateRoutes = () => {
 					element={<GomziNutritionDashboard />}
 				/>
 				<Route path='/deals' element={<DealManage />} />
+				<Route path='/combo-stacks' element={<ComboStackManage />} />
 				<Route
 					path='/hero-banner'
 					element={<HeroBannerManage />}

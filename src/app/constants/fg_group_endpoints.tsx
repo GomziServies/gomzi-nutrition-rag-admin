@@ -32,6 +32,10 @@ export const ManageBlog = `${AdminV1Route}/blogs`
 export const GetDeals = `${AdminV1Route}/deals`
 export const ManageDeal = `${AdminV1Route}/deals`
 
+// Dynamic Combo Stacks
+export const GetComboStacks = `${AdminV1Route}/combo-stacks`
+export const ManageComboStack = `${AdminV1Route}/combo-stacks`
+
 // Middle Promo Banners
 export const GetPromoBanners = `${AdminV1Route}/promo-banners`
 export const ManagePromoBanner = `${AdminV1Route}/promo-banners`
