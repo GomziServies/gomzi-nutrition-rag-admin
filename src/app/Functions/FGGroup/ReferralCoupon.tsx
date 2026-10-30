@@ -18,9 +18,12 @@ export function CreateReferralCoupon(body: {
 	coupon_code: string
 	title: string
 	discount?: number
-	max_usage_count?: string
+	discount_type?: string
+	max_usage_count?: string | number
 	expired_at?: string
 	assign_trainer?: AssignTrainer
+	scope?: 'ALL' | 'SPECIFIC_PRODUCTS'
+	applicable_products?: string[]
 }): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.CreateReferralCoupon, getAPIHeaders('fg_group'), undefined, body)
 }
@@ -30,9 +33,12 @@ export function UpdateReferralCoupon(body: {
 	coupon_code?: string
 	title?: string
 	discount?: number
-	max_usage_count?: string
+	discount_type?: string
+	max_usage_count?: string | number
 	expired_at?: string
 	assign_trainer?: AssignTrainer
+	scope?: 'ALL' | 'SPECIFIC_PRODUCTS'
+	applicable_products?: string[]
 }): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.UpdateReferralCoupon, getAPIHeaders('fg_group'), undefined, body)
 }

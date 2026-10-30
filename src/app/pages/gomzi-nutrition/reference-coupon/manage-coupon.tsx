@@ -34,6 +34,7 @@ import {
 	GetReferralCoupon,
 	GetTrainers,
 	UpdateReferralCoupon,
+	GetProduct,
 } from '../../../Functions/FGGroup'
 import '../common-management.css'
 import '../products-theme.css'
@@ -43,6 +44,8 @@ const ManageCoupon: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [copied, setCopied] = useState(false)
 	const [trainerData, setTrainerData] = useState<any[]>([])
+	const [catalogProducts, setCatalogProducts] = useState<any[]>([])
+	const [productSearch, setProductSearch] = useState('')
 	const [subject, setSubject] = useState<any>({
 		name: '',
 		trainer_id: '',
@@ -55,6 +58,8 @@ const ManageCoupon: React.FC = () => {
 		discount_type: '',
 		discount: '',
 		expired_at: '',
+		scope: 'ALL',
+		applicable_products: [] as string[],
 	})
 	const [couponAdd, setCouponAdd] = useState({
 		title: '',
@@ -63,6 +68,8 @@ const ManageCoupon: React.FC = () => {
 		discount_type: 'percent',
 		discount: '',
 		expired_at: '',
+		scope: 'ALL',
+		applicable_products: [] as string[],
 	})
 	const [generateData, setGenerateData] = useState({
 		ID: '',
@@ -131,14 +138,38 @@ const ManageCoupon: React.FC = () => {
 		}
 	}
 
+	const fetchProductCatalog = async () => {
+		try {
+			const response: any = await GetProduct({ limit: 500, page: 1 })
+			const raw = response?.data?.data || response?.data || []
+			setCatalogProducts(Array.isArray(raw) ? raw : [])
+		} catch (error) {
+			console.error('Error fetching catalog products:', error)
+		}
+	}
+
 	useEffect(() => {
 		fetchCouponData()
 		fetchTrainerData()
+		fetchProductCatalog()
 	}, [])
 
 	const handleUpdateModal = (data: any) => {
 		setShowUpdateModal(true)
-		setUpdateData(data)
+		const applicableProductIds = Array.isArray(data.applicable_products)
+			? data.applicable_products.map((p: any) => (p && p._id ? p._id : String(p)))
+			: []
+		setUpdateData({
+			_id: data._id || '',
+			title: data.title || '',
+			coupon_code: data.coupon_code || '',
+			max_usage_count: data.max_usage_count || '',
+			discount_type: data.discount_type || 'percent',
+			discount: data.discount || '',
+			expired_at: data.expired_at || '',
+			scope: data.scope || (applicableProductIds.length > 0 ? 'SPECIFIC_PRODUCTS' : 'ALL'),
+			applicable_products: applicableProductIds,
+		})
 		if (data?.assign_trainer) {
 			setSubject({
 				name: data.assign_trainer.name || '',
@@ -170,6 +201,8 @@ const ManageCoupon: React.FC = () => {
 					discount_type: updateData.discount_type,
 					discount: parseInt(updateData.discount),
 					expired_at: DayJS(updateData.expired_at).format('YYYY/MM/DD'),
+					scope: updateData.scope,
+					applicable_products: updateData.scope === 'SPECIFIC_PRODUCTS' ? updateData.applicable_products : [],
 					assign_trainer: {
 						name: subject.name,
 						trainer_id: subject.trainer_id,
@@ -188,6 +221,8 @@ const ManageCoupon: React.FC = () => {
 					discount_type: '',
 					discount: '',
 					expired_at: '',
+					scope: 'ALL',
+					applicable_products: [],
 				})
 				toast.success('Coupon Updated Successfully')
 			} else {
@@ -198,6 +233,8 @@ const ManageCoupon: React.FC = () => {
 					discount_type: couponAdd.discount_type,
 					discount: parseInt(couponAdd.discount),
 					expired_at: DayJS(couponAdd.expired_at).format('YYYY/MM/DD'),
+					scope: couponAdd.scope,
+					applicable_products: couponAdd.scope === 'SPECIFIC_PRODUCTS' ? couponAdd.applicable_products : [],
 					assign_trainer: {
 						name: subject.name,
 						trainer_id: subject.trainer_id,
@@ -216,6 +253,8 @@ const ManageCoupon: React.FC = () => {
 					discount_type: 'percent',
 					discount: '',
 					expired_at: '',
+					scope: 'ALL',
+					applicable_products: [],
 				})
 				toast.success('Coupon Added Successfully')
 			}
@@ -417,6 +456,7 @@ const ManageCoupon: React.FC = () => {
 								<th style={{ minWidth: '120px' }}>Max Usage</th>
 								<th style={{ minWidth: '120px' }}>Discount</th>
 								<th style={{ minWidth: '130px' }}>Discount Type</th>
+								<th style={{ minWidth: '150px' }}>Scope</th>
 								<th style={{ minWidth: '150px' }}>Expiry Date</th>
 								<th style={{ minWidth: '130px', textAlign: 'center' }}>Actions</th>
 							</tr>
@@ -451,6 +491,9 @@ const ManageCoupon: React.FC = () => {
 										</td>
 										<td>
 											<div className='gz-skeleton rounded-pill' style={{ width: '65px', height: '20px' }} />
+										</td>
+										<td>
+											<div className='gz-skeleton rounded' style={{ width: '70px', height: '16px' }} />
 										</td>
 										<td>
 											<div className='d-flex flex-column gap-1'>
@@ -574,6 +617,23 @@ const ManageCoupon: React.FC = () => {
 												</span>
 											</td>
 											<td>
+												{data.scope === 'SPECIFIC_PRODUCTS' && Array.isArray(data.applicable_products) && data.applicable_products.length > 0 ? (
+													<div>
+														<span className='badge bg-light-primary text-primary fw-bold' style={{ fontSize: '11px' }}>
+															{data.applicable_products.length} Products
+														</span>
+														<div className='text-muted fs-9 text-truncate mt-0.5' style={{ maxWidth: '140px' }} title={data.applicable_products.map((p: any) => p?.name || 'Product').join(', ')}>
+															{data.applicable_products.map((p: any) => p?.name || 'Product').slice(0, 2).join(', ')}
+															{data.applicable_products.length > 2 ? '...' : ''}
+														</div>
+													</div>
+												) : (
+													<span className='badge bg-light text-muted' style={{ fontSize: '11px' }}>
+														All Products
+													</span>
+												)}
+											</td>
+											<td>
 												{data.expired_at ? (
 													<div>
 														<div
@@ -660,7 +720,7 @@ const ManageCoupon: React.FC = () => {
 								})
 							) : (
 								<tr>
-									<td colSpan={9} className='text-center py-10'>
+									<td colSpan={10} className='text-center py-10'>
 										<div className='d-flex flex-column align-items-center justify-content-center my-6'>
 											<div
 												className='d-inline-flex align-items-center justify-content-center mb-3'
@@ -838,6 +898,90 @@ const ManageCoupon: React.FC = () => {
 									]}
 								/>
 							</div>
+
+							{/* Product Scope Configuration */}
+							<div className='col-12'>
+								<div className='p-4 rounded-3' style={{ background: '#F8FAFD', border: '1px solid #E2E8F0' }}>
+									<label className='fw-bold mb-2 d-block' style={{ color: '#172B4D', fontSize: '13px' }}>
+										Coupon Applicability Scope
+									</label>
+									<div className='d-flex align-items-center gap-4 mb-3'>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='scope_add'
+												checked={couponAdd.scope === 'ALL'}
+												onChange={() => setCouponAdd({ ...couponAdd, scope: 'ALL', applicable_products: [] })}
+											/>
+											<span>All Products (Storewide)</span>
+										</label>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='scope_add'
+												checked={couponAdd.scope === 'SPECIFIC_PRODUCTS'}
+												onChange={() => setCouponAdd({ ...couponAdd, scope: 'SPECIFIC_PRODUCTS' })}
+											/>
+											<span>Specific Product(s) Only</span>
+										</label>
+									</div>
+
+									{couponAdd.scope === 'SPECIFIC_PRODUCTS' && (
+										<div>
+											<input
+												type='text'
+												placeholder='Search product by name...'
+												value={productSearch}
+												onChange={(e) => setProductSearch(e.target.value)}
+												className='form-control form-control-sm mb-2'
+												style={{ fontSize: '12.5px' }}
+											/>
+											<div
+												className='scroll-y border rounded bg-white p-2'
+												style={{ maxHeight: '180px', borderColor: '#E2E8F0' }}>
+												{catalogProducts
+													.filter((p) => (p.name || '').toLowerCase().includes(productSearch.toLowerCase()))
+													.map((p) => {
+														const isChecked = couponAdd.applicable_products.includes(p._id)
+														return (
+															<label
+																key={p._id}
+																className='d-flex align-items-center gap-2 p-1.5 rounded hover-bg-light cursor-pointer'
+																style={{ fontSize: '12.5px' }}>
+																<input
+																	type='checkbox'
+																	checked={isChecked}
+																	onChange={(e) => {
+																		if (e.target.checked) {
+																			setCouponAdd({
+																				...couponAdd,
+																				applicable_products: [...couponAdd.applicable_products, p._id],
+																			})
+																		} else {
+																			setCouponAdd({
+																				...couponAdd,
+																				applicable_products: couponAdd.applicable_products.filter(
+																					(id) => id !== p._id
+																				),
+																			})
+																		}
+																	}}
+																/>
+																<span className='fw-semibold text-truncate' style={{ maxWidth: '320px' }}>
+																	{p.name}
+																</span>
+																<span className='text-muted fs-8 ms-auto'>₹{p.discountPrice || p.price}</span>
+															</label>
+														)
+													})}
+											</div>
+											<div className='fs-8 text-primary mt-1 fw-bold'>
+												{couponAdd.applicable_products.length} product(s) selected
+											</div>
+										</div>
+									)}
+								</div>
+							</div>
 						</div>
 					</div>
 
@@ -995,6 +1139,90 @@ const ManageCoupon: React.FC = () => {
 										})),
 									]}
 								/>
+							</div>
+
+							{/* Product Scope Configuration */}
+							<div className='col-12'>
+								<div className='p-4 rounded-3' style={{ background: '#F8FAFD', border: '1px solid #E2E8F0' }}>
+									<label className='fw-bold mb-2 d-block' style={{ color: '#172B4D', fontSize: '13px' }}>
+										Coupon Applicability Scope
+									</label>
+									<div className='d-flex align-items-center gap-4 mb-3'>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='scope_update'
+												checked={updateData.scope === 'ALL'}
+												onChange={() => setUpdateData({ ...updateData, scope: 'ALL', applicable_products: [] })}
+											/>
+											<span>All Products (Storewide)</span>
+										</label>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='scope_update'
+												checked={updateData.scope === 'SPECIFIC_PRODUCTS'}
+												onChange={() => setUpdateData({ ...updateData, scope: 'SPECIFIC_PRODUCTS' })}
+											/>
+											<span>Specific Product(s) Only</span>
+										</label>
+									</div>
+
+									{updateData.scope === 'SPECIFIC_PRODUCTS' && (
+										<div>
+											<input
+												type='text'
+												placeholder='Search product by name...'
+												value={productSearch}
+												onChange={(e) => setProductSearch(e.target.value)}
+												className='form-control form-control-sm mb-2'
+												style={{ fontSize: '12.5px' }}
+											/>
+											<div
+												className='scroll-y border rounded bg-white p-2'
+												style={{ maxHeight: '180px', borderColor: '#E2E8F0' }}>
+												{catalogProducts
+													.filter((p) => (p.name || '').toLowerCase().includes(productSearch.toLowerCase()))
+													.map((p) => {
+														const isChecked = updateData.applicable_products.includes(p._id)
+														return (
+															<label
+																key={p._id}
+																className='d-flex align-items-center gap-2 p-1.5 rounded hover-bg-light cursor-pointer'
+																style={{ fontSize: '12.5px' }}>
+																<input
+																	type='checkbox'
+																	checked={isChecked}
+																	onChange={(e) => {
+																		if (e.target.checked) {
+																			setUpdateData({
+																				...updateData,
+																				applicable_products: [...updateData.applicable_products, p._id],
+																			})
+																		} else {
+																			setUpdateData({
+																				...updateData,
+																				applicable_products: updateData.applicable_products.filter(
+																					(id) => id !== p._id
+																				),
+																			})
+																		}
+																	}}
+																/>
+																<span className='fw-semibold text-truncate' style={{ maxWidth: '320px' }}>
+																	{p.name}
+																</span>
+																<span className='text-muted fs-8 ms-auto'>₹{p.discountPrice || p.price}</span>
+															</label>
+														)
+													})}
+											</div>
+											<div className='fs-8 text-primary mt-1 fw-bold'>
+												{updateData.applicable_products.length} product(s) selected
+											</div>
+										</div>
+									)}
+								</div>
 							</div>
 						</div>
 					</div>
