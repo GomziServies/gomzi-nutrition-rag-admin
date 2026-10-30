@@ -11,6 +11,7 @@ export function GetOrders(
 		to_date?: string
 		order_status?: OrderStatusValue | OrderStatusValue[]
 		item_type?: OrderItemTypeValue | OrderItemTypeValue[]
+		shipment_status?: ShipmentStatusValue
 	} & FGGroupSearchOptions &
 		FGGroupPaginationOptions &
 		FGGroupSortOptions

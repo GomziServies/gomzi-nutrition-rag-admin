@@ -26,14 +26,17 @@ import '../products-theme.css'
 const ProductOrder: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [shipmentStatus, setShipmentStatus] = useState('')
+	const [orderStatus, setOrderStatus] = useState('')
 	const [formData, setFormData] = useState<any>({
-		from_date: DayJS().startOf('month').format('YYYY-MM-DD'),
-		to_date: DayJS().endOf('month').format('YYYY-MM-DD'),
+		from_date: '',
+		to_date: '',
 	})
 	const [orderData, setOrderData] = useState<any[]>([])
 	const [metaData, setMetaData] = useState<any>()
 	const [sort] = useState('createdAt')
 	const [loading, setLoading] = useState(false)
+	const [loadError, setLoadError] = useState('')
+	const requestId = useRef(0)
 	const [sortOrder] = useState<QuerySortOptions>('desc')
 	const [pagination, setPagination] = useState({
 		page: 1,
@@ -41,7 +44,9 @@ const ProductOrder: React.FC = () => {
 	})
 
 	const fetchOrderData = async (page?: number) => {
+		const currentRequest = ++requestId.current
 		setLoading(true)
+		setLoadError('')
 		try {
 			const filterQuery: any = {
 				page: page || pagination.page,
@@ -50,8 +55,8 @@ const ProductOrder: React.FC = () => {
 				sortOrder,
 				search: searchTerm ? searchTerm : null,
 				item_type: ['FG_MEAL_PRODUCT'],
-				order_status: 'SUCCESS',
 			}
+			if (orderStatus) filterQuery.order_status = orderStatus
 
 			if (formData.from_date && formData.to_date) {
 				filterQuery.from_date = formData.from_date
@@ -63,14 +68,20 @@ const ProductOrder: React.FC = () => {
 			}
 
 			const response = await GetOrders(filterQuery)
+			if (currentRequest !== requestId.current) return
 			const data: any = response?.data || []
 			const metaDataResp: any = response?.metadata || {}
 			setMetaData(metaDataResp.pagination)
 			setOrderData(data)
-		} catch (error) {
+		} catch (error: any) {
+			if (currentRequest !== requestId.current) return
+			setOrderData([])
+			setMetaData(undefined)
+			setLoadError(error?.message || 'Unable to load orders. Please try again.')
 			console.error('Error fetching orders:', error)
+		} finally {
+			if (currentRequest === requestId.current) setLoading(false)
 		}
-		setLoading(false)
 	}
 
 	useEffect(() => {
@@ -79,6 +90,7 @@ const ProductOrder: React.FC = () => {
 		formData.from_date,
 		formData.to_date,
 		shipmentStatus,
+		orderStatus,
 		pagination.itemsPerPage,
 		pagination.page,
 		sort,
@@ -140,7 +152,7 @@ const ProductOrder: React.FC = () => {
 					})
 					.filter(Boolean) as { name: string }[]
 				if (items.length === 0 && cartItems.length > 0) {
-					items = cartItems.map((c: any) => ({ name: c.name || 'N/A' }))
+					items = cartItems.filter(Boolean).map((c: any) => ({ name: c.name || 'N/A' }))
 				}
 				break
 			}
@@ -161,39 +173,16 @@ const ProductOrder: React.FC = () => {
 	}
 
 	const getShipmentStatus = (order: any): string => {
-		const trackingSource =
-			order?.order_item_type === 'CART'
-				? order?.user_meal_product?.tracking || []
-				: order?.product_subscription?.tracking || []
-
-		return (
-			trackingSource.find(
-				(tracking: { shipment_status: string; status: boolean }) =>
-					tracking.status && tracking.shipment_status === 'DELIVERED'
-			)?.shipment_status ||
-			trackingSource.find(
-				(tracking: { shipment_status: string; status: boolean }) =>
-					tracking.status && tracking.shipment_status === 'DISPATCHED'
-			)?.shipment_status ||
-			trackingSource.find(
-				(tracking: { shipment_status: string; status: boolean }) =>
-					tracking.status && tracking.shipment_status === 'PLACED'
-			)?.shipment_status ||
-			'PLACED'
-		)
+		if (order?.status === 'CANCELLED') return 'CANCELLED'
+		const trackingSource = order?.user_meal_product?.tracking || []
+		return ['RETURN', 'CANCELLED', 'DELIVERED', 'DISPATCHED', 'PLACED'].find((status) =>
+			trackingSource.some((tracking: any) => tracking.status && tracking.shipment_status === status)
+		) || 'PLACED'
 	}
 
 	// Filter by search (user, receipt id, item) and shipment status
 	const filteredOrderData = useMemo(() => {
 		return orderData.filter((order: any) => {
-			if (shipmentStatus) {
-				const currentShipmentStatus = getShipmentStatus(order)
-				const matchesStatus =
-					order?.order_status === shipmentStatus ||
-					currentShipmentStatus === shipmentStatus
-				if (!matchesStatus) return false
-			}
-
 			if (!searchTerm || !searchTerm.trim()) return true
 			const term = searchTerm.toLowerCase().trim()
 
@@ -235,7 +224,7 @@ const ProductOrder: React.FC = () => {
 			const status = getShipmentStatus(order)
 			if (status === 'DELIVERED') delivered++
 			else if (status === 'DISPATCHED') dispatched++
-			else placed++
+			else if (status === 'PLACED') placed++
 		})
 
 		return { total, placed, dispatched, delivered }
@@ -256,7 +245,7 @@ const ProductOrder: React.FC = () => {
 				'Total Price': `${order.amount || 0} ${order.currency || 'INR'}`,
 				'Purchased On': DayJS(order.createdAt).format('DD/MM/YYYY hh:mm:ss A'),
 				'Shipment Status': shipmentStatusText,
-				'Order Status': order.order_status || order.status || 'N/A',
+				'Order Status': order.status || 'N/A',
 			}
 		})
 
@@ -399,6 +388,27 @@ const ProductOrder: React.FC = () => {
 						</div>
 						<div style={{ minWidth: '150px' }}>
 							<SelectField
+								value={orderStatus}
+								onChange={(e: any) => {
+									setOrderStatus(e.target.value)
+									setPagination((prev) => ({ ...prev, page: 1 }))
+								}}
+								options={[
+									{ label: 'All Payment Statuses', value: '' },
+									{ label: 'Successful', value: 'SUCCESS' },
+									{ label: 'Pending Payment', value: 'PENDING' },
+									{ label: 'Failed', value: 'FAILED' },
+									{ label: 'Cancelled', value: 'CANCELLED' },
+									{ label: 'Refunded', value: 'REFUNDED' },
+								]}
+								showLabel={false}
+								marginRemove={true}
+								hideDefaultOption={true}
+								searchable={false}
+							/>
+						</div>
+						<div style={{ minWidth: '150px' }}>
+							<SelectField
 								value={shipmentStatus}
 								onChange={(e: any) => {
 									setShipmentStatus(e.target.value)
@@ -421,6 +431,7 @@ const ProductOrder: React.FC = () => {
 						</div>
 						<div>
 							<DateFilter
+								defaultAllDates={true}
 								onDateRangeChange={handleDateRangeChange}
 								rightValue='0'
 							/>
@@ -439,6 +450,7 @@ const ProductOrder: React.FC = () => {
 								<th>Items with Quantity</th>
 								<th>Total Amount</th>
 								<th>Purchased On</th>
+								<th>Payment Status</th>
 								<th>Shipment Status</th>
 								<th style={{ textAlign: 'center', width: '100px' }}>Actions</th>
 							</tr>
@@ -461,20 +473,32 @@ const ProductOrder: React.FC = () => {
 										<td><span className='gz-prod-skeleton' style={{ width: '160px', height: '14px' }} /></td>
 										<td><span className='gz-prod-skeleton' style={{ width: '70px', height: '14px' }} /></td>
 										<td><span className='gz-prod-skeleton' style={{ width: '130px', height: '14px' }} /></td>
+										<td><span className='gz-prod-skeleton' style={{ width: '80px', height: '22px' }} /></td>
 										<td><span className='gz-prod-skeleton' style={{ width: '80px', height: '22px', borderRadius: '999px' }} /></td>
 										<td style={{ textAlign: 'center' }}><span className='gz-prod-skeleton' style={{ width: '64px', height: '32px', borderRadius: '8px' }} /></td>
 									</tr>
 								))
+							) : loadError ? (
+								<tr>
+									<td colSpan={9}>
+										<div role='alert' className='gz-empty-state-wrap'>
+											<p>{loadError}</p>
+											<button type='button' className='btn btn-light-primary' onClick={() => fetchOrderData()}>
+												Retry loading orders
+											</button>
+										</div>
+									</td>
+								</tr>
 							) : filteredOrderData.length === 0 ? (
 								<tr>
-									<td colSpan={8} className='gz-table-empty-cell'>
+									<td colSpan={9} className='gz-table-empty-cell'>
 										<div className='gz-empty-state-wrap'>
 											<div className='gz-prod-empty-icon'>
 												<FontAwesomeIcon icon={faBox} />
 											</div>
 											<h4 className='gz-empty-state-title'>No orders found</h4>
 											<p className='gz-empty-state-desc'>
-												{searchTerm || shipmentStatus
+												{searchTerm || shipmentStatus || orderStatus || formData.from_date
 													? 'No orders match your filter criteria. Try clearing filters.'
 													: 'There are currently no customer orders in the system.'}
 											</p>
@@ -550,6 +574,11 @@ const ProductOrder: React.FC = () => {
 											<td>
 												<span style={{ fontSize: '13px', color: '#475569' }}>
 													{DayJS(order.createdAt).format('DD MMM YYYY, hh:mm A')}
+												</span>
+											</td>
+											<td>
+												<span className={`gz-prod-badge ${order.status === 'SUCCESS' ? 'delivered' : order.status === 'PENDING' ? 'placed' : 'cancelled'}`}>
+													{order.status === 'PENDING' ? 'Pending Payment' : order.status || 'N/A'}
 												</span>
 											</td>
 											<td>
