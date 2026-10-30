@@ -230,6 +230,12 @@ const ProductOrderView: React.FC = () => {
 				</div>
 			</div>
 
+      {orderData?.notes?.gym_access_offer?.qualified && <div className='gz-order-card p-5 mb-5'>
+        <h2 className='fs-4'>{orderData.notes.gym_access_offer.gym_name} gym access · FREE</h2>
+        <p className='mb-2'>{orderData.notes.gym_access_offer.months} month(s) included with this qualifying order. Gomzi subtotal: ₹{orderData.notes.gym_access_offer.eligible_amount}.</p>
+        <p className='text-muted mb-0'>{orderData.notes.gym_access_offer.terms}</p>
+        {orderData.status !== 'SUCCESS' && <p className='text-warning mt-2 mb-0'>Gym access becomes available when the order is successful.</p>}
+      </div>}
 			{/* =========================================================================
 			    MAIN 2-COLUMN DASHBOARD LAYOUT
 			    ========================================================================= */}

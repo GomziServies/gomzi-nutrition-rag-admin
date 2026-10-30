@@ -23,6 +23,7 @@ export function GomziNutritionLoginAsideMenuItems() {
 				Icon={faHome}
 				title='Dashboard'
 			/>
+			<AsideMenuItem to='/rag/gym-access-offer' title='Gym Access Offer' hasBullet={true} />
 			<AsideMenuItem
 				to='/rag/hero-banner'
 				Icon={faImage}

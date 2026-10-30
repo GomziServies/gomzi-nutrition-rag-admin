@@ -1,4 +1,4 @@
-// let fgGroupBaseUrl = 'https://api.ragnutrition.in',
+// let fgGroupBaseUrl = 'x',
 // 	// let fgGroupBaseUrl = 'http://localhost:3005',
 // 	fwgBaseUrl = 'https://fg-app-dev-api.fggroup.in',
 // 	gcsBaseUrl = 'https://dev-api.gcsconsultant.com'

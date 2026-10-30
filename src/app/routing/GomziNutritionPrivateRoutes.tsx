@@ -108,6 +108,8 @@ import PromoBannerManage from '../pages/gomzi-nutrition/promo-banners/promo-bann
 import NutritionPromoBannerManage from '../pages/gomzi-nutrition/nutrition-promo-banners/nutrition-promo-banner-manage'
 import AdBannerManage from '../pages/gomzi-nutrition/ad-banners/ad-banner-manage'
 
+import GymAccessOfferManage from '../pages/gomzi-nutrition/gym-access-offer/gym-access-offer-manage'
+
 const GomziNutritionPrivateRoutes = () => {
 	return (
 		<Routes>
@@ -118,6 +120,7 @@ const GomziNutritionPrivateRoutes = () => {
 				/>
 				<Route path='/deals' element={<DealManage />} />
 				<Route path='/combo-stacks' element={<ComboStackManage />} />
+				<Route path='/gym-access-offer' element={<GymAccessOfferManage />} />
 				<Route
 					path='/hero-banner'
 					element={<HeroBannerManage />}

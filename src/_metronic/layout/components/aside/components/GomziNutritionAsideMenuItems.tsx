@@ -33,6 +33,7 @@ export function GomziNutritionAsideMenuItems() {
 				title='Dashboard'
 			/>
 
+			<AsideMenuItem to='/rag/gym-access-offer' title='Gym Access Offer' hasBullet={true} />
 			{/* 2. Content */}
 			<AsideMenuItemWithSub
 				to=''
