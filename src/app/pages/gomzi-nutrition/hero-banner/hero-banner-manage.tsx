@@ -647,7 +647,7 @@ export default function HeroBannerManage() {
 											Slide #{activeSlideIndex + 1}: Desktop Image
 										</h3>
 										<span className='text-muted fs-8'>
-											Recommended: 1920 &times; 800px (WebP or JPG) for screens &ge; 1024px
+											Fixed Aspect Size: 1600 &times; 533 px (WebP or JPG) for Desktop screens
 										</span>
 									</div>
 								</div>
@@ -724,7 +724,7 @@ export default function HeroBannerManage() {
 											Slide #{activeSlideIndex + 1}: Mobile Banner Image
 										</h3>
 										<span className='text-muted fs-8'>
-											Recommended: 768 &times; 800px or 640 &times; 640px (WebP or JPG) for mobile viewports (&le; 640px)
+											Fixed Aspect Size: 1078 &times; 1460 px (WebP or JPG) for Mobile viewports
 										</span>
 									</div>
 								</div>
