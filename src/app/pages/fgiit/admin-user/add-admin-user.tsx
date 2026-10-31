@@ -29,7 +29,7 @@ const AddAdminUser: React.FC = () => {
 		email: '',
 		password: '',
 		branch: '',
-		type: '',
+		type: 'Admin',
 		mobile: '',
 	})
 	const [showPassword, setShowPassword] = useState(false)
@@ -221,10 +221,17 @@ const AddAdminUser: React.FC = () => {
 								<SelectField
 									label='Account Type / Role *'
 									name='type'
-									value={adminData.type}
+									value={adminData.type || 'Admin'}
 									onChange={handleInputChange}
 									htmlFor='Type'
-									options={['Admin']}
+									options={[
+										{ label: 'MASTER (Full System Access)', value: 'MASTER' },
+										{ label: 'Admin (Platform Administrator)', value: 'Admin' },
+										{ label: 'Trainer', value: 'Trainer' },
+										{ label: 'Employee', value: 'Employee' },
+										{ label: 'Store Manager', value: 'Store' },
+										{ label: 'Franchise', value: 'Franchise' },
+									]}
 									marginRemove
 								/>
 							</div>

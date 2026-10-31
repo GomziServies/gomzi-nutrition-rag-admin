@@ -104,8 +104,15 @@ const EditAdminUser: React.FC = () => {
 		try {
 			const response: FGGroupAPIResponse = await GetAdminUsers({ adminID: admin_id })
 			const data = response?.data || {}
-			if (data.type && data.type.toUpperCase() === 'ADMIN') data.type = 'Admin'
-			if (data.type && data.type.toUpperCase() === 'MASTER') data.type = 'MASTER'
+			if (data.type) {
+				const u = data.type.toUpperCase()
+				if (u === 'ADMIN') data.type = 'Admin'
+				else if (u === 'MASTER') data.type = 'MASTER'
+				else if (u === 'TRAINER') data.type = 'Trainer'
+				else if (u === 'EMPLOYEE') data.type = 'Employee'
+				else if (u === 'STORE' || u === 'STORE MANAGER') data.type = 'Store'
+				else if (u === 'FRANCHISE') data.type = 'Franchise'
+			}
 			setAdminData(data)
 		} catch (error) {
 			console.error('Error fetching admin data:', error)
@@ -219,6 +226,35 @@ const EditAdminUser: React.FC = () => {
 				<span className='gz-mgmt-pill info'>
 					<FontAwesomeIcon icon={faShieldAlt} style={{ fontSize: '10px' }} />
 					<span>ADMIN</span>
+				</span>
+			)
+		}
+		if (upper === 'TRAINER') {
+			return (
+				<span className='gz-mgmt-pill success'>
+					<FontAwesomeIcon icon={faShieldAlt} style={{ fontSize: '10px' }} />
+					<span>TRAINER</span>
+				</span>
+			)
+		}
+		if (upper === 'EMPLOYEE') {
+			return (
+				<span className='gz-mgmt-pill slate'>
+					<span>EMPLOYEE</span>
+				</span>
+			)
+		}
+		if (upper === 'STORE' || upper === 'STORE MANAGER') {
+			return (
+				<span className='gz-mgmt-pill warning'>
+					<span>STORE MANAGER</span>
+				</span>
+			)
+		}
+		if (upper === 'FRANCHISE') {
+			return (
+				<span className='gz-mgmt-pill info'>
+					<span>FRANCHISE</span>
 				</span>
 			)
 		}
@@ -355,13 +391,15 @@ const EditAdminUser: React.FC = () => {
 																		fontWeight: 500,
 																		cursor: canChangeRole ? 'default' : 'not-allowed',
 																	}}>
-																	<option value='MASTER'>MASTER (Full System Access)</option>
-																										<option value='Admin'>Admin (Platform Administrator)</option>
-																										{adminData.type &&
-																											adminData.type.toUpperCase() !== 'MASTER' &&
-																											adminData.type.toUpperCase() !== 'ADMIN' && (
-																												<option value={adminData.type}>{adminData.type} (Non-Admin)</option>
-																										)}
+									<option value='MASTER'>MASTER (Full System Access)</option>
+									<option value='Admin'>Admin (Platform Administrator)</option>
+									<option value='Trainer'>Trainer</option>
+									<option value='Employee'>Employee</option>
+									<option value='Store'>Store Manager</option>
+									<option value='Franchise'>Franchise</option>
+									{adminData.type && !['MASTER', 'ADMIN', 'TRAINER', 'EMPLOYEE', 'STORE', 'STORE MANAGER', 'FRANCHISE'].includes(adminData.type.toUpperCase()) && (
+										<option value={adminData.type}>{adminData.type}</option>
+									)}
 																</select>
 																<span
 									className='fs-8 mt-1 d-block fw-semibold'

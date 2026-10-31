@@ -27,10 +27,18 @@ import {
 	faBookOpen,
 	faClock,
 	faUserMd,
+	faQuestionCircle,
+	faListUl,
+	faHeading,
+	faLayerGroup,
+	faSearch,
+	faTable,
+	faPaste,
 } from '@fortawesome/free-solid-svg-icons'
 
 const PRESET_IMAGES = [
 	{ label: 'Blog 1 (Whey Isolate)', url: '/images/blog-1.webp' },
+	{ label: 'Blog 2 (Plant Protein)', url: '/images/blog-2.webp' },
 	{ label: 'Blog 3 (Protein Intake)', url: '/images/blog-3.webp' },
 	{ label: 'Blog 4 (GLP-1 Muscle)', url: '/images/blog-4.webp' },
 	{ label: 'Blog 5 (Brand Legacy)', url: '/images/blog-5.webp' },
@@ -49,6 +57,27 @@ const getPreviewUrl = (url?: string) => {
 	return `${FG_GROUP_FILE_BASE_URL}/${url}`
 }
 
+interface TableFormState {
+	heading: string
+	columns: string[]
+	columnsText: string
+	rows: string[][]
+	quickPasteText?: string
+}
+
+interface SectionFormState {
+	heading: string
+	paragraphsText: string
+	bulletsText: string
+	closingParagraph: string
+	table?: TableFormState | null
+}
+
+interface FaqFormState {
+	question: string
+	answer: string
+}
+
 export default function BlogManage() {
 	const [blogs, setBlogs] = useState<BlogItem[]>([])
 	const [loading, setLoading] = useState(true)
@@ -63,6 +92,9 @@ export default function BlogManage() {
 	const [showModal, setShowModal] = useState(false)
 	const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
 	const [currentId, setCurrentId] = useState<string>('')
+	const [activeTab, setActiveTab] = useState<'details' | 'media' | 'content' | 'faqs_seo'>('details')
+
+	// Form States
 	const [formData, setFormData] = useState<Partial<BlogItem>>({
 		title: '',
 		slug: '',
@@ -78,6 +110,16 @@ export default function BlogManage() {
 	})
 	const [tagsString, setTagsString] = useState('nutrition, protein')
 	const [uploadingImage, setUploadingImage] = useState(false)
+
+	// Rich Content States
+	const [introText, setIntroText] = useState('')
+	const [sections, setSections] = useState<SectionFormState[]>([])
+	const [tables, setTables] = useState<TableFormState[]>([])
+	const [faqs, setFaqs] = useState<FaqFormState[]>([])
+	const [bottomLineHeading, setBottomLineHeading] = useState('The bottom line')
+	const [bottomLineText, setBottomLineText] = useState('')
+	const [metaTitle, setMetaTitle] = useState('')
+	const [metaDescription, setMetaDescription] = useState('')
 
 	const loadBlogs = async () => {
 		try {
@@ -106,7 +148,7 @@ export default function BlogManage() {
 			slug: '',
 			category: 'Nutrition',
 			desc: '',
-			image: '/images/blog-1.webp',
+			image: '/images/blog-2.webp',
 			readTime: '6 min read',
 			reviewer: 'Dt. Chirag Pandey, RD',
 			author: 'Gomzi Supplement by RAG',
@@ -114,6 +156,23 @@ export default function BlogManage() {
 			featured: false,
 		})
 		setTagsString('nutrition, protein')
+		setIntroText('')
+		setSections([
+			{
+				heading: '',
+				paragraphsText: '',
+				bulletsText: '',
+				closingParagraph: '',
+				table: null,
+			},
+		])
+		setTables([])
+		setFaqs([])
+		setBottomLineHeading('The bottom line')
+		setBottomLineText('')
+		setMetaTitle('')
+		setMetaDescription('')
+		setActiveTab('details')
 		setShowModal(true)
 	}
 
@@ -123,7 +182,7 @@ export default function BlogManage() {
 		setFormData({
 			title: item.title,
 			slug: item.slug,
-			category: item.category,
+			category: item.category || 'Nutrition',
 			desc: item.desc || '',
 			image: item.image || '/images/blog-1.webp',
 			readTime: item.readTime || '6 min read',
@@ -133,13 +192,490 @@ export default function BlogManage() {
 			featured: Boolean(item.featured),
 		})
 		setTagsString(Array.isArray(item.tags) ? item.tags.join(', ') : 'nutrition')
+
+		// Intro
+		const rawIntro = item.content?.intro
+		if (Array.isArray(rawIntro)) {
+			setIntroText(rawIntro.join('\n\n'))
+		} else if (typeof rawIntro === 'string') {
+			setIntroText(rawIntro)
+		} else {
+			setIntroText('')
+		}
+
+		// Sections
+		const rawSections = item.content?.sections
+		if (Array.isArray(rawSections) && rawSections.length > 0) {
+			setSections(
+				rawSections.map((s: any) => ({
+					heading: s.heading || '',
+					paragraphsText: Array.isArray(s.paragraphs)
+						? s.paragraphs.join('\n\n')
+						: typeof s.paragraphs === 'string'
+						? s.paragraphs
+						: '',
+					bulletsText: Array.isArray(s.bullets) ? s.bullets.join('\n') : '',
+					closingParagraph: s.closingParagraph || '',
+					table: s.table
+						? {
+								heading: s.table.heading || '',
+								columns: Array.isArray(s.table.columns) ? s.table.columns : [],
+								columnsText: Array.isArray(s.table.columns) ? s.table.columns.join(', ') : '',
+								rows: Array.isArray(s.table.rows) ? s.table.rows : [],
+								quickPasteText: '',
+						  }
+						: null,
+				}))
+			)
+		} else {
+			setSections([
+				{
+					heading: '',
+					paragraphsText: '',
+					bulletsText: '',
+					closingParagraph: '',
+					table: null,
+				},
+			])
+		}
+
+		// Tables
+		const loadedTables: TableFormState[] = []
+		if (Array.isArray(item.content?.tables) && item.content.tables.length > 0) {
+			item.content.tables.forEach((t: any) => {
+				const cols = Array.isArray(t.columns) ? t.columns : []
+				const rws = Array.isArray(t.rows) ? t.rows : []
+				loadedTables.push({
+					heading: t.heading || 'Data Table',
+					columns: cols,
+					columnsText: cols.join(', '),
+					rows: rws,
+					quickPasteText: '',
+				})
+			})
+		} else {
+			if (item.content?.comparisonTable) {
+				const ct = item.content.comparisonTable
+				const cols = Array.isArray(ct.columns) ? ct.columns : []
+				const rws = Array.isArray(ct.rows) ? ct.rows : []
+				loadedTables.push({
+					heading: ct.heading || 'Comparison Table',
+					columns: cols,
+					columnsText: cols.join(', '),
+					rows: rws,
+					quickPasteText: '',
+				})
+			}
+			if (item.content?.proteinTable) {
+				const pt = item.content.proteinTable
+				const cols = Array.isArray(pt.columns) ? pt.columns : []
+				const rws = Array.isArray(pt.rows) ? pt.rows : []
+				loadedTables.push({
+					heading: pt.heading || 'Daily Meal Guide / Schedule',
+					columns: cols,
+					columnsText: cols.join(', '),
+					rows: rws,
+					quickPasteText: '',
+				})
+			}
+		}
+		setTables(loadedTables)
+
+		// FAQs
+		const rawFaqs = item.content?.faqs
+		if (Array.isArray(rawFaqs) && rawFaqs.length > 0) {
+			setFaqs(
+				rawFaqs.map((f: any) => ({
+					question: f.question || '',
+					answer: f.answer || '',
+				}))
+			)
+		} else {
+			setFaqs([])
+		}
+
+		// Bottom line
+		const rawBottomLine = item.content?.bottomLine
+		setBottomLineHeading(rawBottomLine?.heading || 'The bottom line')
+		if (Array.isArray(rawBottomLine?.paragraphs)) {
+			setBottomLineText(rawBottomLine.paragraphs.join('\n\n'))
+		} else if (typeof rawBottomLine?.paragraphs === 'string') {
+			setBottomLineText(rawBottomLine.paragraphs)
+		} else {
+			setBottomLineText('')
+		}
+
+		// SEO
+		setMetaTitle(item.metaTitle || '')
+		setMetaDescription(item.metaDescription || '')
+
+		setActiveTab('details')
 		setShowModal(true)
+	}
+
+	const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+		try {
+			setUploadingImage(true)
+			const res: any = await FileUploadToFGGroup([file], { directory: 'blog' })
+			const uploadedUrl = res?.data?.fileURLs?.[0] || res?.data?.url || res?.url
+			if (uploadedUrl) {
+				setFormData((prev) => ({ ...prev, image: uploadedUrl }))
+				toast.success('Cover image uploaded successfully!')
+			} else {
+				toast.error('Image upload failed: no URL returned')
+			}
+		} catch (err: any) {
+			toast.error(err?.message || 'Error uploading cover image')
+		} finally {
+			setUploadingImage(false)
+		}
+	}
+
+	const handleGenerateSlug = () => {
+		if (!formData.title) return
+		const gen = formData.title
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/(^-|-$)/g, '')
+		setFormData((prev) => ({ ...prev, slug: gen }))
+	}
+
+	// Section Handlers
+	const handleAddSection = () => {
+		setSections((prev) => [
+			...prev,
+			{ heading: '', paragraphsText: '', bulletsText: '', closingParagraph: '', table: null },
+		])
+	}
+
+	const handleAddSectionWithTable = () => {
+		setSections((prev) => [
+			...prev,
+			{
+				heading: '',
+				paragraphsText: '',
+				bulletsText: '',
+				closingParagraph: '',
+				table: {
+					heading: 'Nutritional Breakdown',
+					columns: ['Food / Factor', 'Protein Content', 'Notes / Usage'],
+					columnsText: 'Food / Factor, Protein Content, Notes / Usage',
+					rows: [
+						['Soya chunks (dry)', '50–52 g', 'Curry, pulao, cutlets'],
+						['Pumpkin seeds', 'about 30 g', 'Snacks, salads, smoothies'],
+					],
+					quickPasteText: '',
+				},
+			},
+		])
+		toast.success('Added new section with table!')
+	}
+
+	const handleSmartAddTable = () => {
+		// If there is an existing section that doesn't have a table yet, add table to it
+		const sectionWithoutTableIdx = sections.findIndex((s) => !s.table)
+		if (sectionWithoutTableIdx !== -1) {
+			handleAddTableToSection(sectionWithoutTableIdx)
+		} else {
+			// All sections already have tables, or no sections exist: create a new section with a table
+			handleAddSectionWithTable()
+		}
+	}
+
+	const handleRemoveSection = (index: number) => {
+		setSections((prev) => prev.filter((_, i) => i !== index))
+	}
+
+	const handleSectionChange = (index: number, field: keyof SectionFormState, value: string) => {
+		setSections((prev) => {
+			const updated = [...prev]
+			updated[index] = { ...updated[index], [field]: value }
+			return updated
+		})
+	}
+
+	// Section Table Handlers
+	const handleAddTableToSection = (sIdx: number) => {
+		setSections((prev) => {
+			const next = [...prev]
+			next[sIdx] = {
+				...next[sIdx],
+				table: {
+					heading: `${next[sIdx].heading || 'Section'} Table`,
+					columns: ['Food / Item', 'Protein Content', 'Notes / Usage'],
+					columnsText: 'Food / Item, Protein Content, Notes / Usage',
+					rows: [
+						['Soya chunks (dry)', '50–52 g', 'Curry, pulao, cutlets'],
+						['Pumpkin seeds', 'about 30 g', 'Snacks, salads, smoothies'],
+					],
+					quickPasteText: '',
+				},
+			}
+			return next
+		})
+		toast.success(`Table added to Section #${sIdx + 1}`)
+	}
+
+	const handleRemoveTableFromSection = (sIdx: number) => {
+		setSections((prev) => {
+			const next = [...prev]
+			next[sIdx] = {
+				...next[sIdx],
+				table: null,
+			}
+			return next
+		})
+		toast.success(`Table removed from Section #${sIdx + 1}`)
+	}
+
+	const handleSectionTableHeadingChange = (sIdx: number, heading: string) => {
+		setSections((prev) => {
+			const next = [...prev]
+			if (next[sIdx].table) {
+				next[sIdx].table = { ...next[sIdx].table!, heading }
+			}
+			return next
+		})
+	}
+
+	const handleSectionTableColumnsChange = (sIdx: number, columnsText: string) => {
+		const cols = columnsText.split(',').map((c) => c.trim()).filter(Boolean)
+		setSections((prev) => {
+			const next = [...prev]
+			if (next[sIdx].table) {
+				const currentRows = next[sIdx].table!.rows || []
+				const adjustedRows = currentRows.map((r) => {
+					const rowCopy = [...r]
+					while (rowCopy.length < cols.length) rowCopy.push('')
+					return rowCopy.slice(0, cols.length)
+				})
+				next[sIdx].table = {
+					...next[sIdx].table!,
+					columnsText,
+					columns: cols,
+					rows: adjustedRows,
+				}
+			}
+			return next
+		})
+	}
+
+	const handleAddSectionTableRow = (sIdx: number) => {
+		setSections((prev) => {
+			const next = [...prev]
+			if (next[sIdx].table) {
+				const cols =
+					next[sIdx].table!.columns.length > 0 ? next[sIdx].table!.columns : ['Column 1', 'Column 2']
+				const emptyRow = cols.map(() => '')
+				next[sIdx].table = {
+					...next[sIdx].table!,
+					rows: [...next[sIdx].table!.rows, emptyRow],
+				}
+			}
+			return next
+		})
+	}
+
+	const handleRemoveSectionTableRow = (sIdx: number, rIdx: number) => {
+		setSections((prev) => {
+			const next = [...prev]
+			if (next[sIdx].table) {
+				next[sIdx].table = {
+					...next[sIdx].table!,
+					rows: next[sIdx].table!.rows.filter((_, idx) => idx !== rIdx),
+				}
+			}
+			return next
+		})
+	}
+
+	const handleSectionTableCellChange = (sIdx: number, rIdx: number, cIdx: number, value: string) => {
+		setSections((prev) => {
+			const next = [...prev]
+			if (next[sIdx].table) {
+				const nextRows = next[sIdx].table!.rows.map((r, ri) => {
+					if (ri !== rIdx) return r
+					const newR = [...r]
+					newR[cIdx] = value
+					return newR
+				})
+				next[sIdx].table = { ...next[sIdx].table!, rows: nextRows }
+			}
+			return next
+		})
+	}
+
+	const handleSectionTableQuickParse = (sIdx: number) => {
+		const text = sections[sIdx]?.table?.quickPasteText
+		if (!text?.trim()) return
+
+		const lines = text.trim().split(/\r?\n/).filter((l) => l.trim())
+		if (lines.length === 0) return
+
+		const firstLine = lines[0]
+		const delimiter = firstLine.includes('\t') ? '\t' : firstLine.includes(',') ? ',' : '\t'
+		const parsedGrid = lines.map((line) => line.split(delimiter).map((cell) => cell.trim()))
+
+		if (parsedGrid.length === 0) return
+
+		const cols = parsedGrid[0]
+		const rows = parsedGrid.slice(1)
+
+		setSections((prev) => {
+			const next = [...prev]
+			if (next[sIdx].table) {
+				next[sIdx].table = {
+					...next[sIdx].table!,
+					columns: cols,
+					columnsText: cols.join(', '),
+					rows: rows.length > 0 ? rows : [cols.map(() => '')],
+					quickPasteText: '',
+				}
+			}
+			return next
+		})
+		toast.success(`Imported ${rows.length} rows with ${cols.length} columns!`)
+	}
+
+	// Standalone Table Handlers
+	const handleAddTable = () => {
+		setTables((prev) => [
+			...prev,
+			{
+				heading: 'New Data Table',
+				columns: ['Food / Factor', 'Protein per 100g', 'Best Use / Notes'],
+				columnsText: 'Food / Factor, Protein per 100g, Best Use / Notes',
+				rows: [
+					['Soya chunks', '52 g', 'Curry, pulao, cutlets'],
+					['Pumpkin seeds', '30 g', 'Snacks, salads, smoothies'],
+				],
+				quickPasteText: '',
+			},
+		])
+	}
+
+	const handleRemoveTable = (tIdx: number) => {
+		setTables((prev) => prev.filter((_, idx) => idx !== tIdx))
+	}
+
+	const handleTableHeadingChange = (tIdx: number, heading: string) => {
+		setTables((prev) => {
+			const next = [...prev]
+			next[tIdx] = { ...next[tIdx], heading }
+			return next
+		})
+	}
+
+	const handleTableColumnsChange = (tIdx: number, columnsText: string) => {
+		const cols = columnsText.split(',').map((c) => c.trim()).filter(Boolean)
+		setTables((prev) => {
+			const next = [...prev]
+			const currentRows = next[tIdx].rows || []
+			const adjustedRows = currentRows.map((r) => {
+				const rowCopy = [...r]
+				while (rowCopy.length < cols.length) rowCopy.push('')
+				return rowCopy.slice(0, cols.length)
+			})
+			next[tIdx] = {
+				...next[tIdx],
+				columnsText,
+				columns: cols,
+				rows: adjustedRows,
+			}
+			return next
+		})
+	}
+
+	const handleAddTableRow = (tIdx: number) => {
+		setTables((prev) => {
+			const next = [...prev]
+			const cols = next[tIdx].columns.length > 0 ? next[tIdx].columns : ['Column 1', 'Column 2']
+			const emptyRow = cols.map(() => '')
+			next[tIdx] = {
+				...next[tIdx],
+				rows: [...next[tIdx].rows, emptyRow],
+			}
+			return next
+		})
+	}
+
+	const handleRemoveTableRow = (tIdx: number, rIdx: number) => {
+		setTables((prev) => {
+			const next = [...prev]
+			next[tIdx] = {
+				...next[tIdx],
+				rows: next[tIdx].rows.filter((_, idx) => idx !== rIdx),
+			}
+			return next
+		})
+	}
+
+	const handleTableCellChange = (tIdx: number, rIdx: number, cIdx: number, value: string) => {
+		setTables((prev) => {
+			const next = [...prev]
+			const nextRows = next[tIdx].rows.map((r, ri) => {
+				if (ri !== rIdx) return r
+				const newR = [...r]
+				newR[cIdx] = value
+				return newR
+			})
+			next[tIdx] = { ...next[tIdx], rows: nextRows }
+			return next
+		})
+	}
+
+	const handleQuickPasteParse = (tIdx: number, pasteText: string) => {
+		if (!pasteText.trim()) return
+		const lines = pasteText.trim().split(/\r?\n/).filter((l) => l.trim())
+		if (lines.length === 0) return
+
+		const firstLine = lines[0]
+		const delimiter = firstLine.includes('\t') ? '\t' : firstLine.includes(',') ? ',' : '\t'
+		const parsedGrid = lines.map((line) => line.split(delimiter).map((cell) => cell.trim()))
+
+		if (parsedGrid.length === 0) return
+
+		const cols = parsedGrid[0]
+		const rows = parsedGrid.slice(1)
+
+		setTables((prev) => {
+			const next = [...prev]
+			next[tIdx] = {
+				...next[tIdx],
+				columns: cols,
+				columnsText: cols.join(', '),
+				rows: rows.length > 0 ? rows : [cols.map(() => '')],
+				quickPasteText: '',
+			}
+			return next
+		})
+		toast.success(`Imported ${rows.length} rows with ${cols.length} columns!`)
+	}
+
+	// FAQ Handlers
+	const handleAddFaq = () => {
+		setFaqs((prev) => [...prev, { question: '', answer: '' }])
+	}
+
+	const handleRemoveFaq = (index: number) => {
+		setFaqs((prev) => prev.filter((_, i) => i !== index))
+	}
+
+	const handleFaqChange = (index: number, field: keyof FaqFormState, value: string) => {
+		setFaqs((prev) => {
+			const updated = [...prev]
+			updated[index] = { ...updated[index], [field]: value }
+			return updated
+		})
 	}
 
 	const handleSave = async (e: React.FormEvent) => {
 		e.preventDefault()
 		if (!formData.title?.trim()) {
-			toast.error('Title is required')
+			toast.error('Article Title is required')
+			setActiveTab('details')
 			return
 		}
 
@@ -150,9 +686,100 @@ export default function BlogManage() {
 				.map((t) => t.trim().toLowerCase())
 				.filter(Boolean)
 
-			const payload = {
+			const parsedIntro = introText
+				.split(/\n\s*\n/)
+				.map((p) => p.trim())
+				.filter(Boolean)
+
+			const parsedSections = sections
+				.filter((s) => s.heading.trim() || s.paragraphsText.trim())
+				.map((s) => {
+					const secObj: any = {
+						heading: s.heading.trim(),
+						paragraphs: s.paragraphsText
+							.split(/\n\s*\n/)
+							.map((p) => p.trim())
+							.filter(Boolean),
+						bullets: s.bulletsText
+							.split('\n')
+							.map((b) => b.trim())
+							.filter(Boolean),
+						...(s.closingParagraph.trim() ? { closingParagraph: s.closingParagraph.trim() } : {}),
+					}
+
+					if (s.table && s.table.heading.trim() && s.table.columns.length > 0) {
+						secObj.table = {
+							heading: s.table.heading.trim(),
+							columns: s.table.columns.map((c) => c.trim()).filter(Boolean),
+							rows: s.table.rows.map((r) =>
+								s.table!.columns.map((_, colIdx) =>
+									r[colIdx] !== undefined ? String(r[colIdx]).trim() : ''
+								)
+							),
+						}
+					}
+
+					return secObj
+				})
+
+			const parsedTables = tables
+				.filter((t) => t.heading.trim() && t.columns.length > 0)
+				.map((t) => ({
+					heading: t.heading.trim(),
+					columns: t.columns.map((c) => c.trim()).filter(Boolean),
+					rows: t.rows.map((r) =>
+						t.columns.map((_, colIdx) =>
+							r[colIdx] !== undefined ? String(r[colIdx]).trim() : ''
+						)
+					),
+				}))
+
+			const parsedFaqs = faqs
+				.filter((f) => f.question.trim() && f.answer.trim())
+				.map((f) => ({
+					question: f.question.trim(),
+					answer: f.answer.trim(),
+				}))
+
+			const parsedBottomLine = bottomLineText.trim()
+				? {
+						heading: bottomLineHeading.trim() || 'The bottom line',
+						paragraphs: bottomLineText
+							.split(/\n\s*\n/)
+							.map((p) => p.trim())
+							.filter(Boolean),
+				  }
+				: undefined
+
+			const contentPayload: any = {
+				...(formData.content || {}),
+				intro: parsedIntro,
+				sections: parsedSections,
+				faqs: parsedFaqs,
+				tables: parsedTables,
+			}
+			if (parsedTables.length > 0) {
+				contentPayload.comparisonTable = parsedTables[0]
+				if (parsedTables.length > 1) {
+					contentPayload.proteinTable = parsedTables[1]
+				}
+			}
+			if (parsedBottomLine) {
+				contentPayload.bottomLine = parsedBottomLine
+			}
+
+			const generatedSlug = (formData.slug || formData.title || '')
+				.toLowerCase()
+				.replace(/[^a-z0-9]+/g, '-')
+				.replace(/(^-|-$)/g, '')
+
+			const payload: any = {
 				...formData,
+				slug: generatedSlug,
 				tags: parsedTags,
+				content: contentPayload,
+				metaTitle: metaTitle.trim() || `${formData.title} | Gomzi Supplement`,
+				metaDescription: metaDescription.trim() || formData.desc || '',
 			}
 
 			if (modalMode === 'create') {
@@ -243,7 +870,8 @@ export default function BlogManage() {
 							)}
 						</span>
 						<span className='text-muted mt-1 fw-semibold fs-7'>
-							Manage evidence-based clinical articles, read times, and reviewers. Total Reads: {totalViews}
+							Manage evidence-based clinical articles, data tables, body sections, FAQs, and SEO. Total Reads:{' '}
+							{totalViews}
 						</span>
 					</h3>
 					<div className='card-toolbar gap-3'>
@@ -260,7 +888,7 @@ export default function BlogManage() {
 							className='btn btn-sm btn-primary'
 							onClick={handleOpenCreate}
 						>
-							<FontAwesomeIcon icon={faPlus} className='me-1' /> Add Article
+							<FontAwesomeIcon icon={faPlus} className='me-1' /> Add Complete Blog
 						</button>
 					</div>
 				</div>
@@ -283,9 +911,9 @@ export default function BlogManage() {
 							columns={[
 								{ title: 'Article Title', field: 'title' },
 								{ title: 'Category', field: 'category' },
-								{ title: 'Reviewer', field: 'medicalReviewer' },
+								{ title: 'Reviewer', field: 'reviewer' },
 								{ title: 'Featured', field: 'featured' },
-								{ title: 'Reads', field: 'reads' },
+								{ title: 'Reads', field: 'views' },
 								{ title: 'Status', field: 'status' },
 							]}
 							filename='articles-list'
@@ -322,6 +950,8 @@ export default function BlogManage() {
 									<th className='min-w-200px'>Article Title</th>
 									<th className='min-w-100px'>Category</th>
 									<th className='min-w-120px'>Reviewer</th>
+									<th className='min-w-80px text-center'>Sections</th>
+									<th className='min-w-80px text-center'>Tables</th>
 									<th className='min-w-80px text-center'>Featured</th>
 									<th className='min-w-80px text-center'>Reads</th>
 									<th className='min-w-80px text-center'>Status</th>
@@ -344,115 +974,140 @@ export default function BlogManage() {
 														className='gz-skeleton rounded me-3'
 														style={{ width: '45px', height: '45px', flexShrink: 0 }}
 													/>
-													<div className='d-flex flex-column gap-2 w-100' style={{ maxWidth: '300px' }}>
+													<div
+														className='d-flex flex-column gap-2 w-100'
+														style={{ maxWidth: '300px' }}
+													>
 														<div className='gz-skeleton' style={{ width: '85%', height: '15px' }} />
 														<div className='gz-skeleton' style={{ width: '55%', height: '12px' }} />
 													</div>
 												</div>
 											</td>
 											<td>
-												<div
-													className='gz-skeleton rounded-pill'
-													style={{ width: '75px', height: '22px' }}
-												/>
+												<div className='gz-skeleton' style={{ width: '70px', height: '22px' }} />
 											</td>
 											<td>
-												<div
-													className='gz-skeleton'
-													style={{ width: '130px', height: '14px' }}
-												/>
+												<div className='gz-skeleton' style={{ width: '100px', height: '14px' }} />
 											</td>
 											<td className='text-center'>
 												<div
-													className='gz-skeleton rounded'
-													style={{ width: '32px', height: '32px', margin: '0 auto' }}
+													className='gz-skeleton'
+													style={{ width: '30px', height: '14px', margin: '0 auto' }}
 												/>
 											</td>
 											<td className='text-center'>
 												<div
 													className='gz-skeleton'
-													style={{ width: '35px', height: '14px', margin: '0 auto' }}
+													style={{ width: '30px', height: '14px', margin: '0 auto' }}
 												/>
 											</td>
 											<td className='text-center'>
 												<div
-													className='gz-skeleton rounded'
-													style={{ width: '70px', height: '24px', margin: '0 auto' }}
+													className='gz-skeleton'
+													style={{ width: '30px', height: '30px', margin: '0 auto' }}
+												/>
+											</td>
+											<td className='text-center'>
+												<div
+													className='gz-skeleton'
+													style={{ width: '40px', height: '14px', margin: '0 auto' }}
+												/>
+											</td>
+											<td className='text-center'>
+												<div
+													className='gz-skeleton'
+													style={{ width: '60px', height: '24px', margin: '0 auto' }}
 												/>
 											</td>
 											<td className='text-end'>
-												<div className='d-inline-flex gap-2 justify-content-end'>
-													<div
-														className='gz-skeleton rounded'
-														style={{ width: '30px', height: '30px' }}
-													/>
-													<div
-														className='gz-skeleton rounded'
-														style={{ width: '30px', height: '30px' }}
-													/>
-												</div>
+												<div
+													className='gz-skeleton'
+													style={{ width: '70px', height: '32px', marginLeft: 'auto' }}
+												/>
 											</td>
 										</tr>
 									))
 								) : filteredBlogs.length === 0 ? (
 									<tr>
-										<td colSpan={8} className='text-center py-10 text-muted'>
-											No articles found matching filters.
+										<td colSpan={10} className='text-center py-10 text-muted'>
+											<FontAwesomeIcon icon={faBookOpen} className='fs-1 d-block mb-3 opacity-25' />
+											No articles found matching the current criteria.
 										</td>
 									</tr>
 								) : (
-									filteredBlogs.map((b, idx) => (
+									filteredBlogs.map((b, idx) => {
+										const secTables = Array.isArray(b.content?.sections)
+											? b.content.sections.filter((s: any) => s.table).length
+											: 0
+										const tablesCount =
+											(Array.isArray(b.content?.tables)
+												? b.content.tables.length
+												: (b.content?.comparisonTable ? 1 : 0) + (b.content?.proteinTable ? 1 : 0)) +
+											secTables
+										return (
 											<tr key={b._id || b.id || idx}>
 												<td className='text-center text-muted fw-bold'>{idx + 1}</td>
 												<td>
 													<div className='d-flex align-items-center'>
-														<div className='symbol symbol-45px me-3'>
-															<img
-																src={getPreviewUrl(b.image)}
-																alt={b.title}
-																className='rounded object-fit-cover'
-																onError={(e: any) => {
-																	e.currentTarget.onerror = null
-																	e.currentTarget.src = '/images/product-placeholder.webp'
-																}}
-															/>
-														</div>
-														<div className='d-flex justify-content-start flex-column'>
-															<span className='text-gray-900 fw-bold fs-6'>
+														<img
+															src={getPreviewUrl(b.image)}
+															alt={b.title}
+															className='rounded me-3 object-fit-cover shadow-sm'
+															style={{ width: '48px', height: '48px', flexShrink: 0 }}
+															onError={(e: any) => {
+																e.target.src = '/images/blog-1.webp'
+															}}
+														/>
+														<div className='d-flex flex-column'>
+															<span className='text-gray-900 fw-bold text-hover-primary fs-6 mb-1'>
 																{b.title}
 															</span>
-															<span className='text-muted fs-7'>
-																/blog/{b.slug} • {b.readTime || '6 min'}
+															<span className='text-muted fs-8'>
+																<FontAwesomeIcon icon={faClock} className='me-1' />
+																{b.readTime || '6 min read'} &bull; /{b.slug}
 															</span>
 														</div>
 													</div>
 												</td>
 												<td>
-													<span className='badge badge-light-primary fw-bold'>
-														{b.category}
+													<span className='badge badge-light-primary fs-8 fw-semibold'>
+														{b.category || 'Nutrition'}
 													</span>
 												</td>
 												<td>
-													<span className='text-muted fs-7 d-flex align-items-center gap-1'>
-														<FontAwesomeIcon icon={faUserMd} className='text-primary' />
-														{b.reviewer || b.author}
+													<span className='text-gray-700 fs-7 d-flex align-items-center gap-1'>
+														<FontAwesomeIcon icon={faUserMd} className='text-muted' />
+														{b.reviewer || 'Clinical Team'}
 													</span>
+												</td>
+												<td className='text-center'>
+													<span className='badge badge-light-secondary fs-8'>
+														{Array.isArray(b.content?.sections) ? b.content.sections.length : 0} sections
+													</span>
+												</td>
+												<td className='text-center'>
+													{tablesCount > 0 ? (
+														<span className='badge badge-light-info fs-8 fw-bold'>
+															<FontAwesomeIcon icon={faTable} className='me-1' />
+															{tablesCount} {tablesCount === 1 ? 'table' : 'tables'}
+														</span>
+													) : (
+														<span className='text-muted fs-8'>—</span>
+													)}
 												</td>
 												<td className='text-center'>
 													<button
 														type='button'
-														className={`btn btn-sm btn-icon ${
-															b.featured ? 'btn-warning' : 'btn-light'
+														className={`btn btn-icon btn-sm ${
+															b.featured ? 'btn-light-warning text-warning' : 'btn-light text-muted'
 														}`}
 														onClick={() => handleToggleFeatured(b)}
-														title={b.featured ? 'Featured on Top' : 'Set as Featured'}
+														title={b.featured ? 'Featured Article' : 'Make Featured'}
 													>
 														<FontAwesomeIcon icon={faStar} />
 													</button>
 												</td>
-												<td className='text-center fw-bold text-gray-700'>
-													{b.views || 0}
-												</td>
+												<td className='text-center fw-bold text-gray-700'>{b.views || 0}</td>
 												<td className='text-center'>
 													<button
 														type='button'
@@ -471,6 +1126,7 @@ export default function BlogManage() {
 														type='button'
 														className='btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1'
 														onClick={() => handleOpenEdit(b)}
+														title='Edit Complete Blog'
 													>
 														<FontAwesomeIcon icon={faEdit} />
 													</button>
@@ -478,202 +1134,970 @@ export default function BlogManage() {
 														type='button'
 														className='btn btn-icon btn-bg-light btn-active-color-danger btn-sm'
 														onClick={() => handleDelete(b._id || b.id)}
+														title='Delete Article'
 													>
 														<FontAwesomeIcon icon={faTrash} />
 													</button>
 												</td>
 											</tr>
-										))
-									)}
-								</tbody>
-							</table>
-						</div>
+										)
+									})
+								)}
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 
-			{/* Modal */}
+			{/* =========================================================================
+			    COMPLETE BLOG AUTHORING & EDITING MODAL WITH TABLE BUILDER
+			    ========================================================================= */}
 			{showModal && (
 				<div
 					className='modal fade show d-block'
 					tabIndex={-1}
-					style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+					style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(3px)', zIndex: 1050 }}
 				>
-					<div className='modal-dialog modal-dialog-centered modal-lg'>
-						<div className='modal-content'>
-							<form onSubmit={handleSave}>
-								<div className='modal-header'>
-									<h5 className='modal-title fw-bold'>
-										{modalMode === 'create' ? 'Create Publication' : 'Edit Article'}
-									</h5>
+					<div className='modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable'>
+						<div
+							className='modal-content border-0 shadow-lg'
+							style={{ borderRadius: '16px', overflow: 'hidden' }}
+						>
+							<form onSubmit={handleSave} className='d-flex flex-column h-100'>
+								{/* Modal Header */}
+								<div
+									className='modal-header py-4 px-6 border-bottom'
+									style={{ backgroundColor: '#F8FAFC' }}
+								>
+									<div className='d-flex align-items-center gap-3'>
+										<div
+											style={{
+												width: '38px',
+												height: '38px',
+												borderRadius: '10px',
+												background: modalMode === 'create' ? '#EFF6FF' : '#F5F3FF',
+												color: modalMode === 'create' ? '#2563EB' : '#7C3AED',
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												fontSize: '16px',
+											}}
+										>
+											<FontAwesomeIcon icon={modalMode === 'create' ? faPlus : faEdit} />
+										</div>
+										<div>
+											<h5 className='modal-title fw-bold text-gray-900 mb-0'>
+												{modalMode === 'create'
+													? 'Create Complete Publication'
+													: 'Edit Publication & Body Content'}
+											</h5>
+											<p className='fs-8 text-muted mb-0'>
+												{modalMode === 'create'
+													? 'Draft an evidence-based clinical journal article for the website'
+													: `Editing: "${formData.title || 'Journal Article'}"`}
+											</p>
+										</div>
+									</div>
 									<button
 										type='button'
 										className='btn-close'
 										onClick={() => setShowModal(false)}
 									/>
 								</div>
-								<div className='modal-body'>
-									<div className='row g-3'>
-										<div className='col-12'>
-											<label className='form-label required fw-bold'>Title</label>
-											<input
-												type='text'
-												className='form-control form-control-sm'
-												value={formData.title || ''}
-												onChange={(e) =>
-													setFormData({ ...formData, title: e.target.value })
-												}
-												required
-											/>
-										</div>
 
-										<div className='col-md-6'>
-											<label className='form-label fw-bold'>Slug (URL identifier)</label>
-											<input
-												type='text'
-												className='form-control form-control-sm'
-												placeholder='e.g. whey-isolate-guide'
-												value={formData.slug || ''}
-												onChange={(e) =>
-													setFormData({ ...formData, slug: e.target.value })
-												}
-											/>
-										</div>
-
-										<div className='col-md-6'>
-											<label className='form-label fw-bold'>Category</label>
-											<SelectField
-												value={formData.category || 'Nutrition'}
-												onChange={(e: any) =>
-													setFormData({ ...formData, category: e.target.value })
-												}
-												options={[
-													{ label: 'Nutrition', value: 'Nutrition' },
-													{ label: 'Clinical Nutrition', value: 'Clinical Nutrition' },
-													{ label: 'Sports Performance', value: 'Sports Performance' },
-													{ label: 'Brand Story', value: 'Brand Story' },
-												]}
-												showLabel={false}
-												marginRemove={true}
-												hideDefaultOption={true}
-												searchable={false}
-											/>
-										</div>
-
-										<div className='col-md-6'>
-											<label className='form-label fw-bold'>Reading Time</label>
-											<input
-												type='text'
-												className='form-control form-control-sm'
-												value={formData.readTime || '6 min read'}
-												onChange={(e) =>
-													setFormData({ ...formData, readTime: e.target.value })
-												}
-											/>
-										</div>
-
-										<div className='col-md-6'>
-											<label className='form-label fw-bold'>Clinical Reviewer</label>
-											<input
-												type='text'
-												className='form-control form-control-sm'
-												value={formData.reviewer || 'Dt. Chirag Pandey, RD'}
-												onChange={(e) =>
-													setFormData({ ...formData, reviewer: e.target.value })
-												}
-											/>
-										</div>
-
-										<div className='col-12'>
-											<label className='form-label fw-bold'>Tags (Comma separated)</label>
-											<input
-												type='text'
-												className='form-control form-control-sm'
-												placeholder='nutrition, protein, guide'
-												value={tagsString}
-												onChange={(e) => setTagsString(e.target.value)}
-											/>
-										</div>
-
-										<div className='col-12'>
-											<label className='form-label fw-bold'>Short Description / Subtitle</label>
-											<textarea
-												className='form-control form-control-sm'
-												rows={2}
-												value={formData.desc || ''}
-												onChange={(e) =>
-													setFormData({ ...formData, desc: e.target.value })
-												}
-											/>
-										</div>
-
-										<div className='col-12'>
-											<label className='form-label fw-bold'>Cover Image URL</label>
-											<input
-												type='text'
-												className='form-control form-control-sm mb-2'
-												value={formData.image || ''}
-												onChange={(e) =>
-													setFormData({ ...formData, image: e.target.value })
-												}
-											/>
-											<div className='d-flex gap-2 flex-wrap'>
-												{PRESET_IMAGES.map((p, idx) => (
-													<button
-														key={idx}
-														type='button'
-														className='btn btn-xs btn-light-primary py-1 px-2 fs-8'
-														onClick={() =>
-															setFormData({ ...formData, image: p.url })
-														}
-													>
-														Preset: {p.label}
-													</button>
-												))}
-											</div>
-										</div>
-
-										<div className='col-md-6'>
-											<div className='form-check form-switch mt-3'>
-												<input
-													className='form-check-input'
-													type='checkbox'
-													id='statusSwitch'
-													checked={formData.status !== false}
-													onChange={(e) =>
-														setFormData({
-															...formData,
-															status: e.target.checked,
-														})
-													}
-												/>
-												<label className='form-check-label fw-bold' htmlFor='statusSwitch'>
-													Published (Visible on Website)
-												</label>
-											</div>
-										</div>
-
-										<div className='col-md-6'>
-											<div className='form-check form-switch mt-3'>
-												<input
-													className='form-check-input'
-													type='checkbox'
-													id='featuredSwitch'
-													checked={Boolean(formData.featured)}
-													onChange={(e) =>
-														setFormData({
-															...formData,
-															featured: e.target.checked,
-														})
-													}
-												/>
-												<label className='form-check-label fw-bold' htmlFor='featuredSwitch'>
-													Featured Article (Hero Banner)
-												</label>
-											</div>
-										</div>
-									</div>
+								{/* Navigation Tabs */}
+								<div className='bg-light px-6 pt-3 border-bottom'>
+									<ul className='nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-6 fw-bold'>
+										<li className='nav-item'>
+											<button
+												type='button'
+												className={`nav-link text-active-primary pb-3 ${
+													activeTab === 'details' ? 'active text-primary border-primary' : 'text-gray-600'
+												}`}
+												onClick={() => setActiveTab('details')}
+											>
+												<FontAwesomeIcon icon={faBookOpen} className='me-2' />
+												1. Overview
+											</button>
+										</li>
+										<li className='nav-item'>
+											<button
+												type='button'
+												className={`nav-link text-active-primary pb-3 ${
+													activeTab === 'media' ? 'active text-primary border-primary' : 'text-gray-600'
+												}`}
+												onClick={() => setActiveTab('media')}
+											>
+												<FontAwesomeIcon icon={faImage} className='me-2' />
+												2. Cover Image
+											</button>
+										</li>
+										<li className='nav-item'>
+											<button
+												type='button'
+												className={`nav-link text-active-primary pb-3 ${
+													activeTab === 'content' ? 'active text-primary border-primary' : 'text-gray-600'
+												}`}
+												onClick={() => setActiveTab('content')}
+											>
+												<FontAwesomeIcon icon={faLayerGroup} className='me-2' />
+												3. Body & Sections{' '}
+												<span className='badge badge-light-primary ms-1 fs-9'>
+													{sections.length}
+												</span>
+											</button>
+										</li>
+										<li className='nav-item'>
+											<button
+												type='button'
+												className={`nav-link text-active-primary pb-3 ${
+													activeTab === 'faqs_seo' ? 'active text-primary border-primary' : 'text-gray-600'
+												}`}
+												onClick={() => setActiveTab('faqs_seo')}
+											>
+												<FontAwesomeIcon icon={faQuestionCircle} className='me-2' />
+												4. FAQs & SEO{' '}
+												{faqs.length > 0 && (
+													<span className='badge badge-light-success ms-1 fs-9'>{faqs.length}</span>
+												)}
+											</button>
+										</li>
+									</ul>
 								</div>
-								<div className='modal-footer'>
+
+								{/* Modal Body */}
+								<div className='modal-body p-6 p-md-8' style={{ maxHeight: '68vh' }}>
+									{/* TAB 1: OVERVIEW & METADATA */}
+									{activeTab === 'details' && (
+										<div className='row g-4'>
+											<div className='col-12'>
+												<label className='form-label required fw-bold text-gray-800'>
+													Article Title
+												</label>
+												<input
+													type='text'
+													className='form-control form-control-solid'
+													placeholder='e.g., Plant Protein Guide: Benefits, Best Sources & Side Effects'
+													value={formData.title || ''}
+													onChange={(e) =>
+														setFormData({ ...formData, title: e.target.value })
+													}
+													required
+												/>
+											</div>
+
+											<div className='col-md-7'>
+												<div className='d-flex align-items-center justify-content-between mb-1'>
+													<label className='form-label fw-bold text-gray-800 mb-0'>
+														Slug (URL Identifier)
+													</label>
+													<button
+														type='button'
+														className='btn btn-link btn-color-primary p-0 fs-8'
+														onClick={handleGenerateSlug}
+													>
+														Auto-generate from title
+													</button>
+												</div>
+												<div className='input-group input-group-solid'>
+													<span className='input-group-text text-muted fs-8'>/blog/</span>
+													<input
+														type='text'
+														className='form-control form-control-solid'
+														placeholder='what-is-plant-protein-benefits-uses-and-side-effects'
+														value={formData.slug || ''}
+														onChange={(e) =>
+															setFormData({ ...formData, slug: e.target.value })
+														}
+													/>
+												</div>
+											</div>
+
+											<div className='col-md-5'>
+												<label className='form-label fw-bold text-gray-800'>Category</label>
+												<SelectField
+													value={formData.category || 'Nutrition'}
+													onChange={(e: any) =>
+														setFormData({ ...formData, category: e.target.value })
+													}
+													options={[
+														{ label: 'Nutrition', value: 'Nutrition' },
+														{ label: 'Clinical Nutrition', value: 'Clinical Nutrition' },
+														{ label: 'Sports Performance', value: 'Sports Performance' },
+														{ label: 'Brand Story', value: 'Brand Story' },
+													]}
+													showLabel={false}
+													marginRemove={true}
+													hideDefaultOption={true}
+													searchable={false}
+												/>
+											</div>
+
+											<div className='col-md-6'>
+												<label className='form-label fw-bold text-gray-800'>
+													Estimated Reading Time
+												</label>
+												<input
+													type='text'
+													className='form-control form-control-solid'
+													placeholder='e.g., 7 min read'
+													value={formData.readTime || '6 min read'}
+													onChange={(e) =>
+														setFormData({ ...formData, readTime: e.target.value })
+													}
+												/>
+											</div>
+
+											<div className='col-md-6'>
+												<label className='form-label fw-bold text-gray-800'>
+													Clinical / Medical Reviewer
+												</label>
+												<input
+													type='text'
+													className='form-control form-control-solid'
+													placeholder='e.g., Dt. Chirag Pandey, RD'
+													value={formData.reviewer || 'Dt. Chirag Pandey, RD'}
+													onChange={(e) =>
+														setFormData({ ...formData, reviewer: e.target.value })
+													}
+												/>
+											</div>
+
+											<div className='col-md-6'>
+												<label className='form-label fw-bold text-gray-800'>Author</label>
+												<input
+													type='text'
+													className='form-control form-control-solid'
+													placeholder='e.g., Gomzi Supplement by RAG'
+													value={formData.author || 'Gomzi Supplement by RAG'}
+													onChange={(e) =>
+														setFormData({ ...formData, author: e.target.value })
+													}
+												/>
+											</div>
+
+											<div className='col-md-6'>
+												<label className='form-label fw-bold text-gray-800'>
+													Tags (Comma-separated)
+												</label>
+												<input
+													type='text'
+													className='form-control form-control-solid'
+													placeholder='e.g., nutrition, plant-protein, vegan'
+													value={tagsString}
+													onChange={(e) => setTagsString(e.target.value)}
+												/>
+											</div>
+
+											<div className='col-12'>
+												<label className='form-label fw-bold text-gray-800'>
+													Short Summary / Excerpt
+												</label>
+												<textarea
+													className='form-control form-control-solid'
+													rows={3}
+													placeholder='A quick 1-2 sentence overview for the article preview card...'
+													value={formData.desc || ''}
+													onChange={(e) =>
+														setFormData({ ...formData, desc: e.target.value })
+													}
+												/>
+											</div>
+
+											<div className='col-md-6'>
+												<div
+													className='p-4 rounded-3 border d-flex align-items-center justify-content-between'
+													style={{ backgroundColor: '#F8FAFC' }}
+												>
+													<div>
+														<span className='fw-bold text-gray-800 d-block'>
+															Publication Status
+														</span>
+														<span className='fs-8 text-muted'>
+															{formData.status !== false
+																? 'Visible and live on public website'
+																: 'Draft only (hidden from readers)'}
+														</span>
+													</div>
+													<div className='form-check form-switch'>
+														<input
+															className='form-check-input'
+															type='checkbox'
+															id='statusToggle'
+															checked={formData.status !== false}
+															onChange={(e) =>
+																setFormData({ ...formData, status: e.target.checked })
+															}
+														/>
+													</div>
+												</div>
+											</div>
+
+											<div className='col-md-6'>
+												<div
+													className='p-4 rounded-3 border d-flex align-items-center justify-content-between'
+													style={{ backgroundColor: '#F8FAFC' }}
+												>
+													<div>
+														<span className='fw-bold text-gray-800 d-block'>
+															Hero Featured Article
+														</span>
+														<span className='fs-8 text-muted'>
+															Pin this publication to the top banner hero
+														</span>
+													</div>
+													<div className='form-check form-switch'>
+														<input
+															className='form-check-input'
+															type='checkbox'
+															id='featuredToggle'
+															checked={Boolean(formData.featured)}
+															onChange={(e) =>
+																setFormData({ ...formData, featured: e.target.checked })
+															}
+														/>
+													</div>
+												</div>
+											</div>
+										</div>
+									)}
+
+									{/* TAB 2: COVER IMAGE & MEDIA */}
+									{activeTab === 'media' && (
+										<div className='row g-5'>
+											<div className='col-md-6'>
+												<div className='card border shadow-none p-5 h-100'>
+													<h6 className='fw-bold text-gray-900 mb-3'>
+														<FontAwesomeIcon icon={faUpload} className='me-2 text-primary' />
+														Upload New Image
+													</h6>
+													<p className='fs-8 text-muted mb-4'>
+														Upload high-resolution editorial photography (WebP, PNG, or JPEG, 16:9 ratio recommended).
+													</p>
+
+													<div className='mb-4'>
+														<label
+															htmlFor='blogImageFileInput'
+															className={`btn btn-outline btn-outline-dashed btn-outline-primary d-flex flex-column align-items-center justify-content-center p-6 w-100 ${
+																uploadingImage ? 'disabled' : ''
+															}`}
+															style={{ cursor: uploadingImage ? 'wait' : 'pointer' }}
+														>
+															<FontAwesomeIcon
+																icon={uploadingImage ? faRotateLeft : faUpload}
+																className={`fs-1 text-primary mb-2 ${
+																	uploadingImage ? 'fa-spin' : ''
+																}`}
+															/>
+															<span className='fw-bold text-gray-800'>
+																{uploadingImage
+																	? 'Uploading image to CDN...'
+																	: 'Click to Choose File'}
+															</span>
+															<span className='fs-8 text-muted mt-1'>
+																Supports JPG, PNG, WebP up to 5MB
+															</span>
+														</label>
+														<input
+															type='file'
+															id='blogImageFileInput'
+															className='d-none'
+															accept='image/*'
+															onChange={handleImageFileUpload}
+															disabled={uploadingImage}
+														/>
+													</div>
+
+													<div className='separator my-3' />
+
+													<h6 className='fw-bold text-gray-900 mb-2 fs-7'>
+														Or Select a Curated Preset
+													</h6>
+													<div className='d-flex flex-column gap-2'>
+														{PRESET_IMAGES.map((preset, idx) => (
+															<button
+																key={idx}
+																type='button'
+																className={`btn btn-sm text-start py-2 px-3 border ${
+																	formData.image === preset.url
+																		? 'btn-light-primary border-primary fw-bold'
+																		: 'btn-light'
+																}`}
+																onClick={() =>
+																	setFormData({ ...formData, image: preset.url })
+																}
+															>
+																<FontAwesomeIcon icon={faCheck} className='me-2 opacity-50' />
+																{preset.label}
+															</button>
+														))}
+													</div>
+												</div>
+											</div>
+
+											<div className='col-md-6'>
+												<div className='card border shadow-none p-5 h-100'>
+													<h6 className='fw-bold text-gray-900 mb-3'>
+														<FontAwesomeIcon icon={faImage} className='me-2 text-primary' />
+														Image Preview & Direct URL
+													</h6>
+
+													<div className='mb-4'>
+														<label className='form-label fw-bold text-gray-800 fs-8'>
+															Direct Image URL
+														</label>
+														<input
+															type='text'
+															className='form-control form-control-solid form-control-sm'
+															placeholder='https://... or /images/blog-2.webp'
+															value={formData.image || ''}
+															onChange={(e) =>
+																setFormData({ ...formData, image: e.target.value })
+															}
+														/>
+													</div>
+
+													<div
+														className='rounded-3 overflow-hidden border bg-light d-flex align-items-center justify-content-center position-relative'
+														style={{ height: '220px' }}
+													>
+														<img
+															src={getPreviewUrl(formData.image)}
+															alt='Article preview'
+															className='w-100 h-100 object-fit-cover'
+															onError={(e: any) => {
+																e.target.src = '/images/blog-1.webp'
+															}}
+														/>
+														<div
+															className='position-absolute top-0 start-0 m-3 badge badge-primary shadow-sm'
+															style={{ fontSize: '11px' }}
+														>
+															{formData.category || 'Nutrition'}
+														</div>
+													</div>
+
+													<p className='fs-8 text-muted mt-3 mb-0'>
+														This image appears in the website science journal hero, article detail header, and social sharing OpenGraph previews.
+													</p>
+												</div>
+											</div>
+										</div>
+									)}
+
+									{/* TAB 3: BODY CONTENT & SECTIONS (WITH EMBEDDED TABLE BUTTON & BUILDER) */}
+									{activeTab === 'content' && (
+										<div>
+											{/* Introduction */}
+											<div className='card border shadow-none p-5 mb-5' style={{ backgroundColor: '#FAFBFD' }}>
+												<h6 className='fw-bold text-gray-900 mb-1'>
+													<FontAwesomeIcon icon={faHeading} className='me-2 text-primary' />
+													Introduction / Lead Paragraphs
+												</h6>
+												<p className='fs-8 text-muted mb-3'>
+													The opening paragraphs of the article that hook the reader. Separate multiple paragraphs by leaving an empty line.
+												</p>
+												<textarea
+													className='form-control form-control-solid'
+													rows={4}
+													placeholder='Enter the opening clinical breakdown or context here...'
+													value={introText}
+													onChange={(e) => setIntroText(e.target.value)}
+												/>
+											</div>
+
+											{/* Dynamic Sections Header */}
+											<div className='d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2'>
+												<div>
+													<h6 className='fw-bold text-gray-900 mb-0'>
+														<FontAwesomeIcon icon={faLayerGroup} className='me-2 text-primary' />
+														Article Content Sections ({sections.length})
+													</h6>
+													<p className='fs-8 text-muted mb-0'>
+														Structured H2 sub-sections with paragraphs, bullets, and tables.
+													</p>
+												</div>
+												<div className='d-flex gap-2 flex-wrap'>
+													<button
+														type='button'
+														className='btn btn-sm btn-light-primary text-primary fw-semibold'
+														onClick={handleSmartAddTable}
+														title='Attach a data table to this section or add a new table section'
+													>
+														<FontAwesomeIcon icon={faTable} className='me-1' /> Add Table
+													</button>
+													<button
+														type='button'
+														className='btn btn-sm btn-primary'
+														onClick={handleAddSection}
+													>
+														<FontAwesomeIcon icon={faPlus} className='me-1' /> Add Section
+													</button>
+												</div>
+											</div>
+
+											{sections.length === 0 ? (
+												<div className='text-center p-8 border rounded-3 text-muted bg-light'>
+													<p className='mb-2'>No sections added yet.</p>
+													<button
+														type='button'
+														className='btn btn-sm btn-primary'
+														onClick={handleAddSection}
+													>
+														<FontAwesomeIcon icon={faPlus} className='me-1' /> Add First Section
+													</button>
+												</div>
+											) : (
+												<div className='d-flex flex-column gap-4'>
+													{sections.map((section, sIdx) => (
+														<div
+															key={sIdx}
+															className='card border shadow-sm p-5'
+															style={{ borderRadius: '12px', backgroundColor: '#FFFFFF' }}
+														>
+															{/* Section Card Top Header */}
+															<div className='d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom flex-wrap gap-2'>
+																<span className='fw-bold text-gray-800 d-flex align-items-center gap-2'>
+																	<span className='badge badge-circle badge-primary fs-8'>
+																		{sIdx + 1}
+																	</span>
+																	Section #{sIdx + 1}: {section.heading || 'Untitled Section'}
+																</span>
+																<div className='d-flex align-items-center gap-2'>
+																	{!section.table ? (
+																		<button
+																			type='button'
+																			className='btn btn-sm btn-light-info py-1 px-3 fs-8'
+																			onClick={() => handleAddTableToSection(sIdx)}
+																			title='Add a data table into this section'
+																		>
+																			<FontAwesomeIcon icon={faTable} className='me-1 text-primary' /> Add Table
+																		</button>
+																	) : (
+																		<span className='badge badge-light-success fs-9 py-1 px-2 d-flex align-items-center gap-1'>
+																			<FontAwesomeIcon icon={faCheck} /> Table Attached ({section.table.rows.length} rows)
+																		</span>
+																	)}
+																	<button
+																		type='button'
+																		className='btn btn-sm btn-light-danger py-1 px-3 fs-8'
+																		onClick={() => handleRemoveSection(sIdx)}
+																		title='Delete this section'
+																	>
+																		<FontAwesomeIcon icon={faTrash} className='me-1' /> Remove
+																	</button>
+																</div>
+															</div>
+
+															<div className='row g-3'>
+																<div className='col-12'>
+																	<label className='form-label fw-bold fs-8 text-gray-700'>
+																		Section Heading (H2)
+																	</label>
+																	<input
+																		type='text'
+																		className='form-control form-control-solid form-control-sm'
+																		placeholder='e.g., Best Plant Protein Sources'
+																		value={section.heading}
+																		onChange={(e) =>
+																			handleSectionChange(sIdx, 'heading', e.target.value)
+																		}
+																	/>
+																</div>
+
+																<div className='col-12'>
+																	<label className='form-label fw-bold fs-8 text-gray-700'>
+																		Section Paragraphs (Leave empty line between paragraphs)
+																	</label>
+																	<textarea
+																		className='form-control form-control-solid form-control-sm'
+																		rows={3}
+																		placeholder='Body text for this section...'
+																		value={section.paragraphsText}
+																		onChange={(e) =>
+																			handleSectionChange(
+																				sIdx,
+																				'paragraphsText',
+																				e.target.value
+																			)
+																		}
+																	/>
+																</div>
+
+																<div className='col-md-7'>
+																	<label className='form-label fw-bold fs-8 text-gray-700'>
+																		Bullet Points (One bullet per line)
+																	</label>
+																	<textarea
+																		className='form-control form-control-solid form-control-sm'
+																		rows={3}
+																		placeholder='Point 1&#10;Point 2&#10;Point 3'
+																		value={section.bulletsText}
+																		onChange={(e) =>
+																			handleSectionChange(sIdx, 'bulletsText', e.target.value)
+																		}
+																	/>
+																</div>
+
+																<div className='col-md-5'>
+																	<label className='form-label fw-bold fs-8 text-gray-700'>
+																		Closing Paragraph / Note (Optional)
+																	</label>
+																	<textarea
+																		className='form-control form-control-solid form-control-sm'
+																		rows={3}
+																		placeholder='Summary takeaway for this section...'
+																		value={section.closingParagraph}
+																		onChange={(e) =>
+																			handleSectionChange(
+																				sIdx,
+																				'closingParagraph',
+																				e.target.value
+																			)
+																		}
+																	/>
+																</div>
+
+																{/* EMBEDDED SECTION DATA TABLE BUILDER */}
+																{section.table && (
+																	<div className='col-12 mt-4 pt-3 border-top'>
+																		<div
+																			className='p-4 border rounded-3'
+																			style={{ backgroundColor: '#F8FAFC' }}
+																		>
+																			{/* Section Table Bar */}
+																			<div className='d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2'>
+																				<span className='fw-bold text-gray-900 fs-7 d-flex align-items-center gap-2'>
+																					<FontAwesomeIcon icon={faTable} className='text-primary' />
+																					Section Data Table: {section.table.heading || 'Untitled Table'}
+																				</span>
+																				<button
+																					type='button'
+																					className='btn btn-sm btn-light-danger py-1 px-2 fs-8'
+																					onClick={() => handleRemoveTableFromSection(sIdx)}
+																					title='Remove table from this section'
+																				>
+																					<FontAwesomeIcon icon={faTimes} className='me-1' /> Remove Table
+																				</button>
+																			</div>
+
+																			{/* Table Title & Columns */}
+																			<div className='row g-3 mb-3'>
+																				<div className='col-md-6'>
+																					<label className='form-label fw-bold fs-8 text-gray-700'>
+																						Table Heading / Title *
+																					</label>
+																					<input
+																						type='text'
+																						className='form-control form-control-solid form-control-sm'
+																						placeholder='e.g., Food Sources & Protein Breakdown'
+																						value={section.table.heading}
+																						onChange={(e) =>
+																							handleSectionTableHeadingChange(sIdx, e.target.value)
+																						}
+																					/>
+																				</div>
+																				<div className='col-md-6'>
+																					<label className='form-label fw-bold fs-8 text-gray-700'>
+																						Column Headers (Comma-separated) *
+																					</label>
+																					<input
+																						type='text'
+																						className='form-control form-control-solid form-control-sm'
+																						placeholder='Food, Protein per 100g, Easy way to use it'
+																						value={section.table.columnsText}
+																						onChange={(e) =>
+																							handleSectionTableColumnsChange(sIdx, e.target.value)
+																						}
+																					/>
+																				</div>
+																			</div>
+
+																			{/* Quick Paste from Excel / Google Sheets */}
+																			<div className='p-3 mb-3 border rounded-3 bg-white'>
+																				<div className='d-flex align-items-center justify-content-between mb-1'>
+																					<span className='fw-bold fs-8 text-gray-800 d-flex align-items-center gap-1'>
+																						<FontAwesomeIcon icon={faPaste} className='text-primary me-1' />
+																						Quick Import from Excel, Google Sheets, or TSV / CSV
+																					</span>
+																				</div>
+																				<p className='fs-9 text-muted mb-2'>
+																					Paste copied spreadsheet cells here. First line will become column headers.
+																				</p>
+																				<div className='d-flex gap-2 flex-column flex-sm-row'>
+																					<textarea
+																						className='form-control form-control-solid form-control-sm'
+																						rows={2}
+																						placeholder='Paste spreadsheet rows here...'
+																						value={section.table.quickPasteText || ''}
+																						onChange={(e) => {
+																							const val = e.target.value
+																							setSections((prev) => {
+																								const next = [...prev]
+																								if (next[sIdx].table) {
+																									next[sIdx].table = {
+																										...next[sIdx].table!,
+																										quickPasteText: val,
+																									}
+																								}
+																								return next
+																							})
+																						}}
+																					/>
+																					<button
+																						type='button'
+																						className='btn btn-sm btn-light-primary text-nowrap align-self-start'
+																						onClick={() => handleSectionTableQuickParse(sIdx)}
+																						disabled={!section.table.quickPasteText?.trim()}
+																					>
+																						<FontAwesomeIcon icon={faPaste} className='me-1' /> Parse & Import
+																					</button>
+																				</div>
+																			</div>
+
+																			{/* Interactive Cell Grid */}
+																			<div className='table-responsive border rounded-3 mb-2 bg-white'>
+																				<table className='table table-sm table-bordered align-middle mb-0'>
+																					<thead style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}>
+																						<tr>
+																							<th style={{ width: '36px', textAlign: 'center', color: '#FFFFFF' }}>#</th>
+																							{section.table.columns.map((col, cIdx) => (
+																								<th key={cIdx} style={{ color: '#FFFFFF', fontWeight: 600 }}>
+																									{col || `Col ${cIdx + 1}`}
+																								</th>
+																							))}
+																							<th style={{ width: '45px', textAlign: 'center', color: '#FFFFFF' }}></th>
+																						</tr>
+																					</thead>
+																					<tbody>
+																						{section.table.rows.map((row, rIdx) => (
+																							<tr key={rIdx}>
+																								<td className='text-center text-muted fs-8 fw-bold'>
+																									{rIdx + 1}
+																								</td>
+																								{section.table.columns.map((_, cIdx) => (
+																									<td key={cIdx} style={{ minWidth: '140px', padding: '3px 5px' }}>
+																										<input
+																											type='text'
+																											className='form-control form-control-sm border-0'
+																											style={{ backgroundColor: '#F1F5F9', borderRadius: '5px' }}
+																											value={row[cIdx] || ''}
+																											onChange={(e) =>
+																												handleSectionTableCellChange(
+																													sIdx,
+																													rIdx,
+																													cIdx,
+																													e.target.value
+																												)
+																											}
+																											placeholder={`Cell (${rIdx + 1}, ${cIdx + 1})`}
+																										/>
+																									</td>
+																								))}
+																								<td className='text-center'>
+																									<button
+																										type='button'
+																										className='btn btn-icon btn-sm btn-light-danger py-1'
+																										onClick={() => handleRemoveSectionTableRow(sIdx, rIdx)}
+																										title='Delete Row'
+																									>
+																										<FontAwesomeIcon icon={faTimes} />
+																									</button>
+																								</td>
+																							</tr>
+																						))}
+																					</tbody>
+																				</table>
+																			</div>
+
+																			{/* Section Table Bottom Controls */}
+																			<div className='d-flex align-items-center justify-content-between pt-1'>
+																				<button
+																					type='button'
+																					className='btn btn-sm btn-light-primary'
+																					onClick={() => handleAddSectionTableRow(sIdx)}
+																				>
+																					<FontAwesomeIcon icon={faPlus} className='me-1' /> Add Row
+																				</button>
+																				<span className='fs-9 text-muted fw-semibold'>
+																					Rows: {section.table.rows.length} | Columns: {section.table.columns.length}
+																				</span>
+																			</div>
+																		</div>
+																	</div>
+																)}
+															</div>
+														</div>
+													))}
+												</div>
+											)}
+										</div>
+									)}
+
+									{/* TAB 4: FAQS & SEO */}
+									{activeTab === 'faqs_seo' && (
+										<div>
+											{/* Frequently Asked Questions */}
+											<div className='card border shadow-none p-5 mb-5'>
+												<div className='d-flex align-items-center justify-content-between mb-4'>
+													<div>
+														<h6 className='fw-bold text-gray-900 mb-0'>
+															<FontAwesomeIcon icon={faQuestionCircle} className='me-2 text-primary' />
+															Frequently Asked Questions ({faqs.length})
+														</h6>
+														<p className='fs-8 text-muted mb-0'>
+															Rendered in the article FAQ accordion and used for Google FAQ Rich Snippets schema.
+														</p>
+													</div>
+													<button
+														type='button'
+														className='btn btn-sm btn-light-primary'
+														onClick={handleAddFaq}
+													>
+														<FontAwesomeIcon icon={faPlus} className='me-1' /> Add FAQ
+													</button>
+												</div>
+
+												{faqs.length === 0 ? (
+													<p className='text-muted fs-8 mb-0 text-center py-4 bg-light rounded-3'>
+														No FAQs added yet. Click "+ Add FAQ" to add question-and-answer pairs.
+													</p>
+												) : (
+													<div className='d-flex flex-column gap-3'>
+														{faqs.map((faq, fIdx) => (
+															<div key={fIdx} className='p-4 border rounded-3 bg-light'>
+																<div className='d-flex align-items-center justify-content-between mb-2'>
+																	<span className='fw-bold fs-8 text-primary'>
+																		Q&A #{fIdx + 1}
+																	</span>
+																	<button
+																		type='button'
+																		className='btn btn-link btn-color-danger p-0 fs-8'
+																		onClick={() => handleRemoveFaq(fIdx)}
+																	>
+																		<FontAwesomeIcon icon={faTimes} className='me-1' /> Remove
+																	</button>
+																</div>
+																<div className='mb-2'>
+																	<input
+																		type='text'
+																		className='form-control form-control-solid form-control-sm'
+																		placeholder='Question: e.g., Is plant protein good for muscle building?'
+																		value={faq.question}
+																		onChange={(e) =>
+																			handleFaqChange(fIdx, 'question', e.target.value)
+																		}
+																	/>
+																</div>
+																<div>
+																	<textarea
+																		className='form-control form-control-solid form-control-sm'
+																		rows={2}
+																		placeholder='Answer explaining the evidence clearly...'
+																		value={faq.answer}
+																		onChange={(e) =>
+																			handleFaqChange(fIdx, 'answer', e.target.value)
+																		}
+																	/>
+																</div>
+															</div>
+														))}
+													</div>
+												)}
+											</div>
+
+											{/* Bottom Line Takeaway */}
+											<div className='card border shadow-none p-5 mb-5'>
+												<h6 className='fw-bold text-gray-900 mb-1'>
+													<FontAwesomeIcon icon={faCheck} className='me-2 text-success' />
+													The Bottom Line / Conclusion Callout
+												</h6>
+												<p className='fs-8 text-muted mb-3'>
+													The final clinical takeaway card displayed at the bottom of the article.
+												</p>
+
+												<div className='mb-3'>
+													<label className='form-label fw-bold fs-8 text-gray-700'>
+														Conclusion Heading
+													</label>
+													<input
+														type='text'
+														className='form-control form-control-solid form-control-sm'
+														placeholder='Conclusion'
+														value={bottomLineHeading}
+														onChange={(e) => setBottomLineHeading(e.target.value)}
+													/>
+												</div>
+
+												<div>
+													<label className='form-label fw-bold fs-8 text-gray-700'>
+														Conclusion Body Text
+													</label>
+													<textarea
+														className='form-control form-control-solid'
+														rows={3}
+														placeholder='Plant protein is a valuable part of a balanced diet...'
+														value={bottomLineText}
+														onChange={(e) => setBottomLineText(e.target.value)}
+													/>
+												</div>
+											</div>
+
+											{/* SEO Meta Tags */}
+											<div className='card border shadow-none p-5'>
+												<h6 className='fw-bold text-gray-900 mb-1'>
+													<FontAwesomeIcon icon={faSearch} className='me-2 text-primary' />
+													Search Engine Optimization (SEO Meta Tags)
+												</h6>
+												<p className='fs-8 text-muted mb-3'>
+													Configure how this article displays on Google Search results and social media embeds.
+												</p>
+
+												<div className='mb-3'>
+													<div className='d-flex justify-content-between align-items-center mb-1'>
+														<label className='form-label fw-bold fs-8 text-gray-700 mb-0'>
+															SEO Meta Title
+														</label>
+														<span className='fs-9 text-muted'>
+															{metaTitle.length}/60 characters
+														</span>
+													</div>
+													<input
+														type='text'
+														className='form-control form-control-solid form-control-sm'
+														placeholder='Plant Protein Guide: Benefits, Best Sources & Side Effects'
+														value={metaTitle}
+														onChange={(e) => setMetaTitle(e.target.value)}
+													/>
+												</div>
+
+												<div>
+													<div className='d-flex justify-content-between align-items-center mb-1'>
+														<label className='form-label fw-bold fs-8 text-gray-700 mb-0'>
+															SEO Meta Description
+														</label>
+														<span className='fs-9 text-muted'>
+															{metaDescription.length}/160 characters
+														</span>
+													</div>
+													<textarea
+														className='form-control form-control-solid form-control-sm'
+														rows={2}
+														placeholder='Discover plant protein benefits, types, uses, and side effects...'
+														value={metaDescription}
+														onChange={(e) => setMetaDescription(e.target.value)}
+													/>
+												</div>
+											</div>
+										</div>
+									)}
+								</div>
+
+								{/* Modal Footer */}
+								<div
+									className='modal-footer py-3 px-6 border-top d-flex justify-content-between'
+									style={{ backgroundColor: '#F8FAFC' }}
+								>
 									<button
 										type='button'
 										className='btn btn-sm btn-light'
@@ -681,13 +2105,49 @@ export default function BlogManage() {
 									>
 										Cancel
 									</button>
-									<button
-										type='submit'
-										className='btn btn-sm btn-primary'
-										disabled={saving}
-									>
-										{saving ? 'Saving...' : 'Save Article'}
-									</button>
+
+									<div className='d-flex gap-2'>
+										{activeTab !== 'details' && (
+											<button
+												type='button'
+												className='btn btn-sm btn-light-primary'
+												onClick={() => {
+													if (activeTab === 'media') setActiveTab('details')
+													else if (activeTab === 'content') setActiveTab('media')
+													else if (activeTab === 'faqs_seo') setActiveTab('content')
+												}}
+											>
+												&larr; Previous Tab
+											</button>
+										)}
+
+										{activeTab !== 'faqs_seo' ? (
+											<button
+												type='button'
+												className='btn btn-sm btn-primary'
+												onClick={() => {
+													if (activeTab === 'details') setActiveTab('media')
+													else if (activeTab === 'media') setActiveTab('content')
+													else if (activeTab === 'content') setActiveTab('faqs_seo')
+												}}
+											>
+												Next Tab &rarr;
+											</button>
+										) : null}
+
+										<button
+											type='submit'
+											className='btn btn-sm btn-success'
+											disabled={saving}
+										>
+											<FontAwesomeIcon icon={faCheck} className='me-1' />
+											{saving
+												? 'Saving Publication...'
+												: modalMode === 'create'
+												? 'Publish / Save Article'
+												: 'Save Changes'}
+										</button>
+									</div>
 								</div>
 							</form>
 						</div>
