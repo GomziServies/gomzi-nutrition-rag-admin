@@ -28,17 +28,22 @@ const AdminUserList: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [adminData, setAdminData] = useState<any>([])
 	const [loading, setLoading] = useState(false)
+	const [selectedRoleFilter, setSelectedRoleFilter] = useState<'ALL' | 'MASTER' | 'ADMIN'>('ALL')
 
 	const fetchBookData = async () => {
 		setLoading(true)
 		try {
 			const response: FGGroupAPIResponse = await GetAdminUsers()
-			const filterData = response.data.filter(
-				(admin: any) => admin.type !== 'Employee' && admin.type !== 'Trainer'
-			)
+			const list = Array.isArray(response?.data) ? response.data : []
+			// Only show persons belonging to Admin roles: MASTER and Admin
+			const filterData = list.filter((admin: any) => {
+				const role = (admin.type || '').toUpperCase()
+				return role === 'ADMIN' || role === 'MASTER'
+			})
 			setAdminData(filterData)
 		} catch (error) {
 			console.error('Error fetching admin users:', error)
+			setAdminData([])
 		} finally {
 			setLoading(false)
 		}
@@ -61,12 +66,18 @@ const AdminUserList: React.FC = () => {
 		setPagination({ ...pagination, itemsPerPage: value, page: 1 })
 	}
 
-	const filteredAdminData = adminData.filter((admin: any) =>
-		(admin.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-		(admin.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-		(admin.mobile || '').toString().includes(searchTerm) ||
-		(admin.type || '').toLowerCase().includes(searchTerm.toLowerCase())
-	)
+	const filteredAdminData = adminData.filter((admin: any) => {
+		const role = (admin.type || '').toUpperCase()
+		if (selectedRoleFilter === 'MASTER' && role !== 'MASTER') return false
+		if (selectedRoleFilter === 'ADMIN' && role !== 'ADMIN') return false
+
+		return (
+			(admin.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(admin.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(admin.mobile || '').toString().includes(searchTerm) ||
+			(admin.type || '').toLowerCase().includes(searchTerm.toLowerCase())
+		)
+	})
 
 	const paginatedAdminData = filteredAdminData.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
@@ -153,7 +164,7 @@ const AdminUserList: React.FC = () => {
 			    SUMMARY METRICS STRIP
 			    ========================================================================= */}
 			<div className='gz-mgmt-stats-grid'>
-				<div className='gz-mgmt-stat-card'>
+				<div className='gz-mgmt-stat-card' onClick={() => { setSelectedRoleFilter('ALL'); setPagination(p => ({ ...p, page: 1 })) }} style={{ cursor: 'pointer', outline: selectedRoleFilter === 'ALL' ? '2px solid #2563EB' : 'none' }} title='Filter to all admin accounts'>
 					<div className='gz-mgmt-stat-icon blue'>
 						<FontAwesomeIcon icon={faUserShield} />
 					</div>
@@ -167,7 +178,7 @@ const AdminUserList: React.FC = () => {
 					</div>
 				</div>
 
-				<div className='gz-mgmt-stat-card'>
+				<div className='gz-mgmt-stat-card' onClick={() => { setSelectedRoleFilter('MASTER'); setPagination(p => ({ ...p, page: 1 })) }} style={{ cursor: 'pointer', outline: selectedRoleFilter === 'MASTER' ? '2px solid #9333EA' : 'none' }} title='Filter to Master role only'>
 					<div className='gz-mgmt-stat-icon purple'>
 						<FontAwesomeIcon icon={faCrown} />
 					</div>
@@ -199,7 +210,7 @@ const AdminUserList: React.FC = () => {
 					</div>
 				</div>
 
-				<div className='gz-mgmt-stat-card'>
+				<div className='gz-mgmt-stat-card' onClick={() => { setSelectedRoleFilter('ADMIN'); setPagination(p => ({ ...p, page: 1 })) }} style={{ cursor: 'pointer', outline: selectedRoleFilter === 'ADMIN' ? '2px solid #D97706' : 'none' }} title='Filter to Admin role only'>
 					<div className='gz-mgmt-stat-icon amber'>
 						<FontAwesomeIcon icon={faUser} />
 					</div>
@@ -222,11 +233,34 @@ const AdminUserList: React.FC = () => {
 			<div className='gz-mgmt-card'>
 				{/* Toolbar */}
 				<div className='gz-mgmt-toolbar'>
-					<div className='gz-mgmt-toolbar-left'>
+					<div className='gz-mgmt-toolbar-left flex-wrap gap-2'>
 						<SearchFilter
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
 						/>
+						<div className='d-inline-flex align-items-center gap-1 p-1 bg-light rounded-pill'>
+							<button
+								type='button'
+								onClick={() => { setSelectedRoleFilter('ALL'); setPagination(p => ({ ...p, page: 1 })) }}
+								className={`btn btn-sm py-1.5 px-3 rounded-pill fw-bold ${selectedRoleFilter === 'ALL' ? 'btn-primary shadow-sm text-white' : 'btn-light text-muted'}`}
+								style={{ fontSize: '12px' }}>
+								All Admins ({totalAdmins})
+							</button>
+							<button
+								type='button'
+								onClick={() => { setSelectedRoleFilter('MASTER'); setPagination(p => ({ ...p, page: 1 })) }}
+								className={`btn btn-sm py-1.5 px-3 rounded-pill fw-bold ${selectedRoleFilter === 'MASTER' ? 'btn-primary shadow-sm text-white' : 'btn-light text-muted'}`}
+								style={{ fontSize: '12px' }}>
+								Master ({masterAdmins})
+							</button>
+							<button
+								type='button'
+								onClick={() => { setSelectedRoleFilter('ADMIN'); setPagination(p => ({ ...p, page: 1 })) }}
+								className={`btn btn-sm py-1.5 px-3 rounded-pill fw-bold ${selectedRoleFilter === 'ADMIN' ? 'btn-primary shadow-sm text-white' : 'btn-light text-muted'}`}
+								style={{ fontSize: '12px' }}>
+								Admin ({standardAdmins})
+							</button>
+						</div>
 						<div className='d-inline-block'>
 							<LengthMenu
 								expenseData={paginatedAdminData}

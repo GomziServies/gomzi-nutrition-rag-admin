@@ -277,8 +277,20 @@ const NutritionUpdateInvoice: React.FC = () => {
 						const u = String(product.weight.unit).toLowerCase();
 						newPlans[index].item_weight_type = u === 'g' ? 'gm' : u;
 					}
-				} else if (typeof product.weight === 'number' || typeof product.weight === 'string') {
+				} else if (typeof product.weight === 'number') {
 					newPlans[index].item_weight = String(product.weight);
+				} else if (typeof product.weight === 'string') {
+					const str = String(product.weight).trim();
+					const match = str.match(/^([\d.]+)\s*([a-zA-Z]+)?$/);
+					if (match) {
+						newPlans[index].item_weight = match[1];
+						if (match[2]) {
+							const u = match[2].toLowerCase();
+							newPlans[index].item_weight_type = u === 'g' ? 'gm' : u;
+						}
+					} else {
+						newPlans[index].item_weight = str;
+					}
 				}
 			}
 
@@ -356,17 +368,21 @@ const NutritionUpdateInvoice: React.FC = () => {
 				product_id: plan.type === 'product' ? plan.product_id : undefined,
 				variant_id: plan.type === 'product' ? plan.variant_id : undefined,
 				item_name: plan.items,
+				item_type: plan.item_type,
 				item_weight: plan.item_weight ? Number(plan.item_weight) : 0,
 				item_weight_type: plan.item_weight_type || 'kg',
-				amount: plan.amount,
-				totalAmount: plan.totalPayment,
-				quantity: plan.quantity,
+				amount: Number(plan.amount),
+				gst: Number(plan.gst || 0),
+				discount: Number(plan.discount || 0),
+				totalAmount: Number(plan.totalPayment),
+				quantity: Number(plan.quantity),
 				duration: plan.duration_number ? `${plan.duration_number} ${plan.duration}` : '1 Days',
+				isDiscountPercentage: plan.isDiscountPercentage,
 			}))
 
 			const payload: any = {
 				id: String(invoiceId),
-				invoice_number: Number(formData.invoice_number),
+				invoice_number: isNaN(Number(formData.invoice_number)) ? formData.invoice_number : Number(formData.invoice_number),
 				date: DayJS(formData.date).format('YYYY/MM/DD'),
 				name: formData.name,
 				branch_name: formData.branch_name,
@@ -374,9 +390,14 @@ const NutritionUpdateInvoice: React.FC = () => {
 				other_sales_person: formData.other_sales_person,
 				email: formData.email,
 				mobile: formData.mobile,
+				gst_number: formData.gst_number,
+				pan_number: formData.pan_number,
 				payment_method: formData.payment_method,
+				amount: Number(formData.net_amount),
+				gst: Number(formData.gst || plans[0]?.gst || 0),
+				discount: Number(formData.discount || 0),
 				net_amount: Number(formData.net_amount),
-				paid_amount: Number(formData.paid_amount),
+				paid_amount: Number(formData.paid_amount || 0),
 				note: formData.note,
 				items: plansData,
 				billing_address: {

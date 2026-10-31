@@ -32,6 +32,27 @@ import '../../gomzi-nutrition/common-management.css'
 import '../../gomzi-nutrition/products-theme.css'
 import '../../gomzi-nutrition/orders-theme.css'
 
+// Helper to decode logged in session from auth token
+const getLoggedInSession = () => {
+	try {
+		const token = localStorage.getItem('auth_fg_group')
+		if (!token) return null
+		const parts = token.split('.')
+		if (parts.length < 2) return null
+		const base64Url = parts[1]
+		const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+		const jsonPayload = decodeURIComponent(
+			atob(base64)
+				.split('')
+				.map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+				.join('')
+		)
+		return JSON.parse(jsonPayload)
+	} catch (e) {
+		return null
+	}
+}
+
 const EditAdminUser: React.FC = () => {
 	const location = useLocation()
 	const searchParams = new URLSearchParams(location.search)
@@ -55,6 +76,12 @@ const EditAdminUser: React.FC = () => {
 	const [isUpdating, setIsUpdating] = useState(false)
 	const [isResetting, setIsResetting] = useState(false)
 
+	const sessionUser = getLoggedInSession()
+	const isMaster = (sessionUser?.type || '').toUpperCase() === 'MASTER'
+	const isAdmin = (sessionUser?.type || '').toUpperCase() === 'ADMIN' || isMaster
+	const isEditingSelf = Boolean(sessionUser?.id && sessionUser.id.toString() === admin_id?.toString())
+	const canChangeRole = isAdmin
+
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = event.target
 		setAdminData((prevData: any) => ({
@@ -76,7 +103,10 @@ const EditAdminUser: React.FC = () => {
 	const fetchAdminData = async () => {
 		try {
 			const response: FGGroupAPIResponse = await GetAdminUsers({ adminID: admin_id })
-			setAdminData(response.data)
+			const data = response?.data || {}
+			if (data.type && data.type.toUpperCase() === 'ADMIN') data.type = 'Admin'
+			if (data.type && data.type.toUpperCase() === 'MASTER') data.type = 'MASTER'
+			setAdminData(data)
 		} catch (error) {
 			console.error('Error fetching admin data:', error)
 		}
@@ -85,11 +115,14 @@ const EditAdminUser: React.FC = () => {
 	const handleUpdateButtonClick = async () => {
 		try {
 			setIsUpdating(true)
-			const payload = {
+			const payload: any = {
 				full_name: adminData.full_name,
 				mobile: adminData.mobile,
 				email: adminData.email,
 				id: admin_id,
+			}
+			if (canChangeRole && adminData.type) {
+				payload.type = adminData.type
 			}
 
 			await UpdateAdmin(payload)
@@ -140,32 +173,36 @@ const EditAdminUser: React.FC = () => {
 	}, [])
 
 	const removeAdmin = async (admin_id: string) => {
-		try {
-			Swal.fire({
-				title: 'Remove This Admin?',
-				text: `Are you sure you want to permanently delete the admin account for "${adminData.full_name || 'this user'}"?`,
-				icon: 'warning',
-				showCancelButton: true,
-				confirmButtonColor: '#DC2626',
-				cancelButtonColor: '#71809A',
-				confirmButtonText: 'Yes, Remove Admin',
-				cancelButtonText: 'Cancel',
-			}).then(async (result) => {
+			try {
+				const result = await Swal.fire({
+					title: 'Remove This Admin?',
+					text: `Are you sure you want to permanently delete the admin account for "${adminData.full_name || 'this user'}"?`,
+					icon: 'warning',
+					showCancelButton: true,
+					confirmButtonColor: '#DC2626',
+					cancelButtonColor: '#71809A',
+					confirmButtonText: 'Yes, Remove Admin',
+					cancelButtonText: 'Cancel',
+				})
+	
 				if (result.isConfirmed) {
-					const response: FGGroupAPIResponse = await RemoveAdminUser({ id: admin_id })
-					if (response.status === 200) {
+					const response: any = await RemoveAdminUser({ id: admin_id })
+					if (response?.status === 200 || response?.data?.status === 200) {
 						toast.success('Admin removed successfully')
 						navigate('/rag/admin')
 					} else {
-						toast.error('Failed to Remove Admin')
+						toast.error(response?.message || 'Failed to remove admin')
 					}
 				}
-			})
-		} catch (error: any) {
-			console.error('Error Removing Admin:', error)
-			toast.error(error.message || 'Failed to remove admin')
+			} catch (error: any) {
+				console.error('Error Removing Admin:', error)
+				const errorMsg =
+					error?.response?.data?.message ||
+					error?.message ||
+					'Failed to remove admin'
+				toast.error(errorMsg)
+			}
 		}
-	}
 
 	const renderRoleBadge = (type: string) => {
 		const upper = (type || '').toUpperCase()
@@ -292,34 +329,48 @@ const EditAdminUser: React.FC = () => {
 
 							<div className='col-md-6'>
 								<label
-									htmlFor='type'
-									className='fs-7 fw-bold mb-1 d-block'
-									style={{ color: '#172B4D' }}>
-									Role Type (Fixed)
-								</label>
-								<select
-									disabled
-									name='type'
-									id='type'
-									className='form-control form-select form-control-solid'
-									value={adminData.type}
-									onChange={handleInputChange}
+																	htmlFor='type'
+																	className='fs-7 fw-bold mb-1 d-block'
+																	style={{ color: '#172B4D' }}>
+																	Role Type / Privilege Level *
+																	{!canChangeRole && (
+																		<span className='badge badge-light-danger fs-9 ms-2 py-1 px-2' style={{ borderRadius: '6px' }}>
+																			Restricted
+																		</span>
+																	)}
+																</label>
+																<select
+																	disabled={!canChangeRole}
+																	name='type'
+																	id='type'
+																	className='form-control form-select'
+																	value={adminData.type || ''}
+																	onChange={handleInputChange}
+																	style={{
+																		height: '44px',
+																		borderColor: canChangeRole ? '#E4EAF2' : '#CBD5E1',
+																		backgroundColor: canChangeRole ? '#FFFFFF' : '#F1F5F9',
+																		color: canChangeRole ? '#172B4D' : '#64748B',
+																		borderRadius: '10px',
+																		fontWeight: 500,
+																		cursor: canChangeRole ? 'default' : 'not-allowed',
+																	}}>
+																	<option value='MASTER'>MASTER (Full System Access)</option>
+																										<option value='Admin'>Admin (Platform Administrator)</option>
+																										{adminData.type &&
+																											adminData.type.toUpperCase() !== 'MASTER' &&
+																											adminData.type.toUpperCase() !== 'ADMIN' && (
+																												<option value={adminData.type}>{adminData.type} (Non-Admin)</option>
+																										)}
+																</select>
+																<span
+									className='fs-8 mt-1 d-block fw-semibold'
 									style={{
-										height: '44px',
-										backgroundColor: '#F5F7FB',
-										borderColor: '#E4EAF2',
-										color: '#556987',
-										borderRadius: '10px',
-										cursor: 'not-allowed',
-										fontWeight: 600,
+										color: canChangeRole ? '#16A34A' : '#DC2626',
 									}}>
-									<option value='MASTER'>Master</option>
-									<option value='ADMIN'>Admin</option>
-									<option value='FRANCHISE'>Franchise</option>
-									<option value='Store'>Store</option>
-								</select>
-								<span className='fs-8 text-muted mt-1 d-block'>
-									Role assignments are restricted and cannot be altered here.
+									{canChangeRole
+										? '✓ As an Administrator, you can change the role of any person and remove them.'
+										: '🔒 Role assignments and removals are restricted to Administrators only.'}
 								</span>
 							</div>
 

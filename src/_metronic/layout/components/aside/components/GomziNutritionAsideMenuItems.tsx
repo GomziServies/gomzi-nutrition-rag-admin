@@ -76,13 +76,11 @@ export function GomziNutritionAsideMenuItems() {
 				/>
 			</AsideMenuItemWithSub>
 
-			{isMasterAdmin && (
-				<AsideMenuItem
-					to='/rag/admin'
-					Icon={ShieldCheckIcon}
-					title='Admin User'
-				/>
-			)}
+			<AsideMenuItem
+				to='/rag/admin'
+				Icon={ShieldCheckIcon}
+				title='Admin Users'
+			/>
 
 			{/* 2. Products & Catalog */}
 			<AsideMenuItemWithSub

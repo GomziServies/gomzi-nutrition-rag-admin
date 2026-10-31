@@ -20,7 +20,9 @@ import SelectField from '../../../components/SelectField'
 import NumberTicker from '../../../components/NumberTicker'
 import SearchFilter from '../../../components/SearchFilter'
 import GomziTablePagination from '../../../components/GomziTablePagination'
-import { GetOrders } from '../../../Functions/FGGroup'
+import toast from 'react-hot-toast'
+import { GetOrders, UpdateOrder } from '../../../Functions/FGGroup'
+import '../orders-theme.css'
 import '../products-theme.css'
 
 const ProductOrder: React.FC = () => {
@@ -577,9 +579,30 @@ const ProductOrder: React.FC = () => {
 												</span>
 											</td>
 											<td>
-												<span className={`gz-prod-badge ${order.status === 'SUCCESS' ? 'delivered' : order.status === 'PENDING' ? 'placed' : 'cancelled'}`}>
-													{order.status === 'PENDING' ? 'Pending Payment' : order.status || 'N/A'}
-												</span>
+												<select
+													className={`gz-status-select gz-status-pill ${
+														(order.status || '').toLowerCase() === 'success'
+															? 'success'
+															: (order.status || '').toLowerCase() === 'pending'
+															? 'pending'
+															: (order.status || '').toLowerCase() === 'failed' || (order.status || '').toLowerCase() === 'cancelled'
+															? 'danger'
+															: (order.status || '').toLowerCase() === 'refunded'
+															? 'primary'
+															: 'secondary'
+													}`}
+													style={{ fontSize: '12px', padding: '3px 8px', height: 'auto', border: '1px solid rgba(0,0,0,0.1)' }}
+													value={order.status || 'PENDING'}
+													onClick={(e) => e.stopPropagation()}
+													onChange={(e) => handleQuickStatusChange(order._id, e.target.value)}
+													title='Click to change order status'
+												>
+													<option value='SUCCESS'>SUCCESS</option>
+													<option value='PENDING'>PENDING</option>
+													<option value='CANCELLED'>CANCELLED</option>
+													<option value='FAILED'>FAILED</option>
+													<option value='REFUNDED'>REFUNDED</option>
+												</select>
 											</td>
 											<td>
 												{renderStatusBadge(shipment_status)}

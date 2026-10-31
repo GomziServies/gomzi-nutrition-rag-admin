@@ -541,14 +541,15 @@ const ProductOrderView: React.FC = () => {
 
 								{/* Modern Stepper matching 5-step UI */}
 								<div className='gz-order-tracker'>
+									<div className='gz-order-tracker-line-bg' />
+									<div
+										className='gz-order-tracker-line-fill'
+										style={{
+											width: `${Math.max(0, Math.min(100, (activeStep / (steps.length - 1)) * 100))}%`,
+										}}
+									/>
 									{steps.map((step, index) => {
-										const isCompleted =
-											activeStep >= index ||
-											trackingList?.some(
-												(t: any) =>
-													(t.shipment_status === step || (step === 'SHIPPED' && t.shipment_status === 'DISPATCHED')) &&
-													t.status !== false
-											)
+										const isCompleted = activeStep >= index
 										const trackInfo = trackingList?.find(
 											(t: any) => t.shipment_status === step || (step === 'SHIPPED' && t.shipment_status === 'DISPATCHED')
 										)

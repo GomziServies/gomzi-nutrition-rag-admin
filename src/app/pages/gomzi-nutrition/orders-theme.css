@@ -156,15 +156,27 @@
 	padding: 0 10px;
 }
 
-.gz-order-tracker::before {
-	content: '';
+.gz-order-tracker-line-bg {
 	position: absolute;
 	top: 24px;
-	left: 40px;
-	right: 40px;
-	height: 3px;
+	left: 45px;
+	right: 45px;
+	height: 4px;
 	background: #E2E8F0;
 	z-index: 1;
+	border-radius: 2px;
+}
+
+.gz-order-tracker-line-fill {
+	position: absolute;
+	top: 24px;
+	left: 45px;
+	height: 4px;
+	background: #00C853;
+	z-index: 1;
+	border-radius: 2px;
+	transition: width 0.35s ease;
+	max-width: calc(100% - 90px);
 }
 
 .gz-order-step {

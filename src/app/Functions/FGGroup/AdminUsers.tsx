@@ -35,6 +35,7 @@ export function UpdateAdmin(body: {
 	email: string
 	mobile: string
 	id: string
+	type?: string
 }): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.UpdateAdminUsers, getAPIHeaders('fg_group'), undefined, body)
 }

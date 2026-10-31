@@ -197,22 +197,20 @@ const GomziNutritionPrivateRoutes = () => {
 					path='/product-list/variation-add'
 					element={<AddGomziNutritionVariationProduct />}
 				/>
-				<Route
-					path='/admin'
-					element={<AdminUserList />}
-				/>
-				<Route
-					path='/admin-user-edit'
-					element={<EditAdminUser />}
-				/>
-				<Route
-					path='/admin-user-add'
-					element={<AddAdminUser />}
-				/>
-				<Route
-					path='/admin-profile'
-					element={<AdminProfileView />}
-				/>
+				<Route path='admin' element={<AdminUserList />} />
+				<Route path='/admin' element={<AdminUserList />} />
+				<Route path='admin-user' element={<AdminUserList />} />
+				<Route path='/admin-user' element={<AdminUserList />} />
+				<Route path='admin-users' element={<AdminUserList />} />
+				<Route path='/admin-users' element={<AdminUserList />} />
+				<Route path='admins' element={<AdminUserList />} />
+				<Route path='/admins' element={<AdminUserList />} />
+				<Route path='admin-user-edit' element={<EditAdminUser />} />
+				<Route path='/admin-user-edit' element={<EditAdminUser />} />
+				<Route path='admin-user-add' element={<AddAdminUser />} />
+				<Route path='/admin-user-add' element={<AddAdminUser />} />
+				<Route path='admin-profile' element={<AdminProfileView />} />
+				<Route path='/admin-profile' element={<AdminProfileView />} />
 				<Route
 					path='/add-to-cart'
 					element={<AddToCart />}

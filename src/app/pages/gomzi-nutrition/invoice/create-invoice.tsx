@@ -214,8 +214,20 @@ const NutritionCreateInvoice: React.FC = () => {
 						const u = String(product.weight.unit).toLowerCase();
 						newPlans[index].item_weight_type = u === 'g' ? 'gm' : u;
 					}
-				} else if (typeof product.weight === 'number' || typeof product.weight === 'string') {
+				} else if (typeof product.weight === 'number') {
 					newPlans[index].item_weight = String(product.weight);
+				} else if (typeof product.weight === 'string') {
+					const str = String(product.weight).trim();
+					const match = str.match(/^([\d.]+)\s*([a-zA-Z]+)?$/);
+					if (match) {
+						newPlans[index].item_weight = match[1];
+						if (match[2]) {
+							const u = match[2].toLowerCase();
+							newPlans[index].item_weight_type = u === 'g' ? 'gm' : u;
+						}
+					} else {
+						newPlans[index].item_weight = str;
+					}
 				}
 			}
 
@@ -324,8 +336,8 @@ const NutritionCreateInvoice: React.FC = () => {
 				item_weight: plan.item_weight ? Number(plan.item_weight) : 0,
 				item_weight_type: plan.item_weight_type || 'kg',
 				amount: Number(plan.amount),
-				gst: Number(plan.gst),
-				discount: Number(plan.discount),
+				gst: Number(plan.gst || 0),
+				discount: Number(plan.discount || 0),
 				totalAmount: plan.totalPayment,
 				quantity: plan.quantity,
 				duration: plan.duration_number ? `${plan.duration_number} ${plan.duration}` : '',
@@ -334,7 +346,7 @@ const NutritionCreateInvoice: React.FC = () => {
 
 			const payload: any = {
 				invoice_category: adminType === 'Store' ? adminType : 'Gomzi Nutrition',
-				invoice_number: Number(formData.invoice_number),
+				invoice_number: isNaN(Number(formData.invoice_number)) ? formData.invoice_number : Number(formData.invoice_number),
 				date: DayJS(formData.date).format('YYYY/MM/DD'),
 				name: formData.name,
 				branch_name: finalBranch,

@@ -90,17 +90,19 @@ const EmployeeDetail: React.FC = () => {
 
 			const filteredData: any = employee.map((item: any) => ({
 				_id: item?._id,
-				employee_code: item?.employee_code,
-				name: item?.full_name,
-				position: item?.position,
-				salary: item?.salary,
-				address: item?.address,
-				photo: item?.photo,
-				mobile: item?.mobile,
-				bank_name: item?.account_details?.bank_name,
-				account_details: item?.account_details?.account_number,
-				IFSC: item?.account_details?.IFSC,
-				document: item.document,
+				employee_code: item?.employee_code || (item?._id ? `EMP-${item._id.toString().slice(-4).toUpperCase()}` : '-'),
+				name: item?.full_name || item?.name || 'N/A',
+				email: item?.email || '-',
+				type: item?.type || 'Staff',
+				position: item?.position || item?.type || 'Employee',
+				salary: item?.salary || '0',
+				address: item?.address || '-',
+				photo: item?.photo || '',
+				mobile: item?.mobile || '-',
+				bank_name: item?.account_details?.bank_name || '-',
+				account_details: item?.account_details?.account_number || '-',
+				IFSC: item?.account_details?.IFSC || '-',
+				document: item.document || [],
 			}))
 			setEmployeeData(filteredData)
 
@@ -147,6 +149,8 @@ const EmployeeDetail: React.FC = () => {
 				'No': index + 1,
 				'Employee Code': emp.employee_code || '-',
 				'Full Name': emp.full_name || emp.name || '-',
+				'Email': emp.email || '-',
+				'Role': emp.type || '-',
 				'Position': emp.position || '-',
 				'Mobile': emp.mobile || '-',
 				'Salary': emp.salary || '-',
@@ -433,7 +437,7 @@ const EmployeeDetail: React.FC = () => {
 													/>
 													<div className='gz-mgmt-identity-info'>
 														<span className='name'>{employee.name}</span>
-														<span className='sub'>{employee.mobile || '-'}</span>
+														<span className='sub'>{employee.email && employee.email !== '-' ? `${employee.email} • ` : ''}{employee.mobile || '-'}</span>
 													</div>
 												</div>
 											</td>
