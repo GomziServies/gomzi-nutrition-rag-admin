@@ -669,6 +669,39 @@
 	box-shadow: 0 0 0 3px rgba(23, 43, 77, 0.08);
 }
 
+/* Compound Weight + Unit input group */
+.gz-inv-weight-group {
+	display: flex;
+	align-items: stretch;
+	width: 100%;
+}
+
+.gz-inv-weight-group .gz-inv-weight-input {
+	flex: 1 1 58%;
+	border-top-right-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
+	border-right: none !important;
+	min-width: 0;
+}
+
+.gz-inv-weight-group .gz-inv-weight-select {
+	flex: 0 0 42%;
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
+	background-color: #F8FAFC;
+	font-weight: 600;
+	color: #334155;
+	padding: 10px 8px;
+	cursor: pointer;
+	min-width: 68px;
+}
+
+.gz-inv-weight-group .gz-inv-weight-input:focus,
+.gz-inv-weight-group .gz-inv-weight-select:focus {
+	position: relative;
+	z-index: 2;
+}
+
 .gz-inv-textarea {
 	padding: 12px 14px;
 	background: var(--gz-inv-white);

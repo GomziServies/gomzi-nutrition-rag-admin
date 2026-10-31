@@ -268,6 +268,20 @@ const NutritionUpdateInvoice: React.FC = () => {
 			newPlans[index].amount = String(product.price || product.amount || 0)
 			newPlans[index].inputField = false
 
+			if (product.weight) {
+				if (typeof product.weight === 'object') {
+					if (product.weight.amount !== undefined && product.weight.amount !== null) {
+						newPlans[index].item_weight = String(product.weight.amount);
+					}
+					if (product.weight.unit) {
+						const u = String(product.weight.unit).toLowerCase();
+						newPlans[index].item_weight_type = u === 'g' ? 'gm' : u;
+					}
+				} else if (typeof product.weight === 'number' || typeof product.weight === 'string') {
+					newPlans[index].item_weight = String(product.weight);
+				}
+			}
+
 			const q = parseFloat(newPlans[index].quantity) || 1
 			const amt = parseFloat(newPlans[index].amount) || 0
 			const gst = parseFloat(newPlans[index].gst) || 0
@@ -337,9 +351,13 @@ const NutritionUpdateInvoice: React.FC = () => {
 	const handleUpdateInvoice = async () => {
 		setIsSubmitting(true)
 		try {
-			const plansData = plans.map((plan) => ({
+						const plansData = plans.map((plan) => ({
 				_id: plan._id,
+				product_id: plan.type === 'product' ? plan.product_id : undefined,
+				variant_id: plan.type === 'product' ? plan.variant_id : undefined,
 				item_name: plan.items,
+				item_weight: plan.item_weight ? Number(plan.item_weight) : 0,
+				item_weight_type: plan.item_weight_type || 'kg',
 				amount: plan.amount,
 				totalAmount: plan.totalPayment,
 				quantity: plan.quantity,
@@ -824,12 +842,31 @@ const NutritionUpdateInvoice: React.FC = () => {
 
 												<div className='col-6 col-md-3'>
 													<label className='gz-inv-label'>Weight</label>
-													<input
-														type='text'
-														className='gz-inv-input'
-														value={plan.item_weight}
-														onChange={(e) => handlePlanChange(idx, 'item_weight', e.target.value)}
-													/>
+													<div className='gz-inv-weight-group'>
+														<input
+															type='number'
+															step='any'
+															min='0'
+															className='gz-inv-input gz-inv-weight-input'
+															placeholder='1'
+															value={plan.item_weight}
+															onChange={(e) => handlePlanChange(idx, 'item_weight', e.target.value)}
+														/>
+														<select
+															className='gz-inv-select gz-inv-weight-select'
+															value={plan.item_weight_type || 'kg'}
+															onChange={(e) => handlePlanChange(idx, 'item_weight_type', e.target.value)}
+														>
+															<option value='kg'>kg</option>
+															<option value='gm'>gm</option>
+															<option value='ml'>ml</option>
+															<option value='ltr'>ltr</option>
+															<option value='servings'>servings</option>
+															<option value='capsules'>capsules</option>
+															<option value='tablets'>tablets</option>
+															<option value='pcs'>pcs</option>
+														</select>
+													</div>
 												</div>
 
 												<div className='col-6 col-md-4'>
