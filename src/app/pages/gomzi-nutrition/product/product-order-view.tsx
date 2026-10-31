@@ -20,7 +20,7 @@ import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import { GetOrders, SetProductOrderTrackingStatus } from '../../../Functions/FGGroup'
+import { GetOrders, SetProductOrderTrackingStatus, UpdateOrder } from '../../../Functions/FGGroup'
 import '../products-theme.css'
 import '../orders-theme.css'
 
@@ -34,8 +34,48 @@ const ProductOrderView: React.FC = () => {
 	const [orderData, setOrderData] = useState<any>([])
 	const [showDiv, setShowDiv] = useState(false)
 	const [loading, setLoading] = useState(true)
+	const [updatingStatus, setUpdatingStatus] = useState(false)
 
-	const steps: ShipmentStatusValue[] = ['PLACED', 'DISPATCHED', 'DELIVERED']
+	const handleOrderStatusChange = async (newStatus: OrderStatusValue) => {
+		const targetId = orderData?._id || order_id
+		if (!targetId) return
+
+		Swal.fire({
+			title: 'Update Order Status?',
+			text: `Change order status from "${orderData?.status || 'PENDING'}" to "${newStatus}"?`,
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonColor: '#172B4D',
+			cancelButtonColor: '#71809A',
+			confirmButtonText: 'Yes, change status',
+			cancelButtonText: 'Cancel',
+		}).then(async (result) => {
+			if (result.isConfirmed) {
+				setUpdatingStatus(true)
+				try {
+					await UpdateOrder({
+						order_id: targetId,
+						status: newStatus,
+					})
+					toast.success(`Order status updated to ${newStatus}`)
+					fetchOrderData()
+				} catch (err: any) {
+					toast.error(err.message || 'Failed to update order status')
+					console.error(err)
+				} finally {
+					setUpdatingStatus(false)
+				}
+			}
+		})
+	}
+
+	const steps: ShipmentStatusValue[] = [
+		'PLACED',
+		'CONFIRMED',
+		'SHIPPED',
+		'OUT FOR DELIVERY',
+		'DELIVERED',
+	]
 
 	const handleStepClick = async (
 		id: string,
@@ -43,6 +83,18 @@ const ProductOrderView: React.FC = () => {
 		status: boolean,
 		step: number
 	) => {
+		const targetId =
+			id ||
+			orderData?.meal_product?._id ||
+			orderData?.user_meal_product?._id ||
+			orderData?._id ||
+			order_id
+
+		if (!targetId) {
+			toast.error('Order ID or Product ID is missing')
+			return
+		}
+
 		Swal.fire({
 			title: 'Update Shipment Status?',
 			text: `Are you sure you want to change shipment status to "${shipment_status}"?`,
@@ -55,7 +107,8 @@ const ProductOrderView: React.FC = () => {
 		}).then(async (result) => {
 			if (result.isConfirmed) {
 				const payload = {
-					user_product_id: id,
+					user_product_id: targetId,
+					order_id: orderData?._id || order_id,
 					status: !status,
 					shipment_status: shipment_status,
 				}
@@ -63,6 +116,7 @@ const ProductOrderView: React.FC = () => {
 					await SetProductOrderTrackingStatus(payload)
 					toast.success('Order Status updated successfully')
 					setActiveStep(step)
+					fetchOrderData()
 				} catch (error: any) {
 					toast.error(error.message || 'Failed to update order status')
 					console.error(error)
@@ -115,14 +169,19 @@ const ProductOrderView: React.FC = () => {
 
 			const trackingList = data?.meal_product?.tracking || data?.user_meal_product?.tracking
 			if (trackingList && Array.isArray(trackingList)) {
+				let maxStepIndex = -1
 				trackingList.forEach((elem: any) => {
 					if (elem.status) {
-						const stepIndex = steps.indexOf(elem.shipment_status)
-						if (stepIndex > -1) {
-							setActiveStep(stepIndex)
+						const statusName = elem.shipment_status === 'DISPATCHED' ? 'SHIPPED' : elem.shipment_status
+						const stepIndex = steps.indexOf(statusName)
+						if (stepIndex > maxStepIndex) {
+							maxStepIndex = stepIndex
 						}
 					}
 				})
+				if (maxStepIndex > -1) {
+					setActiveStep(maxStepIndex)
+				}
 			}
 		} catch (error) {
 			console.error('Error fetching order view:', error)
@@ -196,10 +255,34 @@ const ProductOrderView: React.FC = () => {
 								<h1 className='gz-prod-title'>
 									Order #{orderData?.receipt_id || order_id || 'Details'}
 								</h1>
-								{orderData?.status && renderStatusBadge(orderData.status)}
-								{orderData?.order_status && orderData.order_status !== orderData.status && (
-									renderStatusBadge(orderData.order_status)
-								)}
+								<div className='d-flex align-items-center gap-2'>
+									<select
+										className={`gz-status-select gz-status-pill ${
+											(orderData?.status || '').toLowerCase() === 'success'
+												? 'success'
+												: (orderData?.status || '').toLowerCase() === 'pending'
+												? 'pending'
+												: (orderData?.status || '').toLowerCase() === 'failed' || (orderData?.status || '').toLowerCase() === 'cancelled'
+												? 'danger'
+												: (orderData?.status || '').toLowerCase() === 'refunded'
+												? 'primary'
+												: 'secondary'
+										}`}
+										value={orderData?.status || 'PENDING'}
+										disabled={updatingStatus}
+										onChange={(e) => handleOrderStatusChange(e.target.value as OrderStatusValue)}
+										title='Click to change order status'
+									>
+										<option value='SUCCESS'>SUCCESS</option>
+										<option value='PENDING'>PENDING</option>
+										<option value='CANCELLED'>CANCELLED</option>
+										<option value='FAILED'>FAILED</option>
+										<option value='REFUNDED'>REFUNDED</option>
+									</select>
+									{orderData?.order_status && orderData.order_status !== orderData.status && (
+										renderStatusBadge(orderData.order_status)
+									)}
+								</div>
 							</>
 						)}
 					</div>
@@ -456,41 +539,50 @@ const ProductOrderView: React.FC = () => {
 									Click on any step below to advance or update order fulfillment status:
 								</p>
 
-								{/* Modern Stepper */}
+								{/* Modern Stepper matching 5-step UI */}
 								<div className='gz-order-tracker'>
 									{steps.map((step, index) => {
-										const isCompleted = activeStep >= index
-										const trackInfo = trackingList?.find((t: any) => t.shipment_status === step)
+										const isCompleted =
+											activeStep >= index ||
+											trackingList?.some(
+												(t: any) =>
+													(t.shipment_status === step || (step === 'SHIPPED' && t.shipment_status === 'DISPATCHED')) &&
+													t.status !== false
+											)
+										const trackInfo = trackingList?.find(
+											(t: any) => t.shipment_status === step || (step === 'SHIPPED' && t.shipment_status === 'DISPATCHED')
+										)
 										const updatedTime = trackInfo?.updatedAt
 
 										return (
 											<div
 												key={step}
 												className={`gz-order-step ${isCompleted ? 'active' : ''}`}
-												id={`${step.toLowerCase()}_order`}>
+												id={`${step.toLowerCase().replace(/\s+/g, '_')}_order`}>
 												<button
 													type='button'
 													className='gz-order-step-btn'
-													id={`btn_${step.toLowerCase()}`}
+													id={`btn_${step.toLowerCase().replace(/\s+/g, '_')}`}
 													title={`Click to set status to ${step}`}
 													onClick={() =>
 														handleStepClick(
-															orderData?.meal_product?._id || orderData?.user_meal_product?._id,
+															orderData?.meal_product?._id ||
+																orderData?.user_meal_product?._id ||
+																orderData?._id ||
+																order_id,
 															step,
 															false,
 															index
 														)
 													}>
-													<FontAwesomeIcon
-														icon={index === 0 ? faCheck : index === 1 ? faTruck : faBox}
-													/>
+													<FontAwesomeIcon icon={faCheck} />
 												</button>
 												<span className='gz-order-step-label'>
-													{step.replace('_', ' ')}
+													{step}
 												</span>
-												<span className='gz-order-step-time' id={`${step.toLowerCase()}_order_date`}>
+												<span className='gz-order-step-time' id={`${step.toLowerCase().replace(/\s+/g, '_')}_order_date`}>
 													{updatedTime
-														? DayJS(updatedTime).format('DD MMM YYYY, hh:mm A')
+														? DayJS(updatedTime).format('DD MMM, hh:mm A')
 														: isCompleted
 														? 'Completed'
 														: 'Pending'}

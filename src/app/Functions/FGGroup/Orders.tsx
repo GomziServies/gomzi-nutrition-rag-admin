@@ -31,6 +31,7 @@ export function UpdateOrder(body: {
 	amount?: number
 	paid_amount?: number
 	currency?: string
+	status?: OrderStatusValue
 }): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.UpdateOrder, getAPIHeaders('fg_group'), undefined, body)
 }

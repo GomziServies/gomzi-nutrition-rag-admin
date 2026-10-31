@@ -9,7 +9,15 @@ type OrderItemTypeValue =
 	| 'EBOOKS'
 	| 'PURE_GO_MEAL_PRODUCT'
 	| 'GYM_MEMBERSHIP'
-type ShipmentStatusValue = 'PLACED' | 'DISPATCHED' | 'DELIVERED' | 'CANCELLED' | 'RETURN'
+type ShipmentStatusValue =
+	| 'PLACED'
+	| 'CONFIRMED'
+	| 'SHIPPED'
+	| 'OUT FOR DELIVERY'
+	| 'DELIVERED'
+	| 'DISPATCHED'
+	| 'CANCELLED'
+	| 'RETURN'
 type ProjectSubmissionStatusValue = 'Reassigned' | 'Rejected' | 'Approved'
 
 // API Response
