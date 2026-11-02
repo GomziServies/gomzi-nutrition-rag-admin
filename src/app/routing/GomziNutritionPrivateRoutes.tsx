@@ -29,6 +29,7 @@ import AttendenceView from '../pages/gomzi-nutrition/attendance/attendence-view'
 import ContactList from '../pages/gomzi-nutrition/broadcast-contact/contact-list'
 import ContactInquiry from '../pages/gomzi-nutrition/contact-inquiry/contact'
 import ContactInquiryView from '../pages/gomzi-nutrition/contact-inquiry/contact-inquiry-view'
+import ProPartnerInquiry from '../pages/gomzi-nutrition/contact-inquiry/pro-partner'
 import { GomziNutritionDashboard } from '../pages/gomzi-nutrition/dashboard/DashboardWrapper'
 import EmployeeSalary from '../pages/gomzi-nutrition/employee-salary/employee-salary'
 import EmployeeSalaryView from '../pages/gomzi-nutrition/employee-salary/employee-salary-view'
@@ -573,6 +574,14 @@ const GomziNutritionPrivateRoutes = () => {
 				<Route
 					path='contact-inquiry/contact-inquiry-view'
 					element={<ContactInquiryView />}
+				/>
+				<Route
+					path='contact-inquiry/pro-partner'
+					element={<ProPartnerInquiry />}
+				/>
+				<Route
+					path='pro-partner'
+					element={<ProPartnerInquiry />}
 				/>
 				<Route
 					path='/trainer/dashboard'

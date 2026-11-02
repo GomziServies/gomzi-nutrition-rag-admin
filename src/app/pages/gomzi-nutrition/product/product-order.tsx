@@ -56,7 +56,7 @@ const ProductOrder: React.FC = () => {
 				sort,
 				sortOrder,
 				search: searchTerm ? searchTerm : null,
-				item_type: ['FG_MEAL_PRODUCT'],
+				item_type: ['FG_MEAL_PRODUCT', 'CART', 'PURE_GO_MEAL_PRODUCT', 'PURE_GO_SAMPLE_MEAL_PRODUCT'],
 			}
 			if (orderStatus) filterQuery.order_status = orderStatus
 
@@ -145,9 +145,11 @@ const ProductOrder: React.FC = () => {
 				items = multipleItems
 					.map((multiItem: any) => {
 						const cartItem = cartItems.find((cart: any) => cart?._id === multiItem?.item_id)
-						if (cartItem) {
+						const itemName = cartItem?.name || multiItem?.notes?.product_name || multiItem?.name
+						if (itemName) {
+							const flavour = multiItem?.notes?.flavour ? ` - ${multiItem.notes.flavour}` : ''
 							return {
-								name: `${cartItem.name || 'N/A'} (x ${multiItem.quantity || 1})`,
+								name: `${itemName}${flavour} (x ${multiItem.quantity || 1})`,
 							}
 						}
 						return null
@@ -158,18 +160,29 @@ const ProductOrder: React.FC = () => {
 				}
 				break
 			}
-			case 'FG_MEAL_PRODUCT': {
+			case 'FG_MEAL_PRODUCT':
+			case 'PURE_GO_MEAL_PRODUCT':
+			case 'PURE_GO_SAMPLE_MEAL_PRODUCT': {
 				const prod = order.product
-				items = prod ? [{ name: prod.name || prod.item_name || 'N/A' }] : [{ name: 'N/A' }]
+				const prodName = prod?.name || prod?.item_name || order?.notes?.product_name || order?.notes?.plan_name
+				const flavour = order?.notes?.flavour ? ` (${order.notes.flavour})` : ''
+				items = prodName ? [{ name: `${prodName}${flavour}` }] : [{ name: 'N/A' }]
 				break
 			}
 			default:
 				if (order?.items && Array.isArray(order.items)) {
 					items = order.items.map((it: any) => ({ name: it.name || it.item_name || 'N/A' }))
+				} else if (order?.notes?.product_name) {
+					const flavour = order?.notes?.flavour ? ` (${order.notes.flavour})` : ''
+					items = [{ name: `${order.notes.product_name}${flavour}` }]
 				} else {
 					items = []
 				}
 				break
+		}
+		if (items.length === 0 && order?.notes?.product_name) {
+			const flavour = order?.notes?.flavour ? ` (${order.notes.flavour})` : ''
+			items = [{ name: `${order.notes.product_name}${flavour}` }]
 		}
 		return items
 	}
@@ -190,9 +203,10 @@ const ProductOrder: React.FC = () => {
 
 			const firstName = order?.user_info?.first_name || ''
 			const lastName = order?.user_info?.last_name || ''
-			const fullName = `${firstName} ${lastName}`.toLowerCase()
-			const mobile = (order?.user_info?.mobile || '').toString().toLowerCase()
-			const email = (order?.user_info?.email || '').toLowerCase()
+			const fallbackName = order?.shipping_address?.name || order?.notes?.name || order?.notes?.full_name || ''
+			const fullName = `${firstName} ${lastName} ${fallbackName}`.toLowerCase()
+			const mobile = (order?.user_info?.mobile || order?.notes?.mobile || order?.notes?.phone || order?.shipping_address?.mobile || '').toString().toLowerCase()
+			const email = (order?.user_info?.email || order?.notes?.email || '').toLowerCase()
 			const userId = (order?.user_info?.user_id || '').toLowerCase()
 			const userMatch =
 				fullName.includes(term) ||
@@ -240,8 +254,14 @@ const ProductOrder: React.FC = () => {
 
 			return {
 				'No.': idx + 1,
-				'User Name': `${order?.user_info?.first_name || 'DELETED USER'} ${order?.user_info?.last_name || ''}`.trim(),
-				Mobile: order?.user_info?.mobile || 'N/A',
+				'User Name': (
+					order?.shipping_address?.name ||
+					order?.notes?.name ||
+					order?.notes?.full_name ||
+					`${order?.user_info?.first_name || ''} ${order?.user_info?.last_name || ''}`.trim() ||
+					'Customer'
+				),
+				Mobile: order?.user_info?.mobile || order?.notes?.mobile || order?.notes?.phone || order?.shipping_address?.mobile || 'N/A',
 				'Receipt ID': order.receipt_id || 'N/A',
 				'Items with Quantity': itemNamesStr || 'N/A',
 				'Total Price': `${order.amount || 0} ${order.currency || 'INR'}`,
@@ -513,7 +533,22 @@ const ProductOrder: React.FC = () => {
 									const items = getOrderItemsList(order)
 									const shipment_status = getShipmentStatus(order)
 									const user = order?.user_info
-									const fullName = `${user?.first_name || 'Customer'} ${user?.last_name || ''}`.trim()
+									const fullName = (
+										order?.shipping_address?.name ||
+										order?.notes?.name ||
+										order?.notes?.full_name ||
+										(user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : '') ||
+										'Customer'
+									)
+									const contactInfo = (
+										user?.mobile ||
+										order?.notes?.mobile ||
+										order?.notes?.phone ||
+										order?.shipping_address?.mobile ||
+										user?.email ||
+										order?.notes?.email ||
+										'No contact info'
+									)
 									const profileImg = user?.profile_image
 										? `https://files.fggroup.in/${user.profile_image}`
 										: null
@@ -536,7 +571,7 @@ const ProductOrder: React.FC = () => {
 														/>
 													) : (
 														<div className='gz-prod-avatar-fallback'>
-															{getInitials(user?.first_name, user?.last_name)}
+															{getInitials(user?.first_name || fullName.split(' ')[0], user?.last_name || fullName.split(' ')[1])}
 														</div>
 													)}
 													<div>
@@ -544,7 +579,7 @@ const ProductOrder: React.FC = () => {
 															{fullName}
 														</div>
 														<div style={{ fontSize: '12px', color: '#71809A', marginTop: '2px' }}>
-															{user?.mobile || user?.email || 'No contact info'}
+															{contactInfo}
 														</div>
 													</div>
 												</div>

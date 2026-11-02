@@ -364,6 +364,11 @@ export function GomziNutritionAsideMenuItems() {
 					title='Contact Inquiries'
 					hasBullet={true}
 				/>
+				<AsideMenuItem
+					to='/rag/contact-inquiry/pro-partner'
+					title='Pro Partner'
+					hasBullet={true}
+				/>
 			</AsideMenuItemWithSub>
 
 			{/* 14. Marketing & Broadcast */}

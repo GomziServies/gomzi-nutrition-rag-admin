@@ -146,21 +146,61 @@ const ProductOrderView: React.FC = () => {
 				pData = multipleItems
 					.map((multiItem: any) => {
 						const cartItem = cartItems.find((cart: any) => cart._id === multiItem.item_id)
-						if (cartItem) {
+						const itemName = cartItem?.name || multiItem?.notes?.product_name || multiItem?.name
+						if (itemName) {
+							const flavour = multiItem?.notes?.flavour ? ` (${multiItem.notes.flavour})` : ''
 							return {
-								name: cartItem.name || 'N/A',
-								amount: multiItem.amount || 0,
-								type: multiItem.item_type || 'Unknown',
+								name: `${itemName}${flavour}`,
+								amount: multiItem.amount || cartItem?.price || 0,
+								type: multiItem.item_type || 'Product',
 								qty: multiItem.quantity || 1,
 								id: multiItem._id || 'Unknown',
-								image: cartItem.displayImages?.[0] || cartItem.display_image?.[0] || '',
+								image: cartItem?.displayImages?.[0] || cartItem?.display_image?.[0] || '',
 							}
 						}
 						return null
 					})
 					.filter(Boolean)
-			} else if (data.order_item_type === 'FG_MEAL_PRODUCT') {
-				pData = data.product ? [data.product] : []
+				if (pData.length === 0 && cartItems.length > 0) {
+					pData = cartItems.filter(Boolean).map((c: any) => ({
+						name: c.name || 'N/A',
+						amount: c.price || 0,
+						type: 'Product',
+						qty: 1,
+						id: c._id || 'Unknown',
+						image: c.displayImages?.[0] || c.display_image?.[0] || '',
+					}))
+				}
+			} else if (
+				data.order_item_type === 'FG_MEAL_PRODUCT' ||
+				data.order_item_type === 'PURE_GO_MEAL_PRODUCT' ||
+				data.order_item_type === 'PURE_GO_SAMPLE_MEAL_PRODUCT'
+			) {
+				if (data.product) {
+					pData = [data.product]
+				} else if (data.notes?.product_name) {
+					const flavour = data.notes?.flavour ? ` (${data.notes.flavour})` : ''
+					pData = [
+						{
+							name: `${data.notes.product_name}${flavour}`,
+							amount: data.amount || 0,
+							type: data.order_item_type,
+							qty: 1,
+						},
+					]
+				} else {
+					pData = []
+				}
+			} else if (data.notes?.product_name) {
+				const flavour = data.notes?.flavour ? ` (${data.notes.flavour})` : ''
+				pData = [
+					{
+						name: `${data.notes.product_name}${flavour}`,
+						amount: data.amount || 0,
+						type: data.order_item_type || 'Product',
+						qty: 1,
+					},
+				]
 			}
 
 			setProductData(pData)
@@ -622,7 +662,7 @@ const ProductOrderView: React.FC = () => {
 									{userData?.profile_image ? (
 										<img
 											src={`https://files.fggroup.in/${userData.profile_image}`}
-											alt={userData?.first_name}
+											alt={userData?.first_name || 'Customer'}
 										/>
 									) : (
 										<span>{initials}</span>
@@ -630,8 +670,9 @@ const ProductOrderView: React.FC = () => {
 								</div>
 								<div className='gz-order-user-details'>
 									<div className='gz-order-user-name'>
-										{userData?.first_name || 'Customer'}{' '}
-										{userData?.last_name || ''}
+										{userData?.first_name
+											? `${userData.first_name} ${userData.last_name || ''}`.trim()
+											: (orderData?.shipping_address?.name || orderData?.notes?.name || orderData?.notes?.full_name || 'Customer')}
 									</div>
 									<div className='gz-order-user-meta'>
 										User ID: {userData?._id ? `${String(userData._id).slice(0, 8)}...` : '-'}
@@ -643,7 +684,7 @@ const ProductOrderView: React.FC = () => {
 								<div className='gz-order-info-item'>
 									<span className='gz-order-info-label'>Email Address</span>
 									<span className='gz-order-info-value d-flex align-items-center gap-2'>
-										<span>{userData?.email || 'N/A'}</span>
+										<span>{userData?.email || orderData?.notes?.email || orderData?.shipping_address?.email || 'N/A'}</span>
 										{userData?.emailVerified ? (
 											<FontAwesomeIcon
 												icon={faCheckCircle}
@@ -665,7 +706,7 @@ const ProductOrderView: React.FC = () => {
 									<span className='gz-order-info-value d-flex align-items-center gap-2'>
 										<span>
 											{userData?.country_code ? `${userData.country_code} ` : ''}
-											{userData?.mobile || 'N/A'}
+											{userData?.mobile || orderData?.notes?.mobile || orderData?.notes?.phone || orderData?.shipping_address?.mobile || 'N/A'}
 										</span>
 										{userData?.mobileVerified ? (
 											<FontAwesomeIcon
@@ -682,6 +723,25 @@ const ProductOrderView: React.FC = () => {
 										)}
 									</span>
 								</div>
+
+								{(orderData?.notes?.address_line_1 || orderData?.notes?.address || orderData?.shipping_address) && (
+									<div className='gz-order-info-item align-items-start'>
+										<span className='gz-order-info-label'>Delivery Address</span>
+										<span className='gz-order-info-value' style={{ maxWidth: '220px', textAlign: 'right', fontSize: '13px', lineHeight: 1.4 }}>
+											{[
+												orderData?.notes?.address_line_1 || orderData?.notes?.address,
+												orderData?.notes?.address_line_2,
+												orderData?.notes?.city,
+												orderData?.notes?.state,
+												orderData?.notes?.pin_code || orderData?.notes?.pincode,
+											]
+												.filter(Boolean)
+												.join(', ') ||
+												orderData?.shipping_address?.address ||
+												'N/A'}
+										</span>
+									</div>
+								)}
 							</div>
 						</div>
 					</div>

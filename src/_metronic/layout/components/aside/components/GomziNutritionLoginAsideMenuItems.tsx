@@ -192,6 +192,11 @@ export function GomziNutritionLoginAsideMenuItems() {
 				title='Contact Inquiry'
 				Icon={faEnvelope}
 			/>
+			<AsideMenuItem
+				to='/rag/contact-inquiry/pro-partner'
+				title='Pro Partner'
+				Icon={faEnvelope}
+			/>
 		</>
 	)
 }

@@ -364,7 +364,7 @@ const NutritionUpdateInvoice: React.FC = () => {
 		setIsSubmitting(true)
 		try {
 						const plansData = plans.map((plan) => ({
-				_id: plan._id,
+				_id: plan._id && String(plan._id).trim() !== '' ? String(plan._id).trim() : undefined,
 				product_id: plan.type === 'product' ? plan.product_id : undefined,
 				variant_id: plan.type === 'product' ? plan.variant_id : undefined,
 				item_name: plan.items,

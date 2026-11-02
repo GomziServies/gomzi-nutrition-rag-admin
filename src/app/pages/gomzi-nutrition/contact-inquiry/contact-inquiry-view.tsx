@@ -41,6 +41,7 @@ import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import { FG_GROUP_FILE_BASE_URL } from '../../../constants/base_URL'
 import { GetContactInquiry, UpdateReadReceipt } from '../../../Functions/FGGroup'
+import { isOrderInquiry } from './contactInquiryUtils'
 import '../common-management.css'
 import './contact-inquiry.css'
 
@@ -73,10 +74,21 @@ const ContactInquiryView: React.FC = () => {
 
 	const inquiryItem = Array.isArray(contactInquiry) ? contactInquiry[0] : contactInquiry || {}
 	const details = inquiryItem?.details || null
+	const isOrder = isOrderInquiry(inquiryItem)
 	const isPartnerProgram =
-		Boolean(details) ||
-		(inquiryItem?.subject &&
-			inquiryItem.subject.toLowerCase().includes('partner'))
+		!isOrder &&
+		(Boolean(
+			details?.full_name ||
+				details?.higher_education ||
+				details?.experience_years ||
+				details?.employment_type ||
+				details?.certification_url ||
+				details?.social_platform
+		) ||
+			Boolean(
+				inquiryItem?.subject &&
+					inquiryItem.subject.toLowerCase().includes('partner')
+			))
 
 	const getFileUrl = (url?: string) => {
 		if (!url || typeof url !== 'string') return ''
@@ -302,6 +314,24 @@ const ContactInquiryView: React.FC = () => {
 				<span className='sep'>&gt;</span>
 				<span className='current'>{applicantName}</span>
 			</div>
+
+			{isOrder && (
+				<div className='alert alert-warning d-flex align-items-center justify-content-between p-5 mb-6 rounded-3 shadow-sm'>
+					<div className='d-flex flex-column'>
+						<h4 className='mb-1 text-dark'>Product Order Entry</h4>
+						<span>
+							This record is an online product order submission. Product orders can be managed in the{' '}
+							<Link to={`${basePath}/product-order`} className='fw-bold text-primary text-decoration-underline'>
+								Product Orders
+							</Link>{' '}
+							section.
+						</span>
+					</div>
+					<Link to={`${basePath}/product-order`} className='btn btn-sm btn-primary ms-4'>
+						View Product Orders
+					</Link>
+				</div>
+			)}
 
 			{/* Hero / Header Card */}
 			<div className='gz-inq-hero-card'>

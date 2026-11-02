@@ -22,6 +22,7 @@ import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetContactInquiry } from '../../../Functions/FGGroup'
+import { isOrderInquiry } from './contactInquiryUtils'
 import '../common-management.css'
 import '../products-theme.css'
 import '../orders-theme.css'
@@ -64,6 +65,9 @@ const ContactInquiry: React.FC = () => {
 		if (src.includes('whey')) {
 			return <span className='badge badge-light-warning fw-bold fs-8 py-1 px-2 mt-1'>Whey Landing</span>
 		}
+		if (src.includes('wholesale') || sub.includes('wholesale') || sub.includes('b2b')) {
+			return <span className='badge badge-light-info fw-bold fs-8 py-1 px-2 mt-1'>Wholesale / B2B</span>
+		}
 		return null
 	}
 
@@ -80,7 +84,9 @@ const ContactInquiry: React.FC = () => {
 			const paginationMeta: any = firstResponse?.metadata?.pagination || {}
 			setMetaData(paginationMeta)
 			const totalPages = Number(paginationMeta.totalPages || 1)
-			let allData = Array.isArray(firstResponse?.data) ? [...firstResponse.data] : []
+			let allData = Array.isArray(firstResponse?.data)
+				? firstResponse.data.filter((item: any) => !isOrderInquiry(item))
+				: []
 
 			for (let currentPage = 2; currentPage <= totalPages; currentPage += 1) {
 				const nextResponse: any = await GetContactInquiry({
@@ -89,7 +95,9 @@ const ContactInquiry: React.FC = () => {
 					source: RAG_CONTACT_SOURCE_FILTER,
 				})
 				if (Array.isArray(nextResponse?.data)) {
-					allData = allData.concat(nextResponse.data)
+					allData = allData.concat(
+						nextResponse.data.filter((item: any) => !isOrderInquiry(item))
+					)
 				}
 			}
 
@@ -188,7 +196,7 @@ const ContactInquiry: React.FC = () => {
 	const filteredContactInquiry = useMemo(() => {
 		const filtered = allContactInquiry.filter((item: any) => {
 			// Apply client-side filters: search, subject, unread, date range
-			if (!item) return false
+			if (!item || isOrderInquiry(item)) return false
 
 			if (searchTerm && typeof searchTerm === 'string') {
 				const q = searchTerm.toLowerCase().trim()
