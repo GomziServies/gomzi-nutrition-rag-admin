@@ -158,6 +158,12 @@ const ContactInquiryView: React.FC = () => {
 		if (inquiryItem?.createdAt) {
 			lines.push(`Submitted: ${DayJS(inquiryItem.createdAt).format('DD/MM/YYYY hh:mm:ss A')}`)
 		}
+	if (details && !isPartnerProgram) {
+			lines.push(`\nCAMPAIGN & SELECTION DETAILS:`)
+			Object.entries(details).forEach(([key, val]) => {
+				lines.push(`- ${key.replace(/_/g, ' ').toUpperCase()}: ${typeof val === 'object' ? JSON.stringify(val) : val}`)
+			})
+		}
 		if (inquiryItem?.message) {
 			lines.push(`\nMessage:\n${inquiryItem.message}`)
 		}
@@ -355,6 +361,15 @@ const ContactInquiryView: React.FC = () => {
 								<span className='gz-inq-badge-type'>
 									<FontAwesomeIcon icon={faAward} className='me-1' />
 									Partner Program
+								</span>
+							)}
+							{(inquiryItem?.source?.toLowerCase().includes('gomzi') ||
+								inquiryItem?.source?.toLowerCase().includes('landing') ||
+								inquiryItem?.subject?.toLowerCase().includes('offer') ||
+								inquiryItem?.subject?.toLowerCase().includes('gym')) && (
+								<span className='gz-inq-badge-type' style={{ background: '#FEF2F2', color: '#DC2626', borderColor: '#FECACA' }}>
+									<FontAwesomeIcon icon={faDumbbell} className='me-1' />
+									GOMZI Offer Landing
 								</span>
 							)}
 						</div>
@@ -869,6 +884,39 @@ const ContactInquiryView: React.FC = () => {
 					</div>
 				</div>
 			) : null}
+
+{/* Non-Partner Campaign & Inquiry Specifications (e.g. Landing Page) */}
+			{!isPartnerProgram && details && Object.keys(details).length > 0 && (
+				<div className='gz-inq-card'>
+					<div className='gz-inq-card-header'>
+						<h5 className='gz-inq-card-title'>
+							<span className='gz-inq-card-title-icon green'>
+								<FontAwesomeIcon icon={faDumbbell} />
+							</span>
+							Offer &amp; Inquiry Specifications
+						</h5>
+						<span className='gz-inq-badge-type'>Landing Campaign Submission</span>
+					</div>
+					<div className='gz-inq-card-body'>
+						<div className='gz-inq-tiles-grid'>
+							{details?.campaign && renderInfoTile('Offer / Campaign', details.campaign)}
+							{details?.branch && renderInfoTile('Preferred Gym Branch', details.branch, { badgeClass: 'gz-inq-badge-type' })}
+							{details?.package_interest && renderInfoTile('Interested Pack / Product', details.package_interest)}
+							{details?.preferred_contact_method && renderInfoTile('Preferred Contact Channel', details.preferred_contact_method)}
+							{details?.page_url && renderInfoTile('Landing Page URL', details.page_url, { href: details.page_url, span: 2 })}
+							{details?.submitted_at && renderInfoTile('Submission Timestamp', DayJS(details.submitted_at).format('DD/MM/YYYY hh:mm:ss A'))}
+							{Object.entries(details)
+								.filter(([k]) => !['campaign', 'branch', 'package_interest', 'preferred_contact_method', 'page_url', 'submitted_at'].includes(k))
+								.map(([k, v]) =>
+									renderInfoTile(
+										k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+										typeof v === 'object' ? JSON.stringify(v) : v
+									)
+								)}
+						</div>
+					</div>
+				</div>
+			)}
 
 			{/* Primary Message & Origin Source Section */}
 			<div className='gz-inq-card'>
