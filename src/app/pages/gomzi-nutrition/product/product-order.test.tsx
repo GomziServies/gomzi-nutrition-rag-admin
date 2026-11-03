@@ -3,6 +3,7 @@ import { act } from 'react-dom/test-utils'
 import { MemoryRouter } from 'react-router-dom'
 import { GetOrders } from '../../../Functions/FGGroup'
 import ProductOrder from './product-order'
+import { getOrderContact } from './order-contact'
 
 jest.mock('../../../Functions/FGGroup', () => ({ GetOrders: jest.fn() }))
 jest.mock('../../../../_metronic/layout/core', () => ({ PageTitle: () => null }))
@@ -36,15 +37,25 @@ const response = { data: [order], metadata: { pagination: { totalDocs: 1, totalP
 beforeEach(() => getOrders.mockReset())
 const renderOrders = () => render(<MemoryRouter><ProductOrder /></MemoryRouter>)
 
+test('delivery contact reflects checkout details without claiming they are verified', () => {
+	const contact = getOrderContact({ user_info: { _id: 'user', first_name: 'Account', email: 'account@example.com', emailVerified: true, mobile: '9999999999', mobileVerified: true }, notes: { first_name: 'Recipient', last_name: 'Name', email: 'delivery@example.com', mobile: '9888888888' } })
+	expect(contact.first_name).toBe('Recipient')
+	expect(contact.email).toBe('delivery@example.com')
+	expect(contact.mobile).toBe('9888888888')
+	expect(contact.emailVerified).toBe(false)
+	expect(contact.mobileVerified).toBe(false)
+	expect(contact._id).toBe('user')
+})
+
 test('shows pending orders by default without a hidden payment or date restriction', async () => {
 	getOrders.mockResolvedValue(response)
 	renderOrders()
 	expect(await screen.findByText('RECEIPT-1')).toBeInTheDocument()
-	expect(screen.getByText('Pending Payment', { selector: 'span' })).toBeInTheDocument()
+	expect(screen.getByRole('combobox', { name: 'Payment status for RECEIPT-1' })).toHaveValue('PENDING')
 	expect(screen.getByText('All dates')).toBeInTheDocument()
 	expect(getOrders.mock.calls[0][0]).not.toHaveProperty('order_status')
 	expect(getOrders.mock.calls[0][0]).not.toHaveProperty('from_date')
-	expect(getOrders.mock.calls[0][0].item_type).toEqual(['FG_MEAL_PRODUCT'])
+	expect(getOrders.mock.calls[0][0].item_type).toEqual(['FG_MEAL_PRODUCT', 'PURE_GO_MEAL_PRODUCT', 'PURE_GO_SAMPLE_MEAL_PRODUCT'])
 })
 
 test('passes explicit payment and shipment filters to the API', async () => {

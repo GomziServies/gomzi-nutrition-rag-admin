@@ -24,6 +24,7 @@ import toast from 'react-hot-toast'
 import { GetOrders, UpdateOrder } from '../../../Functions/FGGroup'
 import '../orders-theme.css'
 import '../products-theme.css'
+import { getOrderContact } from './order-contact'
 
 const ProductOrder: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
@@ -56,7 +57,7 @@ const ProductOrder: React.FC = () => {
 				sort,
 				sortOrder,
 				search: searchTerm ? searchTerm : null,
-				item_type: ['FG_MEAL_PRODUCT', 'CART', 'PURE_GO_MEAL_PRODUCT', 'PURE_GO_SAMPLE_MEAL_PRODUCT'],
+				item_type: ['FG_MEAL_PRODUCT', 'PURE_GO_MEAL_PRODUCT', 'PURE_GO_SAMPLE_MEAL_PRODUCT'],
 			}
 			if (orderStatus) filterQuery.order_status = orderStatus
 
@@ -201,12 +202,13 @@ const ProductOrder: React.FC = () => {
 			if (!searchTerm || !searchTerm.trim()) return true
 			const term = searchTerm.toLowerCase().trim()
 
-			const firstName = order?.user_info?.first_name || ''
-			const lastName = order?.user_info?.last_name || ''
+			const contact = getOrderContact(order)
+			const firstName = contact.first_name || ''
+			const lastName = contact.last_name || ''
 			const fallbackName = order?.shipping_address?.name || order?.notes?.name || order?.notes?.full_name || ''
 			const fullName = `${firstName} ${lastName} ${fallbackName}`.toLowerCase()
-			const mobile = (order?.user_info?.mobile || order?.notes?.mobile || order?.notes?.phone || order?.shipping_address?.mobile || '').toString().toLowerCase()
-			const email = (order?.user_info?.email || order?.notes?.email || '').toLowerCase()
+			const mobile = (contact.mobile || '').toString().toLowerCase()
+			const email = (contact.email || '').toLowerCase()
 			const userId = (order?.user_info?.user_id || '').toLowerCase()
 			const userMatch =
 				fullName.includes(term) ||
@@ -248,6 +250,7 @@ const ProductOrder: React.FC = () => {
 
 	const downloadExcel = () => {
 		const worksheetData = filteredOrderData.map((order: any, idx: number) => {
+			const contact = getOrderContact(order)
 			const items = getOrderItemsList(order)
 			const itemNamesStr = items.map((i) => i.name).join(', ')
 			const shipmentStatusText = getShipmentStatus(order)
@@ -258,10 +261,10 @@ const ProductOrder: React.FC = () => {
 					order?.shipping_address?.name ||
 					order?.notes?.name ||
 					order?.notes?.full_name ||
-					`${order?.user_info?.first_name || ''} ${order?.user_info?.last_name || ''}`.trim() ||
+					`${contact.first_name || ''} ${contact.last_name || ''}`.trim() ||
 					'Customer'
 				),
-				Mobile: order?.user_info?.mobile || order?.notes?.mobile || order?.notes?.phone || order?.shipping_address?.mobile || 'N/A',
+				Mobile: contact.mobile || 'N/A',
 				'Receipt ID': order.receipt_id || 'N/A',
 				'Items with Quantity': itemNamesStr || 'N/A',
 				'Total Price': `${order.amount || 0} ${order.currency || 'INR'}`,
@@ -532,7 +535,7 @@ const ProductOrder: React.FC = () => {
 									const actualIndex = (pagination.page - 1) * pagination.itemsPerPage + index + 1
 									const items = getOrderItemsList(order)
 									const shipment_status = getShipmentStatus(order)
-									const user = order?.user_info
+									const user = getOrderContact(order)
 									const fullName = (
 										order?.shipping_address?.name ||
 										order?.notes?.name ||
@@ -627,6 +630,7 @@ const ProductOrder: React.FC = () => {
 															: 'secondary'
 													}`}
 													style={{ fontSize: '12px', padding: '3px 8px', height: 'auto', border: '1px solid rgba(0,0,0,0.1)' }}
+													aria-label={`Payment status for ${order.receipt_id || order._id}`}
 													value={order.status || 'PENDING'}
 													onClick={(e) => e.stopPropagation()}
 													onChange={(e) => handleQuickStatusChange(order._id, e.target.value)}

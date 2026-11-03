@@ -23,6 +23,7 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import { GetOrders, SetProductOrderTrackingStatus, UpdateOrder } from '../../../Functions/FGGroup'
 import '../products-theme.css'
 import '../orders-theme.css'
+import { getOrderContact } from './order-contact'
 
 const ProductOrderView: React.FC = () => {
 	const location = useLocation()
@@ -130,7 +131,7 @@ const ProductOrderView: React.FC = () => {
 		try {
 			const response: any = await GetOrders({ order_id })
 			const data = response?.data?.[0] || {}
-			const user = data.user_info || {}
+			const user = getOrderContact(data)
 
 			if (data.ebook_purchase_info) {
 				setShowDiv(false)
