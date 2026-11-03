@@ -71,6 +71,14 @@ interface SectionFormState {
 	bulletsText: string
 	closingParagraph: string
 	table?: TableFormState | null
+	image?: SectionImageState | null
+}
+
+interface SectionImageState {
+	url: string
+	alt?: string
+	caption?: string
+	placement?: 'below_heading' | 'below_paragraphs' | 'below_bullets'
 }
 
 interface FaqFormState {
@@ -110,6 +118,7 @@ export default function BlogManage() {
 	})
 	const [tagsString, setTagsString] = useState('nutrition, protein')
 	const [uploadingImage, setUploadingImage] = useState(false)
+	const [uploadingSectionImageIdx, setUploadingSectionImageIdx] = useState<number | null>(null)
 
 	// Rich Content States
 	const [introText, setIntroText] = useState('')
@@ -164,6 +173,7 @@ export default function BlogManage() {
 				bulletsText: '',
 				closingParagraph: '',
 				table: null,
+				image: null,
 			},
 		])
 		setTables([])
@@ -225,6 +235,21 @@ export default function BlogManage() {
 								quickPasteText: '',
 						  }
 						: null,
+					image: s.image
+						? typeof s.image === 'string'
+							? {
+									url: s.image,
+									alt: s.heading || '',
+									caption: '',
+									placement: 'below_paragraphs',
+							  }
+							: {
+									url: s.image.url || '',
+									alt: s.image.alt || s.heading || '',
+									caption: s.image.caption || '',
+									placement: s.image.placement || 'below_paragraphs',
+							  }
+						: null,
 				}))
 			)
 		} else {
@@ -235,6 +260,7 @@ export default function BlogManage() {
 					bulletsText: '',
 					closingParagraph: '',
 					table: null,
+					image: null,
 				},
 			])
 		}
@@ -346,7 +372,7 @@ export default function BlogManage() {
 	const handleAddSection = () => {
 		setSections((prev) => [
 			...prev,
-			{ heading: '', paragraphsText: '', bulletsText: '', closingParagraph: '', table: null },
+			{ heading: '', paragraphsText: '', bulletsText: '', closingParagraph: '', table: null, image: null },
 		])
 	}
 
@@ -381,6 +407,113 @@ export default function BlogManage() {
 		} else {
 			// All sections already have tables, or no sections exist: create a new section with a table
 			handleAddSectionWithTable()
+		}
+	}
+
+	const handleAddSectionWithImage = () => {
+		setSections((prev) => [
+			...prev,
+			{
+				heading: '',
+				paragraphsText: '',
+				bulletsText: '',
+				closingParagraph: '',
+				table: null,
+				image: {
+					url: '',
+					alt: '',
+					caption: '',
+					placement: 'below_paragraphs',
+				},
+			},
+		])
+		toast.success('Added new section with image!')
+	}
+
+	const handleSmartAddImage = () => {
+		const sectionWithoutImageIdx = sections.findIndex((s) => !s.image)
+		if (sectionWithoutImageIdx !== -1) {
+			handleAddImageToSection(sectionWithoutImageIdx)
+		} else {
+			handleAddSectionWithImage()
+		}
+	}
+
+	const handleAddImageToSection = (sIdx: number) => {
+		setSections((prev) => {
+			const next = [...prev]
+			next[sIdx] = {
+				...next[sIdx],
+				image: {
+					url: '',
+					alt: next[sIdx].heading || '',
+					caption: '',
+					placement: 'below_paragraphs',
+				},
+			}
+			return next
+		})
+		toast.success(`Image banner attached to Section #${sIdx + 1}`)
+	}
+
+	const handleRemoveImageFromSection = (sIdx: number) => {
+		setSections((prev) => {
+			const next = [...prev]
+			next[sIdx] = {
+				...next[sIdx],
+				image: null,
+			}
+			return next
+		})
+		toast.success(`Image removed from Section #${sIdx + 1}`)
+	}
+
+	const handleSectionImageFieldChange = (
+		sIdx: number,
+		field: keyof SectionImageState,
+		value: string
+	) => {
+		setSections((prev) => {
+			const next = [...prev]
+			if (next[sIdx].image) {
+				next[sIdx].image = {
+					...next[sIdx].image!,
+					[field]: value,
+				}
+			}
+			return next
+		})
+	}
+
+	const handleSectionImageUpload = async (
+		sIdx: number,
+		e: React.ChangeEvent<HTMLInputElement>
+	) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+		try {
+			setUploadingSectionImageIdx(sIdx)
+			const res: any = await FileUploadToFGGroup([file], { directory: 'blog' })
+			const uploadedUrl = res?.data?.fileURLs?.[0] || res?.data?.url || res?.url
+			if (uploadedUrl) {
+				setSections((prev) => {
+					const next = [...prev]
+					if (next[sIdx].image) {
+						next[sIdx].image = {
+							...next[sIdx].image!,
+							url: uploadedUrl,
+						}
+					}
+					return next
+				})
+				toast.success(`Section #${sIdx + 1} image uploaded successfully!`)
+			} else {
+				toast.error('Image upload failed: no URL returned')
+			}
+		} catch (err: any) {
+			toast.error(err?.message || 'Error uploading section image')
+		} finally {
+			setUploadingSectionImageIdx(null)
 		}
 	}
 
@@ -692,7 +825,7 @@ export default function BlogManage() {
 				.filter(Boolean)
 
 			const parsedSections = sections
-				.filter((s) => s.heading.trim() || s.paragraphsText.trim())
+				.filter((s) => s.heading.trim() || s.paragraphsText.trim() || (s.image && s.image.url && s.image.url.trim()))
 				.map((s) => {
 					const secObj: any = {
 						heading: s.heading.trim(),
@@ -705,6 +838,15 @@ export default function BlogManage() {
 							.map((b) => b.trim())
 							.filter(Boolean),
 						...(s.closingParagraph.trim() ? { closingParagraph: s.closingParagraph.trim() } : {}),
+					}
+
+					if (s.image && s.image.url && s.image.url.trim()) {
+						secObj.image = {
+							url: s.image.url.trim(),
+							alt: (s.image.alt || s.heading || '').trim(),
+							caption: (s.image.caption || '').trim(),
+							placement: s.image.placement || 'below_paragraphs',
+						}
 					}
 
 					if (s.table && s.table.heading.trim() && s.table.columns.length > 0) {
@@ -1628,6 +1770,14 @@ export default function BlogManage() {
 													</button>
 													<button
 														type='button'
+														className='btn btn-sm btn-light-success text-success fw-semibold'
+														onClick={handleSmartAddImage}
+														title='Attach an image or banner to a section'
+													>
+														<FontAwesomeIcon icon={faImage} className='me-1' /> Add Image
+													</button>
+													<button
+														type='button'
 														className='btn btn-sm btn-primary'
 														onClick={handleAddSection}
 													>
@@ -1664,24 +1814,38 @@ export default function BlogManage() {
 																	Section #{sIdx + 1}: {section.heading || 'Untitled Section'}
 																</span>
 																<div className='d-flex align-items-center gap-2'>
-																	{!section.table ? (
+									{!section.table ? (
+										<button
+											type='button'
+											className='btn btn-sm btn-light-info py-1 px-3 fs-8'
+											onClick={() => handleAddTableToSection(sIdx)}
+											title='Add a data table into this section'
+										>
+											<FontAwesomeIcon icon={faTable} className='me-1 text-primary' /> Add Table
+										</button>
+									) : (
+										<span className='badge badge-light-success fs-9 py-1 px-2 d-flex align-items-center gap-1'>
+											<FontAwesomeIcon icon={faCheck} /> Table Attached ({section.table.rows.length} rows)
+										</span>
+									)}
+									{!section.image ? (
+										<button
+											type='button'
+											className='btn btn-sm btn-light-success py-1 px-3 fs-8'
+											onClick={() => handleAddImageToSection(sIdx)}
+											title='Attach an image or banner to this section'
+										>
+											<FontAwesomeIcon icon={faImage} className='me-1 text-success' /> Add Image
+										</button>
+									) : (
+										<span className='badge badge-light-info fs-9 py-1 px-2 d-flex align-items-center gap-1'>
+											<FontAwesomeIcon icon={faCheck} /> Image Attached
+										</span>
+									)}
 																		<button
-																			type='button'
-																			className='btn btn-sm btn-light-info py-1 px-3 fs-8'
-																			onClick={() => handleAddTableToSection(sIdx)}
-																			title='Add a data table into this section'
-																		>
-																			<FontAwesomeIcon icon={faTable} className='me-1 text-primary' /> Add Table
-																		</button>
-																	) : (
-																		<span className='badge badge-light-success fs-9 py-1 px-2 d-flex align-items-center gap-1'>
-																			<FontAwesomeIcon icon={faCheck} /> Table Attached ({section.table.rows.length} rows)
-																		</span>
-																	)}
-																	<button
-																		type='button'
-																		className='btn btn-sm btn-light-danger py-1 px-3 fs-8'
-																		onClick={() => handleRemoveSection(sIdx)}
+										type='button'
+										className='btn btn-sm btn-light-danger py-1 px-3 fs-8'
+										onClick={() => handleRemoveSection(sIdx)}
 																		title='Delete this section'
 																	>
 																		<FontAwesomeIcon icon={faTrash} className='me-1' /> Remove
@@ -1757,6 +1921,150 @@ export default function BlogManage() {
 																		}
 																	/>
 																</div>
+
+																{/* EMBEDDED SECTION IMAGE / BANNER BUILDER */}
+																{section.image && (
+																	<div className='col-12 mt-4 pt-3 border-top'>
+																		<div
+																			className='p-4 border rounded-3'
+																			style={{ backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }}
+																		>
+																			{/* Section Image Bar */}
+																			<div className='d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2'>
+																				<span className='fw-bold text-gray-900 fs-7 d-flex align-items-center gap-2'>
+																					<FontAwesomeIcon icon={faImage} className='text-success' />
+																					Section Image / Infographic Banner
+																				</span>
+																				<button
+																					type='button'
+																					className='btn btn-sm btn-light-danger py-1 px-2 fs-8'
+																					onClick={() => handleRemoveImageFromSection(sIdx)}
+																					title='Remove image from this section'
+																				>
+																					<FontAwesomeIcon icon={faTimes} className='me-1' /> Remove Image
+																				</button>
+																			</div>
+
+																			<div className='row g-3'>
+																				{/* Image Preview & Upload Column */}
+																				<div className='col-md-5'>
+																					<div
+																						className='border rounded-3 p-2 bg-white text-center position-relative d-flex align-items-center justify-content-center'
+																						style={{ minHeight: '140px', overflow: 'hidden' }}
+																					>
+																						{section.image.url ? (
+																							<img
+																								src={getPreviewUrl(section.image.url)}
+																					alt={section.image.alt || 'Section banner'}
+																					className='img-fluid rounded-2'
+																					style={{ maxHeight: '160px', width: '100%', objectFit: 'cover' }}
+																					onError={(e) => {
+																						;(e.currentTarget as HTMLImageElement).src = '/images/blog-1.webp'
+																					}}
+																				/>
+																		) : (
+																			<div className='d-flex flex-column align-items-center justify-content-center py-4 text-muted'>
+																				<FontAwesomeIcon icon={faImage} size='2x' className='text-muted mb-2' />
+																				<span className='fs-8 fw-semibold'>No Image Selected</span>
+																				<span className='fs-9 text-muted'>Recommended: 864 × 450 px (16:9)</span>
+															</div>
+																		)}
+																	</div>
+																	<div className='mt-2 d-flex gap-2'>
+																		<label
+																			className={`btn btn-sm btn-light-primary w-100 mb-0 ${
+																				uploadingSectionImageIdx === sIdx ? 'disabled' : ''
+																			}`}
+																		>
+																			<FontAwesomeIcon
+																				icon={uploadingSectionImageIdx === sIdx ? faClock : faUpload}
+																				className='me-1'
+																			/>
+																			{uploadingSectionImageIdx === sIdx ? 'Uploading...' : 'Upload Image File'}
+																			<input
+																				type='file'
+																				accept='image/*'
+																				className='d-none'
+																				disabled={uploadingSectionImageIdx === sIdx}
+																				onChange={(e) => handleSectionImageUpload(sIdx, e)}
+																			/>
+																		</label>
+																	</div>
+																</div>
+
+																{/* Image Details Column */}
+																<div className='col-md-7'>
+																	<div className='mb-3'>
+																		<label className='form-label fw-bold fs-8 text-gray-700'>
+																			Image URL or File Path *
+																		</label>
+																		<input
+																			type='text'
+																			className='form-control form-control-solid form-control-sm'
+																			placeholder='/images/blog-banner.webp or https://...'
+																			value={section.image.url}
+																			onChange={(e) =>
+																				handleSectionImageFieldChange(sIdx, 'url', e.target.value)
+																			}
+																		/>
+																	</div>
+
+																	<div className='row g-2 mb-2'>
+																		<div className='col-sm-6'>
+																			<label className='form-label fw-bold fs-8 text-gray-700'>
+																				Alt Text (SEO & Accessibility)
+																			</label>
+																			<input
+																				type='text'
+																				className='form-control form-control-solid form-control-sm'
+																				placeholder='e.g., ICMR Recommended Dietary Allowance Chart'
+																				value={section.image.alt || ''}
+																				onChange={(e) =>
+																					handleSectionImageFieldChange(sIdx, 'alt', e.target.value)
+																				}
+																			/>
+																		</div>
+																		<div className='col-sm-6'>
+																			<label className='form-label fw-bold fs-8 text-gray-700'>
+																				Placement in Section
+																			</label>
+																			<select
+																				className='form-select form-select-solid form-select-sm'
+																				value={section.image.placement || 'below_paragraphs'}
+																				onChange={(e) =>
+																					handleSectionImageFieldChange(
+																						sIdx,
+																						'placement',
+																						e.target.value as any
+																					)
+																				}
+																			>
+																				<option value='below_heading'>Top (Below Section Heading)</option>
+																<option value='below_paragraphs'>Middle (After Paragraphs)</option>
+																<option value='below_bullets'>Bottom (After Bullets & Table)</option>
+															</select>
+														</div>
+													</div>
+
+													<div>
+														<label className='form-label fw-bold fs-8 text-gray-700'>
+															Caption / Subtitle (Optional)
+														</label>
+														<input
+															type='text'
+															className='form-control form-control-solid form-control-sm'
+															placeholder='e.g., Source: ICMR-NIN 2024 Dietary Guidelines for Indians'
+															value={section.image.caption || ''}
+															onChange={(e) =>
+																handleSectionImageFieldChange(sIdx, 'caption', e.target.value)
+															}
+														/>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								)}
 
 																{/* EMBEDDED SECTION DATA TABLE BUILDER */}
 																{section.table && (
