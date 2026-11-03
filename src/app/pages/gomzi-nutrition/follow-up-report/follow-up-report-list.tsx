@@ -1,6 +1,8 @@
 import {
 	faArrowLeft,
 	faDownload,
+	faFileExcel,
+	faUpload,
 	faPlus,
 	faShareAlt,
 	faUserFriends,
@@ -66,6 +68,12 @@ const FollowUpReportList: React.FC = () => {
 		age: '',
 	})
 	const [savingLead, setSavingLead] = useState(false)
+
+	const [isBulkModalOpen, setIsBulkModalOpen] = useState(false)
+	const [bulkUploading, setBulkUploading] = useState(false)
+	const [bulkFile, setBulkFile] = useState<File | null>(null)
+	const [parsedBulkLeads, setParsedBulkLeads] = useState<any[]>([])
+	const [bulkErrorRows, setBulkErrorRows] = useState<any[]>([])
 
 	const [isDistributeModalOpen, setIsDistributeModalOpen] = useState(false)
 	const [employees, setEmployees] = useState<any[]>([])
@@ -305,6 +313,239 @@ const FollowUpReportList: React.FC = () => {
 			toast.error('Failed to create lead')
 		}
 		setSavingLead(false)
+	}
+
+	const downloadSampleTemplate = () => {
+		const sampleRows = [
+			{
+				full_name: 'Rajesh Sharma',
+				phone_number: '+919876543210',
+				email: 'rajesh.sharma@gmail.com',
+				city: 'Mumbai',
+				age: 32,
+				platform: 'Pull_marketing',
+				ad_name: 'B2B Expo 2026',
+				additional_note: 'Interested in 100 jars Whey Protein & Creatine',
+			},
+			{
+				full_name: 'Pooja Patel',
+				phone_number: '+919823456789',
+				email: 'pooja.patel@yahoo.com',
+				city: 'Surat',
+				age: 28,
+				platform: 'Meta Ads',
+				ad_name: 'PCOS Tablet Launch',
+				additional_note: 'Enquired about PCOS Tablet and D3+K2',
+			},
+			{
+				full_name: 'Amit Verma',
+				phone_number: '+919123456780',
+				email: 'amit.verma@outlook.com',
+				city: 'Delhi',
+				age: 35,
+				platform: 'Instagram',
+				ad_name: 'Summer Campaign',
+				additional_note: 'Gym owner looking for wholesale supply',
+			},
+			{
+				full_name: 'Vikram Singh',
+				phone_number: '+919988776655',
+				email: 'vikram.singh@gmail.com',
+				city: 'Ahmedabad',
+				age: 29,
+				platform: 'Pull_marketing',
+				ad_name: 'Direct Referral',
+				additional_note: 'Sample test requested for Dark Chocolate Whey',
+			},
+			{
+				full_name: 'Sneha Kulkarni',
+				phone_number: '+919765432109',
+				email: 'sneha.k@gmail.com',
+				city: 'Pune',
+				age: 26,
+				platform: 'Facebook',
+				ad_name: 'Multivitamin Ad',
+				additional_note: 'Looking for Daily Multivitamin & Calcium tablets',
+			},
+		]
+		const worksheet = XLSX.utils.json_to_sheet(sampleRows)
+		const workbook = XLSX.utils.book_new()
+		XLSX.utils.book_append_sheet(workbook, worksheet, 'Leads Template')
+		XLSX.writeFile(workbook, 'sample_leads_template.xlsx')
+		toast.success('Sample Excel template downloaded')
+	}
+
+	const handleBulkFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+
+		setBulkFile(file)
+		const reader = new FileReader()
+
+		reader.onload = (evt) => {
+			try {
+				const buffer = evt.target?.result
+				const wb = XLSX.read(buffer, { type: 'array' })
+				const sheetName = wb.SheetNames[0]
+				const sheet = wb.Sheets[sheetName]
+				const rawJson: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+
+				if (rawJson.length === 0) {
+					toast.error('The selected spreadsheet is empty')
+					setParsedBulkLeads([])
+					setBulkErrorRows([])
+					return
+				}
+
+				const validList: any[] = []
+				const errorList: any[] = []
+
+				rawJson.forEach((row: any, idx: number) => {
+					const normalized: Record<string, any> = {}
+					Object.keys(row).forEach((k) => {
+						normalized[k.trim().toLowerCase().replace(/[\s_-]+/g, '')] = row[k]
+					})
+
+					const name = String(
+						normalized['fullname'] ||
+						normalized['name'] ||
+						normalized['clientname'] ||
+						normalized['leadname'] ||
+						''
+					).trim()
+
+					const rawPhone = String(
+						normalized['phonenumber'] ||
+						normalized['phone'] ||
+						normalized['mobilenumber'] ||
+						normalized['mobile'] ||
+						normalized['contactmobile'] ||
+						normalized['contact'] ||
+						''
+					).trim()
+
+					const cleanPhone = rawPhone.replace(/[^\d+]/g, '')
+					const digitsOnly = cleanPhone.replace(/\D/g, '')
+
+					if (!name) {
+						errorList.push({ row: idx + 2, reason: 'Name is required' })
+						return
+					}
+
+					if (!cleanPhone || digitsOnly.length < 8) {
+						errorList.push({ row: idx + 2, name, reason: 'Invalid or missing phone number' })
+						return
+					}
+
+					const email = String(normalized['email'] || normalized['emailid'] || '').trim().toLowerCase()
+					const city = String(normalized['city'] || normalized['location'] || '').trim()
+					const age = normalized['age'] ? String(normalized['age']).trim() : ''
+					const platform = String(normalized['platform'] || normalized['source'] || 'Pull_marketing').trim()
+					const adName = String(normalized['adname'] || normalized['ad'] || normalized['campaign'] || 'Excel Bulk Import').trim()
+					const note = String(normalized['additionalnote'] || normalized['note'] || normalized['remark'] || normalized['remarks'] || '').trim()
+
+					validList.push({
+						full_name: name,
+						phone_number: cleanPhone,
+						email: email || undefined,
+						city: city || undefined,
+						age: age || undefined,
+						platform: platform || 'Pull_marketing',
+						ad_name: adName,
+						additional_note: note,
+						tag: 'gn',
+					})
+				})
+
+				setParsedBulkLeads(validList)
+				setBulkErrorRows(errorList)
+
+				if (validList.length > 0) {
+					toast.success(`Parsed ${validList.length} valid leads (${errorList.length} skipped)`)
+				} else {
+					toast.error('No valid leads found in spreadsheet')
+				}
+			} catch (err: any) {
+				console.error('Failed to parse Excel file:', err)
+				toast.error('Failed to parse file. Please use standard Excel or CSV.')
+			}
+		}
+
+		reader.readAsArrayBuffer(file)
+	}
+
+	const handleUploadBulkLeads = async () => {
+		if (parsedBulkLeads.length === 0) {
+			toast.error('No valid leads to upload')
+			return
+		}
+
+		setBulkUploading(true)
+		try {
+			let uploadedCount = parsedBulkLeads.length
+			let success = false
+			try {
+				const res: any = await FGGroupAPIs.BulkCreateFacebookLeads({
+					leads: parsedBulkLeads,
+					tag: 'gn',
+				})
+				if (res?.status === 200 || res?.status === 201 || res?.data?.inserted_count !== undefined) {
+					success = true
+					uploadedCount = res?.data?.inserted_count || parsedBulkLeads.length
+				}
+			} catch (bulkErr) {
+				console.warn('Bulk endpoint failed, falling back to batch creation:', bulkErr)
+				success = false
+			}
+
+			if (!success) {
+				const batchSize = 10
+				let createdCount = 0
+				for (let i = 0; i < parsedBulkLeads.length; i += batchSize) {
+					const chunk = parsedBulkLeads.slice(i, i + batchSize)
+					const results = await Promise.allSettled(
+						chunk.map((lead, idx) =>
+							FGGroupAPIs.CreateManualFacebookLead({
+								...lead,
+								ad_id: null,
+								ad_name: lead.ad_name || 'Excel Bulk Import',
+								lead_id: `MANUAL_${Date.now()}_${i + idx}_${Math.floor(Math.random() * 10000)}`,
+								created_time: new Date().toISOString(),
+								platform: lead.platform || 'Pull_marketing',
+								tag: 'gn',
+							})
+						)
+					)
+					results.forEach((r) => {
+						if (r.status === 'fulfilled') createdCount++
+					})
+				}
+				uploadedCount = createdCount
+				if (createdCount === 0) {
+					throw new Error('Server rejected lead insertions. Please ensure backend is running.')
+				}
+			}
+
+			toast.success(`${uploadedCount} leads uploaded successfully`)
+			setIsBulkModalOpen(false)
+			setBulkFile(null)
+			setParsedBulkLeads([])
+			setBulkErrorRows([])
+			fetchJobData()
+		} catch (err: any) {
+			console.error('Failed to bulk upload leads:', err)
+			const errMsg =
+				(typeof err === 'string' && err) ||
+				err?.message ||
+				err?.response?.data?.message ||
+				err?.data?.message ||
+				(err?.status === 401 ? 'Session expired or unauthorized. Please log in again.' : null) ||
+				(err?.status === 404 ? 'Lead upload API endpoint not found on server.' : null) ||
+				'Failed to upload leads'
+			toast.error(typeof errMsg === 'string' ? errMsg : 'Failed to upload leads')
+		} finally {
+			setBulkUploading(false)
+		}
 	}
 
 	const colorOptions = [
@@ -1319,6 +1560,18 @@ const FollowUpReportList: React.FC = () => {
 						/>
 						<TableButton
 							action='add'
+							text='Bulk Upload'
+							onClick={() => {
+								setParsedBulkLeads([])
+								setBulkErrorRows([])
+								setBulkFile(null)
+								setIsBulkModalOpen(true)
+							}}
+							className='flex-shrink-0'
+							style={{ backgroundColor: '#059669', color: '#fff' }}
+						/>
+						<TableButton
+							action='add'
 							text='Add Lead'
 							onClick={() => setIsModalOpen(true)}
 							className='flex-shrink-0'
@@ -1690,6 +1943,146 @@ const FollowUpReportList: React.FC = () => {
 							/>
 						)}
 						Save Lead
+					</button>
+				</div>
+			</Modal>
+
+			{/* Bulk Upload Modal */}
+			<Modal
+				show={isBulkModalOpen}
+				onHide={() => setIsBulkModalOpen(false)}
+				centered
+				size='lg'>
+				<div className='flr-modal-header d-flex justify-content-between align-items-center'>
+					<h3 className='flr-modal-title mb-0 d-flex align-items-center gap-2'>
+						<FontAwesomeIcon icon={faUpload} style={{ color: '#059669' }} />
+						<span>Bulk Upload Leads (.xlsx / .csv)</span>
+					</h3>
+					<button
+						className='btn btn-icon btn-sm btn-active-light-primary'
+						onClick={() => setIsBulkModalOpen(false)}>
+						<i className='bi bi-x fs-2' />
+					</button>
+				</div>
+
+				<Modal.Body className='flr-modal-body p-6'>
+					{/* Template banner */}
+					<div
+						className='d-flex align-items-center justify-content-between p-4 mb-5 rounded'
+						style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+						<div>
+							<div className='fw-bold text-gray-800' style={{ fontSize: '14px' }}>
+								Need the sample spreadsheet format?
+							</div>
+							<div className='text-muted fs-8 mt-1'>
+								Download our pre-formatted Excel template with all required columns.
+							</div>
+						</div>
+						<button
+							type='button'
+							className='btn btn-sm btn-success fw-bold d-inline-flex align-items-center gap-2 flex-shrink-0 ms-3'
+							onClick={downloadSampleTemplate}>
+							<FontAwesomeIcon icon={faDownload} />
+							<span>Download Sample Template</span>
+						</button>
+					</div>
+
+					{/* File upload input */}
+					<div className='mb-4'>
+						<label className='form-label fw-bold text-gray-800 mb-2'>
+							Select Excel or CSV Spreadsheet
+						</label>
+						<input
+							type='file'
+							className='form-control rounded'
+							accept='.xlsx, .xls, .csv'
+							onChange={handleBulkFileChange}
+						/>
+						<span className='text-muted fs-8 mt-1 d-block'>
+							Supported: .xlsx, .xls, .csv. Required columns: <strong>full_name</strong> and <strong>phone_number</strong>.
+						</span>
+					</div>
+
+					{/* Parsing Summary */}
+					{bulkFile && (
+						<div className='mb-4'>
+							<div className='d-flex gap-3 mb-3'>
+								<span className='badge bg-light-primary text-primary px-3 py-2 fw-semibold fs-7'>
+									File: {bulkFile.name}
+								</span>
+								<span className='badge bg-light-success text-success px-3 py-2 fw-semibold fs-7'>
+									Valid Rows: {parsedBulkLeads.length}
+								</span>
+								{bulkErrorRows.length > 0 && (
+									<span className='badge bg-light-danger text-danger px-3 py-2 fw-semibold fs-7'>
+										Skipped: {bulkErrorRows.length}
+									</span>
+								)}
+							</div>
+
+							{/* Preview Table */}
+							{parsedBulkLeads.length > 0 && (
+								<div className='table-responsive border rounded' style={{ maxHeight: '220px' }}>
+									<table className='table table-sm table-striped align-middle mb-0' style={{ fontSize: '12px' }}>
+										<thead className='bg-light text-muted fw-bold'>
+											<tr>
+												<th>#</th>
+												<th>Full Name</th>
+												<th>Phone Number</th>
+												<th>City</th>
+												<th>Email</th>
+												<th>Ad / Campaign</th>
+											</tr>
+										</thead>
+										<tbody>
+											{parsedBulkLeads.slice(0, 5).map((row, i) => (
+												<tr key={i}>
+													<td>{i + 1}</td>
+													<td className='fw-semibold text-gray-800'>{row.full_name}</td>
+													<td>{row.phone_number}</td>
+													<td>{row.city || '-'}</td>
+													<td>{row.email || '-'}</td>
+													<td>{row.ad_name || '-'}</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+									{parsedBulkLeads.length > 5 && (
+										<div className='text-center py-2 text-muted fs-8 bg-light'>
+											+ {parsedBulkLeads.length - 5} more leads ready to import
+										</div>
+									)}
+								</div>
+							)}
+
+							{bulkErrorRows.length > 0 && (
+								<div className='alert alert-warning py-2 px-3 mt-3 fs-8 mb-0'>
+									<strong>Note:</strong> {bulkErrorRows.length} rows were skipped due to missing Name or Phone Number.
+								</div>
+							)}
+						</div>
+					)}
+				</Modal.Body>
+
+				<div className='flr-modal-footer'>
+					<button
+						className='flr-btn-cancel'
+						onClick={() => setIsBulkModalOpen(false)}>
+						Cancel
+					</button>
+					<button
+						className='flr-btn-save'
+						style={{ backgroundColor: '#059669', borderColor: '#059669' }}
+						onClick={handleUploadBulkLeads}
+						disabled={bulkUploading || parsedBulkLeads.length === 0}>
+						{bulkUploading && (
+							<span
+								className='spinner-border spinner-border-sm me-2'
+								role='status'
+								aria-hidden='true'
+							/>
+						)}
+						Upload {parsedBulkLeads.length > 0 ? `(${parsedBulkLeads.length}) Leads` : ''}
 					</button>
 				</div>
 			</Modal>

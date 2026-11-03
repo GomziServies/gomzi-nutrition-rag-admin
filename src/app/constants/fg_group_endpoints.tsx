@@ -821,6 +821,7 @@ const FacebookLeadRoute = `${AdminV1Route}/facebook-lead`
 export const CreateFacebookLead = `${FacebookLeadRoute}/create`
 export const GetFacebookLeads = `${FacebookLeadRoute}/get`
 export const CreateManualFacebookLead = `${FacebookLeadRoute}/create-manual-lead`
+export const BulkCreateFacebookLeads = `${FacebookLeadRoute}/bulk-create`
 
 //GN Inventory Stock
 export const GetGnStock = `${AdminV1Route}/gn-stock/get`

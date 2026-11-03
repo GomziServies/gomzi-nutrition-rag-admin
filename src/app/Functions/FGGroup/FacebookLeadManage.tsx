@@ -9,9 +9,19 @@ export function CreateFacebookLead(body: any): Promise<any> {
 export function GetFacebookLeads(query: any): Promise<any> {
 	return APIGet(FGGroupEndpoints.GetFacebookLeads, getAPIHeaders('fg_group'), query)
 }
+
 export function CreateManualFacebookLead(body: any): Promise<any> {
 	return APIPost(
 		FGGroupEndpoints.CreateManualFacebookLead,
+		getAPIHeaders('fg_group'),
+		undefined,
+		body
+	)
+}
+
+export function BulkCreateFacebookLeads(body: any): Promise<any> {
+	return APIPost(
+		FGGroupEndpoints.BulkCreateFacebookLeads,
 		getAPIHeaders('fg_group'),
 		undefined,
 		body

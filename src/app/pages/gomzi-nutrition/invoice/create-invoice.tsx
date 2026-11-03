@@ -340,7 +340,7 @@ const NutritionCreateInvoice: React.FC = () => {
 				discount: Number(plan.discount || 0),
 				totalAmount: plan.totalPayment,
 				quantity: plan.quantity,
-				duration: plan.duration_number ? `${plan.duration_number} ${plan.duration}` : '',
+				duration: plan.duration_number ? `${plan.duration_number} ${plan.duration}` : '1 Days',
 				isDiscountPercentage: plan.isDiscountPercentage,
 			}))
 
