@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDownload, faFileAlt } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faDownload, faFileAlt, faPaperPlane, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import {
 	PartnerApplicationStatus,
@@ -146,7 +146,8 @@ export default function PartnerApplicationActions({
 							setReason('')
 							setDecision('approved')
 						}}>
-						Accept
+						<FontAwesomeIcon icon={faCheck} className='gz-partner-btn-icon' />
+						<span>Accept</span>
 					</button>
 				)}
 				{status !== 'rejected' && (
@@ -160,7 +161,8 @@ export default function PartnerApplicationActions({
 							setReason('')
 							setDecision('rejected')
 						}}>
-						Reject
+						<FontAwesomeIcon icon={faTimes} className='gz-partner-btn-icon' />
+						<span>Reject</span>
 					</button>
 				)}
 				{status === 'approved' && !inquiry.partner_policy?.accepted_at && (
@@ -170,7 +172,8 @@ export default function PartnerApplicationActions({
 						title='Resend policy email'
 						disabled={saving || resending}
 						onClick={resendPolicy}>
-						{resending ? 'Sending…' : compact ? 'Resend' : 'Resend policy email'}
+						<FontAwesomeIcon icon={faPaperPlane} className='gz-partner-btn-icon' />
+						<span>{resending ? 'Sending…' : compact ? 'Resend' : 'Resend policy email'}</span>
 					</button>
 				)}
 				{inquiry.partner_policy?.version && (
@@ -186,8 +189,8 @@ export default function PartnerApplicationActions({
 							event.stopPropagation()
 							handleViewPartnerAgreement(inquiry._id)
 						}}>
-						<FontAwesomeIcon icon={inquiry.partner_policy?.accepted_at ? faDownload : faFileAlt} />
-						{compact ? (inquiry.partner_policy?.accepted_at ? 'PDF' : 'Draft') : (inquiry.partner_policy?.accepted_at ? 'Accepted PDF' : 'Draft PDF')}
+						<FontAwesomeIcon icon={inquiry.partner_policy?.accepted_at ? faDownload : faFileAlt} className='gz-partner-btn-icon' />
+						<span>{compact ? (inquiry.partner_policy?.accepted_at ? 'PDF' : 'Draft') : (inquiry.partner_policy?.accepted_at ? 'Accepted PDF' : 'Draft PDF')}</span>
 					</button>
 				)}
 				{children}
