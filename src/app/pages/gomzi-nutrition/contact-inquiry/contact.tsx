@@ -22,7 +22,7 @@ import Table from '../../../components/Table'
 import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetContactInquiry } from '../../../Functions/FGGroup'
-import { isOrderInquiry } from './contactInquiryUtils'
+import { isOrderInquiry, isProPartnerApplication } from './contactInquiryUtils'
 import '../common-management.css'
 import '../products-theme.css'
 import '../orders-theme.css'
@@ -85,7 +85,7 @@ const ContactInquiry: React.FC = () => {
 			setMetaData(paginationMeta)
 			const totalPages = Number(paginationMeta.totalPages || 1)
 			let allData = Array.isArray(firstResponse?.data)
-				? firstResponse.data.filter((item: any) => !isOrderInquiry(item))
+				? firstResponse.data.filter((item: any) => !isOrderInquiry(item) && !isProPartnerApplication(item))
 				: []
 
 			for (let currentPage = 2; currentPage <= totalPages; currentPage += 1) {
@@ -96,7 +96,7 @@ const ContactInquiry: React.FC = () => {
 				})
 				if (Array.isArray(nextResponse?.data)) {
 					allData = allData.concat(
-						nextResponse.data.filter((item: any) => !isOrderInquiry(item))
+						nextResponse.data.filter((item: any) => !isOrderInquiry(item) && !isProPartnerApplication(item))
 					)
 				}
 			}
@@ -196,7 +196,7 @@ const ContactInquiry: React.FC = () => {
 	const filteredContactInquiry = useMemo(() => {
 		const filtered = allContactInquiry.filter((item: any) => {
 			// Apply client-side filters: search, subject, unread, date range
-			if (!item || isOrderInquiry(item)) return false
+			if (!item || isOrderInquiry(item) || isProPartnerApplication(item)) return false
 
 			if (searchTerm && typeof searchTerm === 'string') {
 				const q = searchTerm.toLowerCase().trim()

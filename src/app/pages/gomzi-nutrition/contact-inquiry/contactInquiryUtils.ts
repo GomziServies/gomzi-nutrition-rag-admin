@@ -67,3 +67,20 @@ export const isOrderInquiry = (item: any): boolean => {
 	return false
 }
 
+export const isProPartnerApplication = (item: any): boolean => {
+	if (!item || isOrderInquiry(item)) return false
+	const subject = (item.subject || '').toString().toLowerCase()
+	const details = item.details || {}
+	return (
+		subject.includes('partner') ||
+		details.inquiryType === 'partner' ||
+		Boolean(
+			details.higher_education ||
+			details.experience_years ||
+			details.employment_type ||
+			details.sales_potential ||
+			details.certification_url
+		)
+	)
+}
+

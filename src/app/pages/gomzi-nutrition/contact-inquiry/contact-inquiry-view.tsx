@@ -42,6 +42,7 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import { FG_GROUP_FILE_BASE_URL } from '../../../constants/base_URL'
 import { GetContactInquiry, UpdateReadReceipt } from '../../../Functions/FGGroup'
 import { isOrderInquiry } from './contactInquiryUtils'
+import PartnerApplicationActions, { PartnerStatusBadge, PartnerReviewDetails, PartnerPolicyRecord } from './PartnerApplicationActions'
 import '../common-management.css'
 import './contact-inquiry.css'
 
@@ -406,7 +407,21 @@ const ContactInquiryView: React.FC = () => {
 				</div>
 			</div>
 
+			{isPartnerProgram && inquiryItem?._id && (
+				<div className='gz-mgmt-card p-5 mb-6'>
+					<div className='d-flex justify-content-between align-items-center flex-wrap gap-3'>
+						<div>
+							<strong className='me-3'>Application Status</strong>
+							<PartnerStatusBadge inquiry={inquiryItem} />
+						</div>
+						<PartnerApplicationActions inquiry={inquiryItem} onUpdated={(updated) => setContactInquiry(updated)} />
+					</div>
+					<PartnerReviewDetails inquiry={inquiryItem} />
+				</div>
+			)}
+
 			{/* 4-Column Overview Quick Contact Cards */}
+			{isPartnerProgram && <PartnerPolicyRecord inquiry={inquiryItem} onRefresh={fetchData} />}
 			<div className='gz-inq-overview-grid'>
 				<div className='gz-inq-overview-card'>
 					<div className='gz-inq-card-icon blue'>
@@ -776,9 +791,9 @@ const ContactInquiryView: React.FC = () => {
 						</div>
 						<div className='gz-inq-card-body'>
 							<div className='mb-4'>
-								<label className='gz-inq-card-label d-block mb-2'>
+								<span className='gz-inq-card-label d-block mb-2'>
 									How Do You Currently Acquire Clients?
-								</label>
+								</span>
 								<div className='d-flex flex-wrap gap-2'>
 									{Array.isArray(details?.client_acquisition) ? (
 										details.client_acquisition.map((item: string, idx: number) => (
@@ -907,9 +922,9 @@ const ContactInquiryView: React.FC = () => {
 						</div>
 					)}
 
-					<label className='gz-inq-card-label d-block mb-2'>
+					<span className='gz-inq-card-label d-block mb-2'>
 						Submitted Message Content
-					</label>
+					</span>
 					<div className='gz-inq-message-box'>
 						{inquiryItem?.message ? (
 							inquiryItem.message

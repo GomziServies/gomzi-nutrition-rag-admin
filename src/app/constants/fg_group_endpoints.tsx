@@ -101,6 +101,8 @@ const ContactInquiryRoute = AdminV1Route + '/contact-inquiry'
 export const GetContactInquiry = `${ContactInquiryRoute}/get`
 export const GetRTPConsultancyInquiry = `${ContactInquiryRoute}/get-rtp-consultancy`
 export const UpdateInquiryReadReceipt = `${ContactInquiryRoute}/read-receipt`
+export const ReviewPartnerApplication = `${ContactInquiryRoute}/review-partner`
+export const PartnerAgreementPDF = `${ContactInquiryRoute}/partner-agreement-pdf`
 
 // Dashboard
 const DashboardRoute = `${AdminV1Route}/dashboard`

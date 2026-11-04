@@ -30,31 +30,16 @@ import SearchFilter from '../../../components/SearchFilter'
 import SelectField from '../../../components/SelectField'
 import DownloadExcelButton from '../../../components/DownloadExcelButton'
 import Table from '../../../components/Table'
-import TableButton from '../../../components/TableButton'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetContactInquiry } from '../../../Functions/FGGroup'
-import { isOrderInquiry } from './contactInquiryUtils'
+import { isProPartnerApplication } from './contactInquiryUtils'
+import PartnerApplicationActions, { getPartnerApplicationStatus, PartnerStatusBadge, PartnerReviewDetails, PartnerPolicyRecord, handleViewPartnerAgreement } from './PartnerApplicationActions'
 import '../common-management.css'
 import '../products-theme.css'
 import '../orders-theme.css'
 import './contact-inquiry.css'
 
-export const isProPartnerApplication = (item: any): boolean => {
-	if (!item || isOrderInquiry(item)) return false
-	const subject = (item.subject || '').toString().toLowerCase()
-	const details = item.details || {}
-	return (
-		subject.includes('partner') ||
-		details.inquiryType === 'partner' ||
-		Boolean(
-			details.higher_education ||
-			details.experience_years ||
-			details.employment_type ||
-			details.sales_potential ||
-			details.certification_url
-		)
-	)
-}
+export { isProPartnerApplication } from './contactInquiryUtils'
 
 const ProPartnerInquiry: React.FC = () => {
 	const location = useLocation()
@@ -64,6 +49,7 @@ const ProPartnerInquiry: React.FC = () => {
 	const [allPartnerInquiries, setAllPartnerInquiries] = useState<any[]>([])
 	const [showUnreadOnly, setShowUnreadOnly] = useState(false)
 	const [employmentTypeFilter, setEmploymentTypeFilter] = useState('')
+	const [statusFilter, setStatusFilter] = useState('')
 	const [sort, setSort] = useState('createdAt')
 	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
@@ -131,7 +117,7 @@ const ProPartnerInquiry: React.FC = () => {
 
 	useEffect(() => {
 		setPagination((prev) => ({ ...prev, page: 1 }))
-	}, [searchTerm, sort, sortOrder, showUnreadOnly, employmentTypeFilter, selectedDateRange])
+	}, [searchTerm, sort, sortOrder, showUnreadOnly, employmentTypeFilter, statusFilter, selectedDateRange])
 
 	const handleItemsPerPageChange = (value: number) => {
 		setPagination((prev) => ({ ...prev, page: 1, itemsPerPage: value }))
@@ -171,6 +157,7 @@ const ProPartnerInquiry: React.FC = () => {
 		{ title: 'Client Reach', field: 'details.active_clients' },
 		{ title: 'Sales Potential', field: 'details.sales_potential' },
 		{ title: 'Date Applied', field: 'createdAt' },
+		{ title: 'Application Status', field: 'partner_status' },
 	]
 
 	const handleRowClick = (id: string) => {
@@ -182,6 +169,7 @@ const ProPartnerInquiry: React.FC = () => {
 			if (!item || !isProPartnerApplication(item)) return false
 
 			const details = item.details || {}
+			if (statusFilter && getPartnerApplicationStatus(item) !== statusFilter) return false
 
 			if (searchTerm && typeof searchTerm === 'string') {
 				const q = searchTerm.toLowerCase().trim()
@@ -243,7 +231,7 @@ const ProPartnerInquiry: React.FC = () => {
 		}
 
 		return filtered
-	}, [allPartnerInquiries, searchTerm, employmentTypeFilter, showUnreadOnly, selectedDateRange, sort, sortOrder])
+	}, [allPartnerInquiries, searchTerm, employmentTypeFilter, statusFilter, showUnreadOnly, selectedDateRange, sort, sortOrder])
 
 	const paginatedApplications = filteredApplications.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
@@ -277,7 +265,14 @@ const ProPartnerInquiry: React.FC = () => {
 					'Estimated Sales Potential': d.sales_potential || 'N/A',
 					'Instagram Followers': d.instagram_followers || 'N/A',
 					'Social Profile': d.instagram || d.social_link || 'N/A',
-					'Status': item.read_receipt ? 'Reviewed' : 'Pending',
+					'Application Status': getPartnerApplicationStatus(item),
+					'Review Note': item.partner_review_reason || '',
+					'Policy Version': item.partner_policy?.version || '',
+					'Policy Accepted': item.partner_policy?.accepted_at ? 'Yes' : 'No',
+					'Policy Accepted By': item.partner_policy?.accepted_name || '',
+					'Policy Acceptance Date': item.partner_policy?.accepted_at ? DayJS(item.partner_policy.accepted_at).format('DD/MM/YYYY hh:mm:ss A') : '',
+					'Decision Date': item.partner_reviewed_at ? DayJS(item.partner_reviewed_at).format('DD/MM/YYYY hh:mm:ss A') : '',
+					'Read Status': item.read_receipt ? 'Read' : 'Unread',
 					'Applied Date': DayJS(item.createdAt).format('DD/MM/YYYY hh:mm:ss A'),
 				}
 			})
@@ -297,20 +292,96 @@ const ProPartnerInquiry: React.FC = () => {
 
 	const stats = useMemo(() => {
 		const total = allPartnerInquiries.length
-		const unread = allPartnerInquiries.filter((i: any) => i.read_receipt === false).length
-		const reviewed = total - unread
-		const highPotential = allPartnerInquiries.filter((i: any) => {
-			const pot = (i?.details?.sales_potential || '').toLowerCase()
-			return pot.includes('15') || pot.includes('30') || pot.includes('products')
-		}).length
-		return { total, unread, reviewed, highPotential }
+		const pending = allPartnerInquiries.filter((item) => getPartnerApplicationStatus(item) === 'pending').length
+		const approved = allPartnerInquiries.filter((item) => getPartnerApplicationStatus(item) === 'approved').length
+		const rejected = allPartnerInquiries.filter((item) => getPartnerApplicationStatus(item) === 'rejected').length
+		return { total, pending, approved, rejected }
 	}, [allPartnerInquiries])
 
 	return (
-		<div className='gz-mgmt-container'>
+		<div className='gz-mgmt-container partner-page'>
 			<PageTitle breadcrumbs={[]}>RAG Pro Partner Applications</PageTitle>
 
 			<style>{`
+				.partner-table { min-width: 0; }
+				.partner-table .table-responsive {
+					overflow-x: auto;
+					scrollbar-width: thin;
+				}
+				.partner-table #kt_table_users {
+					table-layout: fixed !important;
+					width: 100% !important;
+					min-width: 0;
+					max-width: 100%;
+				}
+				.partner-table #kt_table_users thead th {
+					display: table-cell !important;
+					padding: 14px 10px !important;
+					white-space: normal !important;
+					line-height: 1.5;
+					font-size: 11px !important;
+				}
+				.partner-table #kt_table_users thead th:nth-child(1) { width: 4% !important; }
+				.partner-table #kt_table_users thead th:nth-child(2) { width: 11%; }
+				.partner-table #kt_table_users thead th:nth-child(3) { width: 15%; }
+				.partner-table #kt_table_users thead th:nth-child(4) { width: 14%; }
+				.partner-table #kt_table_users thead th:nth-child(5) { width: 8%; }
+				.partner-table #kt_table_users thead th:nth-child(6) { width: 12%; }
+				.partner-table #kt_table_users thead th:nth-child(7) { width: 9%; }
+				.partner-table #kt_table_users thead th:nth-child(8) { width: 13%; }
+				.partner-table #kt_table_users thead th:nth-child(9) { width: 14% !important; }
+				.partner-table #kt_table_users thead th:nth-child(7) { white-space: nowrap !important; }
+				.partner-table #kt_table_users .data-row > td {
+					display: table-cell !important;
+					padding: 14px 10px !important;
+					vertical-align: top !important;
+					white-space: normal !important;
+					overflow-wrap: normal;
+					word-break: normal;
+					line-height: 1.5;
+					background: #fff !important;
+				}
+				.partner-table #kt_table_users .data-row > td:nth-child(2),
+				.partner-table #kt_table_users .data-row > td:nth-child(3),
+				.partner-table #kt_table_users .data-row > td:nth-child(4),
+				.partner-table #kt_table_users .data-row > td.partner-status { overflow-wrap: anywhere; }
+				.partner-table #kt_table_users .data-row:hover > td {
+					background: #f8fafc !important;
+				}
+				.partner-table #kt_table_users th:last-child,
+				.partner-table #kt_table_users td.partner-actions {
+					position: sticky;
+					right: 0;
+					z-index: 2;
+					box-shadow: none;
+					border-left: 1px solid #eef2f6 !important;
+					text-align: left !important;
+				}
+				.partner-table #kt_table_users th:last-child { z-index: 3; }
+				.partner-table #kt_table_users .detail-row.is-visible { display: table-row !important; }
+				.partner-table .partner-status .mt-2 { margin-top: 6px !important; }
+				.partner-table .partner-status .fs-8 { font-size: 11px !important; line-height: 1.5; }
+				.partner-table .partner-status .badge { padding: 5px 9px; }
+				.partner-table .partner-actions-stack { width: 100%; max-width: 184px; min-width: 0; }
+				.partner-table .gz-badge-emp { max-width: 100% !important; white-space: normal; }
+				.partner-table .gz-badge-potential { max-width: 100%; align-items: flex-start; line-height: 1.5; overflow-wrap: normal; word-break: normal; }
+				.partner-table .gz-badge-potential > span { min-width: 0; }
+				.partner-table .gz-badge-potential svg { flex-shrink: 0; margin-top: 3px; }
+				.partner-table .partner-contact-line { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+				.partner-page .partner-toolbar { gap: 12px !important; width: 100%; }
+				.partner-page .partner-toolbar .gz-search-filter-box { flex: 1 1 220px; max-width: 320px; }
+				.partner-page .partner-toolbar > select { min-height: 38px; }
+				@media (max-width: 1199px) {
+					.partner-table #kt_table_users { min-width: 1060px; }
+					.partner-table #kt_table_users th:last-child,
+					.partner-table #kt_table_users td.partner-actions {
+						box-shadow: -4px 0 8px -6px rgba(23, 43, 77, .25);
+					}
+				}
+				@media (max-width: 768px) {
+					.partner-page .partner-table { padding: 0 12px 16px !important; }
+					.partner-page .partner-toolbar .gz-search-filter-box { max-width: none; flex-basis: 100%; }
+				}
 				.partner-table .data-row {
 					cursor: pointer;
 					border-bottom: 1px solid #EEF2F7;
@@ -398,25 +469,25 @@ const ProPartnerInquiry: React.FC = () => {
 				</div>
 				<div className='gz-prod-summary-card'>
 					<div className='gz-prod-summary-label'>Pending Review</div>
-					<div className='gz-prod-summary-val text-danger'>{stats.unread}</div>
+					<div className='gz-prod-summary-val text-warning'>{stats.pending}</div>
 					<div className='gz-prod-summary-sub'>Awaiting action</div>
 				</div>
 				<div className='gz-prod-summary-card'>
-					<div className='gz-prod-summary-label'>Reviewed &amp; Verified</div>
-					<div className='gz-prod-summary-val text-success'>{stats.reviewed}</div>
-					<div className='gz-prod-summary-sub'>Evaluated</div>
+					<div className='gz-prod-summary-label'>Accepted Partners</div>
+					<div className='gz-prod-summary-val text-success'>{stats.approved}</div>
+					<div className='gz-prod-summary-sub'>Applications approved</div>
 				</div>
 				<div className='gz-prod-summary-card'>
-					<div className='gz-prod-summary-label'>High Potential Tier</div>
-					<div className='gz-prod-summary-val text-primary'>{stats.highPotential}</div>
-					<div className='gz-prod-summary-sub'>Active sales drivers</div>
+					<div className='gz-prod-summary-label'>Rejected Applications</div>
+					<div className='gz-prod-summary-val text-danger'>{stats.rejected}</div>
+					<div className='gz-prod-summary-sub'>Applications declined</div>
 				</div>
 			</div>
 
 			{/* Main Management Card */}
 			<div className='gz-mgmt-card mb-6'>
 				<div className='gz-mgmt-toolbar'>
-					<div className='d-flex flex-wrap align-items-center gap-3'>
+					<div className='d-flex flex-wrap align-items-center gap-3 partner-toolbar'>
 						<SearchFilter
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
@@ -439,7 +510,7 @@ const ProPartnerInquiry: React.FC = () => {
 							/>
 						</div>
 
-						<div style={{ minWidth: '240px', maxWidth: '320px' }}>
+						<div style={{ minWidth: '180px', maxWidth: '220px', flex: '1 1 180px' }}>
 							<SelectField
 								className='fv-row mb-0'
 								label='Employment Type'
@@ -462,6 +533,14 @@ const ProPartnerInquiry: React.FC = () => {
 							/>
 						</div>
 
+						<select className='form-select form-select-sm w-auto' aria-label='Filter application status'
+							value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+							<option value=''>All Application Statuses</option>
+							<option value='pending'>Pending</option>
+							<option value='approved'>Accepted</option>
+							<option value='rejected'>Rejected</option>
+						</select>
+
 						<button
 							type='button'
 							className={`btn btn-sm ${showUnreadOnly ? 'btn-danger' : 'btn-light'} fw-bold`}
@@ -473,7 +552,7 @@ const ProPartnerInquiry: React.FC = () => {
 				</div>
 
 				<div className='p-6 pt-0 partner-table'>
-					<div className='table-responsive'>
+					<div className='partner-table-content'>
 						<Table
 							data={paginatedApplications}
 							columns={sortableFields}
@@ -534,12 +613,13 @@ const ProPartnerInquiry: React.FC = () => {
 													<a
 														href={`mailto:${email}`}
 														className='text-primary fw-semibold d-block fs-7'
+														title={email}
 														onClick={(e) => e.stopPropagation()}>
 														{email}
 													</a>
 												)}
 												{mobile && (
-													<div className='d-flex align-items-center gap-2 mt-1'>
+													<div className='partner-contact-line mt-1'>
 														<a
 															href={`tel:${mobile}`}
 															className='text-dark fw-semibold fs-7'
@@ -593,7 +673,7 @@ const ProPartnerInquiry: React.FC = () => {
 												{d.sales_potential ? (
 													<span className='gz-badge-potential'>
 														<FontAwesomeIcon icon={faAward} />
-														{d.sales_potential}
+														<span>{d.sales_potential}</span>
 													</span>
 												) : (
 													<span className='text-muted fs-8'>Not Specified</span>
@@ -611,18 +691,44 @@ const ProPartnerInquiry: React.FC = () => {
 											</td>
 
 											{/* View Details Action */}
-											<td>
-												<TableButton
-													action='view'
+											<td className='partner-status'>
+												<PartnerStatusBadge inquiry={item} />
+												<PartnerReviewDetails inquiry={item} />
+												{item.partner_policy?.accepted_at && (
+													<button
+														type='button'
+														className='btn btn-xs d-inline-flex align-items-center gap-1 mt-1 p-1 px-2 border-0'
+														style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', borderRadius: '4px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+														onClick={(e) => {
+															e.stopPropagation()
+															handleViewPartnerAgreement(item._id)
+														}}
+														title='View Accepted Agreement PDF'>
+														<FontAwesomeIcon icon={faDownload} /> Accepted PDF
+													</button>
+												)}
+											</td>
+											<td className='partner-actions'>
+												<div className='partner-actions-stack'>
+												<PartnerApplicationActions inquiry={item} compact onUpdated={(updated) => {
+													setAllPartnerInquiries((items) => items.map((entry) => entry._id === updated._id ? updated : entry))
+												}}>
+												<Link className='gz-partner-button gz-partner-button-view'
 													to={`${basePath}/contact-inquiry/contact-inquiry-view?contactInquiry_id=${item._id}`}
-												/>
+													onClick={(event) => event.stopPropagation()}>
+													<FontAwesomeIcon icon={faEye} aria-hidden='true' />
+													View
+												</Link>
+												</PartnerApplicationActions>
+												</div>
 											</td>
 										</tr>
 
 										{/* Expandable Quick Details Drawer */}
 										{isVisible && (
 											<tr className='detail-row is-visible'>
-												<td colSpan={8}>
+												<td colSpan={9}>
+													<PartnerPolicyRecord inquiry={item} onRefresh={fetchData} />
 													<div className='partner-details-grid'>
 														<div>
 															<strong>Full Address:</strong> {d.address || 'N/A'} {d.pincode ? `(${d.pincode})` : ''}
