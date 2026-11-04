@@ -1,55 +1,114 @@
 /* Keep compact inquiry actions independent of shared .btn and .d-flex table overrides. */
 .gz-partner-controls {
 	display: grid !important;
-	grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-	gap: 8px !important;
-	width: 100%;
-	max-width: 184px;
-	min-width: 0;
-	box-sizing: border-box;
+	grid-template-columns: repeat(2, 1fr) !important;
+	gap: 6px !important;
+	width: 100% !important;
+	min-width: 160px !important;
+	max-width: 184px !important;
+	box-sizing: border-box !important;
+	align-items: center !important;
 }
 
 .gz-partner-controls > .gz-partner-button {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 6px;
-	width: 100%;
-	min-width: 0;
-	max-width: 100%;
-	height: 34px;
-	margin: 0;
-	padding: 6px 8px;
-	box-sizing: border-box;
-	border: 1px solid transparent;
-	border-radius: 8px;
-	font-family: inherit;
-	font-size: 12px;
-	font-weight: 600;
-	line-height: 1.2;
-	text-decoration: none;
-	white-space: nowrap;
-	word-break: normal;
-	overflow-wrap: normal;
-	cursor: pointer;
-	transition: background-color 150ms ease, border-color 150ms ease;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 5px !important;
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
+	height: 30px !important;
+	margin: 0 !important;
+	padding: 4px 8px !important;
+	box-sizing: border-box !important;
+	border: 1px solid transparent !important;
+	border-radius: 6px !important;
+	font-family: inherit !important;
+	font-size: 11.5px !important;
+	font-weight: 600 !important;
+	line-height: 1 !important;
+	text-decoration: none !important;
+	white-space: nowrap !important;
+	word-break: normal !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	cursor: pointer !important;
+	transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease !important;
 }
 
+/* If 3 buttons exist (e.g. Accept/Reject + PDF + View), make the last button (View) span both columns full width */
 .gz-partner-controls > .gz-partner-button:last-child:nth-child(3) {
-	grid-column: 1 / -1;
+	grid-column: 1 / -1 !important;
 }
 
-.gz-partner-controls > .gz-partner-button-accept { background: #ecfdf3; color: #15803d; border-color: #d1fadf; }
-.gz-partner-controls > .gz-partner-button-reject { background: #fff1f3; color: #be123c; border-color: #ffe4e8; }
-.gz-partner-controls > .gz-partner-button-resend { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
-.gz-partner-controls > .gz-partner-button-view { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
-.gz-partner-controls > .gz-partner-button-accepted-pdf { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
-.gz-partner-controls > .gz-partner-button-pdf { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
-.gz-partner-controls > .gz-partner-button-accept:hover { background: #dcfce7; }
-.gz-partner-controls > .gz-partner-button-reject:hover { background: #ffe4e8; }
-.gz-partner-controls > .gz-partner-button-resend:hover { background: #e2e8f0; }
-.gz-partner-controls > .gz-partner-button-view:hover { background: #dbeafe; color: #1d4ed8; }
-.gz-partner-controls > .gz-partner-button-accepted-pdf:hover { background: #d1fae5; color: #065f46; }
-.gz-partner-controls > .gz-partner-button-pdf:hover { background: #f1f5f9; color: #1e293b; }
-.gz-partner-controls > .gz-partner-button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
-.gz-partner-controls > .gz-partner-button:disabled { opacity: .55; cursor: wait; }
+/* Action Button Themes */
+.gz-partner-controls > .gz-partner-button-accept {
+	background: #ECFDF5 !important;
+	color: #047857 !important;
+	border-color: #A7F3D0 !important;
+}
+.gz-partner-controls > .gz-partner-button-accept:hover {
+	background: #D1FAE5 !important;
+	border-color: #6EE7B7 !important;
+}
+
+.gz-partner-controls > .gz-partner-button-reject {
+	background: #FFF1F2 !important;
+	color: #BE123C !important;
+	border-color: #FECDD3 !important;
+}
+.gz-partner-controls > .gz-partner-button-reject:hover {
+	background: #FFE4E6 !important;
+	border-color: #FDA4AF !important;
+}
+
+.gz-partner-controls > .gz-partner-button-resend {
+	background: #F8FAFC !important;
+	color: #334155 !important;
+	border-color: #E2E8F0 !important;
+}
+.gz-partner-controls > .gz-partner-button-resend:hover {
+	background: #E2E8F0 !important;
+	color: #0F172A !important;
+}
+
+.gz-partner-controls > .gz-partner-button-view {
+	background: #EFF6FF !important;
+	color: #1D4ED8 !important;
+	border-color: #BFDBFE !important;
+}
+.gz-partner-controls > .gz-partner-button-view:hover {
+	background: #DBEAFE !important;
+	color: #1E40AF !important;
+}
+
+.gz-partner-controls > .gz-partner-button-accepted-pdf {
+	background: #ECFDF5 !important;
+	color: #047857 !important;
+	border-color: #A7F3D0 !important;
+}
+.gz-partner-controls > .gz-partner-button-accepted-pdf:hover {
+	background: #D1FAE5 !important;
+	border-color: #6EE7B7 !important;
+}
+
+.gz-partner-controls > .gz-partner-button-pdf {
+	background: #F8FAFC !important;
+	color: #475569 !important;
+	border-color: #E2E8F0 !important;
+}
+.gz-partner-controls > .gz-partner-button-pdf:hover {
+	background: #F1F5F9 !important;
+	color: #1E293B !important;
+}
+
+.gz-partner-controls > .gz-partner-button:focus-visible {
+	outline: 2px solid #2563EB !important;
+	outline-offset: 1px !important;
+}
+
+.gz-partner-controls > .gz-partner-button:disabled {
+	opacity: 0.55 !important;
+	cursor: wait !important;
+}

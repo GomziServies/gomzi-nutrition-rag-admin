@@ -87,18 +87,6 @@ body {
 	box-shadow: 0 1px 4px 0 rgba(15, 23, 42, 0.05) !important;
 }
 
-@media (max-width: 991.98px) {
-	#kt_header .header-brand,
-	.header .header-brand {
-		display: flex !important;
-		align-items: center !important;
-		background-color: #ffffff !important;
-		border-right: 1px solid #DFE7F0 !important;
-		padding: 0 16px !important;
-		height: 100% !important;
-	}
-}
-
 @media (min-width: 992px) {
 	#kt_header .header-brand,
 	.header .header-brand {
@@ -122,15 +110,26 @@ body {
 	border: none !important;
 	border-right: 1px solid #DFE7F0 !important;
 	box-shadow: 2px 0 12px 0 rgba(15, 23, 42, 0.04) !important;
-	width: 265px !important;
-	min-width: 265px !important;
-	max-width: 265px !important;
-	z-index: 104 !important;
-	display: flex !important;
-	flex-direction: column !important;
-	height: 100vh !important;
 	overflow: hidden !important;
 	transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Aside Desktop Static Frame */
+@media (min-width: 992px) {
+	#kt_aside,
+	.aside {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		width: 265px !important;
+		min-width: 265px !important;
+		max-width: 265px !important;
+		z-index: 104 !important;
+		display: flex !important;
+		flex-direction: column !important;
+		height: 100vh !important;
+		transform: none !important;
+	}
 }
 
 /* Sidebar scrollbar suppression - smooth scrolling without visible scrollbar track/thumb */
@@ -3718,3 +3717,247 @@ select.form-control:disabled {
 	border-color: #DFE7F0 !important;
 }
 
+/* ==========================================================================
+   OMNISCIENT RESPONSIVE SYSTEM OVERRIDES (320px Mobile -> Desktop Fluidity)
+   ========================================================================== */
+
+/* 1. Fluid Layout Containers & Shell Spacing */
+@media (max-width: 991.98px) {
+	html, body {
+		overflow-x: hidden !important;
+		width: 100% !important;
+	}
+
+	.page {
+		display: flex !important;
+		flex-direction: column !important;
+		width: 100% !important;
+		max-width: 100% !important;
+		min-height: 100vh !important;
+		min-height: 100dvh !important;
+		overflow-x: hidden !important;
+	}
+
+	/* Fixed Mobile Top Header */
+	#kt_header,
+	.header {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		width: 100% !important;
+		height: 56px !important;
+		min-height: 56px !important;
+		z-index: 1000 !important;
+		display: flex !important;
+		flex-direction: row !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		background-color: #ffffff !important;
+		border-bottom: 1px solid #DFE7F0 !important;
+		box-shadow: 0 1px 4px 0 rgba(15, 23, 42, 0.05) !important;
+		padding: 0 10px !important;
+	}
+
+	#kt_header .header-brand,
+	.header .header-brand {
+		display: flex !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		flex: 1 1 auto !important;
+		height: 100% !important;
+		padding: 0 6px !important;
+		border: none !important;
+		background: transparent !important;
+		position: static !important;
+	}
+
+	.gz-topbar-wrapper {
+		display: flex !important;
+		align-items: center !important;
+		justify-content: flex-end !important;
+		width: auto !important;
+		flex: 0 0 auto !important;
+		height: 56px !important;
+		min-height: 56px !important;
+		padding: 0 4px !important;
+	}
+
+	.gz-topbar-user-dropdown-menu {
+		right: 0 !important;
+		max-width: calc(100vw - 20px) !important;
+	}
+
+	/* Mobile Page Wrapper Offset - Starts Cleanly Under Fixed Header */
+	.wrapper,
+	#kt_wrapper {
+		padding-top: 56px !important;
+		padding-left: 0 !important;
+		margin-left: 0 !important;
+		width: 100% !important;
+		max-width: 100% !important;
+		min-width: 0 !important;
+		flex: 1 1 auto !important;
+	}
+
+	/* Mobile Aside Drawer Isolation - Fixed Offcanvas Tucked Away */
+	#kt_aside,
+	.aside {
+		position: fixed !important;
+		top: 0 !important;
+		bottom: 0 !important;
+		left: 0 !important;
+		width: 280px !important;
+		max-width: 85vw !important;
+		min-width: 0 !important;
+		height: 100vh !important;
+		height: 100dvh !important;
+		z-index: 1050 !important;
+		background: #FFFFFF !important;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+		display: flex !important;
+		flex-direction: column !important;
+		transform: translateX(-100%) !important;
+		transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+		pointer-events: none;
+		visibility: hidden;
+	}
+
+	#kt_aside.drawer,
+	.aside.drawer {
+		pointer-events: auto;
+		visibility: visible;
+	}
+
+	#kt_aside.drawer.drawer-on,
+	.aside.drawer.drawer-on,
+	body[data-kt-drawer-aside='on'] #kt_aside {
+		transform: translateX(0) !important;
+		pointer-events: auto;
+		visibility: visible;
+	}
+}
+
+@media (max-width: 767.98px) {
+	/* Containment & Global Padding Normalization */
+	#kt_content,
+	.content {
+		padding: 10px 0 !important;
+	}
+
+	#kt_content_container,
+	.container-fluid,
+	.container-xxl,
+	.container-xl,
+	.container-lg,
+	.container-md,
+	.container-sm {
+		padding-left: 12px !important;
+		padding-right: 12px !important;
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+
+	/* Card Surfaces on Small Screens */
+	.card {
+		margin-bottom: 16px !important;
+		border-radius: 12px !important;
+	}
+
+	.card .card-header {
+		padding: 12px 14px !important;
+		min-height: 48px !important;
+		flex-wrap: wrap !important;
+		gap: 10px !important;
+	}
+
+	.card .card-body {
+		padding: 14px !important;
+	}
+
+	/* Card Title Typography */
+	.card .card-title,
+	.card .card-header .card-title h3 {
+		font-size: 15px !important;
+		margin-bottom: 0 !important;
+	}
+
+	/* Global Modal Bounds on Mobile */
+	.modal-dialog {
+		margin: 8px auto !important;
+		width: calc(100% - 16px) !important;
+		max-width: calc(100% - 16px) !important;
+	}
+
+	.modal-content {
+		border-radius: 12px !important;
+		overflow: hidden !important;
+	}
+
+	.modal-header {
+		padding: 14px 16px !important;
+	}
+
+	.modal-body {
+		padding: 16px 14px !important;
+	}
+
+	.modal-footer {
+		padding: 12px 14px !important;
+		flex-wrap: wrap !important;
+		gap: 8px !important;
+	}
+
+	.modal-footer button,
+	.modal-footer a {
+		flex: 1 1 auto !important;
+	}
+
+	/* Touch Scroll Data Tables across the entire panel */
+	.table-responsive,
+	.gz-table-responsive,
+	.card-body > .table-responsive,
+	[class*="table-responsive"] {
+		overflow-x: auto !important;
+		-webkit-overflow-scrolling: touch !important;
+		width: 100% !important;
+		display: block !important;
+		margin-bottom: 0 !important;
+		scrollbar-width: thin !important;
+	}
+
+	.table-responsive::-webkit-scrollbar,
+	.gz-table-responsive::-webkit-scrollbar {
+		height: 4px !important;
+	}
+
+	.table-responsive::-webkit-scrollbar-thumb,
+	.gz-table-responsive::-webkit-scrollbar-thumb {
+		background: #CBD5E1 !important;
+		border-radius: 4px !important;
+	}
+
+	/* Prevent Table Column Flattening on Mobile */
+	.table-responsive > table.table,
+	.gz-table-responsive > table.table {
+		min-width: 620px !important;
+	}
+
+	/* Pagination Control Responsiveness */
+	.pagination {
+		flex-wrap: wrap !important;
+		gap: 4px !important;
+		justify-content: center !important;
+		margin-top: 12px !important;
+	}
+
+	.page-item .page-link {
+		min-width: 32px !important;
+		height: 32px !important;
+		padding: 0 6px !important;
+		font-size: 12px !important;
+		display: inline-flex !important;
+		align-items: center !important;
+		justify-content: center !important;
+	}
+}

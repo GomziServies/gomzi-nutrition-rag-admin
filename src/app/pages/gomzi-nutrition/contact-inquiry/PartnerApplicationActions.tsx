@@ -40,12 +40,22 @@ export async function handleViewPartnerAgreement(inquiryId: string) {
 
 export function PartnerStatusBadge({ inquiry }: { inquiry: any }) {
 	const status = getPartnerApplicationStatus(inquiry)
+	const isApproved = status === 'approved'
+	const isRejected = status === 'rejected'
 	return (
 		<span
-			className={`badge badge-light-${
-				status === 'approved' ? 'success' : status === 'rejected' ? 'danger' : 'warning'
-			}`}>
-			{status === 'approved' ? 'Accepted' : status === 'rejected' ? 'Rejected' : 'Pending'}
+			className='badge'
+			style={{
+				background: isApproved ? '#ECFDF5' : isRejected ? '#FFF1F2' : '#FFFBEB',
+				color: isApproved ? '#047857' : isRejected ? '#BE123C' : '#B45309',
+				border: `1px solid ${isApproved ? '#A7F3D0' : isRejected ? '#FECDD3' : '#FDE68A'}`,
+				fontSize: '11px',
+				fontWeight: 700,
+				padding: '4px 8px',
+				borderRadius: '6px',
+				letterSpacing: '0.02em',
+			}}>
+			{isApproved ? 'Accepted' : isRejected ? 'Rejected' : 'Pending'}
 		</span>
 	)
 }
@@ -244,12 +254,16 @@ export function PartnerReviewDetails({ inquiry }: { inquiry: any }) {
 	const status = getPartnerApplicationStatus(inquiry)
 	if (status === 'pending') return null
 	const reviewer = inquiry.partner_reviewed_by
-	const reviewerName = reviewer ? `${reviewer.name || ''} (${reviewer.email || ''})`.trim() : ''
+	const reviewerName = reviewer
+		? [reviewer.name, reviewer.email ? `(${reviewer.email})` : ''].filter(Boolean).join(' ')
+		: ''
 	return (
-		<div className='fs-8 text-muted mt-1'>
+		<div className='fs-8 text-muted mt-1' style={{ lineHeight: 1.45 }}>
 			{inquiry.partner_reviewed_at && (
 				<div>
-					{status === 'approved' ? 'Approved' : 'Rejected'}{' '}
+					<span className={status === 'approved' ? 'text-success fw-semibold' : 'text-danger fw-semibold'}>
+						{status === 'approved' ? 'Approved' : 'Rejected'}
+					</span>{' '}
 					{DayJS(inquiry.partner_reviewed_at).format('DD/MM/YYYY hh:mm A')}
 					{reviewerName ? ` by ${reviewerName}` : ''}
 				</div>

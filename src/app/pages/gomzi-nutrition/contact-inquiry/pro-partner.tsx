@@ -1,5 +1,7 @@
 import {
 	faAward,
+	faChevronDown,
+	faChevronUp,
 	faBriefcase,
 	faCheckCircle,
 	faClock,
@@ -305,116 +307,76 @@ const ProPartnerInquiry: React.FC = () => {
 			<style>{`
 				.partner-table { min-width: 0; }
 				.partner-table .table-responsive {
-					overflow-x: auto;
+					overflow-x: auto !important;
+					-webkit-overflow-scrolling: touch !important;
 					scrollbar-width: thin;
 				}
 				.partner-table #kt_table_users {
-					table-layout: fixed !important;
 					width: 100% !important;
-					min-width: 0;
-					max-width: 100%;
+					min-width: 1280px !important;
+					table-layout: auto !important;
+					border-collapse: separate !important;
+					border-spacing: 0 !important;
 				}
 				.partner-table #kt_table_users thead th {
-					display: table-cell !important;
-					padding: 14px 10px !important;
-					white-space: normal !important;
-					line-height: 1.5;
-					font-size: 11px !important;
+					padding: 14px 16px !important;
+					white-space: nowrap !important;
+					line-height: 1.4;
+					font-size: 11.5px !important;
+					font-weight: 700 !important;
+					letter-spacing: 0.03em !important;
+					color: #71809A !important;
+					text-transform: uppercase !important;
+					background: #F8FAFD !important;
+					border-bottom: 1px solid #E4EAF2 !important;
 				}
-				.partner-table #kt_table_users thead th:nth-child(1) { width: 4% !important; }
-				.partner-table #kt_table_users thead th:nth-child(2) { width: 11%; }
-				.partner-table #kt_table_users thead th:nth-child(3) { width: 15%; }
-				.partner-table #kt_table_users thead th:nth-child(4) { width: 14%; }
-				.partner-table #kt_table_users thead th:nth-child(5) { width: 8%; }
-				.partner-table #kt_table_users thead th:nth-child(6) { width: 12%; }
-				.partner-table #kt_table_users thead th:nth-child(7) { width: 9%; }
-				.partner-table #kt_table_users thead th:nth-child(8) { width: 13%; }
-				.partner-table #kt_table_users thead th:nth-child(9) { width: 14% !important; }
-				.partner-table #kt_table_users thead th:nth-child(7) { white-space: nowrap !important; }
+				.partner-table #kt_table_users thead th:nth-child(1) { width: 50px !important; min-width: 50px !important; text-align: center; }
+				.partner-table #kt_table_users thead th:nth-child(2) { min-width: 150px; }
+				.partner-table #kt_table_users thead th:nth-child(3) { min-width: 210px; }
+				.partner-table #kt_table_users thead th:nth-child(4) { min-width: 170px; }
+				.partner-table #kt_table_users thead th:nth-child(5) { min-width: 120px; }
+				.partner-table #kt_table_users thead th:nth-child(6) { min-width: 180px; }
+				.partner-table #kt_table_users thead th:nth-child(7) { min-width: 115px; }
+				.partner-table #kt_table_users thead th:nth-child(8) { min-width: 190px; }
+				.partner-table #kt_table_users thead th:nth-child(9),
+				.partner-table #kt_table_users th:last-child {
+					width: 184px !important;
+					min-width: 184px !important;
+					text-align: center !important;
+				}
 				.partner-table #kt_table_users .data-row > td {
-					display: table-cell !important;
-					padding: 14px 10px !important;
-					vertical-align: top !important;
-					white-space: normal !important;
-					overflow-wrap: normal;
-					word-break: normal;
-					line-height: 1.5;
+					padding: 14px 16px !important;
+					vertical-align: middle !important;
 					background: #fff !important;
+					border-bottom: 1px solid #EEF2F6 !important;
 				}
-				.partner-table #kt_table_users .data-row > td:nth-child(2),
-				.partner-table #kt_table_users .data-row > td:nth-child(3),
-				.partner-table #kt_table_users .data-row > td:nth-child(4),
-				.partner-table #kt_table_users .data-row > td.partner-status { overflow-wrap: anywhere; }
 				.partner-table #kt_table_users .data-row:hover > td {
-					background: #f8fafc !important;
+					background: #F8FAFD !important;
 				}
 				.partner-table #kt_table_users th:last-child,
 				.partner-table #kt_table_users td.partner-actions {
 					position: sticky;
 					right: 0;
 					z-index: 2;
-					box-shadow: none;
-					border-left: 1px solid #eef2f6 !important;
-					text-align: left !important;
+					background: #ffffff !important;
+					border-left: 1px solid #EEF2F6 !important;
+					box-shadow: -4px 0 10px -4px rgba(15, 23, 42, 0.06);
+				}
+				.partner-table #kt_table_users .data-row:hover > td.partner-actions {
+					background: #F8FAFD !important;
 				}
 				.partner-table #kt_table_users th:last-child { z-index: 3; }
 				.partner-table #kt_table_users .detail-row.is-visible { display: table-row !important; }
-				.partner-table .partner-status .mt-2 { margin-top: 6px !important; }
-				.partner-table .partner-status .fs-8 { font-size: 11px !important; line-height: 1.5; }
-				.partner-table .partner-status .badge { padding: 5px 9px; }
-				.partner-table .partner-actions-stack { width: 100%; max-width: 184px; min-width: 0; }
-				.partner-table .gz-badge-emp { max-width: 100% !important; white-space: normal; }
-				.partner-table .gz-badge-potential { max-width: 100%; align-items: flex-start; line-height: 1.5; overflow-wrap: normal; word-break: normal; }
-				.partner-table .gz-badge-potential > span { min-width: 0; }
-				.partner-table .gz-badge-potential svg { flex-shrink: 0; margin-top: 3px; }
-				.partner-table .partner-contact-line { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-				.partner-page .partner-toolbar { gap: 12px !important; width: 100%; }
-				.partner-page .partner-toolbar .gz-search-filter-box { flex: 1 1 220px; max-width: 320px; }
-				.partner-page .partner-toolbar > select { min-height: 38px; }
-				@media (max-width: 1199px) {
-					.partner-table #kt_table_users { min-width: 1060px; }
-					.partner-table #kt_table_users th:last-child,
-					.partner-table #kt_table_users td.partner-actions {
-						box-shadow: -4px 0 8px -6px rgba(23, 43, 77, .25);
-					}
-				}
-				@media (max-width: 768px) {
-					.partner-page .partner-table { padding: 0 12px 16px !important; }
-					.partner-page .partner-toolbar .gz-search-filter-box { max-width: none; flex-basis: 100%; }
+				.partner-table .partner-actions-stack {
+					width: 100%;
+					min-width: 160px;
+					max-width: 184px;
+					margin: 0 auto;
 				}
 				.partner-table .data-row {
 					cursor: pointer;
 					border-bottom: 1px solid #EEF2F7;
 					transition: background 0.15s ease;
-				}
-				.partner-table .data-row:hover {
-					background: #F8FAFD;
-				}
-				.partner-table .data-row td {
-					padding: 14px 12px;
-					vertical-align: middle;
-				}
-				.gz-badge-potential {
-					display: inline-flex;
-					align-items: center;
-					gap: 4px;
-					background: #EEF2FF;
-					color: #4F46E5;
-					border: 1px solid #C7D2FE;
-					border-radius: 6px;
-					padding: 3px 8px;
-					font-size: 12px;
-					font-weight: 600;
-				}
-				.gz-badge-emp {
-					display: inline-flex;
-					align-items: center;
-					background: #F1F5F9;
-					color: #334155;
-					border-radius: 6px;
-					padding: 3px 8px;
-					font-size: 12px;
-					font-weight: 600;
 				}
 				.partner-details-grid {
 					display: grid;
@@ -574,34 +536,39 @@ const ProPartnerInquiry: React.FC = () => {
 										<tr
 											onClick={() => handleRowClick(item._id)}
 											className='data-row'>
-											<td className='text-center'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='mx-1 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
-												<span className='text-dark fw-bold d-block mb-1 fs-6'>{actualIndex}</span>
-												{item.read_receipt === false ? (
-													<FontAwesomeIcon
-														icon={faEnvelope}
-														style={{ color: '#f00000', fontSize: '18px' }}
-														title='Unread application'
-													/>
-												) : (
-													<FontAwesomeIcon
-														icon={faEnvelopeOpen}
-														style={{ color: '#50cd89', fontSize: '18px' }}
-														title='Reviewed application'
-													/>
-												)}
+											<td className='text-center' style={{ width: '50px' }}>
+												<div className='d-flex flex-column align-items-center justify-content-center gap-1'>
+													<span className='text-dark fw-bold fs-7'>{actualIndex}</span>
+													<div className='d-flex align-items-center gap-1'>
+														<FontAwesomeIcon
+															icon={isVisible ? faChevronUp : faChevronDown}
+															className='text-muted'
+															style={{ fontSize: '10px', cursor: 'pointer' }}
+															title={isVisible ? 'Hide quick details' : 'Show quick details'}
+														/>
+														{item.read_receipt === false ? (
+															<FontAwesomeIcon
+																icon={faEnvelope}
+																style={{ color: '#ef4444', fontSize: '13px' }}
+																title='Unread application'
+															/>
+														) : (
+															<FontAwesomeIcon
+																icon={faEnvelopeOpen}
+																style={{ color: '#10b981', fontSize: '13px' }}
+																title='Reviewed application'
+															/>
+														)}
+													</div>
+												</div>
 											</td>
 
 											{/* Applicant Name & Location */}
 											<td>
-												<span className='text-dark fw-bold d-block fs-6'>{name}</span>
+												<span className='text-dark fw-bold d-block fs-6' style={{ letterSpacing: '-0.01em' }}>{name}</span>
 												{locationStr && (
-													<span className='text-muted fs-8 d-block'>
-														<FontAwesomeIcon icon={faMapMarkerAlt} className='me-1' />
+													<span className='text-muted fs-8 d-inline-flex align-items-center mt-1'>
+														<FontAwesomeIcon icon={faMapMarkerAlt} className='me-1 text-danger' style={{ fontSize: '11px' }} />
 														{locationStr}
 													</span>
 												)}
@@ -612,17 +579,18 @@ const ProPartnerInquiry: React.FC = () => {
 												{email && (
 													<a
 														href={`mailto:${email}`}
-														className='text-primary fw-semibold d-block fs-7'
+														className='text-primary fw-semibold d-block fs-7 text-truncate'
+														style={{ maxWidth: '200px', whiteSpace: 'nowrap' }}
 														title={email}
 														onClick={(e) => e.stopPropagation()}>
 														{email}
 													</a>
 												)}
 												{mobile && (
-													<div className='partner-contact-line mt-1'>
+													<div className='d-inline-flex align-items-center gap-2 mt-1'>
 														<a
 															href={`tel:${mobile}`}
-															className='text-dark fw-semibold fs-7'
+															className='text-dark fw-semibold fs-7 text-decoration-none'
 															onClick={(e) => e.stopPropagation()}>
 															{mobile}
 														</a>
@@ -634,7 +602,7 @@ const ProPartnerInquiry: React.FC = () => {
 																className='text-success'
 																title='WhatsApp'
 																onClick={(e) => e.stopPropagation()}>
-																<FontAwesomeIcon icon={faWhatsapp} />
+																<FontAwesomeIcon icon={faWhatsapp} style={{ fontSize: '14px' }} />
 															</a>
 														)}
 													</div>
@@ -643,7 +611,17 @@ const ProPartnerInquiry: React.FC = () => {
 
 											{/* Role & Experience */}
 											<td>
-												<span className='gz-badge-emp d-inline-block text-truncate' style={{ maxWidth: '200px' }}>
+												<span
+													className='d-inline-block text-truncate px-2 py-1'
+													style={{
+														background: '#F1F5F9',
+														color: '#334155',
+														borderRadius: '6px',
+														fontWeight: 600,
+														fontSize: '12px',
+														maxWidth: '180px',
+													}}
+													title={d.employment_type || 'Trainer'}>
 													{d.employment_type || 'Trainer'}
 												</span>
 												<span className='text-muted fs-8 d-block mt-1'>
@@ -655,14 +633,25 @@ const ProPartnerInquiry: React.FC = () => {
 											{/* Client Reach */}
 											<td>
 												<div className='d-flex align-items-center gap-1'>
-													<FontAwesomeIcon icon={faUsers} className='text-muted fs-8' />
+													<FontAwesomeIcon icon={faUsers} className='text-muted' style={{ fontSize: '12px' }} />
 													<span className='text-dark fw-bold fs-7'>
-														{d.active_clients ? `${d.active_clients} Active` : 'N/A'}
+														{d.active_clients ? String(d.active_clients).replace(/\s*clients?/i, '') : 'N/A'}
+													</span>
+													<span
+														className='badge ms-1'
+														style={{
+															background: '#ECFDF5',
+															color: '#059669',
+															fontSize: '10px',
+															fontWeight: 600,
+															padding: '2px 5px',
+														}}>
+														Active
 													</span>
 												</div>
 												{d.instagram_followers && (
-													<span className='text-muted fs-8 d-block'>
-														<FontAwesomeIcon icon={faInstagram} className='text-danger me-1' />
+													<span className='text-muted fs-8 d-inline-flex align-items-center mt-1'>
+														<FontAwesomeIcon icon={faInstagram} className='text-danger me-1' style={{ fontSize: '11px' }} />
 														{d.instagram_followers}
 													</span>
 												)}
@@ -671,9 +660,25 @@ const ProPartnerInquiry: React.FC = () => {
 											{/* Sales Potential */}
 											<td>
 												{d.sales_potential ? (
-													<span className='gz-badge-potential'>
-														<FontAwesomeIcon icon={faAward} />
-														<span>{d.sales_potential}</span>
+													<span
+														className='d-inline-flex align-items-center gap-1 px-2 py-1'
+														style={{
+															background: '#EEF2FF',
+															color: '#4338CA',
+															border: '1px solid #C7D2FE',
+															borderRadius: '6px',
+															fontSize: '12px',
+															fontWeight: 600,
+															lineHeight: 1.3,
+															whiteSpace: 'normal',
+															maxWidth: '180px',
+														}}>
+														<FontAwesomeIcon icon={faAward} className='flex-shrink-0' />
+														<span>
+															{String(d.sales_potential)
+																.replace(/\s*clients?\s+clients?\s*@/i, ' Clients @')
+																.replace(/\s*clients?\s*@/i, ' Clients @')}
+														</span>
 													</span>
 												) : (
 													<span className='text-muted fs-8'>Not Specified</span>
@@ -690,15 +695,25 @@ const ProPartnerInquiry: React.FC = () => {
 												</span>
 											</td>
 
-											{/* View Details Action */}
+											{/* Status & Review Details */}
 											<td className='partner-status'>
 												<PartnerStatusBadge inquiry={item} />
 												<PartnerReviewDetails inquiry={item} />
 												{item.partner_policy?.accepted_at && (
 													<button
 														type='button'
-														className='btn btn-xs d-inline-flex align-items-center gap-1 mt-1 p-1 px-2 border-0'
-														style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', borderRadius: '4px', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+														className='d-inline-flex align-items-center gap-1 mt-2 border-0'
+														style={{
+															background: '#ECFDF5',
+															color: '#047857',
+															border: '1px solid #A7F3D0',
+															borderRadius: '6px',
+															fontSize: '11px',
+															fontWeight: 600,
+															padding: '3px 8px',
+															cursor: 'pointer',
+															transition: 'background 0.15s ease',
+														}}
 														onClick={(e) => {
 															e.stopPropagation()
 															handleViewPartnerAgreement(item._id)
@@ -710,16 +725,23 @@ const ProPartnerInquiry: React.FC = () => {
 											</td>
 											<td className='partner-actions'>
 												<div className='partner-actions-stack'>
-												<PartnerApplicationActions inquiry={item} compact onUpdated={(updated) => {
-													setAllPartnerInquiries((items) => items.map((entry) => entry._id === updated._id ? updated : entry))
-												}}>
-												<Link className='gz-partner-button gz-partner-button-view'
-													to={`${basePath}/contact-inquiry/contact-inquiry-view?contactInquiry_id=${item._id}`}
-													onClick={(event) => event.stopPropagation()}>
-													<FontAwesomeIcon icon={faEye} aria-hidden='true' />
-													View
-												</Link>
-												</PartnerApplicationActions>
+													<PartnerApplicationActions
+														inquiry={item}
+														compact
+														onUpdated={(updated) => {
+															setAllPartnerInquiries((items) =>
+																items.map((entry) => (entry._id === updated._id ? updated : entry))
+															)
+														}}>
+														<Link
+															className='gz-partner-button gz-partner-button-view'
+															to={`${basePath}/contact-inquiry/contact-inquiry-view?contactInquiry_id=${item._id}`}
+															onClick={(event) => event.stopPropagation()}
+															title='View Application Details'>
+															<FontAwesomeIcon icon={faEye} aria-hidden='true' />
+															View
+														</Link>
+													</PartnerApplicationActions>
 												</div>
 											</td>
 										</tr>
