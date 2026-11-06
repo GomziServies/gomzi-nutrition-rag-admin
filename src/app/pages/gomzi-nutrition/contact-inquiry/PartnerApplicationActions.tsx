@@ -2,13 +2,22 @@ import React, { useState } from 'react'
 import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faDownload, faFileAlt, faPaperPlane, faTimes } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCheck,
+	faDownload,
+	faFileAlt,
+	faKey,
+	faPaperPlane,
+	faTimes,
+	faUserShield,
+} from '@fortawesome/free-solid-svg-icons'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import {
 	PartnerApplicationStatus,
 	ReviewPartnerApplication,
 	DownloadPartnerAgreementPDF,
 } from '../../../Functions/FGGroup/ContactInquiry'
+import PartnerAccountModal from './PartnerAccountModal'
 import './PartnerApplicationActions.css'
 
 export const getPartnerApplicationStatus = (inquiry: any): PartnerApplicationStatus =>
@@ -72,16 +81,19 @@ export default function PartnerApplicationActions({
 	children?: React.ReactNode
 }) {
 	const [decision, setDecision] = useState<'approved' | 'rejected' | null>(null)
+	const [showAccountModal, setShowAccountModal] = useState(false)
 	const [reason, setReason] = useState('')
 	const [saving, setSaving] = useState(false)
 	const [resending, setResending] = useState(false)
 	const status = getPartnerApplicationStatus(inquiry)
 	const name = inquiry?.details?.full_name || inquiry?.name || 'this applicant'
+	const hasAccount = Boolean(inquiry?.details?.partner_account?.created)
 
 	const showAccept = status !== 'approved'
 	const showReject = status !== 'rejected' && (!compact || status === 'pending')
 	const showResend = status === 'approved' && !inquiry.partner_policy?.accepted_at
 	const showPdf = Boolean(inquiry.partner_policy?.version)
+	const showAccount = status === 'approved'
 	const hasChildren = Boolean(children)
 
 	let totalButtons = 0
@@ -89,9 +101,10 @@ export default function PartnerApplicationActions({
 	if (showReject) totalButtons++
 	if (showResend) totalButtons++
 	if (showPdf) totalButtons++
+	if (showAccount) totalButtons++
 	if (hasChildren) totalButtons++
 
-	const shouldSpanLast = compact && (totalButtons === 1 || totalButtons === 3)
+	const shouldSpanLast = compact && (totalButtons === 1 || totalButtons === 3 || totalButtons === 5)
 
 	const btnStyle: React.CSSProperties | undefined = compact
 		? {
@@ -251,6 +264,25 @@ export default function PartnerApplicationActions({
 						<span>{compact ? (inquiry.partner_policy?.accepted_at ? 'PDF' : 'Draft') : (inquiry.partner_policy?.accepted_at ? 'Accepted PDF' : 'Draft PDF')}</span>
 					</button>
 				)}
+				{showAccount && (
+					<button
+						type='button'
+						style={btnStyle}
+						className={
+							compact
+								? `gz-partner-button ${hasAccount ? 'gz-partner-button-account-active' : 'gz-partner-button-account'}`
+								: `btn btn-sm ${hasAccount ? 'btn-light-success' : 'btn-light-primary'} d-inline-flex align-items-center gap-2`
+						}
+						title={hasAccount ? 'View Pro Partner Portal Credentials' : 'Create Partner Portal Account'}
+						disabled={saving || resending}
+						onClick={(event) => {
+							event.stopPropagation()
+							setShowAccountModal(true)
+						}}>
+						<FontAwesomeIcon icon={faUserShield} className='gz-partner-btn-icon' />
+						<span>{compact ? (hasAccount ? 'Credentials' : 'Account') : hasAccount ? 'Portal Credentials' : 'Partner Account'}</span>
+					</button>
+				)}
 				{renderedChildren}
 			</div>
 			<Modal
@@ -307,6 +339,14 @@ export default function PartnerApplicationActions({
 					</Modal.Footer>
 				</form>
 			</Modal>
+			{showAccountModal && (
+				<PartnerAccountModal
+					show={showAccountModal}
+					inquiry={inquiry}
+					onClose={() => setShowAccountModal(false)}
+					onUpdated={(updated) => onUpdated(updated)}
+				/>
+			)}
 		</>
 	)
 }
@@ -346,6 +386,20 @@ export function PartnerReviewDetails({ inquiry }: { inquiry: any }) {
 						: inquiry.partner_policy?.email_status === 'failed'
 						? 'Policy email delivery failed'
 						: 'Policy sent, awaiting acceptance'}
+				</div>
+			)}
+			{status === 'approved' && inquiry.details?.partner_account?.created && (
+				<div className='text-primary mt-1'>
+					<FontAwesomeIcon icon={faUserShield} className='me-1' />
+					<span>Portal Account: </span>
+					<strong className='text-dark'>{inquiry.details.partner_account.email || inquiry.email}</strong>
+					{inquiry.details.partner_account.email_status === 'failed' && (
+						<span
+							className='badge badge-light-danger ms-2'
+							style={{ fontSize: '10px', padding: '2px 6px' }}>
+							Email Failed
+						</span>
+					)}
 				</div>
 			)}
 		</div>

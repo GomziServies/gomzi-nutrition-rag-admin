@@ -32,6 +32,26 @@ export function UpdateReadReceipt(body: {
 
 export type PartnerApplicationStatus = 'pending' | 'approved' | 'rejected'
 
+export interface PartnerAccountResponseData {
+	account_created: boolean
+	email: string
+	password: string
+	email_status: 'sent' | 'failed' | string
+	is_existing: boolean
+	portal_url: string
+}
+
+export function CreatePartnerAccount(body: {
+	inquiry_id: string
+}): Promise<FGGroupAPIResponse & { data: PartnerAccountResponseData }> {
+	return APIPost(
+		FGGroupEndpoints.CreatePartnerAccount,
+		getAPIHeaders('fg_group'),
+		undefined,
+		body
+	) as Promise<FGGroupAPIResponse & { data: PartnerAccountResponseData }>
+}
+
 export function ReviewPartnerApplication(body: {
 	inquiry_id: string
 	partner_status: 'approved' | 'rejected'

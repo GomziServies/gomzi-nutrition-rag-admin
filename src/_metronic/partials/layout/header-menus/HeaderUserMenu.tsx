@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { getProfile } from '../../../../app/Functions/FGGroup'
 import { getProfile as portalProfile } from '../../../../app/Functions/FWG'
 import { GetMyAuthority } from '../../../../app/Functions/FGGroup/RBAC'
+import { isProPartnerOnlyUser, isUserAdmin, checkUserHasAssignedCoupon } from '../../../../app/modules/auth'
 import { toAbsoluteUrl } from '../../../helpers'
 
 export interface PanelDef {
@@ -34,6 +35,15 @@ export const ALL_PANELS: PanelDef[] = [
 		icon: 'bi-capsule',
 		color: '#8b523c',
 		category: 'Invoices & Sales',
+	},
+	{
+		id: 'rag-pro-partner',
+		name: 'RAG Pro Partner',
+		code: 'RAG_Pro_Partner',
+		path: '/rag/pro-partner/coupons',
+		icon: 'bi-gem',
+		color: '#059669',
+		category: 'Coupons & Commission',
 	},
 	/*
 	{
@@ -138,6 +148,7 @@ const HeaderUserMenu: FC = () => {
 
 	const getActivePanelId = (): string => {
 		const path = (location.pathname || window.location.pathname || '').toLowerCase()
+		if (path.startsWith('/rag/pro-partner') || path.startsWith('/pro-partner')) return 'rag-pro-partner'
 		if (path.startsWith('/rag') || path.startsWith('/nutrition')) return 'rag'
 		if (path.startsWith('/employee')) return 'employee'
 		/*
@@ -156,6 +167,7 @@ const HeaderUserMenu: FC = () => {
 		*/
 
 		const admin = (localStorage.getItem('admin') || '').toLowerCase()
+		if (admin === 'rag_pro_partner' || admin === 'pro-partner') return 'rag-pro-partner'
 		if (admin === 'employee') return 'employee'
 		/*
 		if (admin === 'master') return 'master'
@@ -169,7 +181,65 @@ const HeaderUserMenu: FC = () => {
 	}
 
 	const activePanelId = getActivePanelId()
-	const activePanel = ALL_PANELS.find((p) => p.id === activePanelId) || ALL_PANELS[1]
+
+	const getAccessiblePanels = (): PanelDef[] => {
+		const storedAdmin = (localStorage.getItem('admin') || '').toLowerCase().trim()
+		const userType = (userProfile?.type || '').toLowerCase().trim()
+		const isAdmin = isUserAdmin(userProfile)
+		const partnerOnly = isProPartnerOnlyUser(userProfile)
+
+		// 1. Pro Partner Only user (has assigned coupon & is NOT admin):
+		// Strictly returns ONLY the 'rag-pro-partner' panel!
+		if (partnerOnly) {
+			const partnerPanel = ALL_PANELS.find((p) => p.id === 'rag-pro-partner')
+			return partnerPanel ? [partnerPanel] : []
+		}
+
+		// 2. Admin / SuperAdmin has full access to ALL panels
+		if (isAdmin || storedAdmin === 'master' || userType === 'master' || userType === 'superadmin') {
+			return ALL_PANELS
+		}
+
+		// 3. Normal user WITHOUT assigned coupon:
+		// Return employee and RBAC permitted panels, but strictly EXCLUDE 'rag-pro-partner'
+		const map = new Map<string, PanelDef>()
+
+		const emp = ALL_PANELS.find((p) => p.id === 'employee')
+		if (emp) map.set(emp.id, emp)
+
+		const hr = ALL_PANELS.find((p) => p.id === 'hr')
+		if (hr) map.set(hr.id, hr)
+
+		// Match panels granted via RBAC authorities
+		if (Array.isArray(authorities) && authorities.length > 0) {
+			authorities.forEach((auth: any) => {
+				const rawName = (auth.panel_id?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+				if (!rawName) return
+
+				const found = ALL_PANELS.find((p) => {
+					// Pro partner is strictly coupon-gated, never inherited by random authority
+					if (p.id === 'rag-pro-partner') return false
+					const codeKey = p.code.toLowerCase().replace(/[^a-z0-9]/g, '')
+					const nameKey = p.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+					return (
+						rawName.includes(codeKey) ||
+						codeKey.includes(rawName) ||
+						rawName.includes(nameKey) ||
+						nameKey.includes(rawName)
+					)
+				})
+
+				if (found) {
+					map.set(found.id, found)
+				}
+			})
+		}
+
+		return Array.from(map.values()).filter((p) => p.id !== 'rag-pro-partner')
+	}
+
+	const accessiblePanels = getAccessiblePanels()
+	const activePanel = accessiblePanels.find((p) => p.id === activePanelId) || accessiblePanels[0] || ALL_PANELS[2]
 
 	useEffect(() => {
 		// 1. Load user profile
@@ -191,7 +261,7 @@ const HeaderUserMenu: FC = () => {
 			}
 		}
 
-		// Fresh profile fetch
+		// Fresh profile & coupon check
 		const fetchFreshProfile = async () => {
 			try {
 				if (portalAdminType === 'fwg_portal') {
@@ -199,12 +269,14 @@ const HeaderUserMenu: FC = () => {
 					if (data?.data) {
 						setUserProfile(data.data)
 						localStorage.setItem('portal_info', JSON.stringify(data.data))
+						checkUserHasAssignedCoupon(data.data)
 					}
 				} else {
 					const data: any = await getProfile()
 					if (data?.data) {
 						setUserProfile(data.data)
 						localStorage.setItem('fg_group_info', JSON.stringify(data.data))
+						checkUserHasAssignedCoupon(data.data)
 					}
 				}
 			} catch (err) {
@@ -242,6 +314,8 @@ const HeaderUserMenu: FC = () => {
 		localStorage.setItem('admin_type', panel.code)
 		if (panel.id === 'employee') {
 			localStorage.setItem('is_employee_login', 'true')
+		} else {
+			localStorage.removeItem('is_employee_login')
 		}
 		window.location.href = panel.path
 	}
@@ -251,7 +325,7 @@ const HeaderUserMenu: FC = () => {
 		const currentActive = getActivePanelId()
 		if (currentActive === 'employee') {
 			window.location.href = '/employee/login'
-		} else if (currentActive === 'rag') {
+		} else if (currentActive === 'rag' || currentActive === 'rag-pro-partner') {
 			window.location.href = '/rag/login'
 		/*
 		} else if (currentActive === 'master') {
@@ -272,64 +346,7 @@ const HeaderUserMenu: FC = () => {
 		}
 	}
 
-	const getAccessiblePanels = (): PanelDef[] => {
-		const storedAdmin = (localStorage.getItem('admin') || '').toLowerCase()
-		const userType = (userProfile?.type || '').toLowerCase()
 
-		// Master / SuperAdmin has full access to active panels
-		if (storedAdmin === 'master' || userType === 'master' || userType === 'superadmin') {
-			return ALL_PANELS
-		}
-
-		const map = new Map<string, PanelDef>()
-
-		// Default: All employees have access to Employee portal
-		const emp = ALL_PANELS.find((p) => p.id === 'employee')
-		if (emp) map.set(emp.id, emp)
-
-		// Always ensure the active panel is shown
-		if (activePanel) map.set(activePanel.id, activePanel)
-
-		// Match panels granted via RBAC authorities
-		if (Array.isArray(authorities) && authorities.length > 0) {
-			authorities.forEach((auth: any) => {
-				const rawName = (auth.panel_id?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
-				if (!rawName) return
-
-				const found = ALL_PANELS.find((p) => {
-					const codeKey = p.code.toLowerCase().replace(/[^a-z0-9]/g, '')
-					const nameKey = p.name.toLowerCase().replace(/[^a-z0-9]/g, '')
-					return (
-						rawName.includes(codeKey) ||
-						codeKey.includes(rawName) ||
-						rawName.includes(nameKey) ||
-						nameKey.includes(rawName)
-					)
-				})
-
-				if (found) {
-					map.set(found.id, found)
-				} /* else {
-					const customId = auth.panel_id?._id || auth.panel_id?.name
-					if (customId && !map.has(customId)) {
-						map.set(customId, {
-							id: customId,
-							name: auth.panel_id?.name || 'Assigned Panel',
-							code: auth.panel_id?.name || 'Assigned',
-							path: '/employee/dashboard',
-							icon: 'bi-grid-fill',
-							color: '#0d9488',
-							category: 'Assigned Department',
-						})
-					}
-				} */
-			})
-		}
-
-		return Array.from(map.values()).filter((p) => ['employee', 'rag', 'hr'].includes(p.id))
-	}
-
-	const accessiblePanels = getAccessiblePanels()
 	const userName = userProfile?.full_name || 'chiragFWG'
 	const userRole = userProfile?.type || 'Employee'
 	const userEmail = userProfile?.email || 'chirag@fg.com'

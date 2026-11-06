@@ -103,6 +103,7 @@ export const GetRTPConsultancyInquiry = `${ContactInquiryRoute}/get-rtp-consulta
 export const UpdateInquiryReadReceipt = `${ContactInquiryRoute}/read-receipt`
 export const ReviewPartnerApplication = `${ContactInquiryRoute}/review-partner`
 export const PartnerAgreementPDF = `${ContactInquiryRoute}/partner-agreement-pdf`
+export const CreatePartnerAccount = `${ContactInquiryRoute}/create-partner-account`
 
 // Dashboard
 const DashboardRoute = `${AdminV1Route}/dashboard`

@@ -1,5 +1,6 @@
 export * from './AuthPage'
 export * from './core/Auth'
 export * from './core/AuthHelpers'
+export * from './core/ProPartnerAuth'
 export * from './core/_models'
 export * from './Logout'

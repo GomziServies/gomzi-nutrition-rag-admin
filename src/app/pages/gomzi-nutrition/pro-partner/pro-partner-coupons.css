@@ -4,10 +4,88 @@
 	min-height: 100vh;
 }
 
+/* Partner Selector Bar (for Admin / Switcher) */
+.gz-partner-selector-bar {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 12px 20px;
+	margin-bottom: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Assigned Coupon & Document Hero Card */
+.gz-partner-hero-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 16px;
+	padding: 24px;
+	box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.05);
+	margin-bottom: 24px;
+}
+
+.gz-coupon-code-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 12px;
+	background: #f0fdf4;
+	border: 2px dashed #059669;
+	border-radius: 12px;
+	padding: 8px 18px;
+}
+
+.gz-coupon-code-text {
+	font-family: monospace;
+	font-size: 26px;
+	font-weight: 800;
+	letter-spacing: 1.5px;
+	color: #047857;
+	line-height: 1.2;
+}
+
+/* Document & Agreement Block */
+.gz-partner-doc-block {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 16px 20px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 14px;
+}
+
+.gz-partner-doc-block.is-signed {
+	background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+	border-color: #a7f3d0;
+}
+
+.gz-doc-icon-wrap {
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	background: #ffffff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #059669;
+	font-size: 20px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+	flex-shrink: 0;
+}
+
+/* Summary KPI Cards */
 .gz-pro-partner-coupons-wrapper .gz-prod-summary-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	gap: 16px;
+	margin-bottom: 24px;
 }
 
 .gz-pro-partner-coupons-wrapper .gz-prod-summary-card {
@@ -16,6 +94,13 @@
 	border-radius: 12px;
 	padding: 16px 20px;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+	position: relative;
+	overflow: hidden;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-summary-card.highlight-commission {
+	border-color: #a7f3d0;
+	background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
 }
 
 .gz-pro-partner-coupons-wrapper .gz-prod-summary-card .title {
@@ -38,6 +123,7 @@
 	color: #94a3b8;
 }
 
+/* Data Table Card */
 .gz-pro-partner-coupons-wrapper .gz-prod-card {
 	background: #ffffff;
 	border: 1px solid #e2e8f0;
@@ -85,11 +171,37 @@
 	background-color: #f8fafc;
 }
 
-.gz-pro-partner-coupons-wrapper .cursor-pointer {
-	cursor: pointer;
+/* Product thumbnail */
+.gz-partner-product-thumb {
+	width: 44px;
+	height: 44px;
+	border-radius: 8px;
+	object-fit: cover;
+	border: 1px solid #e2e8f0;
+	background: #f8fafc;
+	flex-shrink: 0;
 }
 
-.gz-pro-partner-coupons-wrapper .hover-bg-light:hover {
-	background-color: #f1f5f9;
+/* Commission Badges */
+.gz-commission-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-weight: 700;
+	font-size: 13px;
+	color: #047857;
+	background: #ecfdf5;
+	border: 1px solid #a7f3d0;
+	padding: 4px 10px;
+	border-radius: 8px;
 }
 
+.gz-status-tag-credited {
+	background: #ecfdf5;
+	color: #047857;
+	border: 1px solid #a7f3d0;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 2px 8px;
+	border-radius: 6px;
+}

@@ -18,6 +18,7 @@ import {
 	faGlobe,
 	faGraduationCap,
 	faIdCard,
+	faKey,
 	faMapMarkerAlt,
 	faPhone,
 	faRotateLeft,
@@ -25,6 +26,7 @@ import {
 	faShareNodes,
 	faUser,
 	faUserCheck,
+	faUserShield,
 } from '@fortawesome/free-solid-svg-icons'
 import {
 	faFacebook,
@@ -42,6 +44,7 @@ import { PageTitle } from '../../../../_metronic/layout/core'
 import { FG_GROUP_FILE_BASE_URL } from '../../../constants/base_URL'
 import { GetContactInquiry, UpdateReadReceipt } from '../../../Functions/FGGroup'
 import { isOrderInquiry } from './contactInquiryUtils'
+import PartnerAccountModal from './PartnerAccountModal'
 import PartnerApplicationActions, { PartnerStatusBadge, PartnerReviewDetails, PartnerPolicyRecord } from './PartnerApplicationActions'
 import '../common-management.css'
 import './contact-inquiry.css'
@@ -53,6 +56,7 @@ const ContactInquiryView: React.FC = () => {
 	const contactInquiry_id: any = searchParams.get('contactInquiry_id')!
 	const [contactInquiry, setContactInquiry] = useState<any>(null)
 	const [loading, setLoading] = useState(true)
+	const [showAccountModal, setShowAccountModal] = useState(false)
 
 	const fetchData = async () => {
 		try {
@@ -417,6 +421,47 @@ const ContactInquiryView: React.FC = () => {
 						<PartnerApplicationActions inquiry={inquiryItem} onUpdated={(updated) => setContactInquiry(updated)} />
 					</div>
 					<PartnerReviewDetails inquiry={inquiryItem} />
+				</div>
+			)}
+
+			{isPartnerProgram && inquiryItem?.details?.partner_account?.created && (
+				<div className='gz-mgmt-card p-5 mb-6' style={{ borderLeft: '4px solid #4F46E5' }}>
+					<div className='d-flex align-items-center justify-content-between gap-3 flex-wrap mb-2'>
+						<div className='d-flex align-items-center gap-2'>
+							<FontAwesomeIcon icon={faUserShield} className='text-primary fs-3' />
+							<div>
+								<h3 className='fs-4 mb-0'>Pro Partner Portal Account</h3>
+								<span className='fs-8 text-muted'>
+									Authentication credentials provisioned with strict RBAC portal lockdown
+								</span>
+							</div>
+						</div>
+						<div className='d-flex gap-2 flex-wrap'>
+							<button
+								type='button'
+								className='btn btn-sm btn-primary d-inline-flex align-items-center gap-2'
+								onClick={() => setShowAccountModal(true)}>
+								<FontAwesomeIcon icon={faKey} />
+								<span>View Credentials</span>
+							</button>
+						</div>
+					</div>
+
+					<div className='d-flex flex-wrap gap-3 my-3'>
+						<span className='badge badge-light-success'>Account Active</span>
+						<span>
+							Username: <strong className='font-monospace'>{inquiryItem.details.partner_account.email || inquiryItem.email}</strong>
+						</span>
+						<span>
+							Portal Target: <strong className='font-monospace text-primary'>/rag/pro-partner/coupons</strong>
+						</span>
+						<span>
+							Email Notification:{' '}
+							<strong className={inquiryItem.details.partner_account.email_status === 'failed' ? 'text-danger' : 'text-success'}>
+								{inquiryItem.details.partner_account.email_status === 'failed' ? 'Failed (Share Manually)' : 'Sent'}
+							</strong>
+						</span>
+					</div>
 				</div>
 			)}
 
@@ -972,6 +1017,15 @@ const ContactInquiryView: React.FC = () => {
 					)}
 				</div>
 			</div>
+
+			{showAccountModal && inquiryItem && (
+				<PartnerAccountModal
+					show={showAccountModal}
+					inquiry={inquiryItem}
+					onClose={() => setShowAccountModal(false)}
+					onUpdated={(updated) => setContactInquiry(updated)}
+				/>
+			)}
 		</div>
 	)
 }

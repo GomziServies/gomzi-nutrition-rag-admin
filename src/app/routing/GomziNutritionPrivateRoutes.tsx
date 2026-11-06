@@ -1,5 +1,6 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { MasterLayout } from '../../_metronic/layout/MasterLayout'
+import { isProPartnerOnlyUser, isUserAdmin } from '../modules/auth'
 import Transactions from '../pages/account/transactions/transactions'
 import AutoCommissionRequestsPage from '../pages/employee/wallet/auto-commission-requests'
 import FgroupInvoicePage from '../pages/employee/wallet/fgroup-invoice'
@@ -113,12 +114,55 @@ import AdBannerManage from '../pages/gomzi-nutrition/ad-banners/ad-banner-manage
 import GymAccessOfferManage from '../pages/gomzi-nutrition/gym-access-offer/gym-access-offer-manage'
 
 const GomziNutritionPrivateRoutes = () => {
+	const isPartnerOnly = isProPartnerOnlyUser()
+	const isAdmin = isUserAdmin()
+	const hasAssignedCoupon =
+		localStorage.getItem('has_assigned_coupon') === 'true' ||
+		localStorage.getItem('is_pro_partner_user') === 'true'
+	const canAccessProPartner = isAdmin || hasAssignedCoupon || isPartnerOnly
+
+	// STRICT PRO PARTNER ISOLATED ROUTER
+	// Only for non-admin pro-partner-only users — admins always get full routes
+	if (isPartnerOnly && !isAdmin) {
+		return (
+			<Routes>
+				<Route element={<MasterLayout />}>
+					<Route path='' element={<Navigate to='/rag/pro-partner/coupons' replace />} />
+					<Route path='dashboard' element={<Navigate to='/rag/pro-partner/coupons' replace />} />
+					<Route path='pro-partner' element={<Navigate to='/rag/pro-partner/coupons' replace />} />
+					<Route path='pro-partner/dashboard' element={<Navigate to='/rag/pro-partner/coupons' replace />} />
+					<Route path='pro-partner/coupons' element={<ProPartnerCoupons defaultTab='coupons' />} />
+					<Route path='pro-partner/commissions' element={<ProPartnerCoupons defaultTab='commissions' />} />
+					<Route path='pro-partner/orders' element={<ProPartnerCoupons defaultTab='orders' />} />
+					<Route path='pro-partner/change-password' element={<ProPartnerCoupons defaultTab='change-password' />} />
+					{/* CATCH-ALL: Intercept any and all administrative routes with zero FOAU */}
+					<Route path='*' element={<Navigate to='/rag/pro-partner/coupons' replace />} />
+				</Route>
+			</Routes>
+		)
+	}
+
 	return (
 		<Routes>
 			<Route element={<MasterLayout />}>
 				<Route
+					path=''
+					element={
+						<Navigate
+							to={isPartnerOnly ? '/rag/pro-partner/coupons' : '/rag/dashboard'}
+							replace
+						/>
+					}
+				/>
+				<Route
 					path='dashboard'
-					element={<GomziNutritionDashboard />}
+					element={
+						isPartnerOnly ? (
+							<Navigate to='/rag/pro-partner/coupons' replace />
+						) : (
+							<GomziNutritionDashboard />
+						)
+					}
 				/>
 				<Route path='/deals' element={<DealManage />} />
 				<Route path='/combo-stacks' element={<ComboStackManage />} />
@@ -578,19 +622,71 @@ const GomziNutritionPrivateRoutes = () => {
 				/>
 				<Route
 					path='contact-inquiry/pro-partner'
-					element={<ProPartnerInquiry />}
+					element={
+						isAdmin ? (
+							<ProPartnerInquiry />
+						) : (
+							<Navigate to='/rag/pro-partner/coupons' replace />
+						)
+					}
 				/>
 				<Route
 					path='pro-partner'
-					element={<ProPartnerInquiry />}
+					element={<Navigate to='/rag/pro-partner/coupons' replace />}
+				/>
+				<Route
+					path='pro-partner/dashboard'
+					element={<Navigate to='/rag/pro-partner/coupons' replace />}
 				/>
 				<Route
 					path='pro-partner/applications'
-					element={<ProPartnerInquiry />}
+					element={
+						isAdmin ? (
+							<ProPartnerInquiry />
+						) : (
+							<Navigate to='/rag/pro-partner/coupons' replace />
+						)
+					}
 				/>
 				<Route
 					path='pro-partner/coupons'
-					element={<ProPartnerCoupons />}
+					element={
+						canAccessProPartner ? (
+							<ProPartnerCoupons defaultTab='coupons' />
+						) : (
+							<Navigate to='/employee/dashboard' replace />
+						)
+					}
+				/>
+				<Route
+					path='pro-partner/commissions'
+					element={
+						canAccessProPartner ? (
+							<ProPartnerCoupons defaultTab='commissions' />
+						) : (
+							<Navigate to='/employee/dashboard' replace />
+						)
+					}
+				/>
+				<Route
+					path='pro-partner/orders'
+					element={
+						canAccessProPartner ? (
+							<ProPartnerCoupons defaultTab='orders' />
+						) : (
+							<Navigate to='/employee/dashboard' replace />
+						)
+					}
+				/>
+				<Route
+					path='pro-partner/change-password'
+					element={
+						canAccessProPartner ? (
+							<ProPartnerCoupons defaultTab='change-password' />
+						) : (
+							<Navigate to='/employee/dashboard' replace />
+						)
+					}
 				/>
 				<Route
 					path='/trainer/dashboard'
@@ -643,4 +739,5 @@ const GomziNutritionPrivateRoutes = () => {
 // }
 
 export { GomziNutritionPrivateRoutes }
+export default GomziNutritionPrivateRoutes
 

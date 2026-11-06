@@ -416,6 +416,7 @@ const ProPartnerInquiry: React.FC = () => {
 					box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
 				}
 				.partner-table .gz-partner-controls > .gz-partner-button:last-child:nth-child(3),
+				.partner-table .gz-partner-controls > .gz-partner-button:last-child:nth-child(5),
 				.partner-table .gz-partner-controls > .gz-partner-button:only-child {
 					grid-column: 1 / -1 !important;
 				}

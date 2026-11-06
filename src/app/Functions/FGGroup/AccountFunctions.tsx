@@ -2,6 +2,7 @@ import { HttpStatusCode } from 'axios'
 import { getAPIHeaders } from '../../../_metronic/helpers/AuthToken'
 import { APIGet, APIPost } from '../../../_metronic/helpers/Utils'
 import * as FGGroupEndpoints from '../../constants/fg_group_endpoints'
+import { isProPartnerToken, setProPartnerSessionTokens } from '../../modules/auth/core/ProPartnerAuth'
 
 // FG Group
 export async function LoginFGGroup(data: {
@@ -12,7 +13,13 @@ export async function LoginFGGroup(data: {
 	return await APIPost(FGGroupEndpoints.Login, undefined, undefined, data)
 		.then(async (response: any) => {
 			if (response.status === HttpStatusCode.Ok) {
-				localStorage.setItem('@fggroup+auth', response.data.authorization)
+				const token = response.data?.authorization
+				localStorage.setItem('@fggroup+auth', token)
+				if (isProPartnerToken(token)) {
+					localStorage.setItem('auth_fg_group', token)
+					setProPartnerSessionTokens()
+					return response
+				}
 				return await GetUniversalAccessTokens()
 			} else {
 				return response
@@ -58,7 +65,13 @@ export async function VerifyEmailOTP(data: {
 	return await APIPost(FGGroupEndpoints.VerifyEmailOTP, undefined, undefined, data)
 		.then(async (response: any) => {
 			if (response.status === HttpStatusCode.Ok) {
-				localStorage.setItem('@fggroup+auth', response.data.authorization)
+				const token = response.data?.authorization
+				localStorage.setItem('@fggroup+auth', token)
+				if (isProPartnerToken(token)) {
+					localStorage.setItem('auth_fg_group', token)
+					setProPartnerSessionTokens()
+					return response
+				}
 				return await GetUniversalAccessTokens()
 			} else {
 				return response
@@ -74,7 +87,13 @@ export async function VerifyInvestorEmailOTP(data: {
 	return await APIPost(FGGroupEndpoints.VerifyEmailOTP, undefined, undefined, data)
 		.then(async (response: any) => {
 			if (response.status === HttpStatusCode.Ok) {
-				localStorage.setItem('@fggroup+auth', response.data.authorization)
+				const token = response.data?.authorization
+				localStorage.setItem('@fggroup+auth', token)
+				if (isProPartnerToken(token)) {
+					localStorage.setItem('auth_fg_group', token)
+					setProPartnerSessionTokens()
+					return response
+				}
 				return await GetUniversalAccessTokens()
 			} else {
 				return response
@@ -84,6 +103,11 @@ export async function VerifyInvestorEmailOTP(data: {
 }
 
 export async function GetUniversalAccessTokens(): Promise<FGGroupAPIResponse> {
+	const authVal = localStorage.getItem('@fggroup+auth') || localStorage.getItem('auth_fg_group')
+	if (isProPartnerToken(authVal)) {
+		setProPartnerSessionTokens()
+		return { status: HttpStatusCode.Ok, message: 'Pro Partner session bypass', data: [] } as any
+	}
 	return await APIGet(FGGroupEndpoints.GetUniversalAccessToken, {
 		Authorization: localStorage.getItem('@fggroup+auth'),
 	})

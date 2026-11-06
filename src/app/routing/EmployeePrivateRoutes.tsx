@@ -28,8 +28,12 @@ import FgroupInvoicePage from '../pages/employee/wallet/fgroup-invoice'
 import InvoicePage from '../pages/employee/wallet/Invoice'
 import NutritionInvoicePage from '../pages/employee/wallet/nutrition-invoice'
 import Transactions from '../pages/employee/wallet/transactions'
+import { isProPartnerOnlyUser } from '../modules/auth'
 
 const EmployeePrivateRoutes = () => {
+	if (isProPartnerOnlyUser()) {
+		return <Navigate to='/rag/pro-partner/coupons' replace />
+	}
 	return (
 		<Routes>
 			<Route element={<MasterLayout />}>
