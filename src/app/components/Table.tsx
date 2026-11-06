@@ -34,6 +34,7 @@ type TableProps = {
 	disableSortFields?: string[]
 	manualSearch?: string
 	removeAction?: boolean
+	actionsWidth?: string
 }
 
 const Table: React.FC<TableProps> = ({
@@ -50,6 +51,7 @@ const Table: React.FC<TableProps> = ({
 	disableSortFields = [],
 	manualSearch = '',
 	removeAction,
+	actionsWidth,
 }) => {
 	const handleSort = (field: string) => {
 		if (disableSortFields.includes(field)) return
@@ -165,7 +167,7 @@ const Table: React.FC<TableProps> = ({
 									</th>
 								)
 							})}
-							<th className='text-center pe-4' style={{ width: '130px', padding: '16px 20px', color: '#71809A', fontSize: '12px', fontWeight: 650, letterSpacing: '0.02em', borderBottom: '1px solid #E4EAF2' }}>{removeAction ? '' : 'Actions'}</th>
+							<th className='text-center pe-4' style={{ width: actionsWidth || '130px', minWidth: actionsWidth || '130px', padding: '16px 20px', color: '#71809A', fontSize: '12px', fontWeight: 650, letterSpacing: '0.02em', borderBottom: '1px solid #E4EAF2' }}>{removeAction ? '' : 'Actions'}</th>
 						</tr>
 					</thead>
 					<tbody>

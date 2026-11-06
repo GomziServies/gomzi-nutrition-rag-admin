@@ -36,6 +36,7 @@ import UsersListPagination from '../../../components/TablePagination'
 import { GetContactInquiry } from '../../../Functions/FGGroup'
 import { isProPartnerApplication } from './contactInquiryUtils'
 import PartnerApplicationActions, { getPartnerApplicationStatus, PartnerStatusBadge, PartnerReviewDetails, PartnerPolicyRecord, handleViewPartnerAgreement } from './PartnerApplicationActions'
+import './PartnerApplicationActions.css'
 import '../common-management.css'
 import '../products-theme.css'
 import '../orders-theme.css'
@@ -376,13 +377,455 @@ const ProPartnerInquiry: React.FC = () => {
 					background: #F8FAFD !important;
 				}
 				.partner-table #kt_table_users .detail-row.is-visible { display: table-row !important; }
+				.partner-table .gz-partner-controls {
+					display: grid !important;
+					grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+					gap: 6px !important;
+					width: 100% !important;
+					min-width: 160px !important;
+					max-width: 190px !important;
+					margin: 0 auto !important;
+					padding: 0 !important;
+					box-sizing: border-box !important;
+					align-items: center !important;
+				}
+				.partner-table .gz-partner-controls > .gz-partner-button {
+					display: inline-flex !important;
+					align-items: center !important;
+					justify-content: center !important;
+					gap: 5px !important;
+					width: 100% !important;
+					min-width: 0 !important;
+					max-width: 100% !important;
+					height: 32px !important;
+					min-height: 32px !important;
+					margin: 0 !important;
+					padding: 4px 8px !important;
+					box-sizing: border-box !important;
+					border: 1px solid transparent !important;
+					border-radius: 6px !important;
+					font-family: inherit !important;
+					font-size: 11.5px !important;
+					font-weight: 600 !important;
+					line-height: 1 !important;
+					text-decoration: none !important;
+					white-space: nowrap !important;
+					overflow: hidden !important;
+					text-overflow: ellipsis !important;
+					cursor: pointer !important;
+					box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+				}
+				.partner-table .gz-partner-controls > .gz-partner-button:last-child:nth-child(3),
+				.partner-table .gz-partner-controls > .gz-partner-button:only-child {
+					grid-column: 1 / -1 !important;
+				}
 				.partner-table .partner-actions-stack {
 					width: 100%;
 					min-width: 165px;
 					max-width: 190px;
 					margin: 0 auto;
 				}
-				.partner-table #kt_table_users .detail-row.is-visible { display: table-row !important; }
+				.partner-table .partner-status .mt-2 { margin-top: 6px !important; }
+				.partner-table .partner-status .fs-8 { font-size: 11px !important; line-height: 1.5; }
+				.partner-table .partner-status .badge { padding: 5px 9px; }
+				.partner-table .gz-badge-emp { max-width: 100% !important; white-space: normal; }
+				.partner-table .gz-badge-potential { max-width: 100%; align-items: flex-start; line-height: 1.5; overflow-wrap: normal; word-break: normal; }
+				.partner-table .gz-badge-potential > span { min-width: 0; }
+				.partner-table .gz-badge-potential svg { flex-shrink: 0; margin-top: 3px; }
+				.partner-table .partner-contact-line { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+				.partner-page .partner-toolbar { gap: 12px !important; width: 100%; }
+				.partner-page .partner-toolbar .gz-search-filter-box { flex: 1 1 220px; max-width: 320px; }
+				.partner-page .partner-toolbar > select { min-height: 38px; }
+				@media (max-width: 1199px) {
+					.partner-table #kt_table_users { min-width: 1060px; }
+					.partner-table #kt_table_users th:last-child,
+					.partner-table #kt_table_users td.partner-actions {
+						box-shadow: -4px 0 8px -6px rgba(23, 43, 77, .25);
+					}
+				}
+				@media (max-width: 768px) {
+					.partner-page .partner-table { padding: 0 12px 16px !important; }
+					.partner-page .partner-toolbar .gz-search-filter-box { max-width: none; flex-basis: 100%; }
+				}
+				.partner-table .data-row {
+					cursor: pointer;
+					border-bottom: 1px solid #EEF2F7;
+					transition: background 0.15s ease;
+				}
+				.partner-table .data-row:hover {
+					background: #F8FAFD;
+				}
+				.partner-table .data-row td {
+					padding: 14px 12px;
+					vertical-align: middle;
+				}
+				.gz-badge-potential {
+					display: inline-flex;
+					align-items: center;
+					gap: 4px;
+					background: #EEF2FF;
+					color: #4F46E5;
+					border: 1px solid #C7D2FE;
+					border-radius: 6px;
+					padding: 3px 8px;
+					font-size: 12px;
+					font-weight: 600;
+				}
+				.gz-badge-emp {
+					display: inline-flex;
+					align-items: center;
+					background: #F1F5F9;
+					color: #334155;
+					border-radius: 6px;
+					padding: 3px 8px;
+					font-size: 12px;
+					font-weight: 600;
+				}
+				.partner-details-grid {
+					display: grid;
+					grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+					gap: 12px;
+					background: #F8FAFC;
+					padding: 16px;
+					border-radius: 10px;
+					border: 1px solid #E2E8F0;
+				}
+			`}</style>
+
+			{/* Breadcrumb */}
+			<div className='gz-mgmt-breadcrumb'>
+				<Link to={`${basePath}/dashboard`}>Dashboard</Link>
+				<span className='sep'>&gt;</span>
+				<span>Follow Up &amp; Helpdesk</span>
+				<span className='sep'>&gt;</span>
+				<span className='current'>Pro Partner</span>
+			</div>
+
+			{/* Header */}
+			<div className='gz-mgmt-header mb-6'>
+				<div className='gz-mgmt-title-wrap'>
+					<h1 className='gz-mgmt-title d-flex align-items-center gap-2'>
+						<span>RAG Pro Partner Applications</span>
+						<span className='badge badge-light-primary fs-8 px-3 py-1'>Verified Trainers &amp; Coaches</span>
+					</h1>
+					<p className='gz-mgmt-subtitle'>
+						Review trainer applications, verify fitness credentials, and evaluate potential sales channels.
+					</p>
+				</div>
+				<div className='d-flex align-items-center gap-3 flex-wrap'>
+					<button
+						type='button'
+						className='gz-mgmt-btn-secondary'
+						onClick={downloadExcel}
+						disabled={loading || exporting || filteredApplications.length === 0}
+						title='Download Applications Excel'>
+						<FontAwesomeIcon icon={faDownload} />
+						<span>{exporting ? 'Exporting...' : 'Export Excel'}</span>
+					</button>
+				</div>
+			</div>
+
+			{/* Summary KPI Cards */}
+			<div className='gz-prod-summary-grid mb-6'>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-label'>Total Applications</div>
+					<div className='gz-prod-summary-val'>{stats.total}</div>
+					<div className='gz-prod-summary-sub'>All submissions</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-label'>Pending Review</div>
+					<div className='gz-prod-summary-val text-warning'>{stats.pending}</div>
+					<div className='gz-prod-summary-sub'>Awaiting action</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-label'>Accepted Partners</div>
+					<div className='gz-prod-summary-val text-success'>{stats.approved}</div>
+					<div className='gz-prod-summary-sub'>Applications approved</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-label'>Rejected Applications</div>
+					<div className='gz-prod-summary-val text-danger'>{stats.rejected}</div>
+					<div className='gz-prod-summary-sub'>Applications declined</div>
+				</div>
+			</div>
+
+			{/* Main Management Card */}
+			<div className='gz-mgmt-card mb-6'>
+				<div className='gz-mgmt-toolbar'>
+					<div className='d-flex flex-wrap align-items-center gap-3 partner-toolbar'>
+						<SearchFilter
+							searchTerm={searchTerm}
+							setSearchTerm={setSearchTerm}
+							className='me-0'
+						/>
+
+						<LengthMenu
+							expenseData={filteredApplications}
+							handleItemsPerPageChange={handleItemsPerPageChange}
+							value={pagination.itemsPerPage}
+							className='me-0'
+						/>
+
+						<div>
+							<DownloadExcelButton
+								onClick={downloadExcel}
+								disabled={loading || exporting || filteredApplications.length === 0}
+								loading={exporting}
+								filename='RAG_Pro_Partner_Applications'
+							/>
+						</div>
+
+						<div style={{ minWidth: '180px', maxWidth: '220px', flex: '1 1 180px' }}>
+							<SelectField
+								className='fv-row mb-0'
+								label='Employment Type'
+								showLabel={false}
+								defaultLabel='All Employment Types'
+								name='Filter Employment'
+								value={employmentTypeFilter}
+								onChange={handleEmploymentTypeChange}
+								htmlFor='Filter Employment'
+								marginRemove={true}
+								height='38px'
+								options={employmentOptions}
+							/>
+						</div>
+
+						<div style={{ minWidth: '250px' }}>
+							<DateFilter
+								onDateRangeChange={(r) => setSelectedDateRange(r)}
+								rightValue='0'
+							/>
+						</div>
+
+						<select className='form-select form-select-sm w-auto' aria-label='Filter application status'
+							value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+							<option value=''>All Application Statuses</option>
+							<option value='pending'>Pending</option>
+							<option value='approved'>Accepted</option>
+							<option value='rejected'>Rejected</option>
+						</select>
+
+						<button
+							type='button'
+							className={`btn btn-sm ${showUnreadOnly ? 'btn-danger' : 'btn-light'} fw-bold`}
+							style={{ height: '38px', borderRadius: '8px' }}
+							onClick={() => setShowUnreadOnly(!showUnreadOnly)}>
+							{showUnreadOnly ? 'Showing Unread' : 'Filter Unread'}
+						</button>
+					</div>
+				</div>
+
+				<div className='p-6 pt-0 partner-table'>
+					<div className='partner-table-content'>
+						<Table
+							actionsWidth='200px'
+							data={paginatedApplications}
+							columns={sortableFields}
+							sort={sort}
+							sortOrder={sortOrder}
+							onSortChange={handleSortChange}
+							renderRow={(item: any, index: number, actualIndex: number, isVisible: boolean) => {
+								const d = item.details || {}
+								const name = d.full_name || item.name || 'Unnamed Applicant'
+								const mobile = d.mobile || item.mobile || ''
+								const whatsapp = d.whatsapp || mobile
+								const email = d.email || item.email || ''
+								const city = d.city || ''
+								const state = d.state || ''
+								const locationStr = [city, state].filter(Boolean).join(', ')
+
+								return (
+									<React.Fragment key={item._id}>
+										<tr
+											onClick={() => handleRowClick(item._id)}
+											className='data-row'>
+											<td className='text-center'>
+												<FontAwesomeIcon
+													icon={faPlusCircle}
+													className='mx-1 mb-1 plus-icon'
+													style={{ color: '#607D8B', fontSize: '18px' }}
+												/>
+												<span className='text-dark fw-bold d-block mb-1 fs-6'>{actualIndex}</span>
+												{item.read_receipt === false ? (
+													<FontAwesomeIcon
+														icon={faEnvelope}
+														style={{ color: '#f00000', fontSize: '18px' }}
+														title='Unread application'
+													/>
+												) : (
+													<FontAwesomeIcon
+														icon={faEnvelopeOpen}
+														style={{ color: '#50cd89', fontSize: '18px' }}
+														title='Reviewed application'
+													/>
+												)}
+											</td>
+
+											{/* Applicant Name & Location */}
+											<td>
+												<span className='text-dark fw-bold d-block fs-6'>{name}</span>
+												{locationStr && (
+													<span className='text-muted fs-8 d-block'>
+														<FontAwesomeIcon icon={faMapMarkerAlt} className='me-1' />
+														{locationStr}
+													</span>
+												)}
+											</td>
+
+											{/* Contact Info with WhatsApp */}
+											<td>
+												{email && (
+													<a
+														href={`mailto:${email}`}
+														className='text-primary fw-semibold d-block fs-7'
+														title={email}
+														onClick={(e) => e.stopPropagation()}>
+														{email}
+													</a>
+												)}
+												{mobile && (
+													<div className='partner-contact-line mt-1'>
+														<a
+															href={`tel:${mobile}`}
+															className='text-dark fw-semibold fs-7'
+															onClick={(e) => e.stopPropagation()}>
+															{mobile}
+														</a>
+														{whatsapp && (
+															<a
+																href={`https://wa.me/${String(whatsapp).replace(/[^0-9]/g, '')}`}
+																target='_blank'
+																rel='noreferrer'
+																className='text-success'
+																title='WhatsApp'
+																onClick={(e) => e.stopPropagation()}>
+																<FontAwesomeIcon icon={faWhatsapp} />
+															</a>
+														)}
+													</div>
+												)}
+											</td>
+
+											{/* Role & Experience */}
+											<td>
+												<span className='gz-badge-emp d-inline-block text-truncate' style={{ maxWidth: '200px' }}>
+													{d.employment_type || 'Trainer'}
+												</span>
+												<span className='text-muted fs-8 d-block mt-1'>
+													{d.experience_years ? `${d.experience_years} Yrs Exp` : 'Exp: N/A'}
+													{d.higher_education ? ` • ${d.higher_education}` : ''}
+												</span>
+											</td>
+
+											{/* Client Reach */}
+											<td>
+												<div className='d-flex align-items-center gap-1'>
+													<FontAwesomeIcon icon={faUsers} className='text-muted fs-8' />
+													<span className='text-dark fw-bold fs-7'>
+														{d.active_clients ? String(d.active_clients).replace(/\s*clients?/i, '') : 'N/A'}
+													</span>
+													<span
+														className='badge ms-1'
+														style={{
+															background: '#ECFDF5',
+															color: '#059669',
+															fontSize: '10px',
+															fontWeight: 600,
+															padding: '2px 5px',
+														}}>
+														Active
+													</span>
+												</div>
+												{d.instagram_followers && (
+													<span className='text-muted fs-8 d-inline-flex align-items-center mt-1'>
+														<FontAwesomeIcon icon={faInstagram} className='text-danger me-1' style={{ fontSize: '11px' }} />
+														{d.instagram_followers}
+													</span>
+												)}
+											</td>
+
+											{/* Sales Potential */}
+											<td>
+												{d.sales_potential ? (
+													<span
+														className='d-inline-flex align-items-center gap-1 px-2 py-1'
+														style={{
+															background: '#EEF2FF',
+															color: '#4338CA',
+															border: '1px solid #C7D2FE',
+															borderRadius: '6px',
+															fontSize: '12px',
+															fontWeight: 600,
+															lineHeight: 1.3,
+															whiteSpace: 'normal',
+															maxWidth: '180px',
+														}}>
+														<FontAwesomeIcon icon={faAward} className='flex-shrink-0' />
+														<span>
+															{String(d.sales_potential)
+																.replace(/\s*clients?\s+clients?\s*@/i, ' Clients @')
+																.replace(/\s*clients?\s*@/i, ' Clients @')}
+														</span>
+													</span>
+												) : (
+													<span className='text-muted fs-8'>Not Specified</span>
+												)}
+											</td>
+
+											{/* Date Applied */}
+											<td>
+												<span className='text-dark fw-bold d-block fs-7'>
+													{DayJS(item.createdAt).format('DD/MM/YYYY')}
+												</span>
+												<span className='text-muted fs-8'>
+													{DayJS(item.createdAt).format('hh:mm A')}
+												</span>
+											</td>
+
+											{/* Status & Review Details */}
+											<td className='partner-status'>
+												<PartnerStatusBadge inquiry={item} />
+												<PartnerReviewDetails inquiry={item} />
+												{item.partner_policy?.accepted_at && (
+													<button
+														type='button'
+														className='d-inline-flex align-items-center gap-1 mt-2 border-0'
+														style={{
+															background: '#ECFDF5',
+															color: '#047857',
+															border: '1px solid #A7F3D0',
+															borderRadius: '6px',
+															fontSize: '11px',
+															fontWeight: 600,
+															padding: '3px 8px',
+															cursor: 'pointer',
+															transition: 'background 0.15s ease',
+														}}
+														onClick={(e) => {
+															e.stopPropagation()
+															handleViewPartnerAgreement(item._id)
+														}}
+														title='View Accepted Agreement PDF'>
+														<FontAwesomeIcon icon={faDownload} /> Accepted PDF
+													</button>
+												)}
+											</td>
+											<td
+												className='partner-actions'
+												style={{
+													width: '200px',
+													minWidth: '200px',
+													maxWidth: '220px',
+													whiteSpace: 'normal',
+													padding: '10px 12px',
+													verticalAlign: 'middle',
+													position: 'sticky',
+													right: 0,
+													background: '#ffffff',
+													zIndex: 2,
+												}}>
+												<div className='partner-actions-stack' style={{ width: '100%', minWidth: '160px', maxWidth: '190px', margin: '0 auto' }}>
 													<PartnerApplicationActions
 														inquiry={item}
 														compact

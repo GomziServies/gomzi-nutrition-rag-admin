@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -78,6 +78,33 @@ export default function PartnerApplicationActions({
 	const status = getPartnerApplicationStatus(inquiry)
 	const name = inquiry?.details?.full_name || inquiry?.name || 'this applicant'
 
+	const showAccept = status !== 'approved'
+	const showReject = status !== 'rejected' && (!compact || status === 'pending')
+	const showResend = status === 'approved' && !inquiry.partner_policy?.accepted_at
+	const showPdf = Boolean(inquiry.partner_policy?.version)
+	const hasChildren = Boolean(children)
+
+	let totalButtons = 0
+	if (showAccept) totalButtons++
+	if (showReject) totalButtons++
+	if (showResend) totalButtons++
+	if (showPdf) totalButtons++
+	if (hasChildren) totalButtons++
+
+	const shouldSpanLast = compact && (totalButtons === 1 || totalButtons === 3)
+
+	const btnStyle: React.CSSProperties | undefined = compact
+		? {
+				minWidth: 0,
+				width: '100%',
+				height: '32px',
+				boxSizing: 'border-box',
+				whiteSpace: 'nowrap',
+				textOverflow: 'ellipsis',
+				overflow: 'hidden',
+		  }
+		: undefined
+
 	const saveDecision = async (event: React.FormEvent) => {
 		event.preventDefault()
 		if (!decision || saving) return
@@ -132,12 +159,40 @@ export default function PartnerApplicationActions({
 		}
 	}
 
+	const renderedChildren =
+		compact && React.isValidElement(children)
+			? React.cloneElement(children as React.ReactElement<any>, {
+					style: {
+						...(children as any).props?.style,
+						...(btnStyle || {}),
+						gridColumn: shouldSpanLast ? '1 / -1' : 'span 1',
+					},
+			  })
+			: children
+
 	return (
 		<>
-			<div className={compact ? 'gz-partner-controls' : 'd-flex flex-wrap gap-2'}>
-				{status !== 'approved' && (
+			<div
+				className={compact ? 'gz-partner-controls' : 'd-flex flex-wrap gap-2'}
+				style={
+					compact
+						? {
+								display: 'grid',
+								gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+								gap: '6px',
+								width: '100%',
+								minWidth: '160px',
+								maxWidth: '100%',
+								boxSizing: 'border-box',
+								whiteSpace: 'normal',
+								alignItems: 'center',
+						  }
+						: undefined
+				}>
+				{showAccept && (
 					<button
 						type='button'
+						style={btnStyle}
 						className={compact ? 'gz-partner-button gz-partner-button-accept' : 'btn btn-sm btn-light-success'}
 						title='Accept application and issue demo policy'
 						disabled={saving || resending}
@@ -150,9 +205,10 @@ export default function PartnerApplicationActions({
 						<span>Accept</span>
 					</button>
 				)}
-				{status !== 'rejected' && (
+				{showReject && (
 					<button
 						type='button'
+						style={btnStyle}
 						className={compact ? 'gz-partner-button gz-partner-button-reject' : 'btn btn-sm btn-light-danger'}
 						title='Reject application'
 						disabled={saving || resending}
@@ -165,9 +221,10 @@ export default function PartnerApplicationActions({
 						<span>Reject</span>
 					</button>
 				)}
-				{status === 'approved' && !inquiry.partner_policy?.accepted_at && (
+				{showResend && (
 					<button
 						type='button'
+						style={btnStyle}
 						className={compact ? 'gz-partner-button gz-partner-button-resend' : 'btn btn-sm btn-light-primary'}
 						title='Resend policy email'
 						disabled={saving || resending}
@@ -176,9 +233,10 @@ export default function PartnerApplicationActions({
 						<span>{resending ? 'Sending…' : compact ? 'Resend' : 'Resend policy email'}</span>
 					</button>
 				)}
-				{inquiry.partner_policy?.version && (
+				{showPdf && (
 					<button
 						type='button'
+						style={btnStyle}
 						className={
 							compact
 								? `gz-partner-button ${inquiry.partner_policy?.accepted_at ? 'gz-partner-button-accepted-pdf' : 'gz-partner-button-pdf'}`
@@ -193,7 +251,7 @@ export default function PartnerApplicationActions({
 						<span>{compact ? (inquiry.partner_policy?.accepted_at ? 'PDF' : 'Draft') : (inquiry.partner_policy?.accepted_at ? 'Accepted PDF' : 'Draft PDF')}</span>
 					</button>
 				)}
-				{children}
+				{renderedChildren}
 			</div>
 			<Modal
 				onClick={(event: React.MouseEvent) => event.stopPropagation()}

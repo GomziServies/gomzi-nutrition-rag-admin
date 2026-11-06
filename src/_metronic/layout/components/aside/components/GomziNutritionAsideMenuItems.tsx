@@ -14,6 +14,7 @@ import {
 	PhoneCallIcon,
 	ReceiptIcon,
 	SendIcon,
+	SparklesIcon,
 	ShieldCheckIcon,
 	TruckIcon,
 	UserPlusIcon,
@@ -364,11 +365,6 @@ export function GomziNutritionAsideMenuItems() {
 					title='Contact Inquiries'
 					hasBullet={true}
 				/>
-				<AsideMenuItem
-					to='/rag/contact-inquiry/pro-partner'
-					title='Pro Partner'
-					hasBullet={true}
-				/>
 			</AsideMenuItemWithSub>
 
 			{/* 14. Marketing & Broadcast */}
@@ -389,6 +385,22 @@ export function GomziNutritionAsideMenuItems() {
 				<AsideMenuItem
 					to='/rag/automation/broadcast/active-chats'
 					title='Active Chats'
+					hasBullet={true}
+				/>
+			</AsideMenuItemWithSub>
+			{/* 15. Pro-Partner */}
+			<AsideMenuItemWithSub
+				to=''
+				title='Pro-Partner'
+				Icon={SparklesIcon}>
+				<AsideMenuItem
+					to='/rag/pro-partner/applications'
+					title='Applications'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/pro-partner/coupons'
+					title='Generate Coupon'
 					hasBullet={true}
 				/>
 			</AsideMenuItemWithSub>

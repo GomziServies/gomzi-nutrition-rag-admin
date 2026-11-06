@@ -1,0 +1,95 @@
+.gz-pro-partner-coupons-wrapper {
+	padding: 24px;
+	background: #f8fafc;
+	min-height: 100vh;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-summary-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 16px;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-summary-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 16px 20px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-summary-card .title {
+	font-size: 12px;
+	font-weight: 600;
+	color: #64748b;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-summary-card .value {
+	font-size: 26px;
+	font-weight: 700;
+	margin: 6px 0 2px;
+	line-height: 1.2;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-summary-card .subtext {
+	font-size: 12px;
+	color: #94a3b8;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+	overflow: hidden;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-toolbar {
+	padding: 16px 20px;
+	border-bottom: 1px solid #f1f5f9;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-table th {
+	background: #f8fafc;
+	color: #475569;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	padding: 12px 16px;
+	border-bottom: 1px solid #e2e8f0;
+	white-space: nowrap;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-table td {
+	padding: 14px 16px;
+	font-size: 13px;
+	color: #1e293b;
+	border-bottom: 1px solid #f1f5f9;
+	vertical-align: middle;
+}
+
+.gz-pro-partner-coupons-wrapper .gz-prod-table tbody tr:hover {
+	background-color: #f8fafc;
+}
+
+.gz-pro-partner-coupons-wrapper .cursor-pointer {
+	cursor: pointer;
+}
+
+.gz-pro-partner-coupons-wrapper .hover-bg-light:hover {
+	background-color: #f1f5f9;
+}
+

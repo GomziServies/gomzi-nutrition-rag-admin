@@ -52,6 +52,7 @@ import TeamTasksView from '../pages/hr/team-management/TeamTasksView'
 import ContactInquiry from '../pages/gomzi-nutrition/contact-inquiry/contact'
 import ContactInquiryView from '../pages/gomzi-nutrition/contact-inquiry/contact-inquiry-view'
 import ProPartnerInquiry from '../pages/gomzi-nutrition/contact-inquiry/pro-partner'
+import ProPartnerCoupons from '../pages/gomzi-nutrition/pro-partner/pro-partner-coupons'
 
 const HRPrivateRoutes = () => {
 	return (
@@ -183,6 +184,14 @@ const HRPrivateRoutes = () => {
 				<Route
 					path='pro-partner'
 					element={<ProPartnerInquiry />}
+				/>
+				<Route
+					path='pro-partner/applications'
+					element={<ProPartnerInquiry />}
+				/>
+				<Route
+					path='pro-partner/coupons'
+					element={<ProPartnerCoupons />}
 				/>
 
 				{/* Page Not Found */}
