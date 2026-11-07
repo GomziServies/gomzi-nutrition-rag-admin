@@ -51,11 +51,14 @@ const ContactInquiry: React.FC = () => {
 	const [subject, setSubject] = useState('')
 
 	const RAG_CONTACT_SOURCE_FILTER =
-		'gomzilifesciences|ragnutrition|contact-us|5173|whey|rag'
+		'gomzilifesciences|ragnutrition|contact-us|5173|whey|rag|gomzi|landing'
 
 	const renderOriginBadge = (source?: string, subject?: string) => {
 		const src = (source || '').toLowerCase()
 		const sub = (subject || '').toLowerCase()
+		if (src.includes('gomzi') || src.includes('landing') || sub.includes('offer') || sub.includes('gym')) {
+			return <span className='badge badge-light-danger fw-bold fs-8 py-1 px-2 mt-1'>GOMZI Offer Landing</span>
+		}
 		if (src.includes('contact-us') || sub.includes('rag website') || src.includes('5173')) {
 			return <span className='badge badge-light-success fw-bold fs-8 py-1 px-2 mt-1'>RAG Website</span>
 		}
@@ -293,12 +296,18 @@ const ContactInquiry: React.FC = () => {
 		const total = allContactInquiry.length
 		const unread = allContactInquiry.filter((i: any) => i.read_receipt === false).length
 		const read = total - unread
+		const landing = allContactInquiry.filter((i: any) => {
+			const sub = (i.subject || '').toLowerCase()
+			const src = (i.source || '').toLowerCase()
+			return src.includes('landing') || src.includes('gomzi') || sub.includes('offer') || sub.includes('gym')
+		}).length
 		const partner = allContactInquiry.filter((i: any) => {
 			const sub = (i.subject || '').toLowerCase()
 			const src = (i.source || '').toLowerCase()
-			return sub.includes('partner') || src.includes('inquiry')
+			const isLanding = src.includes('landing') || src.includes('gomzi') || sub.includes('offer') || sub.includes('gym')
+			return !isLanding && (sub.includes('partner') || src.includes('inquiry'))
 		}).length
-		return { total, unread, read, partner }
+		return { total, unread, read, partner, landing }
 	}, [allContactInquiry])
 
 	return (
@@ -377,6 +386,11 @@ const ContactInquiry: React.FC = () => {
 					<div className='gz-prod-summary-label'>Partner Program</div>
 					<div className='gz-prod-summary-val text-primary'>{stats.partner}</div>
 					<div className='gz-prod-summary-sub'>Applications received</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='gz-prod-summary-label'>Landing Offers</div>
+					<div className='gz-prod-summary-val text-warning'>{stats.landing}</div>
+					<div className='gz-prod-summary-sub'>GOMZI Offer leads</div>
 				</div>
 			</div>
 
