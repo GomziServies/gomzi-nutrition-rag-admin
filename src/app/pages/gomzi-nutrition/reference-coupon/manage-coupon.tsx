@@ -31,6 +31,7 @@ import UsersListPagination from '../../../components/TablePagination'
 import CopyButton from '../../../components/motion/CopyButton'
 import {
 	CreateReferralCoupon,
+	GetContactInquiry,
 	GetReferralCoupon,
 	GetTrainers,
 	UpdateReferralCoupon,
@@ -44,8 +45,12 @@ const ManageCoupon: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [copied, setCopied] = useState(false)
 	const [trainerData, setTrainerData] = useState<any[]>([])
+	const [partnerData, setPartnerData] = useState<any[]>([])
 	const [catalogProducts, setCatalogProducts] = useState<any[]>([])
 	const [productSearch, setProductSearch] = useState('')
+	const [assigneeType, setAssigneeType] = useState<'none' | 'trainer' | 'pro_partner'>('none')
+	const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
+	const [assigneeFilter, setAssigneeFilter] = useState<string>('all')
 	const [subject, setSubject] = useState<any>({
 		name: '',
 		trainer_id: '',
@@ -148,9 +153,28 @@ const ManageCoupon: React.FC = () => {
 		}
 	}
 
+	const fetchPartnerData = async () => {
+		try {
+			const res: any = await GetContactInquiry({
+				page: 1,
+				limit: 200,
+				source: 'gomzilifesciences|ragnutrition|contact-us|5173|whey|rag',
+			})
+			const raw = Array.isArray(res?.data) ? res.data : []
+			const approved = raw.filter((item: any) => {
+				const status = String(item.partner_status || item.status || '').toLowerCase()
+				return status === 'approved' || item.partner_policy?.accepted_at
+			})
+			setPartnerData(approved)
+		} catch (error) {
+			console.error('Error fetching partner inquiries:', error)
+		}
+	}
+
 	useEffect(() => {
 		fetchCouponData()
 		fetchTrainerData()
+		fetchPartnerData()
 		fetchProductCatalog()
 	}, [])
 
@@ -170,12 +194,25 @@ const ManageCoupon: React.FC = () => {
 			scope: data.scope || (applicableProductIds.length > 0 ? 'SPECIFIC_PRODUCTS' : 'ALL'),
 			applicable_products: applicableProductIds,
 		})
-		if (data?.assign_trainer) {
+
+		if (data?.coupon_type === 'pro_partner' || data?.partner_inquiry_id) {
+			setAssigneeType('pro_partner')
+			const partnerId = String(data.partner_inquiry_id?._id || data.partner_inquiry_id || data.assign_trainer?.trainer_id || '')
+			setSelectedPartnerId(partnerId)
+			setSubject({
+				name: data.partner_name || data.assign_trainer?.name || '',
+				trainer_id: partnerId,
+			})
+		} else if (data?.assign_trainer?.trainer_id && data?.assign_trainer?.name && data?.assign_trainer?.name !== 'N/A') {
+			setAssigneeType('trainer')
+			setSelectedPartnerId('')
 			setSubject({
 				name: data.assign_trainer.name || '',
 				trainer_id: data.assign_trainer.trainer_id || '',
 			})
 		} else {
+			setAssigneeType('none')
+			setSelectedPartnerId('')
 			setSubject({ name: '', trainer_id: '' })
 		}
 	}
@@ -193,6 +230,43 @@ const ManageCoupon: React.FC = () => {
 
 	const handleAddUpdateCoupon = async (coupon_id?: string) => {
 		try {
+			let couponType = 'general'
+			let partnerInquiryId: string | undefined = undefined
+			let partnerName: string | undefined = undefined
+			let partnerEmail: string | undefined = undefined
+			let partnerMobile: string | undefined = undefined
+			let assignTrainer: any = undefined
+
+			if (assigneeType === 'pro_partner') {
+				couponType = 'pro_partner'
+				const matchedPartner = partnerData.find((p) => String(p._id) === selectedPartnerId)
+				if (matchedPartner) {
+					partnerInquiryId = matchedPartner._id
+					partnerName = matchedPartner.details?.full_name || matchedPartner.name || 'Pro Partner'
+					partnerEmail = matchedPartner.details?.email || matchedPartner.email || ''
+					partnerMobile = matchedPartner.details?.mobile || matchedPartner.mobile || ''
+					assignTrainer = {
+						trainer_id: matchedPartner._id,
+						name: partnerName,
+					}
+				} else if (subject.trainer_id) {
+					partnerInquiryId = subject.trainer_id
+					partnerName = subject.name || 'Pro Partner'
+					assignTrainer = {
+						trainer_id: subject.trainer_id,
+						name: partnerName,
+					}
+				}
+			} else if (assigneeType === 'trainer') {
+				couponType = 'trainer'
+				if (subject.trainer_id) {
+					assignTrainer = {
+						name: subject.name,
+						trainer_id: subject.trainer_id,
+					}
+				}
+			}
+
 			if (coupon_id) {
 				const data: any = {
 					title: updateData.title,
@@ -203,10 +277,12 @@ const ManageCoupon: React.FC = () => {
 					expired_at: DayJS(updateData.expired_at).format('YYYY/MM/DD'),
 					scope: updateData.scope,
 					applicable_products: updateData.scope === 'SPECIFIC_PRODUCTS' ? updateData.applicable_products : [],
-					assign_trainer: {
-						name: subject.name,
-						trainer_id: subject.trainer_id,
-					},
+					coupon_type: couponType,
+					partner_inquiry_id: partnerInquiryId,
+					partner_name: partnerName,
+					partner_email: partnerEmail,
+					partner_mobile: partnerMobile,
+					assign_trainer: assignTrainer,
 				}
 
 				data.coupon_id = coupon_id
@@ -235,10 +311,12 @@ const ManageCoupon: React.FC = () => {
 					expired_at: DayJS(couponAdd.expired_at).format('YYYY/MM/DD'),
 					scope: couponAdd.scope,
 					applicable_products: couponAdd.scope === 'SPECIFIC_PRODUCTS' ? couponAdd.applicable_products : [],
-					assign_trainer: {
-						name: subject.name,
-						trainer_id: subject.trainer_id,
-					},
+					coupon_type: couponType,
+					partner_inquiry_id: partnerInquiryId,
+					partner_name: partnerName,
+					partner_email: partnerEmail,
+					partner_mobile: partnerMobile,
+					assign_trainer: assignTrainer,
 				}
 
 				await CreateReferralCoupon(data)
@@ -256,6 +334,9 @@ const ManageCoupon: React.FC = () => {
 					scope: 'ALL',
 					applicable_products: [],
 				})
+				setAssigneeType('none')
+				setSelectedPartnerId('')
+				setSubject({ name: '', trainer_id: '' })
 				toast.success('Coupon Added Successfully')
 			}
 		} catch (error: any) {
@@ -272,11 +353,35 @@ const ManageCoupon: React.FC = () => {
 		setPagination((prev) => ({ ...prev, itemsPerPage, page: 1 }))
 	}
 
-	const filteredCouponData = referenceData.filter((data: any) =>
-		(data.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-		(data.coupon_code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-		(data?.assign_trainer?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-	)
+	const filteredCouponData = referenceData.filter((data: any) => {
+		const matchesSearch =
+			(data.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(data.coupon_code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(data?.partner_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(data?.assign_trainer?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+
+		if (!matchesSearch) return false
+
+		if (assigneeFilter === 'partner') {
+			return data.coupon_type === 'pro_partner' || Boolean(data.partner_inquiry_id) || Boolean(data.partner_name)
+		}
+		if (assigneeFilter === 'trainer') {
+			return (
+				(data.coupon_type === 'trainer' || (!data.coupon_type && data.assign_trainer?.name)) &&
+				data.coupon_type !== 'pro_partner' &&
+				!data.partner_inquiry_id
+			)
+		}
+		if (assigneeFilter === 'general') {
+			const isPartner = data.coupon_type === 'pro_partner' || Boolean(data.partner_inquiry_id)
+			const isTrainer =
+				(data.coupon_type === 'trainer' || Boolean(data.assign_trainer?.name && data.assign_trainer?.name !== 'N/A')) &&
+				!isPartner
+			return !isPartner && !isTrainer
+		}
+
+		return true
+	})
 
 	const paginatedCouponData = filteredCouponData.slice(
 		(pagination.page - 1) * pagination.itemsPerPage,
@@ -326,8 +431,14 @@ const ManageCoupon: React.FC = () => {
 	const activeCoupons = referenceData.filter(
 		(item: any) => !item.expired_at || new Date(item.expired_at).getTime() >= new Date().getTime()
 	).length
+	const assignedPartners = referenceData.filter(
+		(item: any) => item.coupon_type === 'pro_partner' || Boolean(item.partner_inquiry_id) || Boolean(item.partner_name)
+	).length
 	const assignedTrainers = referenceData.filter(
-		(item: any) => item?.assign_trainer?.name && item?.assign_trainer?.name !== 'N/A'
+		(item: any) =>
+			(item?.assign_trainer?.name && item?.assign_trainer?.name !== 'N/A') &&
+			item.coupon_type !== 'pro_partner' &&
+			!item.partner_inquiry_id
 	).length
 	const percentageCoupons = referenceData.filter(
 		(item: any) => item.discount_type === 'percent'
@@ -353,7 +464,7 @@ const ManageCoupon: React.FC = () => {
 				<div>
 					<h1 className='gz-prod-title'>Reference Coupons</h1>
 					<p className='gz-prod-subtitle'>
-						Create promotional coupon codes, link referral trainers, and track reference usage metrics.
+						Create promotional coupon codes, link referral partners & trainers, and track usage metrics.
 					</p>
 				</div>
 				<div className='d-flex align-items-center gap-3 flex-wrap'>
@@ -361,6 +472,8 @@ const ManageCoupon: React.FC = () => {
 						type='button'
 						className='gz-prod-btn-primary'
 						onClick={() => {
+							setAssigneeType('none')
+							setSelectedPartnerId('')
 							setSubject({ name: '', trainer_id: '' })
 							setShowReferenceModal(true)
 						}}>
@@ -389,18 +502,18 @@ const ManageCoupon: React.FC = () => {
 					<div className='subtext'>Currently valid & usable</div>
 				</div>
 				<div className='gz-prod-summary-card'>
-					<div className='title'>Assigned to Trainers</div>
+					<div className='title'>Pro Partner Coupons</div>
+					<div className='value' style={{ color: '#047857' }}>
+						{loading ? <div className='gz-skeleton mt-1' style={{ width: '40px', height: '24px', borderRadius: '4px' }} /> : assignedPartners}
+					</div>
+					<div className='subtext'>Assigned to RAG Pro Partners</div>
+				</div>
+				<div className='gz-prod-summary-card'>
+					<div className='title'>Trainer Coupons</div>
 					<div className='value' style={{ color: '#2563EB' }}>
 						{loading ? <div className='gz-skeleton mt-1' style={{ width: '40px', height: '24px', borderRadius: '4px' }} /> : assignedTrainers}
 					</div>
-					<div className='subtext'>Referral partner linked</div>
-				</div>
-				<div className='gz-prod-summary-card'>
-					<div className='title'>Percent Discounts</div>
-					<div className='value' style={{ color: '#D97706' }}>
-						{loading ? <div className='gz-skeleton mt-1' style={{ width: '40px', height: '24px', borderRadius: '4px' }} /> : percentageCoupons}
-					</div>
-					<div className='subtext'>Percentage-based savings</div>
+					<div className='subtext'>Referral trainers linked</div>
 				</div>
 			</div>
 
@@ -416,6 +529,16 @@ const ManageCoupon: React.FC = () => {
 							setSearchTerm={setSearchTerm}
 							className='me-0'
 						/>
+						<select
+							className='form-select form-select-sm'
+							style={{ minWidth: '170px', height: '38px', borderRadius: '8px', fontSize: '12.5px' }}
+							value={assigneeFilter}
+							onChange={(e) => setAssigneeFilter(e.target.value)}>
+							<option value='all'>All Beneficiaries</option>
+							<option value='partner'>💎 Pro Partners</option>
+							<option value='trainer'>Fitness Trainers</option>
+							<option value='general'>Storewide Coupons</option>
+						</select>
 						<LengthMenu
 							expenseData={filteredCouponData}
 							handleItemsPerPageChange={handleItemsPerPageChange}
@@ -452,7 +575,7 @@ const ManageCoupon: React.FC = () => {
 								<th style={{ width: '56px', textAlign: 'center' }}>No.</th>
 								<th style={{ minWidth: '180px' }}>Title</th>
 								<th style={{ minWidth: '160px' }}>Coupon Code</th>
-								<th style={{ minWidth: '170px' }}>Assigned Trainer</th>
+								<th style={{ minWidth: '190px' }}>Assigned Beneficiary</th>
 								<th style={{ minWidth: '120px' }}>Max Usage</th>
 								<th style={{ minWidth: '120px' }}>Discount</th>
 								<th style={{ minWidth: '130px' }}>Discount Type</th>
@@ -560,28 +683,52 @@ const ManageCoupon: React.FC = () => {
 												</div>
 											</td>
 											<td>
-												{data?.assign_trainer?.name && data.assign_trainer.name !== 'N/A' ? (
-													<div className='d-inline-flex align-items-center gap-2'>
+												{data.coupon_type === 'pro_partner' || data.partner_inquiry_id || data.partner_name ? (
+													<div className='d-inline-flex align-items-center gap-1.5 flex-wrap'>
 														<span
+															className='badge text-success fw-bold'
 															style={{
-																width: '24px',
-																height: '24px',
-																borderRadius: '50%',
-																background: '#EFF6FF',
-																color: '#2563EB',
-																display: 'inline-flex',
-																alignItems: 'center',
-																justifyContent: 'center',
 																fontSize: '11px',
+																padding: '3px 8px',
+																borderRadius: '6px',
+																background: '#ECFDF5',
+																border: '1px solid #A7F3D0',
 															}}>
-															<FontAwesomeIcon icon={faUserCheck} />
+															💎 Pro Partner
+														</span>
+														<span style={{ fontWeight: 600, color: '#172B4D', fontSize: '13px' }}>
+															{data.partner_name || data.partner_inquiry_id?.name || data.assign_trainer?.name || 'Partner'}
+														</span>
+													</div>
+												) : data?.assign_trainer?.name && data.assign_trainer.name !== 'N/A' ? (
+													<div className='d-inline-flex align-items-center gap-1.5 flex-wrap'>
+														<span
+															className='badge text-primary fw-bold'
+															style={{
+																fontSize: '11px',
+																padding: '3px 8px',
+																borderRadius: '6px',
+																background: '#EFF6FF',
+																border: '1px solid #BFDBFE',
+															}}>
+															Trainer
 														</span>
 														<span style={{ fontWeight: 600, color: '#172B4D', fontSize: '13px' }}>
 															{data.assign_trainer.name}
 														</span>
 													</div>
 												) : (
-													<span style={{ color: '#A0ABC0', fontSize: '13px' }}>Unassigned</span>
+													<span
+														className='badge text-muted fw-semibold'
+														style={{
+															fontSize: '11px',
+															padding: '3px 8px',
+															borderRadius: '6px',
+															background: '#F1F5F9',
+															border: '1px solid #E2E8F0',
+														}}>
+														General Store
+													</span>
 												)}
 											</td>
 											<td>
@@ -881,22 +1028,119 @@ const ManageCoupon: React.FC = () => {
 									labelMarginRemove
 								/>
 							</div>
+							{/* Assignee / Partner Configuration */}
 							<div className='col-12'>
-								<SelectFieldManual
-									label='Assign Referral Trainer'
-									name='account_id'
-									value={subject.trainer_id}
-									onChange={handleSelectChange}
-									htmlFor='account_id'
-									marginRemove={true}
-									options={[
-										{ value: '', name: 'Select Trainer (Optional)' },
-										...trainerData.map((data: any) => ({
-											value: data.trainer_id,
-											name: `${data.full_name} (${data.trainer_id || 'ID'})`,
-										})),
-									]}
-								/>
+								<div className='p-4 rounded-3' style={{ background: '#F8FAFD', border: '1px solid #E2E8F0' }}>
+									<label className='fw-bold mb-1 d-block' style={{ color: '#172B4D', fontSize: '13px' }}>
+										Assign Coupon Beneficiary
+									</label>
+									<p className='text-muted fs-8 mb-3'>
+										Select who this coupon is assigned to so orders and discounts are properly counted.
+									</p>
+									<div className='d-flex align-items-center gap-4 mb-3 flex-wrap'>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='assignee_type_add'
+												checked={assigneeType === 'none'}
+												onChange={() => {
+													setAssigneeType('none')
+													setSelectedPartnerId('')
+													setSubject({ name: '', trainer_id: '' })
+												}}
+											/>
+											<span>Storewide (General Coupon)</span>
+										</label>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='assignee_type_add'
+												checked={assigneeType === 'pro_partner'}
+												onChange={() => {
+													setAssigneeType('pro_partner')
+													if (partnerData.length > 0 && !selectedPartnerId) {
+														const firstP = partnerData[0]
+														setSelectedPartnerId(firstP._id)
+														setSubject({
+															name: firstP.details?.full_name || firstP.name,
+															trainer_id: firstP._id,
+														})
+													}
+												}}
+											/>
+											<span className='fw-bold text-success'>💎 RAG Pro Partner</span>
+										</label>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='assignee_type_add'
+												checked={assigneeType === 'trainer'}
+												onChange={() => {
+													setAssigneeType('trainer')
+													setSelectedPartnerId('')
+												}}
+											/>
+											<span className='fw-bold text-primary'>Fitness Trainer</span>
+										</label>
+									</div>
+
+									{assigneeType === 'pro_partner' && (
+										<div>
+											<label className='form-label fs-8 fw-bold text-gray-700 mb-1'>
+												Select Approved Pro Partner
+											</label>
+											<select
+												className='form-select form-select-sm'
+												style={{ fontSize: '13px', borderRadius: '8px' }}
+												value={selectedPartnerId}
+												onChange={(e) => {
+													const pid = e.target.value
+													setSelectedPartnerId(pid)
+													const matched = partnerData.find((p) => String(p._id) === pid)
+													if (matched) {
+														setSubject({
+															name: matched.details?.full_name || matched.name,
+															trainer_id: matched._id,
+														})
+													} else {
+														setSubject({ name: '', trainer_id: '' })
+													}
+												}}>
+												<option value=''>Choose Pro Partner</option>
+												{partnerData.map((p) => {
+													const name = p.details?.full_name || p.name || 'Partner'
+													const contact = p.details?.email || p.email || p.details?.mobile || p.mobile || ''
+													const coupon = p.details?.assigned_coupon_code ? ` • [${p.details.assigned_coupon_code}]` : ''
+													return (
+														<option key={p._id} value={p._id}>
+															{name} {contact ? `(${contact})` : ''}{coupon}
+														</option>
+													)
+												})}
+											</select>
+										</div>
+									)}
+
+									{assigneeType === 'trainer' && (
+										<div>
+											<SelectFieldManual
+												label='Assign Referral Trainer'
+												name='account_id'
+												value={subject.trainer_id}
+												onChange={handleSelectChange}
+												htmlFor='account_id'
+												marginRemove={true}
+												options={[
+													{ value: '', name: 'Select Trainer (Optional)' },
+													...trainerData.map((data: any) => ({
+														value: data.trainer_id,
+														name: `${data.full_name} (${data.trainer_id || 'ID'})`,
+													})),
+												]}
+											/>
+										</div>
+									)}
+								</div>
 							</div>
 
 							{/* Product Scope Configuration */}
@@ -975,8 +1219,27 @@ const ManageCoupon: React.FC = () => {
 														)
 													})}
 											</div>
-											<div className='fs-8 text-primary mt-1 fw-bold'>
-												{couponAdd.applicable_products.length} product(s) selected
+											<div className='d-flex align-items-center justify-content-between mt-1'>
+												<div className='fs-8 text-primary fw-bold'>
+													{couponAdd.applicable_products.length} product(s) selected
+												</div>
+												<div className='d-flex gap-1'>
+													<button
+														type='button'
+														className='btn btn-xs btn-light-primary py-0.5 px-2 fs-9'
+														onClick={() => {
+															const allIds = catalogProducts.map((p) => p._id)
+															setCouponAdd({ ...couponAdd, applicable_products: allIds })
+														}}>
+														Select All
+													</button>
+													<button
+														type='button'
+														className='btn btn-xs btn-light-secondary py-0.5 px-2 fs-9'
+														onClick={() => setCouponAdd({ ...couponAdd, applicable_products: [] })}>
+														Clear
+													</button>
+												</div>
 											</div>
 										</div>
 									)}
@@ -1123,22 +1386,119 @@ const ManageCoupon: React.FC = () => {
 									labelMarginRemove
 								/>
 							</div>
+							{/* Assignee / Partner Configuration */}
 							<div className='col-12'>
-								<SelectFieldManual
-									label='Assign Referral Trainer'
-									name='trainer_id'
-									value={subject.trainer_id}
-									onChange={handleSelectChange}
-									htmlFor='trainer_id'
-									marginRemove={true}
-									options={[
-										{ value: '', name: 'Select Trainer (Optional)' },
-										...trainerData.map((data: any) => ({
-											value: data.trainer_id,
-											name: `${data.full_name} (${data.trainer_id || 'ID'})`,
-										})),
-									]}
-								/>
+								<div className='p-4 rounded-3' style={{ background: '#F8FAFD', border: '1px solid #E2E8F0' }}>
+									<label className='fw-bold mb-1 d-block' style={{ color: '#172B4D', fontSize: '13px' }}>
+										Assign Coupon Beneficiary
+									</label>
+									<p className='text-muted fs-8 mb-3'>
+										Select who this coupon is assigned to so orders and discounts are properly counted.
+									</p>
+									<div className='d-flex align-items-center gap-4 mb-3 flex-wrap'>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='assignee_type_update'
+												checked={assigneeType === 'none'}
+												onChange={() => {
+													setAssigneeType('none')
+													setSelectedPartnerId('')
+													setSubject({ name: '', trainer_id: '' })
+												}}
+											/>
+											<span>Storewide (General Coupon)</span>
+										</label>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='assignee_type_update'
+												checked={assigneeType === 'pro_partner'}
+												onChange={() => {
+													setAssigneeType('pro_partner')
+													if (partnerData.length > 0 && !selectedPartnerId) {
+														const firstP = partnerData[0]
+														setSelectedPartnerId(firstP._id)
+														setSubject({
+															name: firstP.details?.full_name || firstP.name,
+															trainer_id: firstP._id,
+														})
+													}
+												}}
+											/>
+											<span className='fw-bold text-success'>💎 RAG Pro Partner</span>
+										</label>
+										<label className='d-flex align-items-center gap-2 cursor-pointer' style={{ fontSize: '13px' }}>
+											<input
+												type='radio'
+												name='assignee_type_update'
+												checked={assigneeType === 'trainer'}
+												onChange={() => {
+													setAssigneeType('trainer')
+													setSelectedPartnerId('')
+												}}
+											/>
+											<span className='fw-bold text-primary'>Fitness Trainer</span>
+										</label>
+									</div>
+
+									{assigneeType === 'pro_partner' && (
+										<div>
+											<label className='form-label fs-8 fw-bold text-gray-700 mb-1'>
+												Select Approved Pro Partner
+											</label>
+											<select
+												className='form-select form-select-sm'
+												style={{ fontSize: '13px', borderRadius: '8px' }}
+												value={selectedPartnerId}
+												onChange={(e) => {
+													const pid = e.target.value
+													setSelectedPartnerId(pid)
+													const matched = partnerData.find((p) => String(p._id) === pid)
+													if (matched) {
+														setSubject({
+															name: matched.details?.full_name || matched.name,
+															trainer_id: matched._id,
+														})
+													} else {
+														setSubject({ name: '', trainer_id: '' })
+													}
+												}}>
+												<option value=''>Choose Pro Partner</option>
+												{partnerData.map((p) => {
+													const name = p.details?.full_name || p.name || 'Partner'
+													const contact = p.details?.email || p.email || p.details?.mobile || p.mobile || ''
+													const coupon = p.details?.assigned_coupon_code ? ` • [${p.details.assigned_coupon_code}]` : ''
+													return (
+														<option key={p._id} value={p._id}>
+															{name} {contact ? `(${contact})` : ''}{coupon}
+														</option>
+													)
+												})}
+											</select>
+										</div>
+									)}
+
+									{assigneeType === 'trainer' && (
+										<div>
+											<SelectFieldManual
+												label='Assign Referral Trainer'
+												name='trainer_id'
+												value={subject.trainer_id}
+												onChange={handleSelectChange}
+												htmlFor='trainer_id'
+												marginRemove={true}
+												options={[
+													{ value: '', name: 'Select Trainer (Optional)' },
+													...trainerData.map((data: any) => ({
+														value: data.trainer_id,
+														name: `${data.full_name} (${data.trainer_id || 'ID'})`,
+													})),
+												]}
+											/>
+										</div>
+									)}
+								</div>
 							</div>
 
 							{/* Product Scope Configuration */}
@@ -1217,8 +1577,27 @@ const ManageCoupon: React.FC = () => {
 														)
 													})}
 											</div>
-											<div className='fs-8 text-primary mt-1 fw-bold'>
-												{updateData.applicable_products.length} product(s) selected
+											<div className='d-flex align-items-center justify-content-between mt-1'>
+												<div className='fs-8 text-primary fw-bold'>
+													{updateData.applicable_products.length} product(s) selected
+												</div>
+												<div className='d-flex gap-1'>
+													<button
+														type='button'
+														className='btn btn-xs btn-light-primary py-0.5 px-2 fs-9'
+														onClick={() => {
+															const allIds = catalogProducts.map((p) => p._id)
+															setUpdateData({ ...updateData, applicable_products: allIds })
+														}}>
+														Select All
+													</button>
+													<button
+														type='button'
+														className='btn btn-xs btn-light-secondary py-0.5 px-2 fs-9'
+														onClick={() => setUpdateData({ ...updateData, applicable_products: [] })}>
+														Clear
+													</button>
+												</div>
 											</div>
 										</div>
 									)}

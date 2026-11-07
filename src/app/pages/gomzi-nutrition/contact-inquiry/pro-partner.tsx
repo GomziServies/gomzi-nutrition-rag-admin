@@ -323,7 +323,7 @@ const ProPartnerInquiry: React.FC = () => {
 					padding: 14px 16px !important;
 					white-space: nowrap !important;
 					line-height: 1.4;
-					font-size: 11.5px !important;
+					font-size: 11px !important;
 					font-weight: 700 !important;
 					letter-spacing: 0.03em !important;
 					color: #71809A !important;
@@ -331,18 +331,28 @@ const ProPartnerInquiry: React.FC = () => {
 					background: #F8FAFD !important;
 					border-bottom: 1px solid #E4EAF2 !important;
 				}
-				.partner-table #kt_table_users thead th:nth-child(1) { width: 50px !important; min-width: 50px !important; text-align: center; }
-				.partner-table #kt_table_users thead th:nth-child(2) { min-width: 150px; }
-				.partner-table #kt_table_users thead th:nth-child(3) { min-width: 210px; }
-				.partner-table #kt_table_users thead th:nth-child(4) { min-width: 170px; }
-				.partner-table #kt_table_users thead th:nth-child(5) { min-width: 120px; }
-				.partner-table #kt_table_users thead th:nth-child(6) { min-width: 180px; }
-				.partner-table #kt_table_users thead th:nth-child(7) { min-width: 115px; }
-				.partner-table #kt_table_users thead th:nth-child(8) { min-width: 190px; }
+								.partner-table #kt_table_users {
+					min-width: 1360px !important;
+					width: 100% !important;
+				}
+				.partner-table #kt_table_users thead th:nth-child(1) { width: 44px !important; min-width: 44px !important; text-align: center; }
+				.partner-table #kt_table_users thead th:nth-child(2) { min-width: 165px !important; width: 170px !important; }
+				.partner-table #kt_table_users thead th:nth-child(3) { min-width: 195px !important; width: 200px !important; }
+				.partner-table #kt_table_users thead th:nth-child(4) { min-width: 165px !important; width: 170px !important; }
+				.partner-table #kt_table_users thead th:nth-child(5) { min-width: 130px !important; width: 135px !important; white-space: nowrap !important; }
+				.partner-table #kt_table_users thead th:nth-child(6) { min-width: 165px !important; width: 170px !important; }
+				.partner-table #kt_table_users thead th:nth-child(7) { min-width: 130px !important; width: 135px !important; white-space: nowrap !important; }
+				.partner-table #kt_table_users thead th:nth-child(8) { min-width: 170px !important; width: 175px !important; }
 				.partner-table #kt_table_users thead th:nth-child(9),
 				.partner-table #kt_table_users th:last-child {
-					width: 200px !important;
-					min-width: 200px !important;
+					width: 185px !important;
+					min-width: 185px !important;
+					position: sticky !important;
+					right: 0 !important;
+					z-index: 3 !important;
+					background: #F8FAFD !important;
+					border-left: 1px solid #E4EAF2 !important;
+					box-shadow: -4px 0 10px -4px rgba(15, 23, 42, 0.08) !important;
 					text-align: center !important;
 				}
 				.partner-table #kt_table_users .data-row > td {
@@ -380,10 +390,10 @@ const ProPartnerInquiry: React.FC = () => {
 				.partner-table .gz-partner-controls {
 					display: grid !important;
 					grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-					gap: 6px !important;
+					gap: 5px !important;
 					width: 100% !important;
-					min-width: 160px !important;
-					max-width: 190px !important;
+					min-width: 150px !important;
+					max-width: 175px !important;
 					margin: 0 auto !important;
 					padding: 0 !important;
 					box-sizing: border-box !important;
@@ -397,15 +407,15 @@ const ProPartnerInquiry: React.FC = () => {
 					width: 100% !important;
 					min-width: 0 !important;
 					max-width: 100% !important;
-					height: 32px !important;
-					min-height: 32px !important;
+					height: 27px !important;
+					min-height: 27px !important;
 					margin: 0 !important;
-					padding: 4px 8px !important;
+					padding: 2px 6px !important;
 					box-sizing: border-box !important;
 					border: 1px solid transparent !important;
 					border-radius: 6px !important;
 					font-family: inherit !important;
-					font-size: 11.5px !important;
+					font-size: 11px !important;
 					font-weight: 600 !important;
 					line-height: 1 !important;
 					text-decoration: none !important;
@@ -422,7 +432,7 @@ const ProPartnerInquiry: React.FC = () => {
 				}
 				.partner-table .partner-actions-stack {
 					width: 100%;
-					min-width: 165px;
+					min-width: 150px;
 					max-width: 190px;
 					margin: 0 auto;
 				}
@@ -552,75 +562,89 @@ const ProPartnerInquiry: React.FC = () => {
 
 			{/* Main Management Card */}
 			<div className='gz-mgmt-card mb-6'>
-				<div className='gz-mgmt-toolbar'>
-					<div className='d-flex flex-wrap align-items-center gap-3 partner-toolbar'>
-						<SearchFilter
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-							className='me-0'
-						/>
+				<div className='gz-mgmt-toolbar px-6 py-5 border-bottom border-gray-200'>
+					<div className='d-flex flex-wrap align-items-center justify-content-between gap-3 partner-toolbar'>
+						{/* Search & Status Filters */}
+						<div className='d-flex flex-wrap align-items-center gap-3' style={{ flex: '1 1 auto' }}>
+							<div style={{ minWidth: '220px', maxWidth: '300px', flex: '1 1 240px' }}>
+								<SearchFilter
+									searchTerm={searchTerm}
+									setSearchTerm={setSearchTerm}
+									className='me-0 w-100'
+								/>
+							</div>
 
-						<LengthMenu
-							expenseData={filteredApplications}
-							handleItemsPerPageChange={handleItemsPerPageChange}
-							value={pagination.itemsPerPage}
-							className='me-0'
-						/>
+							<select
+								className='form-select form-select-sm'
+								style={{ height: '38px', minWidth: '160px', width: 'auto', borderRadius: '8px', fontSize: '12px' }}
+								aria-label='Filter application status'
+								value={statusFilter}
+								onChange={(event) => setStatusFilter(event.target.value)}
+							>
+								<option value=''>All Application Statuses</option>
+								<option value='pending'>Pending</option>
+								<option value='approved'>Accepted</option>
+								<option value='rejected'>Rejected</option>
+							</select>
 
-						<div>
-							<DownloadExcelButton
-								onClick={downloadExcel}
-								disabled={loading || exporting || filteredApplications.length === 0}
-								loading={exporting}
-								filename='RAG_Pro_Partner_Applications'
-							/>
+							<div style={{ minWidth: '180px', maxWidth: '220px' }}>
+								<SelectField
+									className='fv-row mb-0'
+									label='Employment Type'
+									showLabel={false}
+									defaultLabel='All Employment Types'
+									name='Filter Employment'
+									value={employmentTypeFilter}
+									onChange={handleEmploymentTypeChange}
+									htmlFor='Filter Employment'
+									marginRemove={true}
+									height='38px'
+									options={employmentOptions}
+								/>
+							</div>
+
+							<button
+								type='button'
+								className={`btn btn-sm ${showUnreadOnly ? 'btn-danger' : 'btn-light-danger text-danger'} fw-semibold d-inline-flex align-items-center gap-1`}
+								style={{ height: '38px', borderRadius: '8px', padding: '0 14px' }}
+								onClick={() => setShowUnreadOnly(!showUnreadOnly)}>
+								<span className='bullet bullet-dot bg-danger me-1' />
+								{showUnreadOnly ? 'Showing Unread' : 'Filter Unread'}
+							</button>
 						</div>
 
-						<div style={{ minWidth: '180px', maxWidth: '220px', flex: '1 1 180px' }}>
-							<SelectField
-								className='fv-row mb-0'
-								label='Employment Type'
-								showLabel={false}
-								defaultLabel='All Employment Types'
-								name='Filter Employment'
-								value={employmentTypeFilter}
-								onChange={handleEmploymentTypeChange}
-								htmlFor='Filter Employment'
-								marginRemove={true}
-								height='38px'
-								options={employmentOptions}
+						{/* Range & Actions */}
+						<div className='d-flex align-items-center gap-3 flex-wrap ms-auto'>
+							<div style={{ minWidth: '230px' }}>
+								<DateFilter
+									onDateRangeChange={(r) => setSelectedDateRange(r)}
+									rightValue='0'
+								/>
+							</div>
+
+							<LengthMenu
+								expenseData={filteredApplications}
+								handleItemsPerPageChange={handleItemsPerPageChange}
+								value={pagination.itemsPerPage}
+								className='me-0'
 							/>
+
+							<div>
+								<DownloadExcelButton
+									onClick={downloadExcel}
+									disabled={loading || exporting || filteredApplications.length === 0}
+									loading={exporting}
+									filename='RAG_Pro_Partner_Applications'
+								/>
+							</div>
 						</div>
-
-						<div style={{ minWidth: '250px' }}>
-							<DateFilter
-								onDateRangeChange={(r) => setSelectedDateRange(r)}
-								rightValue='0'
-							/>
-						</div>
-
-						<select className='form-select form-select-sm w-auto' aria-label='Filter application status'
-							value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-							<option value=''>All Application Statuses</option>
-							<option value='pending'>Pending</option>
-							<option value='approved'>Accepted</option>
-							<option value='rejected'>Rejected</option>
-						</select>
-
-						<button
-							type='button'
-							className={`btn btn-sm ${showUnreadOnly ? 'btn-danger' : 'btn-light'} fw-bold`}
-							style={{ height: '38px', borderRadius: '8px' }}
-							onClick={() => setShowUnreadOnly(!showUnreadOnly)}>
-							{showUnreadOnly ? 'Showing Unread' : 'Filter Unread'}
-						</button>
 					</div>
 				</div>
 
 				<div className='p-6 pt-0 partner-table'>
 					<div className='partner-table-content'>
 						<Table
-							actionsWidth='200px'
+							actionsWidth='185px'
 							data={paginatedApplications}
 							columns={sortableFields}
 							sort={sort}

@@ -110,7 +110,7 @@ export default function PartnerApplicationActions({
 		? {
 				minWidth: 0,
 				width: '100%',
-				height: '32px',
+				height: '27px',
 				boxSizing: 'border-box',
 				whiteSpace: 'nowrap',
 				textOverflow: 'ellipsis',
@@ -192,10 +192,10 @@ export default function PartnerApplicationActions({
 						? {
 								display: 'grid',
 								gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-								gap: '6px',
+								gap: '5px',
 								width: '100%',
-								minWidth: '160px',
-								maxWidth: '100%',
+								minWidth: '150px',
+								maxWidth: '175px', margin: '0 auto',
 								boxSizing: 'border-box',
 								whiteSpace: 'normal',
 								alignItems: 'center',
@@ -207,7 +207,7 @@ export default function PartnerApplicationActions({
 						type='button'
 						style={btnStyle}
 						className={compact ? 'gz-partner-button gz-partner-button-accept' : 'btn btn-sm btn-light-success'}
-						title='Accept application and issue demo policy'
+						title='Accept application and send agreement email'
 						disabled={saving || resending}
 						onClick={(event) => {
 							event.stopPropagation()
@@ -304,7 +304,7 @@ export default function PartnerApplicationActions({
 					<Modal.Body>
 						<p>
 							{decision === 'approved'
-								? `Accept ${name}'s Pro Partner application? An approval email and demo policy link will be sent to the applicant, with chiragpandey600@gmail.com in CC.`
+								? `Accept ${name}'s Pro Partner application? An approval email and official agreement link will be sent to the applicant, with chiragpandey600@gmail.com in CC.`
 								: `Reject ${name}'s Pro Partner application? A rejection notification email will be sent to the applicant, with chiragpandey600@gmail.com in CC.`}
 						</p>
 						<label
@@ -380,12 +380,12 @@ export function PartnerReviewDetails({ inquiry }: { inquiry: any }) {
 						inquiry.partner_policy?.accepted_at ? 'text-success fw-bold' : 'text-warning'
 					}>
 					{inquiry.partner_policy?.accepted_at
-						? `Demo policy accepted ${DayJS(inquiry.partner_policy.accepted_at).format(
+						? `Agreement accepted ${DayJS(inquiry.partner_policy.accepted_at).format(
 								'DD/MM/YYYY hh:mm A'
 						  )}`
 						: inquiry.partner_policy?.email_status === 'failed'
-						? 'Policy email delivery failed'
-						: 'Policy sent, awaiting acceptance'}
+						? 'Agreement email delivery failed'
+						: 'Agreement sent, awaiting acceptance'}
 				</div>
 			)}
 			{status === 'approved' && inquiry.details?.partner_account?.created && (
@@ -438,12 +438,12 @@ export function PartnerPolicyRecord({
 					)}
 				</div>
 			</div>
-			<p className='text-warning mb-3'>
-				Demo policy for workflow testing. The final policy will need separate acceptance.
+			<p className='text-muted mb-3'>
+				Official Pro Partner Program Agreement binding under the Information Technology Act, 2000.
 			</p>
 			<div className='d-flex flex-wrap gap-3 mb-3'>
 				<span className={`badge badge-light-${isAccepted ? 'success' : 'warning'}`}>
-					{isAccepted ? 'Policy Accepted' : 'Awaiting Acceptance'}
+					{isAccepted ? 'Agreement Accepted & Signed' : 'Awaiting Partner Acceptance'}
 				</span>
 				<span>
 					Version: <strong>{policy.version}</strong>
@@ -483,7 +483,7 @@ export function PartnerPolicyRecord({
 				<summary
 					className='fw-bold'
 					style={{ cursor: 'pointer' }}>
-					{isAccepted ? 'View Accepted Policy' : 'View Sent Policy'}
+					{isAccepted ? 'View Accepted Agreement' : 'View Sent Agreement'}
 				</summary>
 				<h4 className='mt-4'>{policy.title}</h4>
 				<div

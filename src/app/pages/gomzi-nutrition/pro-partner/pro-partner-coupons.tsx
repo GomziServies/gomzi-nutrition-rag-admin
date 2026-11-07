@@ -131,10 +131,13 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 
 	const isAdmin = isUserAdmin(currentUser)
 	const isPartnerOnly = isProPartnerOnlyUser(currentUser)
+	const canManageCoupons = isAdmin && !isPartnerOnly
 
 	const [searchTerm, setSearchTerm] = useState('')
+	const [productSearch, setProductSearch] = useState('')
 	const [referenceData, setReferenceData] = useState<any[]>([])
 	const [approvedPartners, setApprovedPartners] = useState<ApprovedPartner[]>([])
+	const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
 	const [catalogProducts, setCatalogProducts] = useState<any[]>([])
 	const [productMap, setProductMap] = useState<Record<string, any>>({})
 	const [loading, setLoading] = useState(true)
@@ -252,6 +255,12 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 				})
 
 			setApprovedPartners(approvedList)
+			const qPid = searchParams.get('partner_id')
+			if (qPid) {
+				setSelectedPartnerId(qPid)
+			} else if (isAdmin && approvedList.length > 0) {
+				setSelectedPartnerId(approvedList[0].id)
+			}
 			return approvedList
 		} catch (error) {
 			console.error('Error fetching approved partners:', error)
@@ -522,82 +531,6 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 		return String(currentUser?._id || currentUser?.id || '').trim()
 	}, [currentUser])
 
-	// Filter: ONLY THIS LOGGED IN USER'S ASSIGNED COUPON(S)
-	const assignedCoupons = useMemo(() => {
-		if (!referenceData || referenceData.length === 0) return []
-
-		const directCode = (
-			currentUser?.assigned_coupon ||
-			currentUser?.coupon_code ||
-			currentUser?.partner_coupon ||
-			localStorage.getItem('assigned_coupon_code') ||
-			''
-		)
-			.toUpperCase()
-			.trim()
-
-		return referenceData.filter((c: any) => {
-			const cCode = (c.coupon_code || '').toUpperCase().trim()
-			if (directCode && cCode === directCode) return true
-
-			const cEmail = (
-				c.partner_email ||
-				c.partner_inquiry_id?.email ||
-				c.partner_inquiry_id?.details?.email ||
-				''
-			)
-				.toLowerCase()
-				.trim()
-			if (loggedInUserEmail && cEmail && cEmail === loggedInUserEmail) return true
-
-			const cMobile = (
-				c.partner_mobile ||
-				c.partner_inquiry_id?.mobile ||
-				c.partner_inquiry_id?.details?.mobile ||
-				''
-			)
-				.trim()
-				.replace(/[^0-9]/g, '')
-			if (loggedInUserMobile && cMobile) {
-				if (cMobile === loggedInUserMobile) return true
-				if (cMobile.length >= 10 && loggedInUserMobile.length >= 10 && cMobile.slice(-10) === loggedInUserMobile.slice(-10))
-					return true
-			}
-
-			const inqId = String(c.partner_inquiry_id?._id || c.partner_inquiry_id || '').trim()
-			if (loggedInUserId && inqId && inqId === loggedInUserId) return true
-
-			const trainerId = String(c.assign_trainer?.trainer_id || '').trim()
-			if (loggedInUserId && trainerId && trainerId === loggedInUserId) return true
-
-			const createdBy = String(c.user_id || c.created_by || '').trim()
-			if (loggedInUserId && createdBy && createdBy === loggedInUserId) return true
-
-			const cName = (
-				c.partner_name ||
-				c.assign_trainer?.name ||
-				c.partner_inquiry_id?.name ||
-				c.partner_inquiry_id?.details?.full_name ||
-				''
-			)
-				.toLowerCase()
-				.trim()
-			if (loggedInUserName && cName && cName === loggedInUserName.toLowerCase()) return true
-
-			return false
-		})
-	}, [
-		referenceData,
-		currentUser,
-		loggedInUserEmail,
-		loggedInUserMobile,
-		loggedInUserId,
-		loggedInUserName,
-	])
-
-	// Primary Assigned Coupon for this partner
-	const primaryCoupon = assignedCoupons[0] || null
-
 	// Match the partner inquiry for digital agreement document
 	const matchedInquiry = useMemo(() => {
 		if (!approvedPartners || approvedPartners.length === 0) return null
@@ -617,13 +550,6 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 				const pId = String(p.id || p.rawInquiry?._id || '').trim()
 				if (loggedInUserId && pId && pId === loggedInUserId) return true
 
-				if (primaryCoupon) {
-					const cInqId = String(
-						primaryCoupon.partner_inquiry_id?._id || primaryCoupon.partner_inquiry_id || ''
-					).trim()
-					if (cInqId && cInqId === p.id) return true
-				}
-
 				const pName = (p.name || '').toLowerCase().trim()
 				if (loggedInUserName && pName && pName === loggedInUserName.toLowerCase()) return true
 
@@ -636,42 +562,76 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 		loggedInUserMobile,
 		loggedInUserId,
 		loggedInUserName,
-		primaryCoupon,
 	])
 
-	// The active partner object: ALWAYS DISPLAYING THE LOGGED-IN USER'S CREDENTIALS
+	// The active partner object:
+	// For Pro Partner accounts: strictly the logged-in user.
+	// For Administrators: the partner selected from the partner selector dropdown.
 	const activePartner = useMemo(() => {
+		if (isPartnerOnly) {
+			return {
+				id:
+					matchedInquiry?.id ||
+					loggedInUserId,
+				name: loggedInUserName,
+				email: loggedInUserEmail || matchedInquiry?.email || '',
+				mobile: loggedInUserMobile || matchedInquiry?.mobile || '',
+				city: matchedInquiry?.city || currentUser?.city || '',
+				state: matchedInquiry?.state || currentUser?.state || '',
+				hasAcceptedPolicy: Boolean(
+					matchedInquiry?.hasAcceptedPolicy ||
+						currentUser?.has_accepted_policy
+				),
+				policyAcceptedAt:
+					matchedInquiry?.policyAcceptedAt ||
+					'',
+				policyVersion: matchedInquiry?.policyVersion || 'v1.0',
+				policyAcceptedName: matchedInquiry?.policyAcceptedName || loggedInUserName,
+				inquiryId:
+					matchedInquiry?.id ||
+					'',
+				existingCouponCode: matchedInquiry?.existingCouponCode || '',
+			}
+		}
+
+		// When Admin is viewing
+		const partner = approvedPartners.find((p) => p.id === selectedPartnerId) || approvedPartners[0]
+		if (partner) {
+			return {
+				id: partner.id,
+				name: partner.name,
+				email: partner.email,
+				mobile: partner.mobile,
+				city: partner.city,
+				state: partner.state,
+				hasAcceptedPolicy: partner.hasAcceptedPolicy,
+				policyAcceptedAt: partner.policyAcceptedAt || '',
+				policyVersion: partner.policyVersion || 'v1.0',
+				policyAcceptedName: partner.policyAcceptedName || partner.name,
+				inquiryId: partner.id,
+				existingCouponCode: partner.existingCouponCode || '',
+			}
+		}
+
 		return {
-			id:
-				matchedInquiry?.id ||
-				primaryCoupon?.partner_inquiry_id?._id ||
-				primaryCoupon?.partner_inquiry_id ||
-				loggedInUserId,
-			name: loggedInUserName, // ALWAYS the logged in user's name
-			email: loggedInUserEmail || matchedInquiry?.email || '',
-			mobile: loggedInUserMobile || matchedInquiry?.mobile || '',
-			city: matchedInquiry?.city || currentUser?.city || '',
-			state: matchedInquiry?.state || currentUser?.state || '',
-			hasAcceptedPolicy: Boolean(
-				matchedInquiry?.hasAcceptedPolicy ||
-					primaryCoupon?.partner_inquiry_id?.partner_policy?.accepted_at ||
-					currentUser?.has_accepted_policy
-			),
-			policyAcceptedAt:
-				matchedInquiry?.policyAcceptedAt ||
-				primaryCoupon?.partner_inquiry_id?.partner_policy?.accepted_at ||
-				'',
-			policyVersion: matchedInquiry?.policyVersion || 'v1.0',
-			policyAcceptedName: matchedInquiry?.policyAcceptedName || loggedInUserName,
-			inquiryId:
-				matchedInquiry?.id ||
-				primaryCoupon?.partner_inquiry_id?._id ||
-				primaryCoupon?.partner_inquiry_id ||
-				'',
+			id: loggedInUserId,
+			name: loggedInUserName,
+			email: loggedInUserEmail || '',
+			mobile: loggedInUserMobile || '',
+			city: '',
+			state: '',
+			hasAcceptedPolicy: false,
+			policyAcceptedAt: '',
+			policyVersion: 'v1.0',
+			policyAcceptedName: loggedInUserName,
+			inquiryId: '',
+			existingCouponCode: '',
 		}
 	}, [
+		isPartnerOnly,
+		selectedPartnerId,
+		approvedPartners,
 		matchedInquiry,
-		primaryCoupon,
 		currentUser,
 		loggedInUserName,
 		loggedInUserEmail,
@@ -679,14 +639,107 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 		loggedInUserId,
 	])
 
+	// Filter: ONLY COUPONS ASSIGNED TO THIS ACTIVE PARTNER
+	const assignedCoupons = useMemo(() => {
+		if (!referenceData || referenceData.length === 0) return []
+
+		const partnerEmail = (activePartner.email || '').toLowerCase().trim()
+		const partnerMobile = (activePartner.mobile || '').trim().replace(/[^0-9]/g, '')
+		const partnerId = String(activePartner.id || activePartner.inquiryId || '').trim()
+		const partnerName = (activePartner.name || '').toLowerCase().trim()
+
+		const directCode = (
+			activePartner?.existingCouponCode ||
+			(isPartnerOnly
+				? currentUser?.assigned_coupon ||
+				  currentUser?.coupon_code ||
+				  currentUser?.partner_coupon ||
+				  localStorage.getItem('assigned_coupon_code') ||
+				  ''
+				: '')
+		)
+			.toUpperCase()
+			.trim()
+
+		return referenceData.filter((c: any) => {
+			const cCode = (c.coupon_code || '').toUpperCase().trim()
+			if (directCode && cCode === directCode) return true
+
+			const cEmail = (
+				c.partner_email ||
+				c.partner_inquiry_id?.email ||
+				c.partner_inquiry_id?.details?.email ||
+				''
+			)
+				.toLowerCase()
+				.trim()
+			if (partnerEmail && cEmail && cEmail === partnerEmail) return true
+
+			const cMobile = (
+				c.partner_mobile ||
+				c.partner_inquiry_id?.mobile ||
+				c.partner_inquiry_id?.details?.mobile ||
+				''
+			)
+				.trim()
+				.replace(/[^0-9]/g, '')
+			if (partnerMobile && cMobile) {
+				if (cMobile === partnerMobile) return true
+				if (cMobile.length >= 10 && partnerMobile.length >= 10 && cMobile.slice(-10) === partnerMobile.slice(-10))
+					return true
+			}
+
+			const inqId = String(c.partner_inquiry_id?._id || c.partner_inquiry_id || '').trim()
+			if (partnerId && inqId && inqId === partnerId) return true
+
+			const trainerId = String(c.assign_trainer?.trainer_id || '').trim()
+			if (partnerId && trainerId && trainerId === partnerId) return true
+
+			const createdBy = String(c.user_id || c.created_by || '').trim()
+			if (partnerId && createdBy && createdBy === partnerId) return true
+
+			const cName = (
+				c.partner_name ||
+				c.assign_trainer?.name ||
+				c.partner_inquiry_id?.name ||
+				c.partner_inquiry_id?.details?.full_name ||
+				''
+			)
+				.toLowerCase()
+				.trim()
+			if (partnerName && cName && cName === partnerName) return true
+
+			return false
+		})
+	}, [referenceData, activePartner, currentUser, isPartnerOnly])
+
+	// Automatically load coupon usage whenever assignedCoupons or productMap changes
+	useEffect(() => {
+		if (assignedCoupons.length > 0 && Object.keys(productMap).length > 0) {
+			fetchCouponUsageOrders(assignedCoupons, productMap)
+		} else if (assignedCoupons.length === 0) {
+			setAllPartnerOrders([])
+		}
+	}, [assignedCoupons, productMap])
+
+	// Primary Assigned Coupon for this partner
+	const primaryCoupon = assignedCoupons[0] || null
+
+	// The partner selected in the coupon creation dropdown (defaults to activePartner)
+	const selectedPartner = useMemo(() => {
+		return approvedPartners.find((p) => p.id === selectedPartnerId) || activePartner
+	}, [approvedPartners, selectedPartnerId, activePartner])
+
 	// Filter: ONLY ORDERS TIED TO THIS PARTNER'S ASSIGNED COUPON(S)
 	const partnerOrders = useMemo(() => {
-		if (!primaryCoupon) return []
-		const codeUpper = (primaryCoupon.coupon_code || '').toUpperCase().trim()
-		return allPartnerOrders.filter(
-			(ord) => (ord.couponCode || '').toUpperCase().trim() === codeUpper
+		if (!assignedCoupons || assignedCoupons.length === 0) return []
+		const partnerCodes = new Set(
+			assignedCoupons.map((c: any) => (c.coupon_code || '').toUpperCase().trim()).filter(Boolean)
 		)
-	}, [allPartnerOrders, primaryCoupon])
+		return allPartnerOrders.filter(
+			(ord) => partnerCodes.has((ord.couponCode || '').toUpperCase().trim())
+		)
+	}, [allPartnerOrders, assignedCoupons])
 
 	// Filtered by Search inside order history
 	const filteredOrders = useMemo(() => {
@@ -769,43 +822,89 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 		}
 	}
 
-	// Code Generator for Admin assigning coupon to this user
+	// Generates sequential coupon code: RAG[NAME]001, RAG[NAME]002... and guarantees no duplicates
 	const computePartnerCouponCode = (name: string) => {
 		const cleanFirstName =
-			name.trim().split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase() || 'PARTNER'
+			name
+				.trim()
+				.split(' ')[0]
+				.replace(/[^a-zA-Z0-9]/g, '')
+				.toUpperCase() || 'PARTNER'
 		const prefix = `RAG${cleanFirstName}`
+
+		// Gather all existing coupon codes from referenceData and approvedPartners
+		const existingCodes = new Set<string>()
+		referenceData.forEach((c: any) => {
+			if (c.coupon_code) existingCodes.add(c.coupon_code.trim().toUpperCase())
+		})
+		approvedPartners.forEach((p: any) => {
+			if (p.existingCouponCode) existingCodes.add(p.existingCouponCode.trim().toUpperCase())
+		})
+
 		const regex = new RegExp(`^${prefix}(\\d+)$`, 'i')
 		let maxSeq = 0
-		referenceData.forEach((c: any) => {
-			const code = (c.coupon_code || '').trim().toUpperCase()
+		existingCodes.forEach((code) => {
 			const match = code.match(regex)
 			if (match && match[1]) {
 				const num = parseInt(match[1], 10)
 				if (!isNaN(num) && num > maxSeq) maxSeq = num
 			}
 		})
-		return `${prefix}${String(maxSeq + 1).padStart(3, '0')}`
+
+		let nextSeq = maxSeq + 1
+		let candidate = `${prefix}${String(nextSeq).padStart(3, '0')}`
+		while (existingCodes.has(candidate)) {
+			nextSeq++
+			candidate = `${prefix}${String(nextSeq).padStart(3, '0')}`
+		}
+
+		return candidate
 	}
 
-	// Create Coupon (Admin assigning to this account)
+	// Create Coupon (Admin assigning to selected accepted partner)
 	const handleCreateCoupon = async (e: React.FormEvent) => {
 		e.preventDefault()
+		if (!canManageCoupons) {
+			toast.error('Only administrators are authorized to generate and assign coupons.')
+			return
+		}
+
+		const targetPartner = approvedPartners.find((p) => p.id === selectedPartnerId) || activePartner
+		if (!targetPartner || !targetPartner.id) {
+			toast.error('Please select an accepted partner from applications')
+			return
+		}
+
 		const cleanCode = couponAdd.coupon_code.trim().toUpperCase()
 		if (!cleanCode) {
 			toast.error('Coupon code is required')
 			return
 		}
 
+		// Prevent duplicate coupon codes
+		const codeExists = referenceData.some(
+			(c: any) => (c.coupon_code || '').trim().toUpperCase() === cleanCode
+		)
+		if (codeExists) {
+			toast.error(
+				`Coupon code "${cleanCode}" already exists. Please enter a unique coupon code.`
+			)
+			return
+		}
+
 		setSubmitting(true)
 		try {
+			const targetInquiryId =
+				targetPartner.rawInquiry?._id || targetPartner.id || targetPartner.inquiryId
+
 			const payload: any = {
 				coupon_type: 'pro_partner',
-				partner_inquiry_id: activePartner.inquiryId || activePartner.id,
-				partner_name: activePartner.name,
-				partner_email: activePartner.email,
-				partner_mobile: activePartner.mobile,
+				partner_inquiry_id: targetInquiryId,
+				partner_name: targetPartner.name,
+				partner_email: targetPartner.email,
+				partner_mobile: targetPartner.mobile,
 				coupon_code: cleanCode,
-				title: couponAdd.title.trim() || `${activePartner.name} - Pro Partner Referral`,
+				title: couponAdd.title.trim() || `${targetPartner.name} - Referral Discount`,
 				discount_type: couponAdd.discount_type,
 				discount: Number(couponAdd.discount),
 				max_usage_count: Number(couponAdd.max_usage_count),
@@ -814,16 +913,17 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 				applicable_products:
 					couponAdd.scope === 'SPECIFIC_PRODUCTS' ? couponAdd.applicable_products : [],
 				assign_trainer: {
-					trainer_id: activePartner.id,
-					name: activePartner.name,
+					trainer_id: targetInquiryId,
+					name: targetPartner.name,
 				},
 			}
 
 			await CreateReferralCoupon(payload)
-			toast.success(`Coupon ${cleanCode} created and assigned to ${activePartner.name}`)
+			toast.success(`Coupon ${cleanCode} created and assigned to ${targetPartner.name}`)
 			setShowCreateModal(false)
 			localStorage.setItem('assigned_coupon_code', cleanCode)
 			const freshCoupons = await fetchProPartnerCoupons()
+			fetchApprovedPartners()
 			fetchCouponUsageOrders(freshCoupons, productMap)
 		} catch (error: any) {
 			toast.error(error?.response?.data?.message || error?.message || 'Failed to create coupon')
@@ -835,7 +935,7 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 	// Update Coupon
 	const handleUpdateCoupon = async (e: React.FormEvent) => {
 		e.preventDefault()
-		if (!updateData._id) return
+		if (!canManageCoupons || !updateData._id) return
 
 		setSubmitting(true)
 		try {
@@ -857,6 +957,7 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 			toast.success('Assigned coupon updated successfully')
 			setShowUpdateModal(false)
 			const freshCoupons = await fetchProPartnerCoupons()
+			fetchApprovedPartners()
 			fetchCouponUsageOrders(freshCoupons, productMap)
 		} catch (error: any) {
 			toast.error(error?.response?.data?.message || error?.message || 'Failed to update coupon')
@@ -865,7 +966,64 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 		}
 	}
 
+	const handlePartnerSelect = (partnerId: string) => {
+		setSelectedPartnerId(partnerId)
+		if (!partnerId) {
+			setCouponAdd((prev) => ({
+				...prev,
+				title: '',
+				coupon_code: '',
+			}))
+			return
+		}
+
+		const partner = approvedPartners.find((p) => p.id === partnerId)
+		if (partner) {
+			const generatedCode = computePartnerCouponCode(partner.name)
+
+			setCouponAdd((prev) => ({
+				...prev,
+				title: `${partner.name} - Referral Discount`,
+				coupon_code: generatedCode,
+			}))
+		}
+	}
+
+	const openCreateModal = (targetPartnerId?: string) => {
+		if (!canManageCoupons) return
+
+		// Default to passed partnerId, or current active partner if found in approvedPartners, or first approved partner
+		const partnerToSelect =
+			(targetPartnerId && approvedPartners.find((p) => p.id === targetPartnerId)?.id) ||
+			approvedPartners.find((p) => p.id === activePartner.id || p.id === activePartner.inquiryId)?.id ||
+			(approvedPartners.length > 0 ? approvedPartners[0].id : '')
+
+		setSelectedPartnerId(partnerToSelect)
+
+		const target = approvedPartners.find((p) => p.id === partnerToSelect) || activePartner
+		const targetName = target?.name || 'PARTNER'
+		const generatedCode = computePartnerCouponCode(targetName)
+
+		setCouponAdd({
+			title: `${targetName} - Referral Discount`,
+			coupon_code: generatedCode,
+			max_usage_count: '1000',
+			discount_type: 'percent',
+			discount: '10',
+			expired_at: DayJS().add(1, 'year').format('YYYY-MM-DD'),
+			scope: 'ALL',
+			applicable_products: [],
+		})
+		setProductSearch('')
+		setShowCreateModal(true)
+	}
+
 	const openEditModal = (c: any) => {
+		if (!canManageCoupons) return
+		const applicableProductIds = Array.isArray(c.applicable_products)
+			? c.applicable_products.map((p: any) => (p && p._id ? p._id : String(p)))
+			: []
+
 		setUpdateData({
 			_id: c._id,
 			title: c.title || '',
@@ -874,11 +1032,12 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 			discount_type: c.discount_type || 'percent',
 			discount: String(c.discount || 10),
 			expired_at: c.expired_at ? DayJS(c.expired_at).format('YYYY-MM-DD') : '',
-			scope: c.scope || 'ALL',
-			applicable_products: c.applicable_products || [],
+			scope: c.scope || (applicableProductIds.length > 0 ? 'SPECIFIC_PRODUCTS' : 'ALL'),
+			applicable_products: applicableProductIds,
 			partner_inquiry_id: c.partner_inquiry_id?._id || c.partner_inquiry_id || '',
 			partner_name: c.partner_name || '',
 		})
+		setProductSearch('')
 		setShowUpdateModal(true)
 	}
 
@@ -908,8 +1067,56 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 					<span className='current'>{activePartner.name}</span>
 				</div>
 
-				<div className='d-flex align-items-center gap-2'>
-				</div>
+				{canManageCoupons && (
+					<div className='d-flex align-items-center gap-3 flex-wrap'>
+						{approvedPartners.length > 0 && (
+							<div className='d-flex align-items-center gap-2'>
+								<label className='fs-8 fw-bolder text-muted text-uppercase mb-0'>
+									Partner:
+								</label>
+								<select
+									className='form-select form-select-sm fw-semibold'
+									style={{
+										minWidth: '220px',
+										height: '38px',
+										borderRadius: '8px',
+										background: '#FFFFFF',
+										borderColor: '#CBD5E1',
+										fontSize: '12.5px',
+									}}
+									value={selectedPartnerId}
+									onChange={(e) => {
+										const pid = e.target.value
+										setSelectedPartnerId(pid)
+										navigate(`/rag/pro-partner/coupons?partner_id=${pid}`, { replace: true })
+									}}>
+									{approvedPartners.map((p) => (
+										<option key={p.id} value={p.id}>
+											{p.name} {p.email ? `(${p.email})` : ''} {p.existingCouponCode ? `• [${p.existingCouponCode}]` : ''}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
+
+						<button
+							type='button'
+							onClick={() => openCreateModal()}
+							className='btn btn-sm d-inline-flex align-items-center gap-2'
+							style={{
+								background: '#047857',
+								borderColor: '#047857',
+								color: '#ffffff',
+								fontWeight: 600,
+								padding: '8px 16px',
+								borderRadius: '8px',
+								boxShadow: '0 2px 6px rgba(4, 120, 87, 0.25)',
+							}}>
+							<FontAwesomeIcon icon={faPlus} />
+							<span>+ Create Coupon</span>
+						</button>
+					</div>
+				)}
 			</div>
 
 			{/* =========================================================================
@@ -984,17 +1191,61 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 												{primaryCoupon.discount}% Customer Discount
 											</span>
 
-											{isAdmin && (
-												<button
-													type='button'
-													onClick={() => openEditModal(primaryCoupon)}
-													className='btn btn-sm btn-icon btn-light'
-													title='Edit Coupon Settings'
-													style={{ width: '36px', height: '36px', borderRadius: '8px' }}>
-													<FontAwesomeIcon icon={faEdit} className='text-warning' />
-												</button>
+											{canManageCoupons && (
+												<div className='d-flex align-items-center gap-2'>
+													<button
+														type='button'
+														onClick={() => openEditModal(primaryCoupon)}
+														className='btn btn-sm btn-icon btn-light'
+														title='Edit Coupon Settings'
+														style={{ width: '36px', height: '36px', borderRadius: '8px' }}>
+														<FontAwesomeIcon icon={faEdit} className='text-warning' />
+													</button>
+													<button
+														type='button'
+														onClick={() => openCreateModal()}
+														className='btn btn-sm btn-light-success d-inline-flex align-items-center gap-1'
+														title='Create Additional Coupon'
+														style={{ height: '36px', padding: '0 12px', borderRadius: '8px', fontWeight: 600 }}>
+														<FontAwesomeIcon icon={faPlus} />
+														<span>New Coupon</span>
+													</button>
+												</div>
 											)}
 										</div>
+
+										{assignedCoupons.length > 1 && (
+											<div className='mt-2 d-flex align-items-center gap-2 flex-wrap'>
+												<span className='fs-9 text-muted fw-bold text-uppercase'>
+													Additional Codes:
+												</span>
+												{assignedCoupons.slice(1).map((c: any) => (
+													<span
+														key={c._id}
+														className='badge d-inline-flex align-items-center gap-1.5'
+														style={{
+															background: '#F1F5F9',
+															color: '#334155',
+															border: '1px solid #CBD5E1',
+															padding: '5px 8px',
+															borderRadius: '6px',
+															fontSize: '11px',
+														}}>
+														<span className='fw-bold font-monospace'>{c.coupon_code}</span>
+														<span className='text-success fw-bold'>({c.discount}%)</span>
+														{canManageCoupons && (
+															<button
+																type='button'
+																onClick={() => openEditModal(c)}
+																className='btn btn-xs btn-link p-0 text-muted ms-1'
+																title='Edit Coupon'>
+																<FontAwesomeIcon icon={faEdit} />
+															</button>
+														)}
+													</span>
+												))}
+											</div>
+										)}
 
 										{/* Shareable Link */}
 										{shareableLink && (
@@ -1018,15 +1269,36 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 									</div>
 								) : (
 									<div
-										className='p-3 rounded-3'
+										className='p-3 rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3'
 										style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-										<div className='fw-bold text-warning-emphasis fs-7 mb-1'>
-											Pending Coupon Assignment
+										<div>
+											<div className='fw-bold text-warning-emphasis fs-7 mb-1'>
+												Pending Coupon Assignment
+											</div>
+											<div className='text-muted fs-8'>
+												No referral coupon has been assigned to your account ({activePartner.email || activePartner.mobile}) yet.
+												{isPartnerOnly &&
+													' Please contact the Gomzi Nutrition administration team to activate your partner code.'}
+											</div>
 										</div>
-										<div className='text-muted fs-8'>
-											No referral coupon has been assigned to your account ({activePartner.email || activePartner.mobile}) yet.
-											Please contact the Gomzi Nutrition administration team to activate your partner code.
-										</div>
+										{canManageCoupons && (
+											<button
+												type='button'
+												onClick={() => openCreateModal()}
+												className='btn btn-sm d-inline-flex align-items-center gap-2'
+												style={{
+													background: '#1e293b',
+													borderColor: '#1e293b',
+													color: '#ffffff',
+													fontWeight: 600,
+													padding: '7px 14px',
+													borderRadius: '8px',
+													whiteSpace: 'nowrap',
+												}}>
+												<FontAwesomeIcon icon={faPlus} />
+												<span>+ Create Coupon</span>
+											</button>
+										)}
 									</div>
 								)}
 							</div>
@@ -1559,7 +1831,7 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 			    MODAL: CREATE / ASSIGN NEW COUPON (FOR ADMIN)
 			    ========================================================================= */}
 			<Modal
-				show={showCreateModal}
+				show={showCreateModal && canManageCoupons}
 				onHide={() => setShowCreateModal(false)}
 				size='lg'
 				centered
@@ -1568,11 +1840,49 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 					<Modal.Header closeButton>
 						<Modal.Title className='d-flex align-items-center gap-2'>
 							<FontAwesomeIcon icon={faTag} className='text-success' />
-							<span>Assign Coupon to {activePartner.name}</span>
+							<span>Assign Coupon to {selectedPartner?.name || activePartner.name}</span>
 						</Modal.Title>
 					</Modal.Header>
 
 					<Modal.Body className='py-4'>
+						{/* Select Approved Partner (Only Accepted Applications) */}
+						<div className='mb-4'>
+							<label className='form-label fw-bold required text-dark fs-7'>
+								Select Partner (Accepted Applications Only)
+							</label>
+							<select
+								className='form-select form-select-solid'
+								value={selectedPartnerId}
+								onChange={(e) => handlePartnerSelect(e.target.value)}
+								required>
+								<option value=''>-- Select Accepted Partner --</option>
+								{approvedPartners.map((p) => (
+									<option key={p.id} value={p.id}>
+										{p.name} {p.city ? `(${p.city})` : ''} — {p.email || p.mobile}
+										{p.existingCouponCode ? ` [Current Coupon: ${p.existingCouponCode}]` : ''}
+										{p.hasAcceptedPolicy ? ' ✓ Signed' : ''}
+									</option>
+								))}
+							</select>
+							{approvedPartners.length === 0 ? (
+								<div className='text-danger fs-8 mt-1'>
+									No accepted partners found. Please accept partner applications in{' '}
+									<Link to='/rag/pro-partner/applications' className='text-danger text-decoration-underline fw-bold'>
+										Applications
+									</Link>{' '}
+									first.
+								</div>
+							) : (
+								<div className='text-muted fs-8 mt-1'>
+									Only applicants accepted in{' '}
+									<Link to='/rag/pro-partner/applications' className='text-primary fw-semibold text-decoration-none'>
+										Pro Partner Applications
+									</Link>{' '}
+									are listed here.
+								</div>
+							)}
+						</div>
+
 						<div className='row g-3 mb-4'>
 							<div className='col-md-6'>
 								<label className='form-label fw-bold required text-dark fs-7'>Coupon Code</label>
@@ -1588,6 +1898,9 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 									}
 									required
 								/>
+								<div className='form-text fs-8 text-muted'>
+									Auto-generated sequential code: RAG + Partner Name + 001 (e.g. RAGPOONAM001).
+								</div>
 							</div>
 
 							<div className='col-md-6'>
@@ -1597,7 +1910,8 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 									className='form-control form-control-solid'
 									value={couponAdd.title}
 									onChange={(e) => setCouponAdd({ ...couponAdd, title: e.target.value })}
-									placeholder={`${activePartner.name} - Pro Partner Referral`}
+									placeholder={`${selectedPartner?.name || activePartner.name} - Referral Discount`}
+									required
 								/>
 							</div>
 						</div>
@@ -1610,7 +1924,7 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 									value={couponAdd.discount_type}
 									onChange={(e) => setCouponAdd({ ...couponAdd, discount_type: e.target.value })}>
 									<option value='percent'>Percentage (%)</option>
-									<option value='fixed'>Fixed Amount (₹)</option>
+									<option value='rupees'>Fixed Rupees (₹)</option>
 								</select>
 							</div>
 
@@ -1624,7 +1938,7 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 									value={couponAdd.discount}
 									onChange={(e) => setCouponAdd({ ...couponAdd, discount: e.target.value })}
 									min='1'
-									max='100'
+									max={couponAdd.discount_type === 'percent' ? 90 : 100000}
 									required
 								/>
 							</div>
@@ -1665,20 +1979,131 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 								</select>
 							</div>
 						</div>
+
+						{/* Product Selection if Specific Products */}
+						{couponAdd.scope === 'SPECIFIC_PRODUCTS' && (
+							<div
+								className='p-3 rounded mb-3'
+								style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+								<div className='d-flex align-items-center justify-content-between mb-2'>
+									<label className='form-label fw-bold text-dark fs-7 mb-0'>
+										Select Applicable Products
+									</label>
+									<div className='d-flex align-items-center gap-2'>
+										<button
+											type='button'
+											className='btn btn-xs btn-light-primary py-1 px-2 fs-9'
+											onClick={() => {
+												const allIds = catalogProducts.map((p: any) => String(p._id || p.id))
+												setCouponAdd((prev) => ({ ...prev, applicable_products: allIds }))
+											}}>
+											Select All
+										</button>
+										<button
+											type='button'
+											className='btn btn-xs btn-light-secondary py-1 px-2 fs-9'
+											onClick={() => setCouponAdd((prev) => ({ ...prev, applicable_products: [] }))}>
+											Clear
+										</button>
+										<span className='badge bg-light-primary text-primary fs-8 fw-bold'>
+											{couponAdd.applicable_products.length} Selected
+										</span>
+									</div>
+								</div>
+								<input
+									type='text'
+									className='form-control form-control-solid mb-2 fs-8'
+									placeholder='Filter products by title...'
+									value={productSearch}
+									onChange={(e) => setProductSearch(e.target.value)}
+								/>
+								<div
+									style={{
+										maxHeight: '190px',
+										overflowY: 'auto',
+										border: '1px solid #E2E8F0',
+										borderRadius: '6px',
+										background: '#FFFFFF',
+									}}>
+									{catalogProducts.length === 0 ? (
+										<div className='p-3 text-muted text-center fs-8'>Loading products...</div>
+									) : (
+										catalogProducts
+											.filter((p: any) =>
+												(p.title || p.name || '')
+													.toLowerCase()
+													.includes(productSearch.toLowerCase())
+											)
+											.map((p: any) => {
+												const pId = String(p._id || p.id)
+												const isSelected = couponAdd.applicable_products.includes(pId)
+												return (
+													<label
+														key={pId}
+														className='d-flex align-items-center justify-content-between p-2 border-bottom cursor-pointer hover-bg-light mb-0'
+														style={{ cursor: 'pointer' }}>
+														<div className='d-flex align-items-center gap-2'>
+															<input
+																type='checkbox'
+																className='form-check-input'
+																checked={isSelected}
+																onChange={(e) => {
+																	if (e.target.checked) {
+																		setCouponAdd((prev) => ({
+																			...prev,
+																			applicable_products: [...prev.applicable_products, pId],
+																		}))
+																	} else {
+																		setCouponAdd((prev) => ({
+																			...prev,
+																			applicable_products: prev.applicable_products.filter(
+																				(id) => id !== pId
+																			),
+																		}))
+																	}
+																}}
+															/>
+															<span className='fs-8 fw-semibold text-dark'>
+																{p.title || p.name}
+															</span>
+															{p.category?.title && (
+																<span className='badge bg-light text-muted fs-9'>
+																	{p.category.title}
+																</span>
+															)}
+														</div>
+														{p.price && (
+															<span className='fs-8 text-muted fw-bold'>₹{p.price}</span>
+														)}
+													</label>
+												)
+											})
+									)}
+								</div>
+							</div>
+						)}
 					</Modal.Body>
 
 					<Modal.Footer>
 						<button
 							type='button'
 							className='btn btn-light'
+							style={{ borderRadius: '8px', fontWeight: 600 }}
 							onClick={() => setShowCreateModal(false)}
 							disabled={submitting}>
 							Cancel
 						</button>
 						<button
 							type='submit'
-							className='btn btn-primary'
-							style={{ background: '#047857', borderColor: '#047857' }}
+							className='btn'
+							style={{
+								background: '#1e293b',
+								borderColor: '#1e293b',
+								color: '#ffffff',
+								fontWeight: 600,
+								padding: '8px 20px',
+								borderRadius: '8px',
+							}}
 							disabled={submitting}>
 							{submitting ? 'Creating...' : 'Create & Assign Coupon'}
 						</button>
@@ -1690,7 +2115,7 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 			    MODAL: UPDATE COUPON (FOR ADMIN)
 			    ========================================================================= */}
 			<Modal
-				show={showUpdateModal}
+				show={showUpdateModal && canManageCoupons}
 				onHide={() => setShowUpdateModal(false)}
 				size='lg'
 				centered
@@ -1741,7 +2166,7 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 									value={updateData.discount_type}
 									onChange={(e) => setUpdateData({ ...updateData, discount_type: e.target.value })}>
 									<option value='percent'>Percentage (%)</option>
-									<option value='fixed'>Fixed Amount (₹)</option>
+									<option value='rupees'>Fixed Rupees (₹)</option>
 								</select>
 							</div>
 
@@ -1752,6 +2177,8 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 									className='form-control form-control-solid'
 									value={updateData.discount}
 									onChange={(e) => setUpdateData({ ...updateData, discount: e.target.value })}
+									min='1'
+									max={updateData.discount_type === 'percent' ? 90 : 100000}
 									required
 								/>
 							</div>
@@ -1763,6 +2190,7 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 									className='form-control form-control-solid'
 									value={updateData.max_usage_count}
 									onChange={(e) => setUpdateData({ ...updateData, max_usage_count: e.target.value })}
+									min='1'
 									required
 								/>
 							</div>
@@ -1791,20 +2219,131 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = ({ defaultTab = 'co
 								</select>
 							</div>
 						</div>
+
+						{/* Product Selection if Specific Products in Edit Modal */}
+						{updateData.scope === 'SPECIFIC_PRODUCTS' && (
+							<div
+								className='p-3 rounded mb-3'
+								style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+								<div className='d-flex align-items-center justify-content-between mb-2'>
+									<label className='form-label fw-bold text-dark fs-7 mb-0'>
+										Select Applicable Products
+									</label>
+									<div className='d-flex align-items-center gap-2'>
+										<button
+											type='button'
+											className='btn btn-xs btn-light-primary py-1 px-2 fs-9'
+											onClick={() => {
+												const allIds = catalogProducts.map((p: any) => String(p._id || p.id))
+												setUpdateData((prev) => ({ ...prev, applicable_products: allIds }))
+											}}>
+											Select All
+										</button>
+										<button
+											type='button'
+											className='btn btn-xs btn-light-secondary py-1 px-2 fs-9'
+											onClick={() => setUpdateData((prev) => ({ ...prev, applicable_products: [] }))}>
+											Clear
+										</button>
+										<span className='badge bg-light-primary text-primary fs-8 fw-bold'>
+											{updateData.applicable_products.length} Selected
+										</span>
+									</div>
+								</div>
+								<input
+									type='text'
+									className='form-control form-control-solid mb-2 fs-8'
+									placeholder='Filter products by title...'
+									value={productSearch}
+									onChange={(e) => setProductSearch(e.target.value)}
+								/>
+								<div
+									style={{
+										maxHeight: '190px',
+										overflowY: 'auto',
+										border: '1px solid #E2E8F0',
+										borderRadius: '6px',
+										background: '#FFFFFF',
+									}}>
+									{catalogProducts.length === 0 ? (
+										<div className='p-3 text-muted text-center fs-8'>Loading products...</div>
+									) : (
+										catalogProducts
+											.filter((p: any) =>
+												(p.title || p.name || '')
+													.toLowerCase()
+													.includes(productSearch.toLowerCase())
+											)
+											.map((p: any) => {
+												const pId = String(p._id || p.id)
+												const isSelected = updateData.applicable_products.includes(pId)
+												return (
+													<label
+														key={pId}
+														className='d-flex align-items-center justify-content-between p-2 border-bottom cursor-pointer hover-bg-light mb-0'
+														style={{ cursor: 'pointer' }}>
+														<div className='d-flex align-items-center gap-2'>
+															<input
+																type='checkbox'
+																className='form-check-input'
+																checked={isSelected}
+																onChange={(e) => {
+																	if (e.target.checked) {
+																		setUpdateData((prev) => ({
+																			...prev,
+																			applicable_products: [...prev.applicable_products, pId],
+																		}))
+																	} else {
+																		setUpdateData((prev) => ({
+																			...prev,
+																			applicable_products: prev.applicable_products.filter(
+																				(id) => id !== pId
+																			),
+																		}))
+																	}
+																}}
+															/>
+															<span className='fs-8 fw-semibold text-dark'>
+																{p.title || p.name}
+															</span>
+															{p.category?.title && (
+																<span className='badge bg-light text-muted fs-9'>
+																	{p.category.title}
+																</span>
+															)}
+														</div>
+														{p.price && (
+															<span className='fs-8 text-muted fw-bold'>₹{p.price}</span>
+														)}
+													</label>
+												)
+											})
+									)}
+								</div>
+							</div>
+						)}
 					</Modal.Body>
 
 					<Modal.Footer>
 						<button
 							type='button'
 							className='btn btn-light'
+							style={{ borderRadius: '8px', fontWeight: 600 }}
 							onClick={() => setShowUpdateModal(false)}
 							disabled={submitting}>
 							Cancel
 						</button>
 						<button
 							type='submit'
-							className='btn btn-primary'
-							style={{ background: '#047857', borderColor: '#047857' }}
+							className='btn'
+							style={{
+								background: '#1e293b',
+								borderColor: '#1e293b',
+								color: '#ffffff',
+								fontWeight: 600,
+								padding: '8px 20px',
+								borderRadius: '8px',
+							}}
 							disabled={submitting}>
 							{submitting ? 'Saving...' : 'Save Changes'}
 						</button>
