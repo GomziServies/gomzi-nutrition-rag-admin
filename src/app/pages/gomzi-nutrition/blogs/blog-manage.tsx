@@ -59,6 +59,146 @@ const getPreviewUrl = (url?: string) => {
 	return `${FG_GROUP_FILE_BASE_URL}/${url}`
 }
 
+const escapeHtml = (value: any): string =>
+	String(value ?? '')
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+
+const toStringList = (value: any): string[] => {
+	if (Array.isArray(value)) return value.map((v) => String(v ?? '').trim()).filter(Boolean)
+	if (typeof value === 'string') {
+		return value
+			.split(/\n\s*\n/)
+			.map((v) => v.trim())
+			.filter(Boolean)
+	}
+	return []
+}
+
+const tableToHtml = (table: any): string => {
+	if (!table || (!Array.isArray(table.columns) && !Array.isArray(table.rows))) return ''
+	const columns: string[] = Array.isArray(table.columns) ? table.columns : []
+	const rows: any[][] = Array.isArray(table.rows) ? table.rows : []
+	let html = ''
+	if (table.heading) html += `<h3>${escapeHtml(table.heading)}</h3>`
+	html += '<table><thead><tr>'
+	columns.forEach((c) => {
+		html += `<th>${escapeHtml(c)}</th>`
+	})
+	html += '</tr></thead><tbody>'
+	rows.forEach((row) => {
+		html += '<tr>'
+		;(Array.isArray(row) ? row : []).forEach((cell) => {
+			html += `<td>${escapeHtml(cell)}</td>`
+		})
+		html += '</tr>'
+	})
+	html += '</tbody></table>'
+	return html
+}
+
+/**
+ * Builds editor HTML from legacy structured blog content (intro / sections / tables / faqs / bottomLine)
+ * so older articles that never stored `content.html` can still be opened in the rich-text editor.
+ */
+const convertLegacyToHtml = (content: any): string => {
+	if (!content || typeof content !== 'object') return ''
+	let html = ''
+
+	toStringList(content.intro).forEach((p) => {
+		html += `<p>${escapeHtml(p)}</p>`
+	})
+
+	if (Array.isArray(content.sections)) {
+		content.sections.forEach((section: any) => {
+			if (!section) return
+			if (section.heading) html += `<h2>${escapeHtml(section.heading)}</h2>`
+			toStringList(section.paragraphs).forEach((p) => {
+				html += `<p>${escapeHtml(p)}</p>`
+			})
+			if (Array.isArray(section.bullets) && section.bullets.length > 0) {
+				html += `<ul>${section.bullets.map((b: any) => `<li>${escapeHtml(b)}</li>`).join('')}</ul>`
+			}
+			if (section.closingParagraph) html += `<p>${escapeHtml(section.closingParagraph)}</p>`
+			html += tableToHtml(section.table)
+		})
+	}
+
+	const tables: any[] = Array.isArray(content.tables) ? content.tables : []
+	tables.forEach((t) => {
+		html += tableToHtml(t)
+	})
+
+	if (Array.isArray(content.faqs) && content.faqs.length > 0) {
+		html += '<h2>Frequently Asked Questions</h2>'
+		content.faqs.forEach((f: any) => {
+			if (!f) return
+			html += `<h3>${escapeHtml(f.question)}</h3><p>${escapeHtml(f.answer)}</p>`
+		})
+	}
+
+	if (content.bottomLine) {
+		html += `<h2>${escapeHtml(content.bottomLine.heading || 'The bottom line')}</h2>`
+		toStringList(content.bottomLine.paragraphs).forEach((p) => {
+			html += `<p>${escapeHtml(p)}</p>`
+		})
+	}
+
+	return html
+}
+
+/**
+ * Reads intro paragraphs and heading-based sections back out of editor HTML.
+ * Returns empty lists when the HTML has no usable structure, so callers fall back to the form fields.
+ */
+const extractStructuredFromHtml = (
+	html: string
+): { intro: string[]; sections: any[] } => {
+	const result: { intro: string[]; sections: any[] } = { intro: [], sections: [] }
+	if (!html || typeof DOMParser === 'undefined') return result
+
+	const doc = new DOMParser().parseFromString(`<div id="root">${html}</div>`, 'text/html')
+	const root = doc.getElementById('root')
+	if (!root) return result
+
+	const text = (el: Element) => (el.textContent || '').replace(/\s+/g, ' ').trim()
+	let current: any = null
+
+	Array.from(root.children).forEach((node) => {
+		const tag = node.tagName.toLowerCase()
+		if (tag === 'h1' || tag === 'h2' || tag === 'h3') {
+			current = { heading: text(node), paragraphs: [], bullets: [], closingParagraph: '' }
+			result.sections.push(current)
+			return
+		}
+		if (tag === 'p') {
+			const value = text(node)
+			if (!value) return
+			if (current) current.paragraphs.push(value)
+			else result.intro.push(value)
+			return
+		}
+		if ((tag === 'ul' || tag === 'ol') && current) {
+			Array.from(node.querySelectorAll('li'))
+				.map((li) => text(li))
+				.filter(Boolean)
+				.forEach((b) => current.bullets.push(b))
+			return
+		}
+		if (tag === 'table' && current) {
+			const columns = Array.from(node.querySelectorAll('thead th, tr:first-child th')).map((th) => text(th))
+			const rows = Array.from(node.querySelectorAll('tbody tr'))
+				.map((tr) => Array.from(tr.querySelectorAll('td')).map((td) => text(td)))
+				.filter((r) => r.length > 0)
+			current.table = { heading: '', columns, rows }
+		}
+	})
+
+	return result
+}
+
 interface TableFormState {
 	heading: string
 	columns: string[]

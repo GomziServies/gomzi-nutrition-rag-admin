@@ -1,74 +1,81 @@
+/* eslint-disable */
+import React, { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import * as XLSX from 'xlsx'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faAward,
-	faChevronDown,
-	faChevronUp,
 	faBriefcase,
 	faCheckCircle,
+	faChevronDown,
+	faChevronUp,
 	faClock,
 	faDownload,
 	faEnvelope,
-	faEnvelopeOpen,
 	faEye,
 	faFileAlt,
 	faGraduationCap,
 	faIdCard,
 	faMapMarkerAlt,
 	faPhone,
-	faPlusCircle,
+	faTimesCircle,
 	faUsers,
 } from '@fortawesome/free-solid-svg-icons'
 import { faWhatsapp, faInstagram } from '@fortawesome/free-brands-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { endOfMonth, startOfMonth } from 'date-fns'
-import React, { useEffect, useMemo, useState } from 'react'
-import toast from 'react-hot-toast'
-import { Link, useLocation } from 'react-router-dom'
-import * as XLSX from 'xlsx'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import DateFilter from '../../../components/DateRangePicker'
-import LengthMenu from '../../../components/LengthMenu'
-import SearchFilter from '../../../components/SearchFilter'
-import SelectField from '../../../components/SelectField'
-import DownloadExcelButton from '../../../components/DownloadExcelButton'
-import Table from '../../../components/Table'
 import UsersListPagination from '../../../components/TablePagination'
 import { GetContactInquiry } from '../../../Functions/FGGroup'
 import { isProPartnerApplication } from './contactInquiryUtils'
-import PartnerApplicationActions, { getPartnerApplicationStatus, PartnerStatusBadge, PartnerReviewDetails, PartnerPolicyRecord, handleViewPartnerAgreement } from './PartnerApplicationActions'
+import PartnerApplicationActions, {
+	getPartnerApplicationStatus,
+	PartnerStatusBadge,
+	PartnerPolicyRecord,
+	handleViewPartnerAgreement,
+} from './PartnerApplicationActions'
 import './PartnerApplicationActions.css'
-import '../common-management.css'
-import '../products-theme.css'
-import '../orders-theme.css'
+import './pro-partner.css'
 import './contact-inquiry.css'
 
 export { isProPartnerApplication } from './contactInquiryUtils'
 
+const RAG_CONTACT_SOURCE_FILTER =
+	'gomzilifesciences|ragnutrition|contact-us|5173|whey|rag'
+
 const ProPartnerInquiry: React.FC = () => {
 	const location = useLocation()
 	const basePath = location.pathname.startsWith('/hr') ? '/hr' : '/rag'
+
 	const [searchTerm, setSearchTerm] = useState('')
-	const [metaData, setMetaData] = useState<any>()
 	const [allPartnerInquiries, setAllPartnerInquiries] = useState<any[]>([])
 	const [showUnreadOnly, setShowUnreadOnly] = useState(false)
 	const [employmentTypeFilter, setEmploymentTypeFilter] = useState('')
 	const [statusFilter, setStatusFilter] = useState('')
-	const [sort, setSort] = useState('createdAt')
-	const [sortOrder, setSortOrder] = useState<QuerySortOptions>('desc')
 	const [visibleDetails, setVisibleDetails] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
 	const [exporting, setExporting] = useState(false)
-	const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>([
-		startOfMonth(new Date()),
-		endOfMonth(new Date()),
-	])
 	const [pagination, setPagination] = useState({
 		page: 1,
 		itemsPerPage: 10,
 	})
 
-	const RAG_CONTACT_SOURCE_FILTER =
-		'gomzilifesciences|ragnutrition|contact-us|5173|whey|rag'
+	// Strict single pure white background enforcement across Metronic wrappers
+	useEffect(() => {
+		const applyWhiteCanvas = () => {
+			const ids = ['kt_wrapper', 'kt_content', 'kt_post', 'kt_content_container']
+			ids.forEach((id) => {
+				const el = document.getElementById(id)
+				if (el) {
+					el.style.backgroundColor = '#FFFFFF'
+					el.style.background = '#FFFFFF'
+				}
+			})
+		}
+		applyWhiteCanvas()
+		const timer = setTimeout(applyWhiteCanvas, 200)
+		return () => clearTimeout(timer)
+	}, [])
 
 	const fetchData = async () => {
 		setLoading(true)
@@ -78,10 +85,11 @@ const ProPartnerInquiry: React.FC = () => {
 				page: 1,
 				limit: pageSize,
 				source: RAG_CONTACT_SOURCE_FILTER,
+				sort: 'createdAt',
+				sortOrder: 'desc',
 			})
 
 			const paginationMeta: any = firstResponse?.metadata?.pagination || {}
-			setMetaData(paginationMeta)
 			const totalPages = Number(paginationMeta.totalPages || 1)
 			let rawList: any[] = Array.isArray(firstResponse?.data) ? [...firstResponse.data] : []
 
@@ -90,13 +98,15 @@ const ProPartnerInquiry: React.FC = () => {
 					page: currentPage,
 					limit: pageSize,
 					source: RAG_CONTACT_SOURCE_FILTER,
+					sort: 'createdAt',
+					sortOrder: 'desc',
 				})
 				if (Array.isArray(nextResponse?.data)) {
 					rawList = rawList.concat(nextResponse.data)
 				}
 			}
 
-			// Filter exclusively for Pro Partner Program applications (ignoring orders & general contact forms)
+			// Exclusively filter for Pro Partner applications
 			const partnerApplications = rawList.filter((item: any) => isProPartnerApplication(item))
 
 			partnerApplications.sort((a: any, b: any) => {
@@ -107,7 +117,7 @@ const ProPartnerInquiry: React.FC = () => {
 
 			setAllPartnerInquiries(partnerApplications)
 		} catch (error: any) {
-			console.error(error)
+			console.error('Error fetching pro partner applications:', error)
 			toast.error('Failed to load Pro Partner applications')
 		} finally {
 			setLoading(false)
@@ -120,21 +130,14 @@ const ProPartnerInquiry: React.FC = () => {
 
 	useEffect(() => {
 		setPagination((prev) => ({ ...prev, page: 1 }))
-	}, [searchTerm, sort, sortOrder, showUnreadOnly, employmentTypeFilter, statusFilter, selectedDateRange])
+	}, [searchTerm, showUnreadOnly, employmentTypeFilter, statusFilter])
 
-	const handleItemsPerPageChange = (value: number) => {
-		setPagination((prev) => ({ ...prev, page: 1, itemsPerPage: value }))
+	const handleItemsPerPageChange = (val: number) => {
+		setPagination((prev) => ({ ...prev, page: 1, itemsPerPage: val }))
 	}
 
 	const handlePageChange = (page: number) => {
 		setPagination((prev) => ({ ...prev, page }))
-	}
-
-	const handleEmploymentTypeChange = (
-		event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-	) => {
-		const val = event.target.value
-		setEmploymentTypeFilter(val === 'All' ? '' : val)
 	}
 
 	const employmentOptions = useMemo(() => {
@@ -148,795 +151,603 @@ const ProPartnerInquiry: React.FC = () => {
 		return Array.from(s).sort()
 	}, [allPartnerInquiries])
 
-	const handleSortChange = (newSort: string, newSortOrder: QuerySortOptions) => {
-		setSort(newSort)
-		setSortOrder(newSortOrder)
-	}
-
-	const sortableFields = [
-		{ title: 'Applicant', field: 'name' },
-		{ title: 'Contact', field: 'email' },
-		{ title: 'Role & Experience', field: 'details.employment_type' },
-		{ title: 'Client Reach', field: 'details.active_clients' },
-		{ title: 'Sales Potential', field: 'details.sales_potential' },
-		{ title: 'Date Applied', field: 'createdAt' },
-		{ title: 'Application Status', field: 'partner_status' },
-	]
-
-	const handleRowClick = (id: string) => {
-		setVisibleDetails(visibleDetails === id ? null : id)
-	}
-
 	const filteredApplications = useMemo(() => {
-		const filtered = allPartnerInquiries.filter((item: any) => {
+		return allPartnerInquiries.filter((item: any) => {
 			if (!item || !isProPartnerApplication(item)) return false
 
 			const details = item.details || {}
 			if (statusFilter && getPartnerApplicationStatus(item) !== statusFilter) return false
 
-			if (searchTerm && typeof searchTerm === 'string') {
+			if (searchTerm) {
 				const q = searchTerm.toLowerCase().trim()
 				const matches =
-					(item.name || '').toString().toLowerCase().includes(q) ||
-					(item.email || '').toString().toLowerCase().includes(q) ||
-					(item.mobile || '').toString().toLowerCase().includes(q) ||
-					(details.full_name || '').toString().toLowerCase().includes(q) ||
-					(details.city || '').toString().toLowerCase().includes(q) ||
-					(details.state || '').toString().toLowerCase().includes(q) ||
-					(details.employment_type || '').toString().toLowerCase().includes(q) ||
-					(details.sales_potential || '').toString().toLowerCase().includes(q) ||
-					(details.higher_education || '').toString().toLowerCase().includes(q)
+					(item.name || '').toLowerCase().includes(q) ||
+					(item.email || '').toLowerCase().includes(q) ||
+					(item.mobile || '').toLowerCase().includes(q) ||
+					(details.full_name || '').toLowerCase().includes(q) ||
+					(details.city || '').toLowerCase().includes(q) ||
+					(details.state || '').toLowerCase().includes(q) ||
+					(details.employment_type || '').toLowerCase().includes(q) ||
+					(details.sales_potential || '').toLowerCase().includes(q)
 				if (!matches) return false
 			}
 
-			if (employmentTypeFilter && employmentTypeFilter !== '') {
-				if ((details.employment_type || '').toString().trim() !== employmentTypeFilter) {
+			if (employmentTypeFilter) {
+				if ((details.employment_type || '').trim() !== employmentTypeFilter) {
 					return false
 				}
 			}
 
-			if (showUnreadOnly) {
-				if (item.read_receipt !== false) return false
-			}
-
-			if (selectedDateRange && selectedDateRange[0] && selectedDateRange[1]) {
-				const startTime = new Date(selectedDateRange[0]).setHours(0, 0, 0, 0)
-				const endTime = new Date(selectedDateRange[1]).setHours(23, 59, 59, 999)
-				const rawDate = item.createdAt || item.created_at || item.date
-				if (!rawDate) return false
-				const itemTime = new Date(rawDate).getTime()
-				if (isNaN(itemTime) || itemTime < startTime || itemTime > endTime) {
-					return false
-				}
+			if (showUnreadOnly && item.read_receipt !== false) {
+				return false
 			}
 
 			return true
 		})
+	}, [allPartnerInquiries, searchTerm, employmentTypeFilter, statusFilter, showUnreadOnly])
 
-		if (sort) {
-			filtered.sort((a: any, b: any) => {
-				let aVal = a[sort] || a.details?.[sort.replace('details.', '')]
-				let bVal = b[sort] || b.details?.[sort.replace('details.', '')]
+	const paginatedApplications = useMemo(() => {
+		const start = (pagination.page - 1) * pagination.itemsPerPage
+		return filteredApplications.slice(start, start + pagination.itemsPerPage)
+	}, [filteredApplications, pagination.page, pagination.itemsPerPage])
 
-				if (sort === 'createdAt' || sort === 'date') {
-					const aTime = new Date(aVal || a.created_at || a.date || 0).getTime()
-					const bTime = new Date(bVal || b.created_at || b.date || 0).getTime()
-					return sortOrder === 'asc' ? aTime - bTime : bTime - aTime
-				}
+	const totalPages = Math.ceil(filteredApplications.length / pagination.itemsPerPage) || 1
 
-				aVal = (aVal || '').toString().toLowerCase()
-				bVal = (bVal || '').toString().toLowerCase()
+	// KPI Metrics
+	const kpiMetrics = useMemo(() => {
+		const total = allPartnerInquiries.length
+		const pending = allPartnerInquiries.filter((i) => getPartnerApplicationStatus(i) === 'pending').length
+		const approved = allPartnerInquiries.filter((i) => getPartnerApplicationStatus(i) === 'approved').length
+		const rejected = allPartnerInquiries.filter((i) => getPartnerApplicationStatus(i) === 'rejected').length
+		return { total, pending, approved, rejected }
+	}, [allPartnerInquiries])
 
-				if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1
-				if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1
-				return 0
-			})
-		}
-
-		return filtered
-	}, [allPartnerInquiries, searchTerm, employmentTypeFilter, statusFilter, showUnreadOnly, selectedDateRange, sort, sortOrder])
-
-	const paginatedApplications = filteredApplications.slice(
-		(pagination.page - 1) * pagination.itemsPerPage,
-		pagination.page * pagination.itemsPerPage
-	)
-
-	const totalPages = Math.ceil(filteredApplications.length / pagination.itemsPerPage)
-	const paginationTotalPages = Number(totalPages || metaData?.totalPages || 1)
-
+	// Export Excel
 	const downloadExcel = () => {
 		setExporting(true)
 		try {
-			const worksheetData = filteredApplications.map((item: any) => {
+			const rows = filteredApplications.map((item: any, idx: number) => {
 				const d = item.details || {}
 				return {
-					'Applicant Name': d.full_name || item.name || 'N/A',
-					Email: d.email || item.email || 'N/A',
-					Mobile: d.mobile || item.mobile || 'N/A',
-					WhatsApp: d.whatsapp || 'N/A',
-					Gender: d.gender || 'N/A',
-					'Date of Birth': d.dob || 'N/A',
-					City: d.city || 'N/A',
-					State: d.state || 'N/A',
-					Pincode: d.pincode || 'N/A',
-					'Employment Type': d.employment_type || 'N/A',
-					'Experience (Years)': d.experience_years || 'N/A',
-					'Active Clients': d.active_clients || 'N/A',
-					'Higher Education': d.higher_education || 'N/A',
-					'Recommends Supplements': d.recommend_supplements ? 'Yes' : 'No',
-					'Supplement Brands': d.supplement_brands || 'N/A',
-					'Estimated Sales Potential': d.sales_potential || 'N/A',
-					'Instagram Followers': d.instagram_followers || 'N/A',
-					'Social Profile': d.instagram || d.social_link || 'N/A',
-					'Application Status': getPartnerApplicationStatus(item),
-					'Review Note': item.partner_review_reason || '',
-					'Policy Version': item.partner_policy?.version || '',
-					'Policy Accepted': item.partner_policy?.accepted_at ? 'Yes' : 'No',
-					'Policy Accepted By': item.partner_policy?.accepted_name || '',
-					'Policy Acceptance Date': item.partner_policy?.accepted_at ? DayJS(item.partner_policy.accepted_at).format('DD/MM/YYYY hh:mm:ss A') : '',
-					'Decision Date': item.partner_reviewed_at ? DayJS(item.partner_reviewed_at).format('DD/MM/YYYY hh:mm:ss A') : '',
-					'Read Status': item.read_receipt ? 'Read' : 'Unread',
-					'Applied Date': DayJS(item.createdAt).format('DD/MM/YYYY hh:mm:ss A'),
+					'#': idx + 1,
+					'Applicant Name': d.full_name || item.name || '',
+					'Email Address': d.email || item.email || '',
+					'Mobile Number': d.mobile || item.mobile || '',
+					City: d.city || '',
+					State: d.state || '',
+					'Employment Type': d.employment_type || '',
+					'Experience (Years)': d.experience_years || '',
+					'Active Clients': d.active_clients || '',
+					'Sales Potential': d.sales_potential || '',
+					'Application Status': getPartnerApplicationStatus(item).toUpperCase(),
+					'Policy Version': item.partner_policy?.version || 'N/A',
+					'Policy Accepted At': item.partner_policy?.accepted_at
+						? DayJS(item.partner_policy.accepted_at).format('DD/MM/YYYY hh:mm A')
+						: 'Pending',
+					'Submission Date': item.createdAt
+						? DayJS(item.createdAt).format('DD/MM/YYYY hh:mm A')
+						: '',
 				}
 			})
 
-			const worksheet = XLSX.utils.json_to_sheet(worksheetData)
+			const worksheet = XLSX.utils.json_to_sheet(rows)
 			const workbook = XLSX.utils.book_new()
 			XLSX.utils.book_append_sheet(workbook, worksheet, 'Pro Partner Applications')
-			XLSX.writeFile(workbook, 'RAG_Pro_Partner_Applications.xlsx')
-			toast.success('Pro Partner report downloaded successfully')
+			XLSX.writeFile(
+				workbook,
+				`RAG_Pro_Partner_Applications_${DayJS().format('YYYY-MM-DD')}.xlsx`
+			)
+			toast.success('Applications exported to Excel')
 		} catch (error) {
-			console.error('Error exporting partner applications:', error)
-			toast.error('Failed to export report')
+			console.error('Excel export error:', error)
+			toast.error('Failed to export applications')
 		} finally {
 			setExporting(false)
 		}
 	}
 
-	const stats = useMemo(() => {
-		const total = allPartnerInquiries.length
-		const pending = allPartnerInquiries.filter((item) => getPartnerApplicationStatus(item) === 'pending').length
-		const approved = allPartnerInquiries.filter((item) => getPartnerApplicationStatus(item) === 'approved').length
-		const rejected = allPartnerInquiries.filter((item) => getPartnerApplicationStatus(item) === 'rejected').length
-		return { total, pending, approved, rejected }
-	}, [allPartnerInquiries])
-
 	return (
-		<div className='gz-mgmt-container partner-page'>
+		<div className='gz-page-wrapper gz-pro-partner-page'>
 			<PageTitle breadcrumbs={[]}>RAG Pro Partner Applications</PageTitle>
 
-			<style>{`
-				.partner-table { min-width: 0; }
-				.partner-table .table-responsive {
-					overflow-x: auto !important;
-					-webkit-overflow-scrolling: touch !important;
-					scrollbar-width: thin;
-				}
-				.partner-table #kt_table_users {
-					width: 100% !important;
-					min-width: 1280px !important;
-					table-layout: auto !important;
-					border-collapse: separate !important;
-					border-spacing: 0 !important;
-				}
-				.partner-table #kt_table_users thead th {
-					padding: 14px 16px !important;
-					white-space: nowrap !important;
-					line-height: 1.4;
-					font-size: 11px !important;
-					font-weight: 700 !important;
-					letter-spacing: 0.03em !important;
-					color: #71809A !important;
-					text-transform: uppercase !important;
-					background: #F8FAFD !important;
-					border-bottom: 1px solid #E4EAF2 !important;
-				}
-								.partner-table #kt_table_users {
-					min-width: 1360px !important;
-					width: 100% !important;
-				}
-				.partner-table #kt_table_users thead th:nth-child(1) { width: 44px !important; min-width: 44px !important; text-align: center; }
-				.partner-table #kt_table_users thead th:nth-child(2) { min-width: 165px !important; width: 170px !important; }
-				.partner-table #kt_table_users thead th:nth-child(3) { min-width: 195px !important; width: 200px !important; }
-				.partner-table #kt_table_users thead th:nth-child(4) { min-width: 165px !important; width: 170px !important; }
-				.partner-table #kt_table_users thead th:nth-child(5) { min-width: 130px !important; width: 135px !important; white-space: nowrap !important; }
-				.partner-table #kt_table_users thead th:nth-child(6) { min-width: 165px !important; width: 170px !important; }
-				.partner-table #kt_table_users thead th:nth-child(7) { min-width: 130px !important; width: 135px !important; white-space: nowrap !important; }
-				.partner-table #kt_table_users thead th:nth-child(8) { min-width: 170px !important; width: 175px !important; }
-				.partner-table #kt_table_users thead th:nth-child(9),
-				.partner-table #kt_table_users th:last-child {
-					width: 185px !important;
-					min-width: 185px !important;
-					position: sticky !important;
-					right: 0 !important;
-					z-index: 3 !important;
-					background: #F8FAFD !important;
-					border-left: 1px solid #E4EAF2 !important;
-					box-shadow: -4px 0 10px -4px rgba(15, 23, 42, 0.08) !important;
-					text-align: center !important;
-				}
-				.partner-table #kt_table_users .data-row > td {
-					padding: 14px 16px !important;
-					vertical-align: middle !important;
-					background: #fff !important;
-					border-bottom: 1px solid #EEF2F6 !important;
-				}
-				.partner-table #kt_table_users .data-row:hover > td {
-					background: #F8FAFD !important;
-				}
-				.partner-table #kt_table_users th:last-child,
-				.partner-table #kt_table_users td.partner-actions,
-				.partner-table #kt_table_users td:last-child {
-					position: sticky;
-					right: 0;
-					z-index: 2;
-					background: #ffffff !important;
-					border-left: 1px solid #EEF2F6 !important;
-					box-shadow: -4px 0 10px -4px rgba(15, 23, 42, 0.06);
-					width: 200px !important;
-					min-width: 200px !important;
-					box-sizing: border-box !important;
-					padding: 10px 12px !important;
-					vertical-align: middle !important;
-				}
-				.partner-table #kt_table_users th:last-child {
-					z-index: 3;
-					background: #F8FAFD !important;
-				}
-				.partner-table #kt_table_users .data-row:hover > td.partner-actions {
-					background: #F8FAFD !important;
-				}
-				.partner-table #kt_table_users .detail-row.is-visible { display: table-row !important; }
-				.partner-table .gz-partner-controls {
-					display: grid !important;
-					grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-					gap: 5px !important;
-					width: 100% !important;
-					min-width: 150px !important;
-					max-width: 175px !important;
-					margin: 0 auto !important;
-					padding: 0 !important;
-					box-sizing: border-box !important;
-					align-items: center !important;
-				}
-				.partner-table .gz-partner-controls > .gz-partner-button {
-					display: inline-flex !important;
-					align-items: center !important;
-					justify-content: center !important;
-					gap: 5px !important;
-					width: 100% !important;
-					min-width: 0 !important;
-					max-width: 100% !important;
-					height: 27px !important;
-					min-height: 27px !important;
-					margin: 0 !important;
-					padding: 2px 6px !important;
-					box-sizing: border-box !important;
-					border: 1px solid transparent !important;
-					border-radius: 6px !important;
-					font-family: inherit !important;
-					font-size: 11px !important;
-					font-weight: 600 !important;
-					line-height: 1 !important;
-					text-decoration: none !important;
-					white-space: nowrap !important;
-					overflow: hidden !important;
-					text-overflow: ellipsis !important;
-					cursor: pointer !important;
-					box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
-				}
-				.partner-table .gz-partner-controls > .gz-partner-button:last-child:nth-child(3),
-				.partner-table .gz-partner-controls > .gz-partner-button:last-child:nth-child(5),
-				.partner-table .gz-partner-controls > .gz-partner-button:only-child {
-					grid-column: 1 / -1 !important;
-				}
-				.partner-table .partner-actions-stack {
-					width: 100%;
-					min-width: 150px;
-					max-width: 190px;
-					margin: 0 auto;
-				}
-				.partner-table .partner-status .mt-2 { margin-top: 6px !important; }
-				.partner-table .partner-status .fs-8 { font-size: 11px !important; line-height: 1.5; }
-				.partner-table .partner-status .badge { padding: 5px 9px; }
-				.partner-table .gz-badge-emp { max-width: 100% !important; white-space: normal; }
-				.partner-table .gz-badge-potential { max-width: 100%; align-items: flex-start; line-height: 1.5; overflow-wrap: normal; word-break: normal; }
-				.partner-table .gz-badge-potential > span { min-width: 0; }
-				.partner-table .gz-badge-potential svg { flex-shrink: 0; margin-top: 3px; }
-				.partner-table .partner-contact-line { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-				.partner-page .partner-toolbar { gap: 12px !important; width: 100%; }
-				.partner-page .partner-toolbar .gz-search-filter-box { flex: 1 1 220px; max-width: 320px; }
-				.partner-page .partner-toolbar > select { min-height: 38px; }
-				@media (max-width: 1199px) {
-					.partner-table #kt_table_users { min-width: 1060px; }
-					.partner-table #kt_table_users th:last-child,
-					.partner-table #kt_table_users td.partner-actions {
-						box-shadow: -4px 0 8px -6px rgba(23, 43, 77, .25);
-					}
-				}
-				@media (max-width: 768px) {
-					.partner-page .partner-table { padding: 0 12px 16px !important; }
-					.partner-page .partner-toolbar .gz-search-filter-box { max-width: none; flex-basis: 100%; }
-				}
-				.partner-table .data-row {
-					cursor: pointer;
-					border-bottom: 1px solid #EEF2F7;
-					transition: background 0.15s ease;
-				}
-				.partner-table .data-row:hover {
-					background: #F8FAFD;
-				}
-				.partner-table .data-row td {
-					padding: 14px 12px;
-					vertical-align: middle;
-				}
-				.gz-badge-potential {
-					display: inline-flex;
-					align-items: center;
-					gap: 4px;
-					background: #EEF2FF;
-					color: #4F46E5;
-					border: 1px solid #C7D2FE;
-					border-radius: 6px;
-					padding: 3px 8px;
-					font-size: 12px;
-					font-weight: 600;
-				}
-				.gz-badge-emp {
-					display: inline-flex;
-					align-items: center;
-					background: #F1F5F9;
-					color: #334155;
-					border-radius: 6px;
-					padding: 3px 8px;
-					font-size: 12px;
-					font-weight: 600;
-				}
-				.partner-details-grid {
-					display: grid;
-					grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-					gap: 12px;
-					background: #F8FAFC;
-					padding: 16px;
-					border-radius: 10px;
-					border: 1px solid #E2E8F0;
-				}
-			`}</style>
-
-			{/* Breadcrumb */}
-			<div className='gz-mgmt-breadcrumb'>
-				<Link to={`${basePath}/dashboard`}>Dashboard</Link>
-				<span className='sep'>&gt;</span>
-				<span>Follow Up &amp; Helpdesk</span>
-				<span className='sep'>&gt;</span>
-				<span className='current'>Pro Partner</span>
-			</div>
-
-			{/* Header */}
-			<div className='gz-mgmt-header mb-6'>
-				<div className='gz-mgmt-title-wrap'>
-					<h1 className='gz-mgmt-title d-flex align-items-center gap-2'>
-						<span>RAG Pro Partner Applications</span>
-						<span className='badge badge-light-primary fs-8 px-3 py-1'>Verified Trainers &amp; Coaches</span>
-					</h1>
-					<p className='gz-mgmt-subtitle'>
-						Review trainer applications, verify fitness credentials, and evaluate potential sales channels.
-					</p>
+			{/* 1. Header Card */}
+			<div className='gz-header-card'>
+				<div className='gz-header-left'>
+					<div className='gz-header-icon-box'>
+						<FontAwesomeIcon icon={faBriefcase} />
+					</div>
+					<div>
+						<h1 className='gz-header-title'>RAG Pro Partner Applications</h1>
+						<div className='gz-header-subtitle'>
+							Review fitness professional onboarding, credentials, coaching channels, and digital agreement policies.
+						</div>
+					</div>
 				</div>
+
 				<div className='d-flex align-items-center gap-3 flex-wrap'>
 					<button
 						type='button'
-						className='gz-mgmt-btn-secondary'
+						className='gz-btn-brown-outline'
 						onClick={downloadExcel}
-						disabled={loading || exporting || filteredApplications.length === 0}
-						title='Download Applications Excel'>
+						disabled={exporting || filteredApplications.length === 0}>
 						<FontAwesomeIcon icon={faDownload} />
 						<span>{exporting ? 'Exporting...' : 'Export Excel'}</span>
 					</button>
 				</div>
 			</div>
 
-			{/* Summary KPI Cards */}
-			<div className='gz-prod-summary-grid mb-6'>
-				<div className='gz-prod-summary-card'>
-					<div className='gz-prod-summary-label'>Total Applications</div>
-					<div className='gz-prod-summary-val'>{stats.total}</div>
-					<div className='gz-prod-summary-sub'>All submissions</div>
+			{/* 2. KPI Summary Cards */}
+			<div className='gz-kpi-grid'>
+				<div className='gz-kpi-card total'>
+					<div className='gz-kpi-header'>
+						<span className='gz-kpi-title'>Total Applications</span>
+						<div className='gz-kpi-icon-box total'>
+							<FontAwesomeIcon icon={faUsers} />
+						</div>
+					</div>
+					<div className='gz-kpi-value'>{kpiMetrics.total}</div>
+					<div className='gz-kpi-desc'>All fitness professional partner submissions</div>
 				</div>
-				<div className='gz-prod-summary-card'>
-					<div className='gz-prod-summary-label'>Pending Review</div>
-					<div className='gz-prod-summary-val text-warning'>{stats.pending}</div>
-					<div className='gz-prod-summary-sub'>Awaiting action</div>
+
+				<div className='gz-kpi-card partner'>
+					<div className='gz-kpi-header'>
+						<span className='gz-kpi-title'>Pending Review</span>
+						<div className='gz-kpi-icon-box partner'>
+							<FontAwesomeIcon icon={faClock} />
+						</div>
+					</div>
+					<div className='gz-kpi-value'>{kpiMetrics.pending}</div>
+					<div className='gz-kpi-desc'>Awaiting review & policy invitation</div>
 				</div>
-				<div className='gz-prod-summary-card'>
-					<div className='gz-prod-summary-label'>Accepted Partners</div>
-					<div className='gz-prod-summary-val text-success'>{stats.approved}</div>
-					<div className='gz-prod-summary-sub'>Applications approved</div>
+
+				<div className='gz-kpi-card active'>
+					<div className='gz-kpi-header'>
+						<span className='gz-kpi-title'>Accepted Partners</span>
+						<div className='gz-kpi-icon-box active'>
+							<FontAwesomeIcon icon={faCheckCircle} />
+						</div>
+					</div>
+					<div className='gz-kpi-value'>{kpiMetrics.approved}</div>
+					<div className='gz-kpi-desc'>Approved for coupon creation & referral</div>
 				</div>
-				<div className='gz-prod-summary-card'>
-					<div className='gz-prod-summary-label'>Rejected Applications</div>
-					<div className='gz-prod-summary-val text-danger'>{stats.rejected}</div>
-					<div className='gz-prod-summary-sub'>Applications declined</div>
+
+				<div className='gz-kpi-card expired'>
+					<div className='gz-kpi-header'>
+						<span className='gz-kpi-title'>Declined Applications</span>
+						<div className='gz-kpi-icon-box expired'>
+							<FontAwesomeIcon icon={faTimesCircle} />
+						</div>
+					</div>
+					<div className='gz-kpi-value'>{kpiMetrics.rejected}</div>
+					<div className='gz-kpi-desc'>Applications rejected with notice</div>
 				</div>
 			</div>
 
-			{/* Main Management Card */}
-			<div className='gz-mgmt-card mb-6'>
-				<div className='gz-mgmt-toolbar px-6 py-5 border-bottom border-gray-200'>
-					<div className='d-flex flex-wrap align-items-center justify-content-between gap-3 partner-toolbar'>
-						{/* Search & Status Filters */}
-						<div className='d-flex flex-wrap align-items-center gap-3' style={{ flex: '1 1 auto' }}>
-							<div style={{ minWidth: '220px', maxWidth: '300px', flex: '1 1 240px' }}>
-								<SearchFilter
-									searchTerm={searchTerm}
-									setSearchTerm={setSearchTerm}
-									className='me-0 w-100'
-								/>
-							</div>
-
-							<select
-								className='form-select form-select-sm'
-								style={{ height: '38px', minWidth: '160px', width: 'auto', borderRadius: '8px', fontSize: '12px' }}
-								aria-label='Filter application status'
-								value={statusFilter}
-								onChange={(event) => setStatusFilter(event.target.value)}
-							>
-								<option value=''>All Application Statuses</option>
-								<option value='pending'>Pending</option>
-								<option value='approved'>Accepted</option>
-								<option value='rejected'>Rejected</option>
-							</select>
-
-							<div style={{ minWidth: '180px', maxWidth: '220px' }}>
-								<SelectField
-									className='fv-row mb-0'
-									label='Employment Type'
-									showLabel={false}
-									defaultLabel='All Employment Types'
-									name='Filter Employment'
-									value={employmentTypeFilter}
-									onChange={handleEmploymentTypeChange}
-									htmlFor='Filter Employment'
-									marginRemove={true}
-									height='38px'
-									options={employmentOptions}
-								/>
-							</div>
-
-							<button
-								type='button'
-								className={`btn btn-sm ${showUnreadOnly ? 'btn-danger' : 'btn-light-danger text-danger'} fw-semibold d-inline-flex align-items-center gap-1`}
-								style={{ height: '38px', borderRadius: '8px', padding: '0 14px' }}
-								onClick={() => setShowUnreadOnly(!showUnreadOnly)}>
-								<span className='bullet bullet-dot bg-danger me-1' />
-								{showUnreadOnly ? 'Showing Unread' : 'Filter Unread'}
-							</button>
-						</div>
-
-						{/* Range & Actions */}
-						<div className='d-flex align-items-center gap-3 flex-wrap ms-auto'>
-							<div style={{ minWidth: '230px' }}>
-								<DateFilter
-									onDateRangeChange={(r) => setSelectedDateRange(r)}
-									rightValue='0'
-								/>
-							</div>
-
-							<LengthMenu
-								expenseData={filteredApplications}
-								handleItemsPerPageChange={handleItemsPerPageChange}
-								value={pagination.itemsPerPage}
-								className='me-0'
-							/>
-
-							<div>
-								<DownloadExcelButton
-									onClick={downloadExcel}
-									disabled={loading || exporting || filteredApplications.length === 0}
-									loading={exporting}
-									filename='RAG_Pro_Partner_Applications'
-								/>
-							</div>
-						</div>
-					</div>
+			{/* 3. Filter Toolbar */}
+			<div className='gz-filter-row'>
+				{/* Search Bar with zero duplicate border and properly positioned icon */}
+				<div
+					className='gz-search-bar-box'
+					style={{ flex: '1 1 280px', minWidth: '240px' }}>
+					<i className='bi bi-search'></i>
+					<input
+						type='text'
+						className='gz-search-bar-input'
+						placeholder='Search by applicant, mobile, email, city...'
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						style={{
+							border: 'none',
+							outline: 'none',
+							background: 'transparent',
+							boxShadow: 'none',
+							width: '100%',
+							height: '100%',
+							padding: '0 4px',
+						}}
+					/>
 				</div>
 
-				<div className='p-6 pt-0 partner-table'>
-					<div className='partner-table-content'>
-						<Table
-							actionsWidth='185px'
-							data={paginatedApplications}
-							columns={sortableFields}
-							sort={sort}
-							sortOrder={sortOrder}
-							onSortChange={handleSortChange}
-							renderRow={(item: any, index: number, actualIndex: number, isVisible: boolean) => {
-								const d = item.details || {}
-								const name = d.full_name || item.name || 'Unnamed Applicant'
-								const mobile = d.mobile || item.mobile || ''
-								const whatsapp = d.whatsapp || mobile
-								const email = d.email || item.email || ''
-								const city = d.city || ''
-								const state = d.state || ''
-								const locationStr = [city, state].filter(Boolean).join(', ')
+				{/* Status Filter */}
+				<select
+					className='gz-select'
+					value={statusFilter}
+					onChange={(e) => setStatusFilter(e.target.value)}
+					style={{ minWidth: '150px' }}>
+					<option value=''>All Status</option>
+					<option value='pending'>Pending Review</option>
+					<option value='approved'>Accepted Partners</option>
+					<option value='rejected'>Declined Applications</option>
+				</select>
 
-								return (
-									<React.Fragment key={item._id}>
-										<tr
-											onClick={() => handleRowClick(item._id)}
-											className='data-row'>
-											<td className='text-center'>
-												<FontAwesomeIcon
-													icon={faPlusCircle}
-													className='mx-1 mb-1 plus-icon'
-													style={{ color: '#607D8B', fontSize: '18px' }}
-												/>
-												<span className='text-dark fw-bold d-block mb-1 fs-6'>{actualIndex}</span>
-												{item.read_receipt === false ? (
-													<FontAwesomeIcon
-														icon={faEnvelope}
-														style={{ color: '#f00000', fontSize: '18px' }}
-														title='Unread application'
-													/>
-												) : (
-													<FontAwesomeIcon
-														icon={faEnvelopeOpen}
-														style={{ color: '#50cd89', fontSize: '18px' }}
-														title='Reviewed application'
-													/>
-												)}
-											</td>
+				{/* Employment Type Filter */}
+				<select
+					className='gz-select'
+					value={employmentTypeFilter}
+					onChange={(e) => setEmploymentTypeFilter(e.target.value)}
+					style={{ minWidth: '170px' }}>
+					<option value=''>All Employment Types</option>
+					{employmentOptions.map((opt) => (
+						<option key={opt} value={opt}>
+							{opt}
+						</option>
+					))}
+				</select>
 
-											{/* Applicant Name & Location */}
-											<td>
-												<span className='text-dark fw-bold d-block fs-6'>{name}</span>
-												{locationStr && (
-													<span className='text-muted fs-8 d-block'>
-														<FontAwesomeIcon icon={faMapMarkerAlt} className='me-1' />
-														{locationStr}
-													</span>
-												)}
-											</td>
+				{/* Unread Toggle */}
+				<button
+					type='button'
+					className={`gz-btn-brown-outline ${showUnreadOnly ? 'active' : ''}`}
+					onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+					style={{
+						background: showUnreadOnly ? '#78350F' : '#FFFFFF',
+						color: showUnreadOnly ? '#FFFFFF' : '#78350F',
+						borderColor: '#78350F',
+					}}>
+					<FontAwesomeIcon icon={faClock} />
+					<span>Unread Only</span>
+				</button>
 
-											{/* Contact Info with WhatsApp */}
-											<td>
-												{email && (
-													<a
-														href={`mailto:${email}`}
-														className='text-primary fw-semibold d-block fs-7'
-														title={email}
-														onClick={(e) => e.stopPropagation()}>
-														{email}
-													</a>
-												)}
-												{mobile && (
-													<div className='partner-contact-line mt-1'>
-														<a
-															href={`tel:${mobile}`}
-															className='text-dark fw-semibold fs-7'
-															onClick={(e) => e.stopPropagation()}>
-															{mobile}
-														</a>
-														{whatsapp && (
-															<a
-																href={`https://wa.me/${String(whatsapp).replace(/[^0-9]/g, '')}`}
-																target='_blank'
-																rel='noreferrer'
-																className='text-success'
-																title='WhatsApp'
-																onClick={(e) => e.stopPropagation()}>
-																<FontAwesomeIcon icon={faWhatsapp} />
-															</a>
-														)}
-													</div>
-												)}
-											</td>
+				{/* Items Per Page */}
+				<div className='d-flex align-items-center gap-2'>
+					<span style={{ fontSize: '12.5px', color: '#82756E', fontWeight: 600 }}>Show:</span>
+					<select
+						className='gz-select'
+						value={pagination.itemsPerPage}
+						onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+						style={{ width: '80px', height: '40px' }}>
+						<option value={10}>10</option>
+						<option value={25}>25</option>
+						<option value={50}>50</option>
+						<option value={100}>100</option>
+					</select>
+				</div>
+			</div>
 
-											{/* Role & Experience */}
-											<td>
-												<span className='gz-badge-emp d-inline-block text-truncate' style={{ maxWidth: '200px' }}>
-													{d.employment_type || 'Trainer'}
-												</span>
-												<span className='text-muted fs-8 d-block mt-1'>
-													{d.experience_years ? `${d.experience_years} Yrs Exp` : 'Exp: N/A'}
-													{d.higher_education ? ` • ${d.higher_education}` : ''}
-												</span>
-											</td>
+			{/* 4. Luxury Applications Table */}
+			<div className='gz-table-card'>
+				<div className='table-responsive'>
+					<table className='gz-table'>
+						<thead>
+							<tr>
+								<th style={{ width: '48px', textAlign: 'center' }}>#</th>
+								<th>Applicant Profile</th>
+								<th>Contact Details</th>
+								<th>Role & Experience</th>
+								<th>Client Reach</th>
+								<th>Sales Potential</th>
+								<th>Applied Date</th>
+								<th style={{ textAlign: 'center' }}>Status</th>
+								<th className='gz-sticky-actions'>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{loading ? (
+								<tr>
+									<td colSpan={9} className='text-center py-5 text-muted'>
+										<div className='spinner-border spinner-border-sm text-warning me-2' role='status' />
+										Loading Pro Partner applications...
+									</td>
+								</tr>
+							) : paginatedApplications.length === 0 ? (
+								<tr>
+									<td colSpan={9} className='text-center py-5 text-muted'>
+										No Pro Partner applications matched your filters.
+									</td>
+								</tr>
+							) : (
+								paginatedApplications.map((item: any, idx: number) => {
+									const details = item.details || {}
+									const applicantName = (details.full_name || item.name || 'Anonymous Applicant').trim()
+									const email = (details.email || item.email || '').trim()
+									const mobile = (details.mobile || item.mobile || '').trim()
+									const whatsapp = (details.whatsapp || mobile).trim()
+									const city = (details.city || '').trim()
+									const state = (details.state || '').trim()
+									const locationStr = [city, state].filter(Boolean).join(', ')
+									const empType = (details.employment_type || 'Trainer').trim()
+									const exp = details.experience_years ? `${details.experience_years} yrs exp` : ''
+									const activeClients = details.active_clients || 'N/A'
+									const potential = details.sales_potential || 'N/A'
+									const isExpanded = visibleDetails === item._id
+									const formattedDate = item.createdAt
+										? DayJS(item.createdAt).format('DD MMM YYYY')
+										: 'N/A'
 
-											{/* Client Reach */}
-											<td>
-												<div className='d-flex align-items-center gap-1'>
-													<FontAwesomeIcon icon={faUsers} className='text-muted fs-8' />
-													<span className='text-dark fw-bold fs-7'>
-														{d.active_clients ? String(d.active_clients).replace(/\s*clients?/i, '') : 'N/A'}
-													</span>
-													<span
-														className='badge ms-1'
-														style={{
-															background: '#ECFDF5',
-															color: '#059669',
-															fontSize: '10px',
-															fontWeight: 600,
-															padding: '2px 5px',
-														}}>
-														Active
-													</span>
-												</div>
-												{d.instagram_followers && (
-													<span className='text-muted fs-8 d-inline-flex align-items-center mt-1'>
-														<FontAwesomeIcon icon={faInstagram} className='text-danger me-1' style={{ fontSize: '11px' }} />
-														{d.instagram_followers}
-													</span>
-												)}
-											</td>
-
-											{/* Sales Potential */}
-											<td>
-												{d.sales_potential ? (
-													<span
-														className='d-inline-flex align-items-center gap-1 px-2 py-1'
-														style={{
-															background: '#EEF2FF',
-															color: '#4338CA',
-															border: '1px solid #C7D2FE',
-															borderRadius: '6px',
-															fontSize: '12px',
-															fontWeight: 600,
-															lineHeight: 1.3,
-															whiteSpace: 'normal',
-															maxWidth: '180px',
-														}}>
-														<FontAwesomeIcon icon={faAward} className='flex-shrink-0' />
-														<span>
-															{String(d.sales_potential)
-																.replace(/\s*clients?\s+clients?\s*@/i, ' Clients @')
-																.replace(/\s*clients?\s*@/i, ' Clients @')}
+									return (
+										<React.Fragment key={item._id}>
+											<tr
+												style={{ cursor: 'pointer' }}
+												onClick={() => setVisibleDetails(isExpanded ? null : item._id)}>
+												{/* 1. Index & Expand Toggle */}
+												<td style={{ textAlign: 'center' }}>
+													<div className='d-flex align-items-center justify-content-center gap-1'>
+														<span style={{ fontSize: '11px', color: '#82756E', fontWeight: 600 }}>
+															{(pagination.page - 1) * pagination.itemsPerPage + idx + 1}
 														</span>
+														<FontAwesomeIcon
+															icon={isExpanded ? faChevronUp : faChevronDown}
+															style={{ fontSize: '10px', color: '#94A3B8' }}
+														/>
+													</div>
+												</td>
+
+												{/* 2. Applicant Profile */}
+												<td>
+													<div className='fw-bold fs-7' style={{ color: '#261E1A' }}>
+														{applicantName}
+													</div>
+													{locationStr && (
+														<div
+															className='d-flex align-items-center gap-1 mt-1'
+															style={{ color: '#82756E', fontSize: '11.5px' }}>
+															<FontAwesomeIcon icon={faMapMarkerAlt} style={{ color: '#94A3B8', fontSize: '10px' }} />
+															<span>{locationStr}</span>
+														</div>
+													)}
+													{whatsapp && (
+														<a
+															href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
+															target='_blank'
+															rel='noreferrer'
+															className='gz-wa-btn mt-1'
+															onClick={(e) => e.stopPropagation()}>
+															<FontAwesomeIcon icon={faWhatsapp} />
+															<span>Chat</span>
+														</a>
+													)}
+												</td>
+
+												{/* 3. Contact */}
+												<td>
+													{email && (
+														<div className='d-flex align-items-center gap-1' style={{ fontSize: '12px', color: '#443B35' }}>
+															<FontAwesomeIcon icon={faEnvelope} style={{ color: '#82756E', fontSize: '11px' }} />
+															<span>{email}</span>
+														</div>
+													)}
+													{mobile && (
+														<div className='d-flex align-items-center gap-1 mt-1' style={{ fontSize: '12px', color: '#443B35' }}>
+															<FontAwesomeIcon icon={faPhone} style={{ color: '#82756E', fontSize: '11px' }} />
+															<span>{mobile}</span>
+														</div>
+													)}
+												</td>
+
+												{/* 4. Role & Experience */}
+												<td>
+													<span className='gz-badge-emp'>{empType}</span>
+													{exp && (
+														<div style={{ color: '#82756E', fontSize: '11.5px', marginTop: '3px' }}>
+															{exp}
+														</div>
+													)}
+												</td>
+
+												{/* 5. Client Reach */}
+												<td>
+													<div className='fw-bold fs-7' style={{ color: '#261E1A' }}>
+														{activeClients}
+													</div>
+													<div style={{ color: '#82756E', fontSize: '11px' }}>
+														{details.coaching_mode || 'Coaching clients'}
+													</div>
+												</td>
+
+												{/* 6. Sales Potential */}
+												<td>
+													<span className='gz-badge-potential'>
+														<span>{potential}</span>
 													</span>
-												) : (
-													<span className='text-muted fs-8'>Not Specified</span>
-												)}
-											</td>
+												</td>
 
-											{/* Date Applied */}
-											<td>
-												<span className='text-dark fw-bold d-block fs-7'>
-													{DayJS(item.createdAt).format('DD/MM/YYYY')}
-												</span>
-												<span className='text-muted fs-8'>
-													{DayJS(item.createdAt).format('hh:mm A')}
-												</span>
-											</td>
+												{/* 7. Applied Date */}
+												<td>
+													<div style={{ fontSize: '12.5px', color: '#261E1A', fontWeight: 600 }}>
+														{formattedDate}
+													</div>
+													<div style={{ color: '#82756E', fontSize: '11px' }}>
+														{item.createdAt ? DayJS(item.createdAt).format('hh:mm A') : ''}
+													</div>
+												</td>
 
-											{/* Status & Review Details */}
-											<td className='partner-status'>
-												<PartnerStatusBadge inquiry={item} />
-												<PartnerReviewDetails inquiry={item} />
-												{item.partner_policy?.accepted_at && (
-													<button
-														type='button'
-														className='d-inline-flex align-items-center gap-1 mt-2 border-0'
-														style={{
-															background: '#ECFDF5',
-															color: '#047857',
-															border: '1px solid #A7F3D0',
-															borderRadius: '6px',
-															fontSize: '11px',
-															fontWeight: 600,
-															padding: '3px 8px',
-															cursor: 'pointer',
-															transition: 'background 0.15s ease',
-														}}
-														onClick={(e) => {
-															e.stopPropagation()
-															handleViewPartnerAgreement(item._id)
-														}}
-														title='View Accepted Agreement PDF'>
-														<FontAwesomeIcon icon={faDownload} /> Accepted PDF
-													</button>
-												)}
-											</td>
-											<td
-												className='partner-actions'
-												style={{
-													width: '200px',
-													minWidth: '200px',
-													maxWidth: '220px',
-													whiteSpace: 'normal',
-													padding: '10px 12px',
-													verticalAlign: 'middle',
-													position: 'sticky',
-													right: 0,
-													background: '#ffffff',
-													zIndex: 2,
-												}}>
-												<div className='partner-actions-stack' style={{ width: '100%', minWidth: '160px', maxWidth: '190px', margin: '0 auto' }}>
+												{/* 8. Status */}
+												<td style={{ textAlign: 'center' }}>
+													<PartnerStatusBadge inquiry={item} />
+													{item.partner_policy?.version && (
+														<div>
+															<button
+																type='button'
+																className='gz-btn-pdf-accepted'
+																onClick={(e) => {
+																	e.stopPropagation()
+																	handleViewPartnerAgreement(item._id)
+																}}
+																title='View Digitally Signed Partner Policy'>
+																<FontAwesomeIcon icon={faFileAlt} />
+																<span>Agreement PDF</span>
+															</button>
+														</div>
+													)}
+												</td>
+
+												{/* 9. Actions (Sticky) */}
+												<td
+													className='gz-sticky-actions'
+													onClick={(e) => e.stopPropagation()}>
 													<PartnerApplicationActions
 														inquiry={item}
-														compact
 														onUpdated={(updated) => {
-															setAllPartnerInquiries((items) =>
-																items.map((entry) => (entry._id === updated._id ? updated : entry))
+															setAllPartnerInquiries((prev) =>
+																prev.map((i) => (i._id === updated._id ? updated : i))
 															)
-														}}>
+														}}
+														compact>
 														<Link
 															className='gz-partner-button gz-partner-button-view'
 															to={`${basePath}/contact-inquiry/contact-inquiry-view?contactInquiry_id=${item._id}`}
-															onClick={(event) => event.stopPropagation()}
-															title='View Application Details'>
+															title='Open Full Applicant Dossier'>
 															<FontAwesomeIcon icon={faEye} aria-hidden='true' className='gz-partner-btn-icon' />
 															<span>View</span>
 														</Link>
 													</PartnerApplicationActions>
-												</div>
-											</td>
-										</tr>
-
-										{/* Expandable Quick Details Drawer */}
-										{isVisible && (
-											<tr className='detail-row is-visible'>
-												<td colSpan={9}>
-													<PartnerPolicyRecord inquiry={item} onRefresh={fetchData} />
-													<div className='partner-details-grid'>
-														<div>
-															<strong>Full Address:</strong> {d.address || 'N/A'} {d.pincode ? `(${d.pincode})` : ''}
-															<br />
-															<strong>Gender / DOB:</strong> {d.gender || 'N/A'} {d.dob ? `• ${d.dob}` : ''}
-														</div>
-														<div>
-															<strong>Certifications:</strong> {d.additional_certifications || d.additional_qualifications || 'Standard'}
-															<br />
-															<strong>Recommends Supplements:</strong> {d.recommend_supplements ? 'Yes' : 'No'} {d.supplement_brands ? `(${d.supplement_brands})` : ''}
-														</div>
-														<div>
-															<strong>Documents:</strong>{' '}
-															{d.photo_url ? <span className='badge badge-light-success me-1'>Photo</span> : null}
-															{d.id_proof_url ? <span className='badge badge-light-primary me-1'>Govt ID</span> : null}
-															{d.certification_url ? <span className='badge badge-light-info me-1'>Certificate</span> : null}
-															{d.portfolio_url ? <span className='badge badge-light-warning me-1'>Portfolio</span> : null}
-															{!d.photo_url && !d.id_proof_url && !d.certification_url && !d.portfolio_url && 'None uploaded'}
-															<br />
-															<strong>Instagram / Social:</strong>{' '}
-															{d.instagram || d.social_link ? (
-																<a
-																	href={String(d.instagram || d.social_link).startsWith('http') ? String(d.instagram || d.social_link) : `https://${d.instagram || d.social_link}`}
-																	target='_blank'
-																	rel='noreferrer'
-																	className='text-primary fw-semibold'>
-																	Open Profile
-																</a>
-															) : 'N/A'}
-														</div>
-													</div>
 												</td>
 											</tr>
-										)}
-									</React.Fragment>
-								)
-							}}
-							visibleDetails={visibleDetails}
-							pagination={pagination}
-							setPagination={setPagination}
-							loading={loading}
-						/>
-					</div>
 
-					{filteredApplications.length === 0 && !loading && (
-						<div className='d-flex text-center w-100 align-content-center justify-content-center py-10'>
-							<span className='text-muted fw-bold'>No Pro Partner applications found</span>
-						</div>
-					)}
+											{/* Expandable Dossier Drawer */}
+											{isExpanded && (
+												<tr className='gz-expanded-row'>
+													<td colSpan={9}>
+														<div className='row g-3'>
+															{/* Dossier Card 1: Applicant Profile */}
+															<div className='col-md-4'>
+																<div className='gz-dossier-card'>
+																	<div className='gz-dossier-header'>
+																		<FontAwesomeIcon icon={faIdCard} />
+																		<span>Applicant Profile</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Full Name:</strong>
+																		<span>{applicantName}</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Education:</strong>
+																		<span>{details.higher_education || 'Not Specified'}</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Experience:</strong>
+																		<span>{details.experience_years ? `${details.experience_years} Years` : 'Not Specified'}</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Gender / DOB:</strong>
+																		<span>{[details.gender, details.dob].filter(Boolean).join(' • ') || 'N/A'}</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Address:</strong>
+																		<span>{details.address || locationStr || 'N/A'}</span>
+																	</div>
+																</div>
+															</div>
 
-					{filteredApplications.length > 0 && (
-						<UsersListPagination
-							totalPages={paginationTotalPages}
-							currentPage={pagination.page}
-							onPageChange={handlePageChange}
-							totalRecords={filteredApplications.length}
-							itemsPerPage={pagination.itemsPerPage}
-							entityName='applications'
-						/>
-					)}
+															{/* Dossier Card 2: Coaching & Sales */}
+															<div className='col-md-4'>
+																<div className='gz-dossier-card'>
+																	<div className='gz-dossier-header'>
+																		<FontAwesomeIcon icon={faBriefcase} />
+																		<span>Coaching & Sales</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Gym / Studio:</strong>
+																		<span>{details.gym_name || details.current_gym || 'Independent / Freelance'}</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Active Clients:</strong>
+																		<span>{details.active_clients || 'N/A'}</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Coaching Mode:</strong>
+																		<span>{details.coaching_mode || 'In-Person & Online'}</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Instagram:</strong>
+																		{details.instagram ? (
+																			<a
+																				href={`https://instagram.com/${details.instagram.replace(/^@/, '')}`}
+																				target='_blank'
+																				rel='noreferrer'
+																				style={{ color: '#78350F', fontWeight: 600 }}>
+																				@{details.instagram.replace(/^@/, '')}
+																			</a>
+																		) : (
+																			<span>N/A</span>
+																		)}
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Monthly Sales:</strong>
+																		<span>{details.sales_potential || 'N/A'}</span>
+																	</div>
+																</div>
+															</div>
+
+															{/* Dossier Card 3: Verification & Docs */}
+															<div className='col-md-4'>
+																<div className='gz-dossier-card'>
+																	<div className='gz-dossier-header'>
+																		<FontAwesomeIcon icon={faGraduationCap} />
+																		<span>Verification & Docs</span>
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Certification:</strong>
+																		{details.certification_url ? (
+																			<a
+																				href={details.certification_url}
+																				target='_blank'
+																				rel='noreferrer'
+																				className='fw-bold text-decoration-underline'
+																				style={{ color: '#78350F' }}>
+																				View Certificate
+																			</a>
+																		) : (
+																			<span>No File Attached</span>
+																		)}
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Photo ID:</strong>
+																		{details.photo_id_url ? (
+																			<a
+																				href={details.photo_id_url}
+																				target='_blank'
+																				rel='noreferrer'
+																				className='fw-bold text-decoration-underline'
+																				style={{ color: '#78350F' }}>
+																				View Photo ID
+																			</a>
+																		) : (
+																			<span>Not Attached</span>
+																		)}
+																	</div>
+																	<div className='gz-dossier-item'>
+																		<strong>Bio / Pitch:</strong>
+																		<span style={{ fontStyle: 'italic', color: '#5B270A', wordBreak: 'break-word' }}>
+																			{details.bio ||
+																			details.pitch ||
+																			details.personal_pitch ||
+																			(item.message &&
+																			!item.message.includes('=== RAG PRO PARTNER') &&
+																			!item.message.includes('[SECTION')
+																				? `"${item.message}"`
+																				: 'Official partner application submitted via web portal.')}
+																		</span>
+																	</div>
+																</div>
+															</div>
+
+															{/* Partner Policy & Acceptance Record */}
+															<div className='col-12'>
+																<PartnerPolicyRecord inquiry={item} />
+															</div>
+														</div>
+													</td>
+												</tr>
+											)}
+										</React.Fragment>
+									)
+								})
+							)}
+						</tbody>
+					</table>
+				</div>
+
+				{/* 5. Pagination */}
+				<div className='gz-pagination-wrapper'>
+					<UsersListPagination
+						totalPages={totalPages}
+						totalRecords={filteredApplications.length}
+						itemsPerPage={pagination.itemsPerPage}
+						entityName='applications'
+						onPageChange={handlePageChange}
+						currentPage={pagination.page}
+					/>
 				</div>
 			</div>
 		</div>
@@ -944,4 +755,3 @@ const ProPartnerInquiry: React.FC = () => {
 }
 
 export default ProPartnerInquiry
-

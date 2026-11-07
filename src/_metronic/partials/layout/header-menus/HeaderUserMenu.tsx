@@ -24,7 +24,7 @@ export const ALL_PANELS: PanelDef[] = [
 		code: 'Employee',
 		path: '/employee/dashboard',
 		icon: 'bi-person-badge',
-		color: '#2563eb',
+		color: '#78350F',
 		category: 'Staff & Tasks',
 	},
 	{
@@ -41,8 +41,8 @@ export const ALL_PANELS: PanelDef[] = [
 		name: 'RAG Pro Partner',
 		code: 'RAG_Pro_Partner',
 		path: '/rag/pro-partner/coupons',
-		icon: 'bi-gem',
-		color: '#059669',
+		icon: 'bi-shield-check',
+		color: '#78350F',
 		category: 'Coupons & Commission',
 	},
 	/*

@@ -77,6 +77,23 @@ const ContactInquiryView: React.FC = () => {
 		}
 	}, [contactInquiry_id])
 
+	// Strict single pure white background enforcement across Metronic wrappers
+	useEffect(() => {
+		const applyWhiteCanvas = () => {
+			const ids = ['kt_wrapper', 'kt_content', 'kt_post', 'kt_content_container']
+			ids.forEach((id) => {
+				const el = document.getElementById(id)
+				if (el) {
+					el.style.backgroundColor = '#FFFFFF'
+					el.style.background = '#FFFFFF'
+				}
+			})
+		}
+		applyWhiteCanvas()
+		const timer = setTimeout(applyWhiteCanvas, 200)
+		return () => clearTimeout(timer)
+	}, [])
+
 	const inquiryItem = Array.isArray(contactInquiry) ? contactInquiry[0] : contactInquiry || {}
 	const details = inquiryItem?.details || null
 	const isOrder = isOrderInquiry(inquiryItem)
@@ -229,7 +246,7 @@ const ContactInquiryView: React.FC = () => {
 				<div className='gz-inq-attachment-card'>
 					<div
 						className='gz-inq-attachment-icon-box'
-						style={{ background: '#F1F5F9', color: '#94A3B8', borderColor: '#E2E8F0' }}>
+						style={{ background: '#F1F5F9', color: '#94A3B8', borderColor: '#EFE4DC' }}>
 						<FontAwesomeIcon icon={icon} />
 					</div>
 					<div className='gz-inq-attachment-meta'>
@@ -242,7 +259,15 @@ const ContactInquiryView: React.FC = () => {
 
 		const fullUrl = getFileUrl(fileUrl)
 		const isImg = isImageFile(fullUrl)
-		const fileName = fileUrl.split('/').pop() || 'document'
+		const rawName = fileUrl.split('/').pop() || 'document'
+		const cleanFileName = (() => {
+			const ext = rawName.includes('.') ? `.${rawName.split('.').pop()}` : ''
+			const noUuid = rawName.replace(/[-_][0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '')
+			if (noUuid.length > 25) {
+				return noUuid.substring(0, 22) + '...' + ext
+			}
+			return noUuid
+		})()
 
 		return (
 			<div className='gz-inq-attachment-card'>
@@ -261,8 +286,8 @@ const ContactInquiryView: React.FC = () => {
 				)}
 				<div className='gz-inq-attachment-meta'>
 					<span className='gz-inq-attachment-label'>{label}</span>
-					<span className='gz-inq-attachment-name' title={fileName}>
-						{fileName}
+					<span className='gz-inq-attachment-name' title={rawName}>
+						{cleanFileName}
 					</span>
 				</div>
 				<div className='gz-inq-attachment-actions'>
@@ -425,13 +450,13 @@ const ContactInquiryView: React.FC = () => {
 			)}
 
 			{isPartnerProgram && inquiryItem?.details?.partner_account?.created && (
-				<div className='gz-mgmt-card p-5 mb-6' style={{ borderLeft: '4px solid #4F46E5' }}>
+				<div className='gz-mgmt-card p-5 mb-6' style={{ borderLeft: '4px solid #78350F', background: '#FAF6F2', border: '1.5px solid #EFE4DC' }}>
 					<div className='d-flex align-items-center justify-content-between gap-3 flex-wrap mb-2'>
 						<div className='d-flex align-items-center gap-2'>
-							<FontAwesomeIcon icon={faUserShield} className='text-primary fs-3' />
+							<FontAwesomeIcon icon={faUserShield} style={{ color: '#94A3B8', fontSize: '20px' }} />
 							<div>
-								<h3 className='fs-4 mb-0'>Pro Partner Portal Account</h3>
-								<span className='fs-8 text-muted'>
+								<h3 className='fs-5 mb-0' style={{ color: '#261E1A', fontWeight: 700 }}>Pro Partner Portal Account</h3>
+								<span className='fs-8' style={{ color: '#82756E' }}>
 									Authentication credentials provisioned with strict RBAC portal lockdown
 								</span>
 							</div>
@@ -439,7 +464,8 @@ const ContactInquiryView: React.FC = () => {
 						<div className='d-flex gap-2 flex-wrap'>
 							<button
 								type='button'
-								className='btn btn-sm btn-primary d-inline-flex align-items-center gap-2'
+								className='gz-mgmt-btn-secondary'
+								style={{ background: '#FFFFFF', color: '#78350F', border: '1.5px solid #EFE4DC' }}
 								onClick={() => setShowAccountModal(true)}>
 								<FontAwesomeIcon icon={faKey} />
 								<span>View Credentials</span>
@@ -447,13 +473,13 @@ const ContactInquiryView: React.FC = () => {
 						</div>
 					</div>
 
-					<div className='d-flex flex-wrap gap-3 my-3'>
-						<span className='badge badge-light-success'>Account Active</span>
+					<div className='d-flex flex-wrap gap-3 my-3' style={{ fontSize: '13px' }}>
+						<span className='badge' style={{ background: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0' }}>Account Active</span>
 						<span>
-							Username: <strong className='font-monospace'>{inquiryItem.details.partner_account.email || inquiryItem.email}</strong>
+							Username: <strong className='font-monospace' style={{ color: '#78350F' }}>{inquiryItem.details.partner_account.email || inquiryItem.email}</strong>
 						</span>
 						<span>
-							Portal Target: <strong className='font-monospace text-primary'>/rag/pro-partner/coupons</strong>
+							Portal Target: <strong className='font-monospace' style={{ color: '#B45309' }}>/rag/pro-partner/coupons</strong>
 						</span>
 						<span>
 							Email Notification:{' '}
