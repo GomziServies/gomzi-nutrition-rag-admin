@@ -21,6 +21,7 @@ import NumberTicker from '../../../components/NumberTicker'
 import SearchFilter from '../../../components/SearchFilter'
 import GomziTablePagination from '../../../components/GomziTablePagination'
 import toast from 'react-hot-toast'
+import Swal from 'sweetalert2'
 import { GetOrders, UpdateOrder } from '../../../Functions/FGGroup'
 import '../orders-theme.css'
 import '../products-theme.css'
@@ -131,6 +132,30 @@ const ProductOrder: React.FC = () => {
 
 	const handlePageChange = (page: number) => {
 		setPagination({ ...pagination, page })
+	}
+
+	// Inline order-status change from the list (same confirm -> update -> refresh flow as the order detail page)
+	const handleQuickStatusChange = (orderId: string, newStatus: string) => {
+		const current = orderData.find((o: any) => o._id === orderId)
+		Swal.fire({
+			title: 'Update Order Status?',
+			text: `Change order status from "${current?.status || 'PENDING'}" to "${newStatus}"?`,
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonColor: '#172B4D',
+			cancelButtonColor: '#71809A',
+			confirmButtonText: 'Yes, change status',
+			cancelButtonText: 'Cancel',
+		}).then(async (result) => {
+			if (!result.isConfirmed) return
+			try {
+				await UpdateOrder({ order_id: orderId, status: newStatus as any })
+				toast.success(`Order status updated to ${newStatus}`)
+				fetchOrderData()
+			} catch (err: any) {
+				toast.error(err?.message || 'Failed to update order status')
+			}
+		})
 	}
 
 	const handleItemsPerPageChange = (value: number) => {

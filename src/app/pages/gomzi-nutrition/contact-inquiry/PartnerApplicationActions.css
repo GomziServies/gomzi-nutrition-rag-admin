@@ -1,0 +1,222 @@
+/* =============================================================================
+   PRO PARTNER APPLICATION ACTION CONTROLS
+   Metronic-aligned, highly legible, non-overlapping action button grid
+   ============================================================================= */
+
+.gz-partner-controls {
+	display: grid !important;
+	grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	border: 0 none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	gap: 8px !important;
+	width: 100% !important;
+	min-width: 236px !important;
+	max-width: 260px !important;
+	margin: 0 auto !important;
+	padding: 0 !important;
+	box-sizing: border-box !important;
+	align-items: center !important;
+}
+
+.gz-partner-controls > .gz-partner-button {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 4px !important;
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
+	height: 32px !important;
+	min-height: 32px !important;
+	margin: 0 !important;
+	padding: 2px 10px !important;
+	box-sizing: border-box !important;
+	border: 1px solid transparent !important;
+	border-radius: 6px !important;
+	font-family: inherit !important;
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	line-height: 1 !important;
+	text-decoration: none !important;
+	white-space: nowrap !important;
+	word-break: normal !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	cursor: pointer !important;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+	transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease !important;
+}
+
+.gz-partner-controls > .gz-partner-button .gz-partner-btn-icon {
+	font-size: 11px !important;
+	flex-shrink: 0 !important;
+}
+
+.gz-partner-controls > .gz-partner-button:last-child:nth-child(3),
+.gz-partner-controls > .gz-partner-button:last-child:nth-child(5),
+.gz-partner-controls > .gz-partner-button:only-child {
+	grid-column: 1 / -1 !important;
+}
+
+.gz-partner-controls > .gz-partner-button-account {
+	background: #FEF3C7 !important;
+	color: #B45309 !important;
+	border-color: #FDE68A !important;
+}
+.gz-partner-controls > .gz-partner-button-account:hover {
+	background: #B45309 !important;
+	color: #FFFFFF !important;
+	border-color: #B45309 !important;
+	box-shadow: 0 2px 5px rgba(180, 83, 9, 0.28) !important;
+}
+
+.gz-partner-controls > .gz-partner-button-account-active {
+	background: #ECFDF5 !important;
+	color: #047857 !important;
+	border-color: #A7F3D0 !important;
+}
+.gz-partner-controls > .gz-partner-button-account-active:hover {
+	background: #059669 !important;
+	color: #FFFFFF !important;
+	border-color: #059669 !important;
+	box-shadow: 0 2px 5px rgba(5, 150, 105, 0.28) !important;
+}
+
+.gz-partner-controls > .gz-partner-button-accept {
+	background: #ECFDF5 !important;
+	color: #047857 !important;
+	border-color: #A7F3D0 !important;
+}
+.gz-partner-controls > .gz-partner-button-accept:hover {
+	background: #10B981 !important;
+	color: #FFFFFF !important;
+	border-color: #10B981 !important;
+	box-shadow: 0 2px 5px rgba(16, 185, 129, 0.28) !important;
+}
+
+.gz-partner-controls > .gz-partner-button-reject {
+	background: #FFF1F2 !important;
+	color: #BE123C !important;
+	border-color: #FECDD3 !important;
+}
+.gz-partner-controls > .gz-partner-button-reject:hover {
+	background: #F43F5E !important;
+	color: #FFFFFF !important;
+	border-color: #F43F5E !important;
+	box-shadow: 0 2px 5px rgba(244, 63, 94, 0.28) !important;
+}
+
+.gz-partner-controls > .gz-partner-button-resend {
+	background: #F0F9FF !important;
+	color: #0369A1 !important;
+	border-color: #BAE6FD !important;
+}
+.gz-partner-controls > .gz-partner-button-resend:hover {
+	background: #0284C7 !important;
+	color: #FFFFFF !important;
+	border-color: #0284C7 !important;
+	box-shadow: 0 2px 5px rgba(2, 132, 199, 0.28) !important;
+}
+
+.gz-partner-controls > .gz-partner-button-view {
+	background: #FAF6F2 !important;
+	color: #78350F !important;
+	border-color: #EFE4DC !important;
+}
+.gz-partner-controls > .gz-partner-button-view:hover {
+	background: #78350F !important;
+	color: #FFFFFF !important;
+	border-color: #78350F !important;
+	box-shadow: 0 2px 5px rgba(120, 53, 15, 0.28) !important;
+}
+
+.gz-partner-controls > .gz-partner-button-accepted-pdf {
+	background: #F0FDF4 !important;
+	color: #15803D !important;
+	border-color: #BBF7D0 !important;
+}
+.gz-partner-controls > .gz-partner-button-accepted-pdf:hover {
+	background: #16A34A !important;
+	color: #FFFFFF !important;
+	border-color: #16A34A !important;
+	box-shadow: 0 2px 5px rgba(22, 163, 74, 0.28) !important;
+}
+
+.gz-partner-controls > .gz-partner-button-pdf {
+	background: #F8FAFC !important;
+	color: #475569 !important;
+	border-color: #CBD5E1 !important;
+}
+.gz-partner-controls > .gz-partner-button-pdf:hover {
+	background: #475569 !important;
+	color: #FFFFFF !important;
+	border-color: #475569 !important;
+	box-shadow: 0 2px 5px rgba(71, 85, 105, 0.28) !important;
+}
+
+.gz-partner-controls > .gz-partner-button:focus-visible {
+	outline: 2px solid #2563EB !important;
+	outline-offset: 1px !important;
+}
+
+.gz-partner-controls > .gz-partner-button:disabled {
+	opacity: 0.55 !important;
+	cursor: not-allowed !important;
+}
+
+@media (max-width: 576px) {
+	.gz-partner-controls {
+		max-width: 100% !important;
+		min-width: 0 !important;
+	}
+}
+
+/* =============================================================================
+   ICON-ONLY COMPACT ACTIONS (text hidden, tooltip via title attribute)
+   ============================================================================= */
+.gz-pro-partner-page .gz-partner-controls,
+td .gz-partner-controls {
+	display: flex !important;
+	flex-wrap: nowrap !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: 8px !important;
+	width: auto !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	margin: 0 auto !important;
+	padding: 0 !important;
+	border: 0 none !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.gz-pro-partner-page .gz-partner-controls > .gz-partner-button,
+td .gz-partner-controls > .gz-partner-button {
+	flex: 0 0 34px !important;
+	width: 34px !important;
+	min-width: 34px !important;
+	max-width: 34px !important;
+	height: 34px !important;
+	min-height: 34px !important;
+	padding: 0 !important;
+	gap: 0 !important;
+	border-radius: 8px !important;
+	grid-column: auto !important;
+}
+
+.gz-pro-partner-page .gz-partner-controls > .gz-partner-button > span,
+td .gz-partner-controls > .gz-partner-button > span {
+	display: none !important;
+}
+
+.gz-pro-partner-page .gz-partner-controls > .gz-partner-button .gz-partner-btn-icon,
+.gz-pro-partner-page .gz-partner-controls > .gz-partner-button svg,
+td .gz-partner-controls > .gz-partner-button svg {
+	font-size: 14px !important;
+	width: 14px !important;
+	height: 14px !important;
+	margin: 0 !important;
+}

@@ -6,7 +6,7 @@ import { useFormik } from 'formik'
 import { useEffect, useState } from 'react'
 import * as Yup from 'yup'
 import { LoginWithEmailPasswordOTP, VerifyEmailOTP } from '../../../Functions/FGGroup'
-import { useAuth } from '../../../modules/auth'
+import { useAuth, syncAndRouteProPartnerUser } from '../../../modules/auth'
 
 const loginSchema = Yup.object().shape({
 	email: Yup.string()
@@ -60,6 +60,11 @@ export function EmployeeLogin() {
 					})
 					if (auth.status !== 200) throw new Error(auth.message)
 					saveAuth(auth.data)
+					const isPartner = await syncAndRouteProPartnerUser()
+					if (isPartner) {
+						window.location.href = '/rag/pro-partner/coupons'
+						return
+					}
 				} else {
 					// Initial login
 					const auth: any = await LoginWithEmailPasswordOTP(values)
@@ -77,6 +82,11 @@ export function EmployeeLogin() {
 						setTimer(60)
 					} else {
 						saveAuth(auth.data)
+						const isPartner = await syncAndRouteProPartnerUser()
+						if (isPartner) {
+							window.location.href = '/rag/pro-partner/coupons'
+							return
+						}
 					}
 				}
 			} catch (error: any) {

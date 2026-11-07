@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { isProPartnerOnlyUser } from '../../../../app/modules/auth'
 import { KTIcon, toAbsoluteUrl } from '../../../helpers'
 import { useLayout } from '../../core'
 import { HeaderToolbar } from './HeaderToolbar'
@@ -9,6 +10,9 @@ export function HeaderWrapper() {
 	const { config, classes, attributes } = useLayout()
 	const { aside } = config
 	const location = useLocation()
+	const isPartner = isProPartnerOnlyUser()
+	const mobileBrandTarget = isPartner ? '/rag/pro-partner/coupons' : '/rag/dashboard'
+	const mobileBrandTitle = isPartner ? 'RAG Pro Partner' : 'RAG Admin'
 	const routesToCloseSidebar = [
 		'/fwg/chat',
 		'/hr/hr-chat',
@@ -42,17 +46,17 @@ export function HeaderWrapper() {
 			<div className='header-brand d-lg-none d-flex align-items-center flex-shrink-0 px-4'>
 				{/* begin::Logo */}
 				<div className='d-flex align-items-center me-3'>
-					<a
-						href='/rag/dashboard'
+					<Link
+						to={mobileBrandTarget}
 						className='d-flex align-items-center'
-						title='RAG Admin'>
+						title={mobileBrandTitle}>
 						<img
-							alt='RAG Logo'
+							alt={isPartner ? 'RAG Pro Partner Logo' : 'RAG Logo'}
 							src={toAbsoluteUrl('/media/logos/rag-logo.webp')}
 							className='h-30px'
 							style={{ objectFit: 'contain' }}
 						/>
-					</a>
+					</Link>
 					<div className='ms-2'>
 						{process.env.REACT_APP_NODE_ENV === 'development' && (
 							<span className='badge badge-light-warning fs-8 m-2'>Test</span>

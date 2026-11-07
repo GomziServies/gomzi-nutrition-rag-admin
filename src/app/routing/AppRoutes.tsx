@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { App } from '../App'
-import { AuthPage, Logout } from '../modules/auth'
+import { AuthPage, Logout, isProPartnerOnlyUser, syncAndRouteProPartnerUser } from '../modules/auth'
 import * as OAuthCallbacks from '../modules/oAuthCallbacks'
 import { EmployeeAuthPage } from '../pages/employee/components/AuthPage'
 import { PortalAuthPage } from '../pages/fwg/auth/AuthPage'
@@ -58,6 +58,20 @@ const AppRoutes: FC = () => {
 	}, [])
 
 	useEffect(() => {
+		const initUserSession = async () => {
+			const token = localStorage.getItem('auth_fg_group')
+			if (token) {
+				const isPartner = await syncAndRouteProPartnerUser()
+				if (isPartner) {
+					localStorage.removeItem('searchedURL')
+					const cur = window.location.pathname
+					if (!cur.startsWith('/rag/pro-partner') && !cur.includes('logout')) {
+						window.location.replace('/rag/pro-partner/coupons')
+					}
+				}
+			}
+		}
+		initUserSession()
 		redirectDashboard()
 		redirectLoginToUrl()
 	}, [])
@@ -66,6 +80,10 @@ const AppRoutes: FC = () => {
 		const admin: any = localStorage.getItem('admin')
 		let currentUrl = window.location.pathname
 		const isLoginPage = currentUrl.includes('login')
+		if (isProPartnerOnlyUser()) {
+			localStorage.removeItem('searchedURL')
+			return
+		}
 		if (!admin && !isLoginPage) {
 			localStorage.setItem('searchedURL', currentUrl)
 		}
@@ -77,6 +95,19 @@ const AppRoutes: FC = () => {
 		let currentUrl = window.location.pathname
 		let extractedText = currentUrl.split('/')[1]
 		const isLoginPage = currentUrl.includes('login')
+
+		// PRO PARTNER STRICT ACCESS GUARD:
+		// Only redirect if user is a non-admin pro-partner-only user
+		const isPartnerOnly = isProPartnerOnlyUser()
+		if (isPartnerOnly && !isLoginPage) {
+			localStorage.removeItem('searchedURL')
+			const isPartnerRoute =
+				currentUrl.startsWith('/rag/pro-partner') || currentUrl.startsWith('/pro-partner')
+			if (!isPartnerRoute) {
+				window.location.replace('/rag/pro-partner/coupons')
+				return
+			}
+		}
 
 		const isEmployee = localStorage.getItem('is_employee_login') === 'true'
 		let hasMasterAccess = false
@@ -219,6 +250,9 @@ const AppRoutes: FC = () => {
 			if (currentUrl == '/master/login' && adminType) {
 				return (window.location.href = '/rag/dashboard')
 			}
+			if (currentUrl == '/rag/login' && (isPartnerOnly || admin === 'RAG_Pro_Partner')) {
+				return (window.location.href = '/rag/pro-partner/coupons')
+			}
 			if (currentUrl == '/rag/login' && adminType && admin == 'Gomzi_Nutrition_Login') {
 				return (window.location.href = '/rag/dashboard')
 			}
@@ -248,7 +282,9 @@ const AppRoutes: FC = () => {
 								element={
 									<Navigate
 										to={
-											admin === 'Employee'
+											isProPartnerOnlyUser() || admin === 'RAG_Pro_Partner'
+												? '/rag/pro-partner/coupons'
+												: admin === 'Employee'
 												? '/employee/dashboard'
 												/* : admin === 'Master'
 												? '/master/dashboard' */
@@ -282,7 +318,16 @@ const AppRoutes: FC = () => {
 							/> */}
 							<Route
 								path='/rag/login'
-								element={<Navigate to='/rag/dashboard' />}
+								element={
+									<Navigate
+										to={
+											isProPartnerOnlyUser() || admin === 'RAG_Pro_Partner'
+												? '/rag/pro-partner/coupons'
+												: '/rag/dashboard'
+										}
+										replace
+									/>
+								}
 							/>
 							{/* <Route
 								path='/gls-investor/login'

@@ -234,9 +234,15 @@ const NutritionCreateInvoice: React.FC = () => {
 			const q = parseFloat(newPlans[index].quantity) || 1
 			const amt = parseFloat(newPlans[index].amount) || 0
 			const gst = parseFloat(newPlans[index].gst) || 0
+			const discount = parseFloat(newPlans[index].discount) || 0
+			let discountForCalc = discount
+			if (discount > 0 && newPlans[index].isDiscountPercentage) {
+				discountForCalc = (q * amt * discount) / 100
+			}
 			let tot = q * amt
 			if (gst) tot += (tot * gst) / 100
-			newPlans[index].totalPayment = tot.toFixed(0)
+			if (discountForCalc) tot -= discountForCalc
+			newPlans[index].totalPayment = Math.max(0, tot).toFixed(0)
 		}
 		setPlans(newPlans)
 	}
@@ -420,47 +426,51 @@ const NutritionCreateInvoice: React.FC = () => {
 			</div>
 
 			{/* =========================================================================
-			    SPLIT VIEW: STEPPER & FORM ON LEFT, LIVE INVOICE TEMPLATE PREVIEW ON RIGHT
+			    STEPPER BAR (FULL WIDTH, CLEAN HORIZONTAL NAVIGATION)
 			    ========================================================================= */}
-			<div className='row g-4 align-items-start'>
-				{/* LEFT COLUMN: Stepper + Form */}
-				<div className='col-12 col-xl-6'>
-					{/* Stepper */}
-					<div className='gz-inv-stepper mb-4' style={{ maxWidth: '100%', margin: '0 0 24px 0' }}>
-						<div
-							className={`gz-inv-step-item ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}
-							onClick={() => setCurrentStep(1)}>
-							<div className='gz-inv-step-circle'>
-								{currentStep > 1 ? <FontAwesomeIcon icon={faCheck} /> : 1}
-							</div>
-							<span className='gz-inv-step-label'>Client & Details</span>
+			<div className='gz-inv-stepper-card mb-4'>
+				<div className='gz-inv-stepper'>
+					<div
+						className={`gz-inv-step-item ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}
+						onClick={() => setCurrentStep(1)}>
+						<div className='gz-inv-step-circle'>
+							{currentStep > 1 ? <FontAwesomeIcon icon={faCheck} /> : 1}
 						</div>
-
-						<div className='gz-inv-step-line' />
-
-						<div
-							className={`gz-inv-step-item ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}
-							onClick={() => {
-								if (formData.name.trim() && formData.sales_person) setCurrentStep(2)
-							}}>
-							<div className='gz-inv-step-circle'>
-								{currentStep > 2 ? <FontAwesomeIcon icon={faCheck} /> : 2}
-							</div>
-							<span className='gz-inv-step-label'>Items & Pricing</span>
-						</div>
-
-						<div className='gz-inv-step-line' />
-
-						<div
-							className={`gz-inv-step-item ${currentStep === 3 ? 'active' : ''}`}
-							onClick={() => {
-								if (formData.name.trim() && formData.sales_person) setCurrentStep(3)
-							}}>
-							<div className='gz-inv-step-circle'>3</div>
-							<span className='gz-inv-step-label'>Review & Create</span>
-						</div>
+						<span className='gz-inv-step-label'>Client & Details</span>
 					</div>
 
+					<div className='gz-inv-step-line' />
+
+					<div
+						className={`gz-inv-step-item ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}
+						onClick={() => {
+							if (formData.name.trim() && formData.sales_person) setCurrentStep(2)
+						}}>
+						<div className='gz-inv-step-circle'>
+							{currentStep > 2 ? <FontAwesomeIcon icon={faCheck} /> : 2}
+						</div>
+						<span className='gz-inv-step-label'>Items & Pricing</span>
+					</div>
+
+					<div className='gz-inv-step-line' />
+
+					<div
+						className={`gz-inv-step-item ${currentStep === 3 ? 'active' : ''}`}
+						onClick={() => {
+							if (formData.name.trim() && formData.sales_person) setCurrentStep(3)
+						}}>
+						<div className='gz-inv-step-circle'>3</div>
+						<span className='gz-inv-step-label'>Review & Create</span>
+					</div>
+				</div>
+			</div>
+
+			{/* =========================================================================
+			    SPLIT VIEW: FORM ON LEFT, LIVE INVOICE TEMPLATE PREVIEW ON RIGHT
+			    ========================================================================= */}
+			<div className='row g-4 align-items-start'>
+				{/* LEFT COLUMN: Form Steps */}
+				<div className='col-12 col-xl-6'>
 					{/* STEP 1: CLIENT & DETAILS */}
 					{currentStep === 1 && (
 						<div>
@@ -530,7 +540,7 @@ const NutritionCreateInvoice: React.FC = () => {
 										/>
 									</div>
 
-									<div className='col-6'>
+									<div className='col-12 col-md-4'>
 										<label className='gz-inv-label'>City</label>
 										<input
 											type='text'
@@ -542,7 +552,19 @@ const NutritionCreateInvoice: React.FC = () => {
 										/>
 									</div>
 
-									<div className='col-6'>
+									<div className='col-12 col-md-4'>
+										<label className='gz-inv-label'>State</label>
+										<input
+											type='text'
+											name='billing_state'
+											className='gz-inv-input'
+											placeholder='State'
+											value={formData.billing_state}
+											onChange={handleInputChange}
+										/>
+									</div>
+
+									<div className='col-12 col-md-4'>
 										<label className='gz-inv-label'>Pin Code</label>
 										<input
 											type='text'
@@ -804,7 +826,7 @@ const NutritionCreateInvoice: React.FC = () => {
 												</div>
 
 												{/* Qty */}
-												<div className='col-4 col-md-3'>
+												<div className='col-4 col-md-2'>
 													<label className='gz-inv-label'>Qty</label>
 													<input
 														type='number'
@@ -815,8 +837,32 @@ const NutritionCreateInvoice: React.FC = () => {
 													/>
 												</div>
 
+												{/* Discount (% or ₹) */}
+												<div className='col-8 col-md-3'>
+													<label className='gz-inv-label'>Discount</label>
+													<div className='gz-inv-weight-group'>
+														<input
+															type='number'
+															min='0'
+															step='any'
+															className='gz-inv-input gz-inv-weight-input'
+															placeholder='0'
+															value={plan.discount}
+															onChange={(e) => handlePlanChange(idx, 'discount', e.target.value)}
+														/>
+														<select
+															className='gz-inv-select gz-inv-weight-select'
+															value={plan.isDiscountPercentage ? '%' : '₹'}
+															onChange={(e) => handlePlanChange(idx, 'isDiscountPercentage', e.target.value === '%')}
+														>
+															<option value='%'>%</option>
+															<option value='₹'>₹ (Rs)</option>
+														</select>
+													</div>
+												</div>
+
 												{/* GST */}
-												<div className='col-4 col-md-3'>
+												<div className='col-4 col-md-2'>
 													<label className='gz-inv-label'>GST%</label>
 													<input
 														type='number'
@@ -828,7 +874,7 @@ const NutritionCreateInvoice: React.FC = () => {
 												</div>
 
 												{/* Row Total */}
-												<div className='col-4 col-md-4 text-end'>
+												<div className='col-5 col-md-3 text-end'>
 													<label className='gz-inv-label'>Total</label>
 													<div className='pt-2' style={{ fontWeight: 700, color: '#172B4D', fontSize: '15px' }}>
 														₹{plan.totalPayment || 0}
@@ -836,7 +882,7 @@ const NutritionCreateInvoice: React.FC = () => {
 												</div>
 
 												{/* Delete button */}
-												<div className='col-12 col-md-2 text-end'>
+												<div className='col-3 col-md-2 text-end'>
 													<button
 														type='button'
 														className='btn btn-sm btn-outline-danger'
@@ -923,6 +969,8 @@ const NutritionCreateInvoice: React.FC = () => {
 											<tr>
 												<th>Item</th>
 												<th>Qty</th>
+												<th>Rate</th>
+												<th>Discount</th>
 												<th style={{ textAlign: 'right' }}>Total</th>
 											</tr>
 										</thead>
@@ -931,6 +979,12 @@ const NutritionCreateInvoice: React.FC = () => {
 												<tr key={idx}>
 													<td style={{ fontWeight: 600 }}>{p.items}</td>
 													<td>{p.quantity}</td>
+													<td>₹{p.amount || 0}</td>
+													<td>
+														{Number(p.discount || 0) > 0
+															? `${p.discount}${p.isDiscountPercentage ? '%' : '₹'}`
+															: '-'}
+													</td>
 													<td style={{ textAlign: 'right', fontWeight: 700 }}>₹{p.totalPayment}</td>
 												</tr>
 											))}
@@ -1003,16 +1057,7 @@ const NutritionCreateInvoice: React.FC = () => {
 							</span>
 						</div>
 
-						<div
-							style={{
-								background: '#FFFFFF',
-								borderRadius: '16px',
-								border: '1px solid #E4EAF2',
-								padding: '20px',
-								boxShadow: '0 4px 20px rgba(16, 31, 56, 0.05)',
-								maxHeight: 'calc(100vh - 120px)',
-								overflowY: 'auto',
-							}}>
+						<div className='gz-inv-preview-sheet-container'>
 							<CompanyInvoiceDocument
 								invoiceData={{
 									name: formData.name,

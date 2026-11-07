@@ -1,54 +1,57 @@
 /* eslint-disable react/jsx-no-target-blank */
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { AdajanBranchAsideMenuItems } from './components/AdajanBranchAsideMenuItems'
-import { AutomationAsideMenuItems } from './components/AutomationAsideMenuItems'
+import { isProPartnerOnlyUser, isUserAdmin } from '../../../../app/modules/auth'
 import { EmployeeAsideMenuItems } from './components/EmployeeAsideMenuItems'
-import { FGIITAsideMenuItems } from './components/FGIITAsideMenuItems'
-import { FgiitLoginAsideMenuItems } from './components/FgiitLoginAsideMenuItems'
-import { FGIITTeleSalesAsideMenuItems } from './components/FGIITTeleSalesAsideMenuItems'
-import { FWGAsideMenuItems } from './components/FWGAsideMenuItems'
-import { FwgloginAsidemenuItems } from './components/FwgloginAsidemenuItems'
-import { FwgPortalAsideMenuItems } from './components/FwgPortalAsideMenuItems'
-import { FWGTeleSalesAsideMenuItems } from './components/FWGTeleSalesAsideMenuItems'
-import { GCSAsideMenuItems } from './components/GCSAsideMenuItems'
-import { GlsInvestorAsideMenuItems } from './components/GlsInvestorAsideMenuItems'
-import { GomziMedicalAsideMenuItems } from './components/GomziMedicalAsideMenuItems'
-import { GomziMedicalDoctorAsideMenuItems } from './components/GomziMedicalDoctorAsideMenuItems'
-import { GomziMedicalPharmacyAsideMenuItems } from './components/GomziMedicalPharmacyAsideMenuItems'
 import { GomziNutritionAsideMenuItems } from './components/GomziNutritionAsideMenuItems'
-import { GomziNutritionLoginAsideMenuItems } from './components/GomziNutritionLoginAsideMenuItems'
-import { GomziNutritionTeleSalesAsideMenuItems } from './components/GomziNutritionTeleSalesAsideMenuItems'
 import { HRAsideMenuItems } from './components/HRAsideMenuItems'
-import { InvestorAsideMenuItems } from './components/InvestorAsideMenuItems'
-import { MasterAsideMenuItems } from './components/MasterAsideMenuItems'
-import { StoreNutritionAsideMenuItems } from './components/StoreNutritionAsideMenuItems'
-import { TrainerAsideMenuItems } from './components/TrainerAsideMenuItems'
-import { VesuFWGAsideMenuItems } from './components/VesuFWGAsideMenuItems'
-import { MatricesAsideMenuItems } from './components/MatricesAsideMenuItems'
-import { AccountAsideMenuItems } from './components/AccountAsideMenuItems'
-import { HelixAsideMenuItems } from './components/HelixAsideMenuItems'
+import { RAGProPartnerAsideMenuItems } from './components/RAGProPartnerAsideMenuItems'
 
 export function AsideMenuMain() {
+	const location = useLocation()
+	const isPartner = isProPartnerOnlyUser()
+
 	const [portalAdminType, setPortalAdminType] = useState('')
 	const [adminType, setAdminType] = useState(() => {
-		if (window.location.pathname.startsWith('/rag')) {
+		if (isPartner) {
+			localStorage.setItem('admin', 'RAG_Pro_Partner')
+			localStorage.setItem('admin_type', 'RAG_Pro_Partner')
+			localStorage.removeItem('is_employee_login')
+			return 'RAG_Pro_Partner'
+		}
+		const pathSegments = window.location.pathname.split('/')
+		const firstSegment = (pathSegments[1] || '').toLowerCase()
+		if (firstSegment === 'rag') {
 			localStorage.setItem('admin', 'Gomzi_Nutrition')
 			localStorage.setItem('admin_type', 'Gomzi_Nutrition')
 			localStorage.removeItem('is_employee_login')
 			return 'Gomzi_Nutrition'
 		}
-		if (window.location.pathname.startsWith('/hr')) {
+		if (firstSegment === 'hr') {
 			localStorage.setItem('admin', 'HR')
 			return 'HR'
 		}
+		if (firstSegment === 'employee') {
+			localStorage.setItem('admin', 'Employee')
+			return 'Employee'
+		}
 		return localStorage.getItem('admin') || ''
 	})
-	const location = useLocation()
 
 	useEffect(() => {
+		// Strict Partner Lockdown: NEVER allow admin mutation or panel hopping
+		if (isPartner) {
+			setAdminType('RAG_Pro_Partner')
+			if (localStorage.getItem('admin') !== 'RAG_Pro_Partner') {
+				localStorage.setItem('admin', 'RAG_Pro_Partner')
+				localStorage.setItem('admin_type', 'RAG_Pro_Partner')
+			}
+			localStorage.removeItem('is_employee_login')
+			return
+		}
+
 		const pathSegments = location.pathname.split('/')
-		const firstSegment = pathSegments[1]
+		const firstSegment = (pathSegments[1] || '').toLowerCase()
 
 		if (firstSegment === 'rag') {
 			setAdminType('Gomzi_Nutrition')
@@ -78,7 +81,12 @@ export function AsideMenuMain() {
 		if (storedAdmin) {
 			setAdminType(storedAdmin)
 		}
-	}, [location.pathname])
+	}, [location.pathname, isPartner])
+
+	// Airtight UI Isolation: Pro Partner sees strictly RAGProPartnerAsideMenuItems
+	if (isPartner || (!isUserAdmin() && adminType === 'RAG_Pro_Partner')) {
+		return <RAGProPartnerAsideMenuItems />
+	}
 
 	return (
 		<>

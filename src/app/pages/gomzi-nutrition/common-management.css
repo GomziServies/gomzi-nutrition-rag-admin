@@ -654,3 +654,103 @@
 	padding-top: 16px;
 	margin-top: 12px;
 }
+
+/* ==========================================================================
+   COMMON MANAGEMENT MODULE RESPONSIVE ENHANCEMENTS
+   ========================================================================== */
+@media (max-width: 991.98px) {
+	.gz-mgmt-toolbar {
+		flex-direction: column !important;
+		align-items: stretch !important;
+		gap: 12px !important;
+	}
+
+	.gz-mgmt-toolbar-left {
+		width: 100% !important;
+		flex-direction: column !important;
+		align-items: stretch !important;
+		gap: 8px !important;
+	}
+
+	.gz-mgmt-toolbar-right {
+		width: 100% !important;
+		justify-content: flex-start !important;
+		flex-wrap: wrap !important;
+		gap: 8px !important;
+	}
+
+	.gz-mgmt-toolbar .gz-search-filter-box,
+	.gz-mgmt-toolbar .gz-top-search-bar {
+		width: 100% !important;
+		min-width: 0 !important;
+		max-width: 100% !important;
+		flex: 1 1 100% !important;
+	}
+}
+
+@media (max-width: 768px) {
+	.gz-mgmt-container {
+		padding: 0 0 20px 0 !important;
+	}
+
+	.gz-mgmt-header {
+		flex-direction: column !important;
+		align-items: stretch !important;
+		gap: 12px !important;
+		margin-bottom: 16px !important;
+	}
+
+	.gz-mgmt-title {
+		font-size: 22px !important;
+	}
+
+	.gz-mgmt-btn-primary {
+		width: 100% !important;
+		justify-content: center !important;
+	}
+
+	.gz-mgmt-card {
+		border-radius: 12px !important;
+		margin-bottom: 16px !important;
+	}
+
+	.gz-mgmt-form-card {
+		padding: 16px 14px !important;
+		border-radius: 12px !important;
+		margin-bottom: 16px !important;
+	}
+
+	.gz-mgmt-form-actions {
+		flex-direction: column-reverse !important;
+		align-items: stretch !important;
+		gap: 8px !important;
+	}
+
+	.gz-mgmt-form-actions button,
+	.gz-mgmt-form-actions a {
+		width: 100% !important;
+		justify-content: center !important;
+		text-align: center !important;
+	}
+
+	.gz-mgmt-table-wrap {
+		overflow-x: auto !important;
+		-webkit-overflow-scrolling: touch !important;
+		width: 100% !important;
+	}
+
+	.gz-mgmt-card table.table {
+		min-width: 660px !important;
+	}
+}
+
+@media (max-width: 600px) {
+	.gz-mgmt-stats-grid {
+		grid-template-columns: 1fr !important;
+		gap: 12px !important;
+	}
+
+	.gz-mgmt-stat-card {
+		padding: 16px 14px !important;
+	}
+}

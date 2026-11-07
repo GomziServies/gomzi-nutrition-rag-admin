@@ -52,8 +52,13 @@ import TeamTasksView from '../pages/hr/team-management/TeamTasksView'
 import ContactInquiry from '../pages/gomzi-nutrition/contact-inquiry/contact'
 import ContactInquiryView from '../pages/gomzi-nutrition/contact-inquiry/contact-inquiry-view'
 import ProPartnerInquiry from '../pages/gomzi-nutrition/contact-inquiry/pro-partner'
+import ProPartnerCoupons from '../pages/gomzi-nutrition/pro-partner/pro-partner-coupons'
+import { isProPartnerOnlyUser } from '../modules/auth'
 
 const HRPrivateRoutes = () => {
+	if (isProPartnerOnlyUser()) {
+		return <Navigate to='/rag/pro-partner/coupons' replace />
+	}
 	return (
 		<Routes>
 			<Route element={<MasterLayout />}>
@@ -182,7 +187,27 @@ const HRPrivateRoutes = () => {
 				/>
 				<Route
 					path='pro-partner'
+					element={<Navigate to='/hr/pro-partner/coupons' replace />}
+				/>
+				<Route
+					path='pro-partner/dashboard'
+					element={<Navigate to='/hr/pro-partner/coupons' replace />}
+				/>
+				<Route
+					path='pro-partner/applications'
 					element={<ProPartnerInquiry />}
+				/>
+				<Route
+					path='pro-partner/coupons'
+					element={<ProPartnerCoupons defaultTab='coupons' />}
+				/>
+				<Route
+					path='pro-partner/commissions'
+					element={<ProPartnerCoupons defaultTab='commissions' />}
+				/>
+				<Route
+					path='pro-partner/orders'
+					element={<ProPartnerCoupons defaultTab='orders' />}
 				/>
 
 				{/* Page Not Found */}

@@ -12,6 +12,7 @@ import {
 	FileUploadToFGGroup,
 } from '../../../Functions/FGGroup'
 import { FG_GROUP_FILE_BASE_URL } from '../../../constants/base_URL'
+import GoogleDocsEditor from './GoogleDocsEditor'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faPlus,
@@ -34,6 +35,7 @@ import {
 	faSearch,
 	faTable,
 	faPaste,
+	faFileAlt,
 } from '@fortawesome/free-solid-svg-icons'
 
 const PRESET_IMAGES = [
@@ -55,6 +57,146 @@ const getPreviewUrl = (url?: string) => {
 		return url
 	}
 	return `${FG_GROUP_FILE_BASE_URL}/${url}`
+}
+
+const escapeHtml = (value: any): string =>
+	String(value ?? '')
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+
+const toStringList = (value: any): string[] => {
+	if (Array.isArray(value)) return value.map((v) => String(v ?? '').trim()).filter(Boolean)
+	if (typeof value === 'string') {
+		return value
+			.split(/\n\s*\n/)
+			.map((v) => v.trim())
+			.filter(Boolean)
+	}
+	return []
+}
+
+const tableToHtml = (table: any): string => {
+	if (!table || (!Array.isArray(table.columns) && !Array.isArray(table.rows))) return ''
+	const columns: string[] = Array.isArray(table.columns) ? table.columns : []
+	const rows: any[][] = Array.isArray(table.rows) ? table.rows : []
+	let html = ''
+	if (table.heading) html += `<h3>${escapeHtml(table.heading)}</h3>`
+	html += '<table><thead><tr>'
+	columns.forEach((c) => {
+		html += `<th>${escapeHtml(c)}</th>`
+	})
+	html += '</tr></thead><tbody>'
+	rows.forEach((row) => {
+		html += '<tr>'
+		;(Array.isArray(row) ? row : []).forEach((cell) => {
+			html += `<td>${escapeHtml(cell)}</td>`
+		})
+		html += '</tr>'
+	})
+	html += '</tbody></table>'
+	return html
+}
+
+/**
+ * Builds editor HTML from legacy structured blog content (intro / sections / tables / faqs / bottomLine)
+ * so older articles that never stored `content.html` can still be opened in the rich-text editor.
+ */
+const convertLegacyToHtml = (content: any): string => {
+	if (!content || typeof content !== 'object') return ''
+	let html = ''
+
+	toStringList(content.intro).forEach((p) => {
+		html += `<p>${escapeHtml(p)}</p>`
+	})
+
+	if (Array.isArray(content.sections)) {
+		content.sections.forEach((section: any) => {
+			if (!section) return
+			if (section.heading) html += `<h2>${escapeHtml(section.heading)}</h2>`
+			toStringList(section.paragraphs).forEach((p) => {
+				html += `<p>${escapeHtml(p)}</p>`
+			})
+			if (Array.isArray(section.bullets) && section.bullets.length > 0) {
+				html += `<ul>${section.bullets.map((b: any) => `<li>${escapeHtml(b)}</li>`).join('')}</ul>`
+			}
+			if (section.closingParagraph) html += `<p>${escapeHtml(section.closingParagraph)}</p>`
+			html += tableToHtml(section.table)
+		})
+	}
+
+	const tables: any[] = Array.isArray(content.tables) ? content.tables : []
+	tables.forEach((t) => {
+		html += tableToHtml(t)
+	})
+
+	if (Array.isArray(content.faqs) && content.faqs.length > 0) {
+		html += '<h2>Frequently Asked Questions</h2>'
+		content.faqs.forEach((f: any) => {
+			if (!f) return
+			html += `<h3>${escapeHtml(f.question)}</h3><p>${escapeHtml(f.answer)}</p>`
+		})
+	}
+
+	if (content.bottomLine) {
+		html += `<h2>${escapeHtml(content.bottomLine.heading || 'The bottom line')}</h2>`
+		toStringList(content.bottomLine.paragraphs).forEach((p) => {
+			html += `<p>${escapeHtml(p)}</p>`
+		})
+	}
+
+	return html
+}
+
+/**
+ * Reads intro paragraphs and heading-based sections back out of editor HTML.
+ * Returns empty lists when the HTML has no usable structure, so callers fall back to the form fields.
+ */
+const extractStructuredFromHtml = (
+	html: string
+): { intro: string[]; sections: any[] } => {
+	const result: { intro: string[]; sections: any[] } = { intro: [], sections: [] }
+	if (!html || typeof DOMParser === 'undefined') return result
+
+	const doc = new DOMParser().parseFromString(`<div id="root">${html}</div>`, 'text/html')
+	const root = doc.getElementById('root')
+	if (!root) return result
+
+	const text = (el: Element) => (el.textContent || '').replace(/\s+/g, ' ').trim()
+	let current: any = null
+
+	Array.from(root.children).forEach((node) => {
+		const tag = node.tagName.toLowerCase()
+		if (tag === 'h1' || tag === 'h2' || tag === 'h3') {
+			current = { heading: text(node), paragraphs: [], bullets: [], closingParagraph: '' }
+			result.sections.push(current)
+			return
+		}
+		if (tag === 'p') {
+			const value = text(node)
+			if (!value) return
+			if (current) current.paragraphs.push(value)
+			else result.intro.push(value)
+			return
+		}
+		if ((tag === 'ul' || tag === 'ol') && current) {
+			Array.from(node.querySelectorAll('li'))
+				.map((li) => text(li))
+				.filter(Boolean)
+				.forEach((b) => current.bullets.push(b))
+			return
+		}
+		if (tag === 'table' && current) {
+			const columns = Array.from(node.querySelectorAll('thead th, tr:first-child th')).map((th) => text(th))
+			const rows = Array.from(node.querySelectorAll('tbody tr'))
+				.map((tr) => Array.from(tr.querySelectorAll('td')).map((td) => text(td)))
+				.filter((r) => r.length > 0)
+			current.table = { heading: '', columns, rows }
+		}
+	})
+
+	return result
 }
 
 interface TableFormState {
@@ -117,6 +259,7 @@ export default function BlogManage() {
 		featured: false,
 	})
 	const [tagsString, setTagsString] = useState('nutrition, protein')
+	const [editorHtml, setEditorHtml] = useState('')
 	const [uploadingImage, setUploadingImage] = useState(false)
 	const [uploadingSectionImageIdx, setUploadingSectionImageIdx] = useState<number | null>(null)
 
@@ -165,6 +308,7 @@ export default function BlogManage() {
 			featured: false,
 		})
 		setTagsString('nutrition, protein')
+		setEditorHtml('')
 		setIntroText('')
 		setSections([
 			{
@@ -202,6 +346,7 @@ export default function BlogManage() {
 			featured: Boolean(item.featured),
 		})
 		setTagsString(Array.isArray(item.tags) ? item.tags.join(', ') : 'nutrition')
+		setEditorHtml(item.content?.html || convertLegacyToHtml(item.content))
 
 		// Intro
 		const rawIntro = item.content?.intro
@@ -893,10 +1038,12 @@ export default function BlogManage() {
 				  }
 				: undefined
 
+			const fallbackStructured = extractStructuredFromHtml(editorHtml)
 			const contentPayload: any = {
 				...(formData.content || {}),
-				intro: parsedIntro,
-				sections: parsedSections,
+				html: editorHtml,
+				intro: fallbackStructured.intro.length > 0 ? fallbackStructured.intro : parsedIntro,
+				sections: fallbackStructured.sections.length > 0 ? fallbackStructured.sections : parsedSections,
 				faqs: parsedFaqs,
 				tables: parsedTables,
 			}
@@ -1300,7 +1447,7 @@ export default function BlogManage() {
 					tabIndex={-1}
 					style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(3px)', zIndex: 1050 }}
 				>
-					<div className='modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable'>
+					<div className='modal-dialog modal-dialog-centered modal-dialog-scrollable' style={{ maxWidth: '1280px', width: '96%' }}>
 						<div
 							className='modal-content border-0 shadow-lg'
 							style={{ borderRadius: '16px', overflow: 'hidden' }}
@@ -1382,11 +1529,8 @@ export default function BlogManage() {
 												}`}
 												onClick={() => setActiveTab('content')}
 											>
-												<FontAwesomeIcon icon={faLayerGroup} className='me-2' />
-												3. Body & Sections{' '}
-												<span className='badge badge-light-primary ms-1 fs-9'>
-													{sections.length}
-												</span>
+												<FontAwesomeIcon icon={faFileAlt} className='me-2' />
+												3. Document Editor (Google Docs)
 											</button>
 										</li>
 										<li className='nav-item'>
@@ -1408,7 +1552,7 @@ export default function BlogManage() {
 								</div>
 
 								{/* Modal Body */}
-								<div className='modal-body p-6 p-md-8' style={{ maxHeight: '68vh' }}>
+								<div className='modal-body p-6 p-md-8' style={{ maxHeight: '78vh' }}>
 									{/* TAB 1: OVERVIEW & METADATA */}
 									{activeTab === 'details' && (
 										<div className='row g-4'>
@@ -1727,518 +1871,26 @@ export default function BlogManage() {
 										</div>
 									)}
 
-									{/* TAB 3: BODY CONTENT & SECTIONS (WITH EMBEDDED TABLE BUTTON & BUILDER) */}
+									{/* TAB 3: GOOGLE DOCS STYLE DOCUMENT CANVAS */}
 									{activeTab === 'content' && (
-										<div>
-											{/* Introduction */}
-											<div className='card border shadow-none p-5 mb-5' style={{ backgroundColor: '#FAFBFD' }}>
-												<h6 className='fw-bold text-gray-900 mb-1'>
-													<FontAwesomeIcon icon={faHeading} className='me-2 text-primary' />
-													Introduction / Lead Paragraphs
-												</h6>
-												<p className='fs-8 text-muted mb-3'>
-													The opening paragraphs of the article that hook the reader. Separate multiple paragraphs by leaving an empty line.
-												</p>
-												<textarea
-													className='form-control form-control-solid'
-													rows={4}
-													placeholder='Enter the opening clinical breakdown or context here...'
-													value={introText}
-													onChange={(e) => setIntroText(e.target.value)}
-												/>
-											</div>
-
-											{/* Dynamic Sections Header */}
-											<div className='d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2'>
+										<div className='p-0'>
+											<div className='d-flex align-items-center justify-content-between mb-3 px-1'>
 												<div>
 													<h6 className='fw-bold text-gray-900 mb-0'>
-														<FontAwesomeIcon icon={faLayerGroup} className='me-2 text-primary' />
-														Article Content Sections ({sections.length})
+														<FontAwesomeIcon icon={faFileAlt} className='me-2 text-primary' />
+														Google Docs Article Canvas
 													</h6>
 													<p className='fs-8 text-muted mb-0'>
-														Structured H2 sub-sections with paragraphs, bullets, and tables.
+														Type directly, insert images & tables anywhere, format headings, or paste directly from Google Docs / Microsoft Word.
 													</p>
 												</div>
-												<div className='d-flex gap-2 flex-wrap'>
-													<button
-														type='button'
-														className='btn btn-sm btn-light-primary text-primary fw-semibold'
-														onClick={handleSmartAddTable}
-														title='Attach a data table to this section or add a new table section'
-													>
-														<FontAwesomeIcon icon={faTable} className='me-1' /> Add Table
-													</button>
-													<button
-														type='button'
-														className='btn btn-sm btn-light-success text-success fw-semibold'
-														onClick={handleSmartAddImage}
-														title='Attach an image or banner to a section'
-													>
-														<FontAwesomeIcon icon={faImage} className='me-1' /> Add Image
-													</button>
-													<button
-														type='button'
-														className='btn btn-sm btn-primary'
-														onClick={handleAddSection}
-													>
-														<FontAwesomeIcon icon={faPlus} className='me-1' /> Add Section
-													</button>
-												</div>
 											</div>
-
-											{sections.length === 0 ? (
-												<div className='text-center p-8 border rounded-3 text-muted bg-light'>
-													<p className='mb-2'>No sections added yet.</p>
-													<button
-														type='button'
-														className='btn btn-sm btn-primary'
-														onClick={handleAddSection}
-													>
-														<FontAwesomeIcon icon={faPlus} className='me-1' /> Add First Section
-													</button>
-												</div>
-											) : (
-												<div className='d-flex flex-column gap-4'>
-													{sections.map((section, sIdx) => (
-														<div
-															key={sIdx}
-															className='card border shadow-sm p-5'
-															style={{ borderRadius: '12px', backgroundColor: '#FFFFFF' }}
-														>
-															{/* Section Card Top Header */}
-															<div className='d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom flex-wrap gap-2'>
-																<span className='fw-bold text-gray-800 d-flex align-items-center gap-2'>
-																	<span className='badge badge-circle badge-primary fs-8'>
-																		{sIdx + 1}
-																	</span>
-																	Section #{sIdx + 1}: {section.heading || 'Untitled Section'}
-																</span>
-																<div className='d-flex align-items-center gap-2'>
-									{!section.table ? (
-										<button
-											type='button'
-											className='btn btn-sm btn-light-info py-1 px-3 fs-8'
-											onClick={() => handleAddTableToSection(sIdx)}
-											title='Add a data table into this section'
-										>
-											<FontAwesomeIcon icon={faTable} className='me-1 text-primary' /> Add Table
-										</button>
-									) : (
-										<span className='badge badge-light-success fs-9 py-1 px-2 d-flex align-items-center gap-1'>
-											<FontAwesomeIcon icon={faCheck} /> Table Attached ({section.table.rows.length} rows)
-										</span>
-									)}
-									{!section.image ? (
-										<button
-											type='button'
-											className='btn btn-sm btn-light-success py-1 px-3 fs-8'
-											onClick={() => handleAddImageToSection(sIdx)}
-											title='Attach an image or banner to this section'
-										>
-											<FontAwesomeIcon icon={faImage} className='me-1 text-success' /> Add Image
-										</button>
-									) : (
-										<span className='badge badge-light-info fs-9 py-1 px-2 d-flex align-items-center gap-1'>
-											<FontAwesomeIcon icon={faCheck} /> Image Attached
-										</span>
-									)}
-																		<button
-										type='button'
-										className='btn btn-sm btn-light-danger py-1 px-3 fs-8'
-										onClick={() => handleRemoveSection(sIdx)}
-																		title='Delete this section'
-																	>
-																		<FontAwesomeIcon icon={faTrash} className='me-1' /> Remove
-																	</button>
-																</div>
-															</div>
-
-															<div className='row g-3'>
-																<div className='col-12'>
-																	<label className='form-label fw-bold fs-8 text-gray-700'>
-																		Section Heading (H2)
-																	</label>
-																	<input
-																		type='text'
-																		className='form-control form-control-solid form-control-sm'
-																		placeholder='e.g., Best Plant Protein Sources'
-																		value={section.heading}
-																		onChange={(e) =>
-																			handleSectionChange(sIdx, 'heading', e.target.value)
-																		}
-																	/>
-																</div>
-
-																<div className='col-12'>
-																	<label className='form-label fw-bold fs-8 text-gray-700'>
-																		Section Paragraphs (Leave empty line between paragraphs)
-																	</label>
-																	<textarea
-																		className='form-control form-control-solid form-control-sm'
-																		rows={3}
-																		placeholder='Body text for this section...'
-																		value={section.paragraphsText}
-																		onChange={(e) =>
-																			handleSectionChange(
-																				sIdx,
-																				'paragraphsText',
-																				e.target.value
-																			)
-																		}
-																	/>
-																</div>
-
-																<div className='col-md-7'>
-																	<label className='form-label fw-bold fs-8 text-gray-700'>
-																		Bullet Points (One bullet per line)
-																	</label>
-																	<textarea
-																		className='form-control form-control-solid form-control-sm'
-																		rows={3}
-																		placeholder='Point 1&#10;Point 2&#10;Point 3'
-																		value={section.bulletsText}
-																		onChange={(e) =>
-																			handleSectionChange(sIdx, 'bulletsText', e.target.value)
-																		}
-																	/>
-																</div>
-
-																<div className='col-md-5'>
-																	<label className='form-label fw-bold fs-8 text-gray-700'>
-																		Closing Paragraph / Note (Optional)
-																	</label>
-																	<textarea
-																		className='form-control form-control-solid form-control-sm'
-																		rows={3}
-																		placeholder='Summary takeaway for this section...'
-																		value={section.closingParagraph}
-																		onChange={(e) =>
-																			handleSectionChange(
-																				sIdx,
-																				'closingParagraph',
-																				e.target.value
-																			)
-																		}
-																	/>
-																</div>
-
-																{/* EMBEDDED SECTION IMAGE / BANNER BUILDER */}
-																{section.image && (
-																	<div className='col-12 mt-4 pt-3 border-top'>
-																		<div
-																			className='p-4 border rounded-3'
-																			style={{ backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }}
-																		>
-																			{/* Section Image Bar */}
-																			<div className='d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2'>
-																				<span className='fw-bold text-gray-900 fs-7 d-flex align-items-center gap-2'>
-																					<FontAwesomeIcon icon={faImage} className='text-success' />
-																					Section Image / Infographic Banner
-																				</span>
-																				<button
-																					type='button'
-																					className='btn btn-sm btn-light-danger py-1 px-2 fs-8'
-																					onClick={() => handleRemoveImageFromSection(sIdx)}
-																					title='Remove image from this section'
-																				>
-																					<FontAwesomeIcon icon={faTimes} className='me-1' /> Remove Image
-																				</button>
-																			</div>
-
-																			<div className='row g-3'>
-																				{/* Image Preview & Upload Column */}
-																				<div className='col-md-5'>
-																					<div
-																						className='border rounded-3 p-2 bg-white text-center position-relative d-flex align-items-center justify-content-center'
-																						style={{ minHeight: '140px', overflow: 'hidden' }}
-																					>
-																						{section.image.url ? (
-																							<img
-																								src={getPreviewUrl(section.image.url)}
-																					alt={section.image.alt || 'Section banner'}
-																					className='img-fluid rounded-2'
-																					style={{ maxHeight: '160px', width: '100%', objectFit: 'cover' }}
-																					onError={(e) => {
-																						;(e.currentTarget as HTMLImageElement).src = '/images/blog-1.webp'
-																					}}
-																				/>
-																		) : (
-																			<div className='d-flex flex-column align-items-center justify-content-center py-4 text-muted'>
-																				<FontAwesomeIcon icon={faImage} size='2x' className='text-muted mb-2' />
-																				<span className='fs-8 fw-semibold'>No Image Selected</span>
-																				<span className='fs-9 text-muted'>Recommended: 864 × 450 px (16:9)</span>
-															</div>
-																		)}
-																	</div>
-																	<div className='mt-2 d-flex gap-2'>
-																		<label
-																			className={`btn btn-sm btn-light-primary w-100 mb-0 ${
-																				uploadingSectionImageIdx === sIdx ? 'disabled' : ''
-																			}`}
-																		>
-																			<FontAwesomeIcon
-																				icon={uploadingSectionImageIdx === sIdx ? faClock : faUpload}
-																				className='me-1'
-																			/>
-																			{uploadingSectionImageIdx === sIdx ? 'Uploading...' : 'Upload Image File'}
-																			<input
-																				type='file'
-																				accept='image/*'
-																				className='d-none'
-																				disabled={uploadingSectionImageIdx === sIdx}
-																				onChange={(e) => handleSectionImageUpload(sIdx, e)}
-																			/>
-																		</label>
-																	</div>
-																</div>
-
-																{/* Image Details Column */}
-																<div className='col-md-7'>
-																	<div className='mb-3'>
-																		<label className='form-label fw-bold fs-8 text-gray-700'>
-																			Image URL or File Path *
-																		</label>
-																		<input
-																			type='text'
-																			className='form-control form-control-solid form-control-sm'
-																			placeholder='/images/blog-banner.webp or https://...'
-																			value={section.image.url}
-																			onChange={(e) =>
-																				handleSectionImageFieldChange(sIdx, 'url', e.target.value)
-																			}
-																		/>
-																	</div>
-
-																	<div className='row g-2 mb-2'>
-																		<div className='col-sm-6'>
-																			<label className='form-label fw-bold fs-8 text-gray-700'>
-																				Alt Text (SEO & Accessibility)
-																			</label>
-																			<input
-																				type='text'
-																				className='form-control form-control-solid form-control-sm'
-																				placeholder='e.g., ICMR Recommended Dietary Allowance Chart'
-																				value={section.image.alt || ''}
-																				onChange={(e) =>
-																					handleSectionImageFieldChange(sIdx, 'alt', e.target.value)
-																				}
-																			/>
-																		</div>
-																		<div className='col-sm-6'>
-																			<label className='form-label fw-bold fs-8 text-gray-700'>
-																				Placement in Section
-																			</label>
-																			<select
-																				className='form-select form-select-solid form-select-sm'
-																				value={section.image.placement || 'below_paragraphs'}
-																				onChange={(e) =>
-																					handleSectionImageFieldChange(
-																						sIdx,
-																						'placement',
-																						e.target.value as any
-																					)
-																				}
-																			>
-																				<option value='below_heading'>Top (Below Section Heading)</option>
-																<option value='below_paragraphs'>Middle (After Paragraphs)</option>
-																<option value='below_bullets'>Bottom (After Bullets & Table)</option>
-															</select>
-														</div>
-													</div>
-
-													<div>
-														<label className='form-label fw-bold fs-8 text-gray-700'>
-															Caption / Subtitle (Optional)
-														</label>
-														<input
-															type='text'
-															className='form-control form-control-solid form-control-sm'
-															placeholder='e.g., Source: ICMR-NIN 2024 Dietary Guidelines for Indians'
-															value={section.image.caption || ''}
-															onChange={(e) =>
-																handleSectionImageFieldChange(sIdx, 'caption', e.target.value)
-															}
-														/>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								)}
-
-																{/* EMBEDDED SECTION DATA TABLE BUILDER */}
-																{section.table && (
-																	<div className='col-12 mt-4 pt-3 border-top'>
-																		<div
-																			className='p-4 border rounded-3'
-																			style={{ backgroundColor: '#F8FAFC' }}
-																		>
-																			{/* Section Table Bar */}
-																			<div className='d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2'>
-																				<span className='fw-bold text-gray-900 fs-7 d-flex align-items-center gap-2'>
-																					<FontAwesomeIcon icon={faTable} className='text-primary' />
-																					Section Data Table: {section.table.heading || 'Untitled Table'}
-																				</span>
-																				<button
-																					type='button'
-																					className='btn btn-sm btn-light-danger py-1 px-2 fs-8'
-																					onClick={() => handleRemoveTableFromSection(sIdx)}
-																					title='Remove table from this section'
-																				>
-																					<FontAwesomeIcon icon={faTimes} className='me-1' /> Remove Table
-																				</button>
-																			</div>
-
-																			{/* Table Title & Columns */}
-																			<div className='row g-3 mb-3'>
-																				<div className='col-md-6'>
-																					<label className='form-label fw-bold fs-8 text-gray-700'>
-																						Table Heading / Title *
-																					</label>
-																					<input
-																						type='text'
-																						className='form-control form-control-solid form-control-sm'
-																						placeholder='e.g., Food Sources & Protein Breakdown'
-																						value={section.table.heading}
-																						onChange={(e) =>
-																							handleSectionTableHeadingChange(sIdx, e.target.value)
-																						}
-																					/>
-																				</div>
-																				<div className='col-md-6'>
-																					<label className='form-label fw-bold fs-8 text-gray-700'>
-																						Column Headers (Comma-separated) *
-																					</label>
-																					<input
-																						type='text'
-																						className='form-control form-control-solid form-control-sm'
-																						placeholder='Food, Protein per 100g, Easy way to use it'
-																						value={section.table.columnsText}
-																						onChange={(e) =>
-																							handleSectionTableColumnsChange(sIdx, e.target.value)
-																						}
-																					/>
-																				</div>
-																			</div>
-
-																			{/* Quick Paste from Excel / Google Sheets */}
-																			<div className='p-3 mb-3 border rounded-3 bg-white'>
-																				<div className='d-flex align-items-center justify-content-between mb-1'>
-																					<span className='fw-bold fs-8 text-gray-800 d-flex align-items-center gap-1'>
-																						<FontAwesomeIcon icon={faPaste} className='text-primary me-1' />
-																						Quick Import from Excel, Google Sheets, or TSV / CSV
-																					</span>
-																				</div>
-																				<p className='fs-9 text-muted mb-2'>
-																					Paste copied spreadsheet cells here. First line will become column headers.
-																				</p>
-																				<div className='d-flex gap-2 flex-column flex-sm-row'>
-																					<textarea
-																						className='form-control form-control-solid form-control-sm'
-																						rows={2}
-																						placeholder='Paste spreadsheet rows here...'
-																						value={section.table.quickPasteText || ''}
-																						onChange={(e) => {
-																							const val = e.target.value
-																							setSections((prev) => {
-																								const next = [...prev]
-																								if (next[sIdx].table) {
-																									next[sIdx].table = {
-																										...next[sIdx].table!,
-																										quickPasteText: val,
-																									}
-																								}
-																								return next
-																							})
-																						}}
-																					/>
-																					<button
-																						type='button'
-																						className='btn btn-sm btn-light-primary text-nowrap align-self-start'
-																						onClick={() => handleSectionTableQuickParse(sIdx)}
-																						disabled={!section.table.quickPasteText?.trim()}
-																					>
-																						<FontAwesomeIcon icon={faPaste} className='me-1' /> Parse & Import
-																					</button>
-																				</div>
-																			</div>
-
-																			{/* Interactive Cell Grid */}
-																			<div className='table-responsive border rounded-3 mb-2 bg-white'>
-																				<table className='table table-sm table-bordered align-middle mb-0'>
-																					<thead style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}>
-																						<tr>
-																							<th style={{ width: '36px', textAlign: 'center', color: '#FFFFFF' }}>#</th>
-																							{section.table.columns.map((col, cIdx) => (
-																								<th key={cIdx} style={{ color: '#FFFFFF', fontWeight: 600 }}>
-																									{col || `Col ${cIdx + 1}`}
-																								</th>
-																							))}
-																							<th style={{ width: '45px', textAlign: 'center', color: '#FFFFFF' }}></th>
-																						</tr>
-																					</thead>
-																					<tbody>
-																						{section.table.rows.map((row, rIdx) => (
-																							<tr key={rIdx}>
-																								<td className='text-center text-muted fs-8 fw-bold'>
-																									{rIdx + 1}
-																								</td>
-																								{section.table.columns.map((_, cIdx) => (
-																									<td key={cIdx} style={{ minWidth: '140px', padding: '3px 5px' }}>
-																										<input
-																											type='text'
-																											className='form-control form-control-sm border-0'
-																											style={{ backgroundColor: '#F1F5F9', borderRadius: '5px' }}
-																											value={row[cIdx] || ''}
-																											onChange={(e) =>
-																												handleSectionTableCellChange(
-																													sIdx,
-																													rIdx,
-																													cIdx,
-																													e.target.value
-																												)
-																											}
-																											placeholder={`Cell (${rIdx + 1}, ${cIdx + 1})`}
-																										/>
-																									</td>
-																								))}
-																								<td className='text-center'>
-																									<button
-																										type='button'
-																										className='btn btn-icon btn-sm btn-light-danger py-1'
-																										onClick={() => handleRemoveSectionTableRow(sIdx, rIdx)}
-																										title='Delete Row'
-																									>
-																										<FontAwesomeIcon icon={faTimes} />
-																									</button>
-																								</td>
-																							</tr>
-																						))}
-																					</tbody>
-																				</table>
-																			</div>
-
-																			{/* Section Table Bottom Controls */}
-																			<div className='d-flex align-items-center justify-content-between pt-1'>
-																				<button
-																					type='button'
-																					className='btn btn-sm btn-light-primary'
-																					onClick={() => handleAddSectionTableRow(sIdx)}
-																				>
-																					<FontAwesomeIcon icon={faPlus} className='me-1' /> Add Row
-																				</button>
-																				<span className='fs-9 text-muted fw-semibold'>
-																					Rows: {section.table.rows.length} | Columns: {section.table.columns.length}
-																				</span>
-																			</div>
-																		</div>
-																	</div>
-																)}
-															</div>
-														</div>
-													))}
-												</div>
-											)}
+											<GoogleDocsEditor
+												value={editorHtml}
+												onChange={setEditorHtml}
+												placeholder='Start writing your publication or paste directly from Google Docs / Microsoft Word...'
+												minHeight={650}
+											/>
 										</div>
 									)}
 

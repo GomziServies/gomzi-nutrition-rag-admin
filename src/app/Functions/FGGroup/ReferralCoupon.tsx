@@ -7,9 +7,17 @@ type AssignTrainer = {
 	name?: string
 }
 
+type AssignedUser = {
+	user_id: string
+	name?: string
+	email?: string
+	mobile?: string
+}
+
 export function GetReferralCoupon(query?: {
 	coupon_id?: string
 	coupon_code?: string
+	coupon_type?: 'trainer' | 'pro_partner' | 'user' | 'general' | string
 }): Promise<FGGroupAPIResponse> {
 	return APIGet(FGGroupEndpoints.GetReferralCoupons, getAPIHeaders('fg_group'), query)
 }
@@ -22,6 +30,12 @@ export function CreateReferralCoupon(body: {
 	max_usage_count?: string | number
 	expired_at?: string
 	assign_trainer?: AssignTrainer
+	assigned_user?: AssignedUser
+	coupon_type?: 'trainer' | 'pro_partner' | 'user' | 'general' | string
+	partner_inquiry_id?: string
+	partner_name?: string
+	partner_email?: string
+	partner_mobile?: string
 	scope?: 'ALL' | 'SPECIFIC_PRODUCTS'
 	applicable_products?: string[]
 }): Promise<FGGroupAPIResponse> {
@@ -37,6 +51,12 @@ export function UpdateReferralCoupon(body: {
 	max_usage_count?: string | number
 	expired_at?: string
 	assign_trainer?: AssignTrainer
+	assigned_user?: AssignedUser
+	coupon_type?: 'trainer' | 'pro_partner' | 'user' | 'general' | string
+	partner_inquiry_id?: string
+	partner_name?: string
+	partner_email?: string
+	partner_mobile?: string
 	scope?: 'ALL' | 'SPECIFIC_PRODUCTS'
 	applicable_products?: string[]
 }): Promise<FGGroupAPIResponse> {

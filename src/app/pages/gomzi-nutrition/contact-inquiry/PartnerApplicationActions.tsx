@@ -1,0 +1,503 @@
+import React, { useState } from 'react'
+import { Modal } from 'react-bootstrap'
+import toast from 'react-hot-toast'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+	faCheck,
+	faDownload,
+	faFileAlt,
+	faKey,
+	faPaperPlane,
+	faTimes,
+	faUserShield,
+} from '@fortawesome/free-solid-svg-icons'
+import { DayJS } from '../../../../_metronic/helpers/Utils'
+import {
+	PartnerApplicationStatus,
+	ReviewPartnerApplication,
+	DownloadPartnerAgreementPDF,
+} from '../../../Functions/FGGroup/ContactInquiry'
+import PartnerAccountModal from './PartnerAccountModal'
+import './PartnerApplicationActions.css'
+
+export const getPartnerApplicationStatus = (inquiry: any): PartnerApplicationStatus =>
+	inquiry?.partner_status === 'approved' || inquiry?.partner_status === 'rejected'
+		? inquiry.partner_status
+		: 'pending'
+
+export async function handleViewPartnerAgreement(inquiryId: string) {
+	try {
+		const toastId = toast.loading('Loading agreement PDF...')
+		const { blob, filename } = await DownloadPartnerAgreementPDF(inquiryId)
+		toast.dismiss(toastId)
+		const url = window.URL.createObjectURL(blob)
+		const win = window.open(url, '_blank')
+		if (!win) {
+			const a = document.createElement('a')
+			a.href = url
+			a.download = filename
+			document.body.appendChild(a)
+			a.click()
+			document.body.removeChild(a)
+		}
+		toast.success('Agreement PDF loaded')
+	} catch (error: any) {
+		console.error('Failed to open agreement PDF:', error)
+		toast.error(error?.response?.data?.message || error?.message || 'Could not load agreement PDF')
+	}
+}
+
+export function PartnerStatusBadge({ inquiry }: { inquiry: any }) {
+	const status = getPartnerApplicationStatus(inquiry)
+	const isApproved = status === 'approved'
+	const isRejected = status === 'rejected'
+	return (
+		<span
+			className='badge'
+			style={{
+				background: isApproved ? '#ECFDF5' : isRejected ? '#FFF1F2' : '#FFFBEB',
+				color: isApproved ? '#047857' : isRejected ? '#BE123C' : '#B45309',
+				border: `1px solid ${isApproved ? '#A7F3D0' : isRejected ? '#FECDD3' : '#FDE68A'}`,
+				fontSize: '11px',
+				fontWeight: 700,
+				padding: '4px 8px',
+				borderRadius: '6px',
+				letterSpacing: '0.02em',
+			}}>
+			{isApproved ? 'Accepted' : isRejected ? 'Rejected' : 'Pending'}
+		</span>
+	)
+}
+
+export default function PartnerApplicationActions({
+	inquiry,
+	onUpdated,
+	compact = false,
+	children,
+}: {
+	inquiry: any
+	onUpdated: (updated: any) => void
+	compact?: boolean
+	children?: React.ReactNode
+}) {
+	const [decision, setDecision] = useState<'approved' | 'rejected' | null>(null)
+	const [showAccountModal, setShowAccountModal] = useState(false)
+	const [reason, setReason] = useState('')
+	const [saving, setSaving] = useState(false)
+	const [resending, setResending] = useState(false)
+	const status = getPartnerApplicationStatus(inquiry)
+	const name = inquiry?.details?.full_name || inquiry?.name || 'this applicant'
+	const hasAccount = Boolean(inquiry?.details?.partner_account?.created)
+
+	const showAccept = status !== 'approved'
+	const showReject = status !== 'rejected' && (!compact || status === 'pending')
+	const showResend = status === 'approved' && !inquiry.partner_policy?.accepted_at
+	const showPdf = Boolean(inquiry.partner_policy?.version)
+	const showAccount = status === 'approved'
+	const hasChildren = Boolean(children)
+
+	let totalButtons = 0
+	if (showAccept) totalButtons++
+	if (showReject) totalButtons++
+	if (showResend) totalButtons++
+	if (showPdf) totalButtons++
+	if (showAccount) totalButtons++
+	if (hasChildren) totalButtons++
+
+	const shouldSpanLast = compact && (totalButtons === 1 || totalButtons === 3 || totalButtons === 5)
+
+	const btnStyle: React.CSSProperties | undefined = compact
+		? {
+				minWidth: 0,
+				width: '100%',
+				height: '27px',
+				boxSizing: 'border-box',
+				whiteSpace: 'nowrap',
+				textOverflow: 'ellipsis',
+				overflow: 'hidden',
+		  }
+		: undefined
+
+	const saveDecision = async (event: React.FormEvent) => {
+		event.preventDefault()
+		if (!decision || saving) return
+		setSaving(true)
+		try {
+			const result = await ReviewPartnerApplication({
+				inquiry_id: inquiry._id,
+				partner_status: decision,
+				expected_status: status,
+				reason,
+			})
+			onUpdated(result.data)
+			if (decision === 'approved' && result.data?.partner_policy?.email_status === 'failed') {
+				toast.error(
+					'Application accepted, but the approval email failed. Use Resend policy email to retry.'
+				)
+			} else {
+				toast.success(
+					decision === 'approved'
+						? 'Application accepted and policy email sent'
+						: 'Application rejected and notification email sent'
+				)
+			}
+			setDecision(null)
+			setReason('')
+		} catch (error: any) {
+			toast.error(error?.message || 'Could not save the decision. Please try again.')
+		} finally {
+			setSaving(false)
+		}
+	}
+
+	const resendPolicy = async (event: React.MouseEvent) => {
+		event.stopPropagation()
+		if (resending || saving) return
+		setResending(true)
+		try {
+			const result = await ReviewPartnerApplication({
+				inquiry_id: inquiry._id,
+				partner_status: 'approved',
+				expected_status: 'approved',
+				reason: inquiry.partner_review_reason || '',
+			})
+			onUpdated(result.data)
+			if (result.data?.partner_policy?.email_status === 'failed')
+				toast.error('Email failed. Check the API mail settings and try again.')
+			else toast.success('Policy email sent to the applicant with chiragpandey600@gmail.com in CC')
+		} catch (error: any) {
+			toast.error(error?.message || 'Could not resend the policy email')
+		} finally {
+			setResending(false)
+		}
+	}
+
+	const renderedChildren =
+		compact && React.isValidElement(children)
+			? React.cloneElement(children as React.ReactElement<any>, {
+					style: {
+						...(children as any).props?.style,
+						...(btnStyle || {}),
+						gridColumn: shouldSpanLast ? '1 / -1' : 'span 1',
+					},
+			  })
+			: children
+
+	return (
+		<>
+			<div
+				className={compact ? 'gz-partner-controls' : 'd-flex flex-wrap gap-2'}
+				style={
+					compact
+						? {
+								display: 'grid',
+								gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+								gap: '5px',
+								width: '100%',
+								minWidth: '200px',
+								maxWidth: '220px',
+								margin: '0 auto',
+								boxSizing: 'border-box',
+								whiteSpace: 'normal',
+								alignItems: 'center',
+						  }
+						: undefined
+				}>
+				{showAccept && (
+					<button
+						type='button'
+						style={btnStyle}
+						className={compact ? 'gz-partner-button gz-partner-button-accept' : 'btn btn-sm btn-light-success'}
+						title='Accept application and send agreement email'
+						disabled={saving || resending}
+						onClick={(event) => {
+							event.stopPropagation()
+							setReason('')
+							setDecision('approved')
+						}}>
+						<FontAwesomeIcon icon={faCheck} className='gz-partner-btn-icon' />
+						<span>Accept</span>
+					</button>
+				)}
+				{showReject && (
+					<button
+						type='button'
+						style={btnStyle}
+						className={compact ? 'gz-partner-button gz-partner-button-reject' : 'btn btn-sm btn-light-danger'}
+						title='Reject application'
+						disabled={saving || resending}
+						onClick={(event) => {
+							event.stopPropagation()
+							setReason('')
+							setDecision('rejected')
+						}}>
+						<FontAwesomeIcon icon={faTimes} className='gz-partner-btn-icon' />
+						<span>Reject</span>
+					</button>
+				)}
+				{showResend && (
+					<button
+						type='button'
+						style={btnStyle}
+						className={compact ? 'gz-partner-button gz-partner-button-resend' : 'btn btn-sm btn-light-primary'}
+						title='Resend policy email'
+						disabled={saving || resending}
+						onClick={resendPolicy}>
+						<FontAwesomeIcon icon={faPaperPlane} className='gz-partner-btn-icon' />
+						<span>{resending ? 'Sending…' : compact ? 'Resend' : 'Resend policy email'}</span>
+					</button>
+				)}
+				{showPdf && (
+					<button
+						type='button'
+						style={btnStyle}
+						className={
+							compact
+								? `gz-partner-button ${inquiry.partner_policy?.accepted_at ? 'gz-partner-button-accepted-pdf' : 'gz-partner-button-pdf'}`
+								: `btn btn-sm ${inquiry.partner_policy?.accepted_at ? 'btn-light-success' : 'btn-light-secondary'}`
+						}
+						title={inquiry.partner_policy?.accepted_at ? 'View Accepted Agreement PDF' : 'View Draft Agreement PDF'}
+						onClick={(event) => {
+							event.stopPropagation()
+							handleViewPartnerAgreement(inquiry._id)
+						}}>
+						<FontAwesomeIcon icon={inquiry.partner_policy?.accepted_at ? faDownload : faFileAlt} className='gz-partner-btn-icon' />
+						<span>{compact ? (inquiry.partner_policy?.accepted_at ? 'PDF' : 'Draft') : (inquiry.partner_policy?.accepted_at ? 'Accepted PDF' : 'Draft PDF')}</span>
+					</button>
+				)}
+				{showAccount && (
+					<button
+						type='button'
+						style={btnStyle}
+						className={
+							compact
+								? `gz-partner-button ${hasAccount ? 'gz-partner-button-account-active' : 'gz-partner-button-account'}`
+								: `btn btn-sm ${hasAccount ? 'btn-light-success' : 'btn-light-primary'} d-inline-flex align-items-center gap-2`
+						}
+						title={hasAccount ? 'View Pro Partner Portal Credentials' : 'Create Partner Portal Account'}
+						disabled={saving || resending}
+						onClick={(event) => {
+							event.stopPropagation()
+							setShowAccountModal(true)
+						}}>
+						<FontAwesomeIcon icon={faUserShield} className='gz-partner-btn-icon' />
+						<span>{compact ? (hasAccount ? 'Credentials' : 'Account') : hasAccount ? 'Portal Credentials' : 'Partner Account'}</span>
+					</button>
+				)}
+				{renderedChildren}
+			</div>
+			<Modal
+				onClick={(event: React.MouseEvent) => event.stopPropagation()}
+				show={decision !== null}
+				onHide={() => {
+					if (!saving) setDecision(null)
+				}}
+				centered
+				backdrop={saving ? 'static' : true}
+				keyboard={!saving}
+				aria-labelledby='partner-review-title'>
+				<form onSubmit={saveDecision}>
+					<Modal.Header closeButton={!saving}>
+						<Modal.Title id='partner-review-title'>
+							{decision === 'approved' ? 'Accept Application' : 'Reject Application'}
+						</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<p>
+							{decision === 'approved'
+								? `Accept ${name}'s Pro Partner application? An approval email and official agreement link will be sent to the applicant, with chiragpandey600@gmail.com in CC.`
+								: `Reject ${name}'s Pro Partner application? A rejection notification email will be sent to the applicant, with chiragpandey600@gmail.com in CC.`}
+						</p>
+						<label
+							htmlFor='partner-review-reason'
+							className='form-label'>
+							{decision === 'rejected' ? 'Rejection reason (optional)' : 'Review note (optional)'}
+						</label>
+						<textarea
+							id='partner-review-reason'
+							className='form-control'
+							rows={3}
+							maxLength={2000}
+							value={reason}
+							onChange={(event) => setReason(event.target.value)}
+							disabled={saving}
+						/>
+					</Modal.Body>
+					<Modal.Footer>
+						<button
+							type='button'
+							className='btn btn-light'
+							onClick={() => setDecision(null)}
+							disabled={saving}>
+							Cancel
+						</button>
+						<button
+							type='submit'
+							className={`btn btn-${decision === 'approved' ? 'success' : 'danger'}`}
+							disabled={saving}>
+							{saving ? 'Saving…' : decision === 'approved' ? 'Accept Application' : 'Reject Application'}
+						</button>
+					</Modal.Footer>
+				</form>
+			</Modal>
+			{showAccountModal && (
+				<PartnerAccountModal
+					show={showAccountModal}
+					inquiry={inquiry}
+					onClose={() => setShowAccountModal(false)}
+					onUpdated={(updated) => onUpdated(updated)}
+				/>
+			)}
+		</>
+	)
+}
+
+export function PartnerReviewDetails({ inquiry }: { inquiry: any }) {
+	const status = getPartnerApplicationStatus(inquiry)
+	if (status === 'pending') return null
+	const reviewer = inquiry.partner_reviewed_by
+	const reviewerName = reviewer
+		? [reviewer.name, reviewer.email ? `(${reviewer.email})` : ''].filter(Boolean).join(' ')
+		: ''
+	return (
+		<div className='fs-8 text-muted mt-1' style={{ lineHeight: 1.45 }}>
+			{inquiry.partner_reviewed_at && (
+				<div>
+					<span className={status === 'approved' ? 'text-success fw-semibold' : 'text-danger fw-semibold'}>
+						{status === 'approved' ? 'Approved' : 'Rejected'}
+					</span>{' '}
+					{DayJS(inquiry.partner_reviewed_at).format('DD/MM/YYYY hh:mm A')}
+					{reviewerName ? ` by ${reviewerName}` : ''}
+				</div>
+			)}
+			{inquiry.partner_review_reason && (
+				<div className='text-danger'>
+					<strong>Reason:</strong> {inquiry.partner_review_reason}
+				</div>
+			)}
+			{status === 'approved' && (
+				<div
+					className={
+						inquiry.partner_policy?.accepted_at ? 'text-success fw-bold' : 'text-warning'
+					}>
+					{inquiry.partner_policy?.accepted_at
+						? `Agreement accepted ${DayJS(inquiry.partner_policy.accepted_at).format(
+								'DD/MM/YYYY hh:mm A'
+						  )}`
+						: inquiry.partner_policy?.email_status === 'failed'
+						? 'Agreement email delivery failed'
+						: 'Agreement sent, awaiting acceptance'}
+				</div>
+			)}
+			{status === 'approved' && inquiry.details?.partner_account?.created && (
+				<div className='text-primary mt-1'>
+					<FontAwesomeIcon icon={faUserShield} className='me-1' />
+					<span>Portal Account: </span>
+					<strong className='text-dark'>{inquiry.details.partner_account.email || inquiry.email}</strong>
+					{inquiry.details.partner_account.email_status === 'failed' && (
+						<span
+							className='badge badge-light-danger ms-2'
+							style={{ fontSize: '10px', padding: '2px 6px' }}>
+							Email Failed
+						</span>
+					)}
+				</div>
+			)}
+		</div>
+	)
+}
+
+export function PartnerPolicyRecord({
+	inquiry,
+	onRefresh,
+}: {
+	inquiry: any
+	onRefresh?: () => void
+}) {
+	const policy = inquiry.partner_policy
+	if (!policy?.version) return null
+	const isAccepted = Boolean(policy.accepted_at)
+	return (
+		<div className='gz-mgmt-card p-5 mb-6'>
+			<div className='d-flex align-items-center justify-content-between gap-3 flex-wrap mb-2'>
+				<h3 className='fs-4 mb-0'>Partner Policy Agreement</h3>
+				<div className='d-flex gap-2 flex-wrap'>
+					<button
+						type='button'
+						className={`btn btn-sm ${isAccepted ? 'btn-success' : 'btn-light-primary'} d-inline-flex align-items-center gap-2`}
+						onClick={() => handleViewPartnerAgreement(inquiry._id)}>
+						<FontAwesomeIcon icon={isAccepted ? faDownload : faFileAlt} />
+						{isAccepted ? 'View Accepted Agreement (PDF)' : 'Preview Agreement (PDF)'}
+					</button>
+					{onRefresh && (
+						<button
+							type='button'
+							className='btn btn-sm btn-light-primary'
+							onClick={onRefresh}>
+							Refresh policy status
+						</button>
+					)}
+				</div>
+			</div>
+			<p className='text-muted mb-3'>
+				Official Pro Partner Program Agreement binding under the Information Technology Act, 2000.
+			</p>
+			<div className='d-flex flex-wrap gap-3 mb-3'>
+				<span className={`badge badge-light-${isAccepted ? 'success' : 'warning'}`}>
+					{isAccepted ? 'Agreement Accepted & Signed' : 'Awaiting Partner Acceptance'}
+				</span>
+				<span>
+					Version: <strong>{policy.version}</strong>
+				</span>
+				<span>
+					Email:{' '}
+					<strong>
+						{policy.email_status === 'sent'
+							? 'Sent'
+							: policy.email_status === 'failed'
+							? 'Failed'
+							: 'Sending'}
+					</strong>
+				</span>
+			</div>
+			{isAccepted && (
+				<div className='alert alert-success d-flex align-items-center justify-content-between flex-wrap gap-2 py-3 px-4 mb-4 rounded'>
+					<div>
+						<div className='fw-bold text-success'>Agreement Accepted &amp; Verified</div>
+						<div className='fs-7 text-dark'>
+							Accepted by <strong>{policy.accepted_name}</strong> ({policy.accepted_email}) on{' '}
+							{DayJS(policy.accepted_at).format('DD/MM/YYYY hh:mm:ss A')}.
+						</div>
+						<div className='fs-8 text-muted mt-1'>
+							Verification Method: One-Time Password (OTP) Verified via Email
+						</div>
+					</div>
+					<button
+						type='button'
+						className='btn btn-sm btn-success fw-bold d-inline-flex align-items-center gap-2'
+						onClick={() => handleViewPartnerAgreement(inquiry._id)}>
+						<FontAwesomeIcon icon={faDownload} /> Open Accepted PDF
+					</button>
+				</div>
+			)}
+			<details>
+				<summary
+					className='fw-bold'
+					style={{ cursor: 'pointer' }}>
+					{isAccepted ? 'View Accepted Agreement' : 'View Sent Agreement'}
+				</summary>
+				<h4 className='mt-4'>{policy.title}</h4>
+				<div
+					style={{
+						whiteSpace: 'pre-wrap',
+						overflowWrap: 'anywhere',
+						maxHeight: 500,
+						overflowY: 'auto',
+					}}
+					className='p-4 bg-light rounded mt-3'>
+					{policy.text}
+				</div>
+			</details>
+		</div>
+	)
+}

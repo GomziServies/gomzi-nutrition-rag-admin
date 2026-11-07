@@ -87,18 +87,6 @@ body {
 	box-shadow: 0 1px 4px 0 rgba(15, 23, 42, 0.05) !important;
 }
 
-@media (max-width: 991.98px) {
-	#kt_header .header-brand,
-	.header .header-brand {
-		display: flex !important;
-		align-items: center !important;
-		background-color: #ffffff !important;
-		border-right: 1px solid #DFE7F0 !important;
-		padding: 0 16px !important;
-		height: 100% !important;
-	}
-}
-
 @media (min-width: 992px) {
 	#kt_header .header-brand,
 	.header .header-brand {
@@ -122,15 +110,26 @@ body {
 	border: none !important;
 	border-right: 1px solid #DFE7F0 !important;
 	box-shadow: 2px 0 12px 0 rgba(15, 23, 42, 0.04) !important;
-	width: 265px !important;
-	min-width: 265px !important;
-	max-width: 265px !important;
-	z-index: 104 !important;
-	display: flex !important;
-	flex-direction: column !important;
-	height: 100vh !important;
 	overflow: hidden !important;
 	transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Aside Desktop Static Frame */
+@media (min-width: 992px) {
+	#kt_aside,
+	.aside {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		width: 265px !important;
+		min-width: 265px !important;
+		max-width: 265px !important;
+		z-index: 104 !important;
+		display: flex !important;
+		flex-direction: column !important;
+		height: 100vh !important;
+		transform: none !important;
+	}
 }
 
 /* Sidebar scrollbar suppression - smooth scrolling without visible scrollbar track/thumb */
@@ -186,6 +185,9 @@ body {
 #kt_aside_menu,
 [id="#kt_aside_menu"] {
 	background: #FFFFFF !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
 }
 
 .aside-search {
@@ -310,6 +312,164 @@ body {
 #kt_aside_menu .menu-item > .menu-link.without-sub.active::before {
 	display: none !important;
 	content: none !important;
+}
+
+/* ==========================================================================
+   GOMZI RAG PRO PARTNER ASIDE NAVIGATION (LUXURY BROWN BRAND AESTHETIC)
+   Overrides the default #172B4D navy blue with #78350F luxury brown,
+   soft #FAF5F0 hover, pure white active text/icons, and seamless layout.
+   ========================================================================== */
+.gz-pro-partner-sidebar-menu {
+	display: flex !important;
+	flex-direction: column !important;
+	width: 100% !important;
+}
+
+/* Section Header */
+.gz-pro-partner-sidebar-menu .menu-section,
+.aside-menu .gz-partner-section-title,
+.aside-menu .menu-item.gz-pro-partner-section-header .menu-section {
+	color: #78350F !important;
+	font-size: 11px !important;
+	font-weight: 800 !important;
+	letter-spacing: 0.1em !important;
+	text-transform: uppercase !important;
+	margin: 10px 0 6px 0 !important;
+	padding: 8px 14px !important;
+	display: flex !important;
+	align-items: center !important;
+}
+
+/* Inactive Pro Partner Menu Items */
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"],
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link {
+	min-height: 44px !important;
+	height: 44px !important;
+	border-radius: 10px !important;
+	padding: 8px 14px !important;
+	margin: 3px 8px !important;
+	display: flex !important;
+	align-items: center !important;
+	background-color: transparent !important;
+	border: 1px solid transparent !important;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	text-decoration: none !important;
+}
+
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"] .menu-title,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link .menu-title {
+	color: #443B35 !important;
+	font-size: 13.5px !important;
+	font-weight: 600 !important;
+	letter-spacing: -0.01em !important;
+	transition: color 0.2s ease !important;
+}
+
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"] .menu-icon,
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"] .menu-icon i,
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"] .menu-icon svg,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link .menu-icon,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link .menu-icon i,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link .menu-icon svg {
+	color: #78350F !important;
+	font-size: 17px !important;
+	margin-right: 12px !important;
+	transition: color 0.2s ease, transform 0.2s ease !important;
+}
+
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"] .menu-icon .svg-inline--fa,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link .menu-icon .svg-inline--fa {
+	fill: #78350F !important;
+}
+
+/* Inactive Pro Partner Menu Items Hover State */
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"]:not(.active):hover,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link:not(.active):hover {
+	background-color: #FAF5F0 !important;
+	border-color: #EFE4DC !important;
+	transform: translateX(2px) !important;
+}
+
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"]:not(.active):hover .menu-title,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link:not(.active):hover .menu-title {
+	color: #78350F !important;
+	font-weight: 700 !important;
+}
+
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"]:not(.active):hover .menu-icon,
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"]:not(.active):hover .menu-icon i,
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"]:not(.active):hover .menu-icon svg,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link:not(.active):hover .menu-icon,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link:not(.active):hover .menu-icon i,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link:not(.active):hover .menu-icon svg {
+	color: #B45309 !important;
+}
+
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"]:not(.active):hover .menu-icon .svg-inline--fa,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link:not(.active):hover .menu-icon .svg-inline--fa {
+	fill: #B45309 !important;
+}
+
+/* Active Pro Partner Menu Item (Pure Luxury Brown #78350F with Pure White text and icon) */
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active,
+#kt_aside_menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active,
+.aside-menu .menu-item > .menu-link.without-sub.active[href*="/rag/pro-partner/"],
+#kt_aside_menu .menu-item > .menu-link.without-sub.active[href*="/rag/pro-partner/"],
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.active,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.without-sub.active {
+	background: #78350F !important;
+	background-color: #78350F !important;
+	border-radius: 10px !important;
+	border: 1px solid #78350F !important;
+	box-shadow: 0 4px 12px rgba(120, 53, 15, 0.25), 0 1px 3px rgba(120, 53, 15, 0.15) !important;
+	color: #FFFFFF !important;
+	transform: none !important;
+}
+
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-title,
+#kt_aside_menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-title,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.active .menu-title,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.without-sub.active .menu-title {
+	color: #FFFFFF !important;
+	font-weight: 700 !important;
+}
+
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon,
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon i,
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon svg,
+#kt_aside_menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon,
+#kt_aside_menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon i,
+#kt_aside_menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon svg,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.active .menu-icon,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.active .menu-icon i,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.active .menu-icon svg,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.without-sub.active .menu-icon,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.without-sub.active .menu-icon i,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.without-sub.active .menu-icon svg {
+	color: #FFFFFF !important;
+	fill: #FFFFFF !important;
+}
+
+.aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon .svg-inline--fa,
+#kt_aside_menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon .svg-inline--fa,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.active .menu-icon .svg-inline--fa,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.without-sub.active .menu-icon .svg-inline--fa {
+	fill: #FFFFFF !important;
+}
+
+/* Minimized sidebar active state for Pro Partner */
+body.aside-minimize .aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active,
+body.gz-aside-collapsed .aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active,
+body[data-kt-aside-minimize="on"] .aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active {
+	background: #78350F !important;
+	background-color: #78350F !important;
+	color: #FFFFFF !important;
+}
+
+body.aside-minimize .aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon svg,
+body.gz-aside-collapsed .aside-menu .menu-item > .menu-link[href*="/rag/pro-partner/"].active .menu-icon svg {
+	color: #FFFFFF !important;
+	fill: #FFFFFF !important;
 }
 
 /* 2. PARENT ACCORDION EXPANDED STATE (E.G. PRODUCTS & ORDERS) */
@@ -3718,3 +3878,436 @@ select.form-control:disabled {
 	border-color: #DFE7F0 !important;
 }
 
+/* ==========================================================================
+   OMNISCIENT RESPONSIVE SYSTEM OVERRIDES (320px Mobile -> Desktop Fluidity)
+   ========================================================================== */
+
+/* 1. Fluid Layout Containers & Shell Spacing */
+@media (max-width: 991.98px) {
+	html, body {
+		overflow-x: hidden !important;
+		width: 100% !important;
+	}
+
+	.page {
+		display: flex !important;
+		flex-direction: column !important;
+		width: 100% !important;
+		max-width: 100% !important;
+		min-height: 100vh !important;
+		min-height: 100dvh !important;
+		overflow-x: hidden !important;
+	}
+
+	/* Fixed Mobile Top Header */
+	#kt_header,
+	.header {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		width: 100% !important;
+		height: 56px !important;
+		min-height: 56px !important;
+		z-index: 1000 !important;
+		display: flex !important;
+		flex-direction: row !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		background-color: #ffffff !important;
+		border-bottom: 1px solid #DFE7F0 !important;
+		box-shadow: 0 1px 4px 0 rgba(15, 23, 42, 0.05) !important;
+		padding: 0 10px !important;
+	}
+
+	#kt_header .header-brand,
+	.header .header-brand {
+		display: flex !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		flex: 1 1 auto !important;
+		height: 100% !important;
+		padding: 0 6px !important;
+		border: none !important;
+		background: transparent !important;
+		position: static !important;
+	}
+
+	.gz-topbar-wrapper {
+		display: flex !important;
+		align-items: center !important;
+		justify-content: flex-end !important;
+		width: auto !important;
+		flex: 0 0 auto !important;
+		height: 56px !important;
+		min-height: 56px !important;
+		padding: 0 4px !important;
+	}
+
+	.gz-topbar-user-dropdown-menu {
+		right: 0 !important;
+		max-width: calc(100vw - 20px) !important;
+	}
+
+	/* Mobile Page Wrapper Offset - Starts Cleanly Under Fixed Header */
+	.wrapper,
+	#kt_wrapper {
+		padding-top: 56px !important;
+		padding-left: 0 !important;
+		margin-left: 0 !important;
+		width: 100% !important;
+		max-width: 100% !important;
+		min-width: 0 !important;
+		flex: 1 1 auto !important;
+	}
+
+	/* Mobile Aside Drawer Isolation - Fixed Offcanvas Tucked Away */
+	#kt_aside,
+	.aside {
+		position: fixed !important;
+		top: 0 !important;
+		bottom: 0 !important;
+		left: 0 !important;
+		width: 280px !important;
+		max-width: 85vw !important;
+		min-width: 0 !important;
+		height: 100vh !important;
+		height: 100dvh !important;
+		z-index: 1050 !important;
+		background: #FFFFFF !important;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+		display: flex !important;
+		flex-direction: column !important;
+		transform: translateX(-100%) !important;
+		transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+		pointer-events: none;
+		visibility: hidden;
+	}
+
+	#kt_aside.drawer,
+	.aside.drawer {
+		pointer-events: auto;
+		visibility: visible;
+	}
+
+	#kt_aside.drawer.drawer-on,
+	.aside.drawer.drawer-on,
+	body[data-kt-drawer-aside='on'] #kt_aside {
+		transform: translateX(0) !important;
+		pointer-events: auto;
+		visibility: visible;
+	}
+}
+
+@media (max-width: 767.98px) {
+	/* Containment & Global Padding Normalization */
+	#kt_content,
+	.content {
+		padding: 10px 0 !important;
+	}
+
+	#kt_content_container,
+	.container-fluid,
+	.container-xxl,
+	.container-xl,
+	.container-lg,
+	.container-md,
+	.container-sm {
+		padding-left: 12px !important;
+		padding-right: 12px !important;
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+
+	/* Card Surfaces on Small Screens */
+	.card {
+		margin-bottom: 16px !important;
+		border-radius: 12px !important;
+	}
+
+	.card .card-header {
+		padding: 12px 14px !important;
+		min-height: 48px !important;
+		flex-wrap: wrap !important;
+		gap: 10px !important;
+	}
+
+	.card .card-body {
+		padding: 14px !important;
+	}
+
+	/* Card Title Typography */
+	.card .card-title,
+	.card .card-header .card-title h3 {
+		font-size: 15px !important;
+		margin-bottom: 0 !important;
+	}
+
+	/* Global Modal Bounds on Mobile */
+	.modal-dialog {
+		margin: 8px auto !important;
+		width: calc(100% - 16px) !important;
+		max-width: calc(100% - 16px) !important;
+	}
+
+	.modal-content {
+		border-radius: 12px !important;
+		overflow: hidden !important;
+	}
+
+	.modal-header {
+		padding: 14px 16px !important;
+	}
+
+	.modal-body {
+		padding: 16px 14px !important;
+	}
+
+	.modal-footer {
+		padding: 12px 14px !important;
+		flex-wrap: wrap !important;
+		gap: 8px !important;
+	}
+
+	.modal-footer button,
+	.modal-footer a {
+		flex: 1 1 auto !important;
+	}
+
+	/* Touch Scroll Data Tables across the entire panel */
+	.table-responsive,
+	.gz-table-responsive,
+	.card-body > .table-responsive,
+	[class*="table-responsive"] {
+		overflow-x: auto !important;
+		-webkit-overflow-scrolling: touch !important;
+		width: 100% !important;
+		display: block !important;
+		margin-bottom: 0 !important;
+		scrollbar-width: thin !important;
+	}
+
+	.table-responsive::-webkit-scrollbar,
+	.gz-table-responsive::-webkit-scrollbar {
+		height: 4px !important;
+	}
+
+	.table-responsive::-webkit-scrollbar-thumb,
+	.gz-table-responsive::-webkit-scrollbar-thumb {
+		background: #CBD5E1 !important;
+		border-radius: 4px !important;
+	}
+
+	/* Prevent Table Column Flattening on Mobile */
+	.table-responsive > table.table,
+	.gz-table-responsive > table.table {
+		min-width: 620px !important;
+	}
+
+	/* Pagination Control Responsiveness */
+	.pagination {
+		flex-wrap: wrap !important;
+		gap: 4px !important;
+		justify-content: center !important;
+		margin-top: 12px !important;
+	}
+
+	.page-item .page-link {
+		min-width: 32px !important;
+		height: 32px !important;
+		padding: 0 6px !important;
+		font-size: 12px !important;
+		display: inline-flex !important;
+		align-items: center !important;
+		justify-content: center !important;
+	}
+}
+
+/* =============================================================================
+   PRO PARTNER SIDEBAR — POLISH (flat menu, outline icons, no cut-off labels)
+   ============================================================================= */
+/* Menu container: flat, no floating shadow card */
+#kt_aside_menu_wrapper .menu:has(.gz-pro-partner-sidebar-menu),
+[id="#kt_aside_menu"]:has(.gz-pro-partner-sidebar-menu) {
+	box-shadow: none !important;
+	border: 0 none !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	padding: 0 !important;
+}
+
+.gz-pro-partner-sidebar-menu {
+	padding: 4px 4px 12px 4px !important;
+	box-shadow: none !important;
+	border: 0 none !important;
+	background: transparent !important;
+}
+
+.gz-pro-partner-sidebar-menu .gz-pro-partner-section-header .menu-content { padding-left: 8px !important; }
+
+/* Outline icons must stay outlined (a forced fill turned the active icon into a white blob) */
+.gz-pro-partner-sidebar-menu .menu-link .menu-icon svg:not(.svg-inline--fa),
+.gz-pro-partner-sidebar-menu .menu-link .menu-icon svg:not(.svg-inline--fa) * {
+	fill: none !important;
+	stroke: currentColor !important;
+}
+
+.gz-pro-partner-sidebar-menu .menu-link .menu-icon {
+	width: 24px !important;
+	min-width: 24px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	margin-right: 10px !important;
+}
+
+.gz-pro-partner-sidebar-menu .menu-link .menu-icon svg {
+	width: 18px !important;
+	height: 18px !important;
+	margin: 0 !important;
+}
+
+/* Lighter, calmer inactive icon colour; active stays white on brown */
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link:not(.active) .menu-icon,
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link:not(.active) .menu-icon svg {
+	color: #B08D68 !important;
+}
+
+/* Roomier row so full titles fit */
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link {
+	margin: 3px 4px !important;
+	padding: 8px 12px !important;
+	gap: 0 !important;
+}
+
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link .menu-title {
+	font-size: 13px !important;
+	flex: 1 1 auto !important;
+	min-width: 0 !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+}
+
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link.active {
+	box-shadow: 0 2px 8px rgba(120, 53, 15, 0.18) !important;
+}
+
+/* Remove the inner floating box: only the main sidebar box stays, menu uses the full width */
+.aside #kt_aside_menu_wrapper,
+.aside .hover-scroll-overlay-y {
+	padding-left: 6px !important;
+	padding-right: 6px !important;
+}
+
+.aside #kt_aside_menu_wrapper > *,
+.aside #kt_aside_menu_wrapper > * > *:not(.menu-item) {
+	box-shadow: none !important;
+	filter: none !important;
+	border: 0 none !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	outline: 0 none !important;
+}
+
+.aside #kt_aside_menu_wrapper > *::before,
+.aside #kt_aside_menu_wrapper > *::after,
+.aside #kt_aside_menu_wrapper > * > *::before,
+.aside #kt_aside_menu_wrapper > * > *::after {
+	box-shadow: none !important;
+	border: 0 none !important;
+}
+
+.gz-pro-partner-sidebar-menu .menu-item > .menu-link {
+	margin: 3px 0 !important;
+}
+
+.gz-pro-partner-sidebar-menu .gz-pro-partner-section-header .menu-content { padding-left: 12px !important; }
+
+/* =============================================================================
+   DEFAULT VIEW SCALE — renders at 100% browser zoom exactly like 80% zoom.
+   To change the scale edit the value below (0.8 = 80%). Remove block to undo.
+   Desktop only so tablet/phone layouts stay readable.
+   ============================================================================= */
+@media (min-width: 1200px) {
+	html {
+		zoom: 0.8;
+	}
+
+	/* viewport-height based wrappers must be divided by the zoom to still fill the screen */
+	.gz-page-wrapper,
+	.gz-inq-container,
+	.gz-pro-partner-page {
+		min-height: calc(100vh / 0.8) !important;
+	}
+
+	/* Sidebar: fill the full screen height at this scale */
+	#kt_aside,
+	.aside {
+		height: calc(100vh / 0.8) !important;
+		max-height: none !important;
+	}
+
+	.aside-menu {
+		height: auto !important;
+		flex: 1 1 auto !important;
+		min-height: 0 !important;
+	}
+
+	/* Metronic's scroll script sets a pixel height from the unzoomed window; override it */
+	#kt_aside_menu_wrapper,
+	.aside .hover-scroll-overlay-y {
+		height: auto !important;
+		max-height: none !important;
+		flex: 1 1 auto !important;
+		min-height: 0 !important;
+		overflow-y: auto !important;
+		overflow-x: hidden !important;
+	}
+
+	.gz-floating-sub-body {
+		max-height: calc((100vh - 120px) / 0.8) !important;
+	}
+}
+
+
+/* =============================================================================
+   GLOBAL OVERFLOW & RESPONSIVE SAFETY — applies to every panel and page
+   ============================================================================= */
+img, video, canvas { max-width: 100%; }
+
+#kt_content_container,
+#kt_content,
+.content,
+.post,
+.card,
+.card-body,
+.modal-body,
+.row > [class*='col-'] { min-width: 0; }
+
+/* Long words / emails / links wrap inside their container instead of spilling out */
+.card-title, .modal-title, h1, h2, h3, h4, h5, h6, label, .form-label, .menu-title,
+.badge, td, th { overflow-wrap: anywhere; }
+pre, code { white-space: pre-wrap; word-break: break-word; }
+
+/* Wide tables scroll inside their card, the page never scrolls sideways */
+.table-responsive { overflow-x: auto !important; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.card-header, .card-toolbar, .toolbar, .card-title { flex-wrap: wrap; }
+.form-control, .form-select, select, textarea { max-width: 100%; }
+
+@media (max-width: 991px) {
+	.d-flex.justify-content-between { flex-wrap: wrap; gap: 0.5rem; }
+	.card-header { gap: 0.5rem; }
+	.card-toolbar { width: 100%; }
+}
+
+@media (max-width: 576px) {
+	.modal-dialog { max-width: calc(100% - 1rem); margin: 0.5rem auto; }
+	.pagination { flex-wrap: wrap; justify-content: center; }
+	.btn { white-space: normal; }
+	.table td, .table th { padding-left: 10px; padding-right: 10px; }
+}

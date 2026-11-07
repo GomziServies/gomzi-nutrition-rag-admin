@@ -192,11 +192,21 @@ export function GomziNutritionLoginAsideMenuItems() {
 				title='Contact Inquiry'
 				Icon={faEnvelope}
 			/>
-			<AsideMenuItem
-				to='/rag/contact-inquiry/pro-partner'
-				title='Pro Partner'
-				Icon={faEnvelope}
-			/>
+			<AsideMenuItemWithSub
+				to=''
+				title='Pro-Partner'
+				Icon={faCoins}>
+				<AsideMenuItem
+					to='/rag/pro-partner/applications'
+					title='Applications'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/pro-partner/coupons'
+					title='Generate Coupon'
+					hasBullet={true}
+				/>
+			</AsideMenuItemWithSub>
 		</>
 	)
 }

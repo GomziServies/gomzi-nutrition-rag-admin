@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getProfile } from '../../../../app/Functions/FGGroup'
 import { getProfile as profile } from '../../../../app/Functions/FWG'
-import { KTIcon, toAbsoluteUrl } from '../../../helpers'
-import { HeaderUserMenu } from '../../../partials'
+import { isProPartnerOnlyUser } from '../../../../app/modules/auth'
+import { toAbsoluteUrl } from '../../../helpers'
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 const AsideToolbar = () => {
@@ -11,9 +12,11 @@ const AsideToolbar = () => {
 	const fetchProfile = async () => {
 		try {
 			const data: any = await getProfile()
-			setUserProfile(data.data)
-			localStorage.setItem('fg_group_info', JSON.stringify(data.data))
-			localStorage.setItem('admin_type', data?.data?.type)
+			if (data?.data) {
+				setUserProfile(data.data)
+				localStorage.setItem('fg_group_info', JSON.stringify(data.data))
+				localStorage.setItem('admin_type', data?.data?.type)
+			}
 		} catch (error: any) {
 			console.error(error)
 		}
@@ -22,9 +25,11 @@ const AsideToolbar = () => {
 	const fetchPortalProfile = async () => {
 		try {
 			const data: any = await profile()
-			setUserProfile(data.data)
-			localStorage.setItem('portal_info', JSON.stringify(data.data))
-			localStorage.setItem('admin_type', data?.data?.type)
+			if (data?.data) {
+				setUserProfile(data.data)
+				localStorage.setItem('portal_info', JSON.stringify(data.data))
+				localStorage.setItem('admin_type', data?.data?.type)
+			}
 		} catch (error: any) {
 			console.error(error)
 		}
@@ -80,16 +85,31 @@ const AsideToolbar = () => {
 		}
 	}
 
+	const isPartner = isProPartnerOnlyUser(userProfile)
+	const brandTarget = isPartner ? '/rag/pro-partner/coupons' : '/rag/dashboard'
+	const brandTitle = isPartner
+		? 'RAG Pro Partner Portal'
+		: isMinimized
+		? 'Click to expand sidebar'
+		: 'RAG Admin'
+
 	return (
 		<div className={`gz-aside-top ${isMinimized ? 'gz-aside-top-minimized' : ''}`}>
-			<a
-				href='/rag/dashboard'
+			<Link
+				to={brandTarget}
 				className='gz-brand-lockup d-flex align-items-center'
-				onClick={isMinimized ? (e) => { e.preventDefault(); toggleSidebar(); } : undefined}
-				title={isMinimized ? 'Click to expand sidebar' : 'RAG Admin'}
+				onClick={
+					isMinimized
+						? (e) => {
+								e.preventDefault()
+								toggleSidebar()
+						  }
+						: undefined
+				}
+				title={brandTitle}
 				style={{ cursor: isMinimized ? 'pointer' : 'default', textDecoration: 'none' }}>
 				<img
-					alt='RAG Logo'
+					alt={isPartner ? 'RAG Pro Partner Logo' : 'RAG Logo'}
 					src={toAbsoluteUrl('/media/logos/rag-logo.webp')}
 					className='gz-brand-logo'
 					style={{
@@ -98,7 +118,7 @@ const AsideToolbar = () => {
 						objectFit: 'contain',
 					}}
 				/>
-			</a>
+			</Link>
 			<button
 				type='button'
 				className='gz-aside-collapse-btn'

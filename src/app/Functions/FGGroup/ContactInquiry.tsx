@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { getAPIHeaders } from '../../../_metronic/helpers/AuthToken'
 import { APIGet, APIPost } from '../../../_metronic/helpers/Utils'
 import * as FGGroupEndpoints from '../../constants/fg_group_endpoints'
@@ -29,6 +30,37 @@ export function UpdateReadReceipt(body: {
 	)
 }
 
+export type PartnerApplicationStatus = 'pending' | 'approved' | 'rejected'
+
+export interface PartnerAccountResponseData {
+	account_created: boolean
+	email: string
+	password: string
+	email_status: 'sent' | 'failed' | string
+	is_existing: boolean
+	portal_url: string
+}
+
+export function CreatePartnerAccount(body: {
+	inquiry_id: string
+}): Promise<FGGroupAPIResponse & { data: PartnerAccountResponseData }> {
+	return APIPost(
+		FGGroupEndpoints.CreatePartnerAccount,
+		getAPIHeaders('fg_group'),
+		undefined,
+		body
+	) as Promise<FGGroupAPIResponse & { data: PartnerAccountResponseData }>
+}
+
+export function ReviewPartnerApplication(body: {
+	inquiry_id: string
+	partner_status: 'approved' | 'rejected'
+	expected_status: PartnerApplicationStatus
+	reason?: string
+}): Promise<FGGroupAPIResponse> {
+	return APIPost(FGGroupEndpoints.ReviewPartnerApplication, getAPIHeaders('fg_group'), undefined, body)
+}
+
 export function FreeSessionRegistration(
 	query?: { id?: string } & FGGroupSearchOptions & FGGroupPaginationOptions & FGGroupSortOptions
 ): Promise<FGGroupAPIResponse> {
@@ -39,4 +71,16 @@ export function GetSeminarRegistrations(query?: {
 	registration_id?: string
 }): Promise<FGGroupAPIResponse> {
 	return APIGet(FGGroupEndpoints.GetSeminarRegistrations, getAPIHeaders('fg_group'), query)
+}
+
+export async function DownloadPartnerAgreementPDF(inquiry_id: string): Promise<{ blob: Blob; filename: string }> {
+	const response = await axios.get(FGGroupEndpoints.PartnerAgreementPDF, {
+		headers: getAPIHeaders('fg_group') as any,
+		params: { inquiry_id },
+		responseType: 'blob',
+	})
+	const disposition = response.headers?.['content-disposition'] || ''
+	const filenameMatch = String(disposition).match(/filename="?([^";]+)"?/)
+	const filename = filenameMatch ? filenameMatch[1] : `RAG-Partner-Agreement-${inquiry_id}.pdf`
+	return { blob: response.data, filename }
 }

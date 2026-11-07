@@ -41,15 +41,22 @@ const clearAuthStorage = () => {
 	localStorage.removeItem('admin_type')
 }
 
+let isHandlingUnauthorized = false
+
 const handleUnauthorized = (error: any) => {
 	const statusCode = error?.response?.status ?? error?.response?.data?.status
-	const authHeader = error?.config?.headers?.Authorization || error?.config?.headers?.authorization
+	const message = String(error?.response?.data?.message || '')
 
-	// Only force logout when server explicitly returns 401 for an authenticated request.
-	// if (statusCode === HttpStatusCode.Unauthorized && authHeader) {
-	// 	clearAuthStorage()
-	// 	window.location.href = '/'
-	// }
+	if (
+		(statusCode === HttpStatusCode.Unauthorized || statusCode === 401) &&
+		(message.includes('Invalid Token') || message.includes('Token is required'))
+	) {
+		if (!isHandlingUnauthorized && !window.location.pathname.includes('/auth/')) {
+			isHandlingUnauthorized = true
+			clearAuthStorage()
+			window.location.replace('/auth/login')
+		}
+	}
 }
 
 export const APIGet = (
