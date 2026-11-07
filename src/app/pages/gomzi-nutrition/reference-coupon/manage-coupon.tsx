@@ -646,8 +646,8 @@ const ManageCoupon: React.FC = () => {
 			const ordersList: any[] = Array.isArray(usageData?.orders)
 				? usageData.orders
 				: Array.isArray(usageData)
-				? usageData
-				: []
+					? usageData
+					: []
 			setUsageOrders(ordersList)
 		} catch (err) {
 			console.error('Failed to load usage orders:', err)
@@ -908,7 +908,7 @@ const ManageCoupon: React.FC = () => {
 										paginatedCoupons.map((c: any, idx: number) => {
 											const actualIndex = (pagination.page - 1) * pagination.itemsPerPage + idx + 1
 											const isExpired = c.expired_at && new Date(c.expired_at).getTime() < new Date().getTime()
-											const storeLink = `https://gomzinutrition.com/shop?coupon_code=${c.coupon_code}`
+											const storeLink = `https://www.ragnutrition.in/shop?coupon_code=${c.coupon_code}`
 
 											return (
 												<tr key={c._id || idx}>
@@ -1168,9 +1168,8 @@ const ManageCoupon: React.FC = () => {
 													<button
 														type='button'
 														onClick={() => setBeneficiaryType('user')}
-														className={`gz-beneficiary-btn ${
-															beneficiaryType === 'user' ? 'is-active' : ''
-														}`}>
+														className={`gz-beneficiary-btn ${beneficiaryType === 'user' ? 'is-active' : ''
+															}`}>
 														<div className='gz-beneficiary-icon-box'>
 															<i className='bi bi-person' style={{ color: '#FFFFFF' }}></i>
 														</div>
@@ -1185,9 +1184,8 @@ const ManageCoupon: React.FC = () => {
 													<button
 														type='button'
 														onClick={() => setBeneficiaryType('pro_partner')}
-														className={`gz-beneficiary-btn ${
-															beneficiaryType === 'pro_partner' ? 'is-active' : ''
-														}`}>
+														className={`gz-beneficiary-btn ${beneficiaryType === 'pro_partner' ? 'is-active' : ''
+															}`}>
 														<div className='gz-beneficiary-icon-box'>
 															<i className='bi bi-gem' style={{ color: '#FFFFFF' }}></i>
 														</div>
@@ -1202,9 +1200,8 @@ const ManageCoupon: React.FC = () => {
 													<button
 														type='button'
 														onClick={() => setBeneficiaryType('trainer')}
-														className={`gz-beneficiary-btn ${
-															beneficiaryType === 'trainer' ? 'is-active' : ''
-														}`}>
+														className={`gz-beneficiary-btn ${beneficiaryType === 'trainer' ? 'is-active' : ''
+															}`}>
 														<div className='gz-beneficiary-icon-box'>
 															<i className='bi bi-person-check' style={{ color: '#FFFFFF' }}></i>
 														</div>
@@ -1219,9 +1216,8 @@ const ManageCoupon: React.FC = () => {
 													<button
 														type='button'
 														onClick={() => setBeneficiaryType('general')}
-														className={`gz-beneficiary-btn ${
-															beneficiaryType === 'general' ? 'is-active' : ''
-														}`}>
+														className={`gz-beneficiary-btn ${beneficiaryType === 'general' ? 'is-active' : ''
+															}`}>
 														<div className='gz-beneficiary-icon-box'>
 															<i className='bi bi-shop' style={{ color: '#FFFFFF' }}></i>
 														</div>
@@ -1484,31 +1480,31 @@ const ManageCoupon: React.FC = () => {
 											</div>
 										</div>
 									</div>
-											{/* Step 5: Usage Limits */}
-											<div className='gz-step-box'>
-												<div className='gz-step-header'>
-													<div className='gz-step-num'>5</div>
-													<h4 className='gz-step-title'>
-														Usage Limits
-													</h4>
-												</div>
-												<div>
-													<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
-														Max Uses:
-													</label>
-													<input
-														type='number'
-														className='gz-input'
-														style={{ height: '36px', fontSize: '13px' }}
-														value={formState.max_usage_count}
-														onChange={(e) => setFormState({ ...formState, max_usage_count: e.target.value })}
-														required
-													/>
-													<div style={{ color: '#82756E', fontSize: '11px', marginTop: '3px' }}>
-														Total orders redemption limit.
-													</div>
-												</div>
+									{/* Step 5: Usage Limits */}
+									<div className='gz-step-box'>
+										<div className='gz-step-header'>
+											<div className='gz-step-num'>5</div>
+											<h4 className='gz-step-title'>
+												Usage Limits
+											</h4>
+										</div>
+										<div>
+											<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
+												Max Uses:
+											</label>
+											<input
+												type='number'
+												className='gz-input'
+												style={{ height: '36px', fontSize: '13px' }}
+												value={formState.max_usage_count}
+												onChange={(e) => setFormState({ ...formState, max_usage_count: e.target.value })}
+												required
+											/>
+											<div style={{ color: '#82756E', fontSize: '11px', marginTop: '3px' }}>
+												Total orders redemption limit.
 											</div>
+										</div>
+									</div>
 								</div>
 
 								{/* RIGHT COLUMN: Discount, Validity, Usage Limits & Product Scope */}
@@ -1530,18 +1526,16 @@ const ManageCoupon: React.FC = () => {
 													<button
 														type='button'
 														onClick={() => setFormState({ ...formState, discount_type: 'percent' })}
-														className={`gz-scope-btn ${
-															formState.discount_type === 'percent' ? 'is-active' : ''
-														}`}
+														className={`gz-scope-btn ${formState.discount_type === 'percent' ? 'is-active' : ''
+															}`}
 														style={{ height: '36px', fontSize: '12px' }}>
 														Percentage (%)
 													</button>
 													<button
 														type='button'
 														onClick={() => setFormState({ ...formState, discount_type: 'flat' })}
-														className={`gz-scope-btn ${
-															formState.discount_type === 'flat' ? 'is-active' : ''
-														}`}
+														className={`gz-scope-btn ${formState.discount_type === 'flat' ? 'is-active' : ''
+															}`}
 														style={{ height: '36px', fontSize: '12px' }}>
 														Flat Amount (₹)
 													</button>
@@ -1572,9 +1566,8 @@ const ManageCoupon: React.FC = () => {
 														key={pct}
 														type='button'
 														onClick={() => setFormState({ ...formState, discount: pct })}
-														className={`gz-pill-brown ${
-															formState.discount === pct ? 'is-active' : ''
-														}`}>
+														className={`gz-pill-brown ${formState.discount === pct ? 'is-active' : ''
+															}`}>
 														{pct}%
 													</button>
 												))}
@@ -1633,48 +1626,46 @@ const ManageCoupon: React.FC = () => {
 											</div>
 										</div>
 									</div>
-											{/* Step 6: Product Scope */}
-											<div className='gz-step-box'>
-												<div className='gz-step-header'>
-													<div className='gz-step-num'>6</div>
-													<h4 className='gz-step-title'>
-														Product Scope
-													</h4>
-												</div>
-												<div>
-													<div className='d-flex gap-1.5 mb-2'>
-														<button
-															type='button'
-															onClick={() => setFormState({ ...formState, scope: 'ALL' })}
-															className={`gz-scope-btn ${
-																formState.scope === 'ALL' ? 'is-active' : ''
-															}`}
-															style={{ height: '36px', fontSize: '11.5px', padding: '0 8px' }}>
-															All Products
-														</button>
-														<button
-															type='button'
-															onClick={() => setFormState({ ...formState, scope: 'SPECIFIC_PRODUCTS' })}
-															className={`gz-scope-btn ${
-																formState.scope === 'SPECIFIC_PRODUCTS' ? 'is-active' : ''
-															}`}
-															style={{ height: '36px', fontSize: '11.5px', padding: '0 8px' }}>
-															Specific ({formState.applicable_products.length})
-														</button>
-													</div>
-
-													{formState.scope === 'SPECIFIC_PRODUCTS' && (
-														<button
-															type='button'
-															onClick={() => setShowProductModal(true)}
-															className='gz-btn-brown w-100 d-inline-flex align-items-center justify-content-center gap-1'
-															style={{ height: '28px', fontSize: '11.5px' }}>
-															<i className='bi bi-grid-3x3-gap-fill' style={{ color: '#FFFFFF' }}></i>
-															<span>Select Products</span>
-														</button>
-													)}
-												</div>
+									{/* Step 6: Product Scope */}
+									<div className='gz-step-box'>
+										<div className='gz-step-header'>
+											<div className='gz-step-num'>6</div>
+											<h4 className='gz-step-title'>
+												Product Scope
+											</h4>
+										</div>
+										<div>
+											<div className='d-flex gap-1.5 mb-2'>
+												<button
+													type='button'
+													onClick={() => setFormState({ ...formState, scope: 'ALL' })}
+													className={`gz-scope-btn ${formState.scope === 'ALL' ? 'is-active' : ''
+														}`}
+													style={{ height: '36px', fontSize: '11.5px', padding: '0 8px' }}>
+													All Products
+												</button>
+												<button
+													type='button'
+													onClick={() => setFormState({ ...formState, scope: 'SPECIFIC_PRODUCTS' })}
+													className={`gz-scope-btn ${formState.scope === 'SPECIFIC_PRODUCTS' ? 'is-active' : ''
+														}`}
+													style={{ height: '36px', fontSize: '11.5px', padding: '0 8px' }}>
+													Specific ({formState.applicable_products.length})
+												</button>
 											</div>
+
+											{formState.scope === 'SPECIFIC_PRODUCTS' && (
+												<button
+													type='button'
+													onClick={() => setShowProductModal(true)}
+													className='gz-btn-brown w-100 d-inline-flex align-items-center justify-content-center gap-1'
+													style={{ height: '28px', fontSize: '11.5px' }}>
+													<i className='bi bi-grid-3x3-gap-fill' style={{ color: '#FFFFFF' }}></i>
+													<span>Select Products</span>
+												</button>
+											)}
+										</div>
+									</div>
 
 									{/* Selected Product Summary Tray (if specific products chosen) */}
 									{formState.scope === 'SPECIFIC_PRODUCTS' && formState.applicable_products.length > 0 && (
@@ -1701,7 +1692,7 @@ const ManageCoupon: React.FC = () => {
 																	alt={p.title || p.name}
 																	className='gz-selected-chip-thumb'
 																	onError={(e) => {
-																		;(e.target as HTMLElement).style.display = 'none'
+																		; (e.target as HTMLElement).style.display = 'none'
 																	}}
 																/>
 															) : (
@@ -1893,7 +1884,7 @@ const ManageCoupon: React.FC = () => {
 													alt={p.title || p.name}
 													loading='lazy'
 													onError={(e) => {
-														;(e.target as HTMLElement).style.display = 'none'
+														; (e.target as HTMLElement).style.display = 'none'
 													}}
 												/>
 											) : (
