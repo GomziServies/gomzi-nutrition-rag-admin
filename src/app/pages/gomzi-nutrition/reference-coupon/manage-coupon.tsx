@@ -908,7 +908,7 @@ const ManageCoupon: React.FC = () => {
 										paginatedCoupons.map((c: any, idx: number) => {
 											const actualIndex = (pagination.page - 1) * pagination.itemsPerPage + idx + 1
 											const isExpired = c.expired_at && new Date(c.expired_at).getTime() < new Date().getTime()
-											const storeLink = `https://gomzinutrition.com/shop?coupon_code=${c.coupon_code}`
+											const storeLink = `https://gomzinutrition.com/gomzi-supplement?coupon_code=${c.coupon_code}`
 
 											return (
 												<tr key={c._id || idx}>

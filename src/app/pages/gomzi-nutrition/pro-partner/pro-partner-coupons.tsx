@@ -28,7 +28,7 @@ import './pro-partner-coupons-list.css'
 import './pro-partner-coupons.css'
 import { useProPartnerData } from './useProPartnerData'
 
-const STORE_BASE_URL = 'https://gomzinutrition.com/shop?coupon_code='
+const STORE_BASE_URL = 'https://gomzinutrition.com/gomzi-supplement?coupon_code='
 
 type StatusFilter = 'all' | 'active' | 'inactive'
 type SortKey = 'newest' | 'oldest' | 'earnings_desc' | 'earnings_asc' | 'orders_desc' | 'expiring'
