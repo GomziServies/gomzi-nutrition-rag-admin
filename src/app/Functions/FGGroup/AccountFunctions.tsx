@@ -244,8 +244,15 @@ export function FileUploadToFGGroup(
 	}
 
 	files.forEach((file: any) => {
-		file.fileURL = URL.createObjectURL(file)
-		formData.append('files', file)
+		const blobOrFile = file instanceof Blob ? file : file?.file instanceof Blob ? file.file : null
+		if (blobOrFile) {
+			try {
+				file.fileURL = URL.createObjectURL(blobOrFile)
+			} catch (_) {}
+			formData.append('files', blobOrFile)
+		} else if (file) {
+			formData.append('files', file)
+		}
 	})
 
 	return APIPost(

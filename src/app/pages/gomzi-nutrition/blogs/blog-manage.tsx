@@ -1021,12 +1021,58 @@ export default function BlogManage() {
 					),
 				}))
 
-			const parsedFaqs = faqs
+			let parsedFaqs = faqs
 				.filter((f) => f.question.trim() && f.answer.trim())
 				.map((f) => ({
 					question: f.question.trim(),
 					answer: f.answer.trim(),
 				}))
+
+			if (parsedFaqs.length === 0 && editorHtml) {
+				try {
+					const faqHeadingRegex = /<h([1-6])[^>]*>(?:(?!<\/h\1>)[\s\S])*?(?:Frequently\s+Asked\s+Questions|FAQs?)(?:(?!<\/h\1>)[\s\S])*?<\/h\1>/i
+					const match = faqHeadingRegex.exec(editorHtml)
+					if (match) {
+						const afterHeading = editorHtml.slice(match.index + match[0].length)
+						const nextSectionMatch = /<h[12][^>]*>/i.exec(afterHeading)
+						const endIndex = nextSectionMatch ? match.index + match[0].length + nextSectionMatch.index : editorHtml.length
+						const faqChunk = editorHtml.slice(match.index + match[0].length, endIndex)
+						const pMatches = faqChunk.match(/<p[\s\S]*?<\/p>/gi) || []
+
+						let currentQ = null
+						let currentA: string[] = []
+
+						pMatches.forEach((p) => {
+							const text = p.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+							if (!text) return
+
+							const isQuestion =
+								/^\s*\d+[\.\)]\s+.*\?$/.test(text) ||
+								(text.endsWith('?') &&
+									(p.includes('font-weight:700') ||
+										p.includes('font-weight: 700') ||
+										p.includes('font-weight:bold') ||
+										p.includes('font-weight: bold') ||
+										/<strong|<b\b/i.test(p) ||
+										text.length < 150))
+
+							if (isQuestion) {
+								if (currentQ && currentA.length > 0) {
+									parsedFaqs.push({ question: currentQ, answer: currentA.join('\n\n') })
+								}
+								currentQ = text.replace(/^\s*\d+[\.\)]\s*/, '')
+								currentA = []
+							} else if (currentQ) {
+								currentA.push(text)
+							}
+						})
+
+						if (currentQ && currentA.length > 0) {
+							parsedFaqs.push({ question: currentQ, answer: currentA.join('\n\n') })
+						}
+					}
+				} catch (_) {}
+			}
 
 			const parsedBottomLine = bottomLineText.trim()
 				? {
@@ -1062,13 +1108,19 @@ export default function BlogManage() {
 				.replace(/[^a-z0-9]+/g, '-')
 				.replace(/(^-|-$)/g, '')
 
+			const plainExcerpt = editorHtml
+				? editorHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180)
+				: ''
+			const finalDesc = (formData.desc || '').trim() || plainExcerpt
+
 			const payload: any = {
 				...formData,
+				desc: finalDesc,
 				slug: generatedSlug,
 				tags: parsedTags,
 				content: contentPayload,
 				metaTitle: metaTitle.trim() || `${formData.title} | Gomzi Supplement`,
-				metaDescription: metaDescription.trim() || formData.desc || '',
+				metaDescription: metaDescription.trim() || finalDesc || '',
 			}
 
 			if (modalMode === 'create') {

@@ -431,33 +431,71 @@
 	margin: 20px 0;
 }
 
-/* Tables inside Document Canvas */
+/* Tables inside Document Canvas - Exact brand match (#8A3822 rust header, white text, rounded 16px card, no vertical dividers) */
+.gdocs-sheet .table-responsive-wrapper {
+	margin: 24px 0;
+	border-radius: 16px;
+	overflow: hidden;
+	border: 1px solid #ebdcd2;
+	background-color: #ffffff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
 .gdocs-sheet table {
 	width: 100%;
 	border-collapse: collapse;
-	margin: 18px 0;
-	border: 1px solid #CBD5E1;
-	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+	margin: 20px 0;
+	border: 1px solid #ebdcd2;
+	border-radius: 16px;
+	overflow: hidden;
+	background-color: #ffffff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
-.gdocs-sheet table th,
-.gdocs-sheet table td {
-	border: 1px solid #CBD5E1;
-	padding: 8px 12px;
-	font-size: 13px;
-	vertical-align: top;
-	min-width: 60px;
+.gdocs-sheet .table-responsive-wrapper table {
+	margin: 0;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
 }
 
 .gdocs-sheet table th {
-	background: #F1F5F9;
-	font-weight: 700;
-	color: #1E293B;
+	background-color: #8A3822 !important;
+	color: #ffffff !important;
+	font-weight: 600;
+	font-size: 14px;
 	text-align: left;
+	padding: 14px 20px;
+	border: none !important;
+	white-space: nowrap;
+}
+
+.gdocs-sheet table tr {
+	border-bottom: 1px solid #ebdcd2;
+	background-color: #ffffff;
+	transition: background-color 0.15s ease;
+}
+
+.gdocs-sheet table tr:last-child {
+	border-bottom: none;
+}
+
+.gdocs-sheet table td {
+	border: none !important;
+	padding: 14px 20px;
+	font-size: 14px;
+	line-height: 1.6;
+	vertical-align: top;
+	color: #4b5563;
+}
+
+.gdocs-sheet table tr td:first-child {
+	font-weight: 700;
+	color: #111827;
 }
 
 .gdocs-sheet table tr:hover td {
-	background-color: #F8FAFC;
+	background-color: #faf7f3;
 }
 
 /* Images & Figures Inside Canvas */
