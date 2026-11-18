@@ -24,6 +24,8 @@ import {
 	PartnerAccountResponseData,
 } from '../../../Functions/FGGroup/ContactInquiry'
 
+const PARTNER_PORTAL_LOGIN_URL = 'https://admin.ragnutrition.in/rag/login'
+
 export interface PartnerAccountModalProps {
 	show: boolean
 	inquiry: any
@@ -136,15 +138,11 @@ export const PartnerAccountModal: React.FC<PartnerAccountModalProps> = ({
 
 	const handleCopyAll = async () => {
 		if (!credentials) return
-		const origin = typeof window !== 'undefined' && window.location?.origin
-			? window.location.origin
-			: 'https://admin.ragnutrition.in'
-		const loginUrl = `${origin}/rag/login`
 
 		const payload = [
 			'RAG Pro Partner Portal Credentials',
 			'==================================',
-			`Portal Login: ${loginUrl}`,
+			`Portal Login: ${PARTNER_PORTAL_LOGIN_URL}`,
 			`Partner Email: ${credentials.email}`,
 			`Password: ${credentials.password}`,
 			'Target Portal: /rag/pro-partner/coupons',
@@ -218,10 +216,7 @@ export const PartnerAccountModal: React.FC<PartnerAccountModalProps> = ({
 		}
 	}
 
-	const originUrl = typeof window !== 'undefined' && window.location?.origin
-		? window.location.origin
-		: 'http://localhost:3000'
-	const portalUrlPreview = `${originUrl}/rag/login`
+	const portalUrlPreview = PARTNER_PORTAL_LOGIN_URL
 
 	return (
 		<Modal
