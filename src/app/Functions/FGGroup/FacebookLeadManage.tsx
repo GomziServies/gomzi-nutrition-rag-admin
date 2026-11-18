@@ -1,5 +1,5 @@
 import { getAPIHeaders } from '../../../_metronic/helpers/AuthToken'
-import { APIGet, APIPost } from '../../../_metronic/helpers/Utils'
+import { APIGet, APIPost, APIPatch, APIDelete } from '../../../_metronic/helpers/Utils'
 import * as FGGroupEndpoints from '../../constants/fg_group_endpoints'
 
 export function CreateFacebookLead(body: any): Promise<any> {
@@ -26,4 +26,25 @@ export function BulkCreateFacebookLeads(body: any): Promise<any> {
 		undefined,
 		body
 	)
+}
+
+export function UpdateFacebookLead(body: any): Promise<any> {
+	return APIPatch(
+		FGGroupEndpoints.UpdateFacebookLead,
+		getAPIHeaders('fg_group'),
+		undefined,
+		body
+	)
+}
+
+export function DeleteFacebookLead(leadId: string): Promise<any> {
+	return APIDelete(
+		`${FGGroupEndpoints.DeleteFacebookLead}/${leadId}`,
+		getAPIHeaders('fg_group'),
+		undefined
+	)
+}
+
+export function GetVisitorCookieLogs(query: any): Promise<any> {
+	return APIGet(FGGroupEndpoints.GetVisitorCookieLogs, getAPIHeaders('fg_group'), query)
 }

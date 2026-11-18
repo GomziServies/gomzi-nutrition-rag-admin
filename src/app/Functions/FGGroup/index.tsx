@@ -78,3 +78,4 @@ export * from './CompanyAd'
 
 
 export * from './AdBanner'
+export * from './Shiprocket'

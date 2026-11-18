@@ -647,7 +647,7 @@ export default function HeroBannerManage() {
 											Slide #{activeSlideIndex + 1}: Desktop Image
 										</h3>
 										<span className='text-muted fs-8'>
-											Fixed Aspect Size: 1600 &times; 533 px (WebP or JPG) for Desktop screens
+											Recommended: 1600 &times; 388 px or 2814 &times; 684 px (~4.12:1 Widescreen)
 										</span>
 									</div>
 								</div>
@@ -724,7 +724,7 @@ export default function HeroBannerManage() {
 											Slide #{activeSlideIndex + 1}: Mobile Banner Image
 										</h3>
 										<span className='text-muted fs-8'>
-											Fixed Aspect Size: 1078 &times; 1460 px (WebP or JPG) for Mobile viewports
+											Recommended: 720 &times; 480 px or 784 &times; 522 px (HealthKart Standard 3:2 Ratio)
 										</span>
 									</div>
 								</div>

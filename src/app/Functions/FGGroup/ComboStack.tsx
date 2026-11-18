@@ -7,6 +7,12 @@ export interface ComboStackProductItem {
 	label?: string
 }
 
+export interface ComboStackHeaderConfig {
+	eyebrow?: string
+	title?: string
+	subtitle?: string
+}
+
 export interface ComboStackItem {
 	_id?: string
 	id?: string
@@ -47,5 +53,12 @@ export function ReorderComboStacksAdmin(comboStacks: ComboStackItem[]): Promise<
 	return APIPost(FGGroupEndpoints.ManageComboStack, getAPIHeaders('fg_group'), undefined, {
 		action: 'reorder',
 		comboStacks,
+	})
+}
+
+export function UpdateComboHeaderConfigAdmin(headerConfig: ComboStackHeaderConfig): Promise<FGGroupAPIResponse> {
+	return APIPost(FGGroupEndpoints.ManageComboStack, getAPIHeaders('fg_group'), undefined, {
+		action: 'update_header_config',
+		headerConfig,
 	})
 }
