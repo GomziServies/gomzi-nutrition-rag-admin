@@ -138,7 +138,7 @@ export const PartnerAccountModal: React.FC<PartnerAccountModalProps> = ({
 		if (!credentials) return
 		const origin = typeof window !== 'undefined' && window.location?.origin
 			? window.location.origin
-			: 'http://localhost:3000'
+			: 'https://admin.ragnutrition.in'
 		const loginUrl = `${origin}/rag/login`
 
 		const payload = [
