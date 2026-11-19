@@ -61,6 +61,24 @@ export interface ApprovedPartnerInfo {
 
 const RAG_CONTACT_SOURCE_FILTER = 'gomzilifesciences|ragnutrition|contact-us|5173|whey|rag'
 const DEFAULT_COMMISSION_PERCENT = 10
+const normalizeEmail = (value: any) =>
+	String(value || '')
+		.trim()
+		.toLowerCase()
+const recordId = (value: any) => String(value?._id || value || '')
+
+const belongsToAccount = (coupon: any, account: any) => {
+	const inquiry = coupon.partner_inquiry_id
+	const accountId = recordId(account?._id || account?.id)
+	if (accountId && recordId(inquiry?.details?.partner_account?.admin_id) === accountId) return true
+	const email = normalizeEmail(account?.email)
+	if (!email) return false
+	const ownerEmails =
+		inquiry && typeof inquiry === 'object'
+			? [inquiry.email, inquiry.details?.email]
+			: [coupon.partner_email]
+	return ownerEmails.some((ownerEmail) => normalizeEmail(ownerEmail) === email)
+}
 
 export function useProPartnerData(partnerIdParam?: string | null) {
 	const [loading, setLoading] = useState(true)
@@ -75,6 +93,11 @@ export function useProPartnerData(partnerIdParam?: string | null) {
 
 		const loadAll = async () => {
 			setLoading(true)
+			setCoupons([])
+			setOrders([])
+			setPartnerInfo(null)
+			setProfileUser(null)
+			setCatalogMap({})
 			try {
 				// 1. Logged in profile user
 				let currentUser: any = null
@@ -85,43 +108,65 @@ export function useProPartnerData(partnerIdParam?: string | null) {
 				} catch (err) {
 					console.error('Error fetching profile:', err)
 				}
+				// Never load another account's data when identity cannot be resolved.
+				if (!isMounted || !currentUser) return
+				const isPartner = currentUser.type === 'RAG_Pro_Partner'
+				const previewPartnerId = ['MASTER', 'Admin'].includes(currentUser.type)
+					? partnerIdParam
+					: null
+				const selfOnly = !previewPartnerId
 
 				// 2. Fetch Coupons
 				let partnerCoupons: any[] = []
 				try {
-					const couponRes: any = await GetReferralCoupon({ coupon_type: 'pro_partner' })
+					const couponRes: any = await GetReferralCoupon({
+						coupon_type: 'pro_partner',
+						self_only: selfOnly,
+						...(previewPartnerId ? { partner_inquiry_id: previewPartnerId } : {}),
+					})
 					const rawCoupons: any[] = Array.isArray(couponRes?.data) ? couponRes.data : []
 					partnerCoupons = [...rawCoupons].sort(
 						(a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
 					)
-					if (isMounted) setCoupons(partnerCoupons)
 				} catch (err) {
 					console.error('Error fetching partner coupons:', err)
 				}
+				if (!isMounted) return
 
 				// 3. Fetch Partner Inquiries
 				let matchedPartner: ApprovedPartnerInfo | null = null
 				try {
-					const inqRes: any = await GetContactInquiry({
-						page: 1,
-						limit: 100,
-						source: RAG_CONTACT_SOURCE_FILTER,
-					})
-					const inqList: any[] = Array.isArray(inqRes?.data) ? inqRes.data : []
+					// Partner accounts cannot list all applications. Their own inquiry
+					// is already populated on the coupons returned by the API.
+					const inqRes: any = isPartner
+						? null
+						: await GetContactInquiry({
+								page: 1,
+								limit: 100,
+								source: RAG_CONTACT_SOURCE_FILTER,
+						  })
+					const inqList: any[] = isPartner
+						? partnerCoupons
+								.filter((c) => belongsToAccount(c, currentUser))
+								.map((c) => c.partner_inquiry_id)
+								.filter((inquiry) => inquiry && typeof inquiry === 'object')
+						: Array.isArray(inqRes?.data)
+						? inqRes.data
+						: []
 
-					// Match against partnerIdParam or current user email/mobile
+					// Only administrators can select a different partner to preview.
 					const found = inqList.find((item: any) => {
-						if (partnerIdParam) {
-							return String(item._id) === String(partnerIdParam)
+						if (previewPartnerId) {
+							return String(item._id) === String(previewPartnerId)
 						}
 						const d = item.details || {}
 						const email = (d.email || item.email || '').toLowerCase().trim()
-						const mobile = (d.mobile || item.mobile || '').trim()
 						const userEmail = (currentUser?.email || '').toLowerCase().trim()
-						const userMobile = (currentUser?.phone || currentUser?.mobile || '').trim()
 
-						if (userEmail && email && userEmail === email) return true
-						if (userMobile && mobile && userMobile.endsWith(mobile.slice(-10))) return true
+						if (userEmail && [email, normalizeEmail(item.email)].includes(userEmail)) return true
+						const accountId = recordId(currentUser._id || currentUser.id)
+						if (accountId && recordId(item.details?.partner_account?.admin_id) === accountId)
+							return true
 						return false
 					})
 
@@ -148,11 +193,26 @@ export function useProPartnerData(partnerIdParam?: string | null) {
 				} catch (err) {
 					console.error('Error fetching partner inquiry:', err)
 				}
+				if (!isMounted) return
+
+				const relevantCoupons = partnerCoupons.filter((coupon) => {
+					if (previewPartnerId) {
+						return (
+							recordId(coupon.partner_inquiry_id || coupon.assign_trainer?.trainer_id) ===
+							previewPartnerId
+						)
+					}
+					return belongsToAccount(coupon, currentUser)
+				})
+				if (isMounted) setCoupons(relevantCoupons)
 
 				// 4. Products Catalog
 				const pMap: Record<string, any> = {}
 				try {
-					const prodRes: any = await GetProduct({ limit: 500, page: 1 })
+					const prodRes: any =
+						isPartner || relevantCoupons.length === 0
+							? null
+							: await GetProduct({ limit: 500, page: 1 })
 					const pList: any[] = Array.isArray(prodRes?.data?.data || prodRes?.data)
 						? prodRes?.data?.data || prodRes?.data
 						: []
@@ -165,23 +225,16 @@ export function useProPartnerData(partnerIdParam?: string | null) {
 				}
 
 				// 5. Orders / Usage Transactions
-				// Filter coupons relevant to this partner if specified
-				const relevantCoupons = partnerIdParam
-					? partnerCoupons.filter(
-							(c) =>
-								String(c.partner_inquiry_id?._id || c.partner_inquiry_id || '') ===
-									String(partnerIdParam) ||
-								String(c.assign_trainer?.trainer_id || '') === String(partnerIdParam)
-					  )
-					: partnerCoupons
-
-				const activeCouponList = relevantCoupons.length > 0 ? relevantCoupons : partnerCoupons
-
 				const txList: PartnerOrderTransaction[] = []
-				for (const coupon of activeCouponList) {
+				for (const coupon of relevantCoupons) {
+					if (!isMounted) return
 					if (!coupon?._id) continue
 					try {
-						const usageRes: any = await GetReferralCouponUsage({ coupon_id: coupon._id })
+						const usageRes: any = await GetReferralCouponUsage({
+							coupon_id: coupon._id,
+							self_only: selfOnly,
+						})
+						if (!isMounted) return
 						const usageData = usageRes?.data?.[0] || usageRes?.data || {}
 						const ords: any[] = Array.isArray(usageData?.orders)
 							? usageData.orders
@@ -293,7 +346,11 @@ export function useProPartnerData(partnerIdParam?: string | null) {
 									paidAmount: paidVal,
 									commissionAmount: commissionVal,
 									commissionRate,
-									creditTime: ord?.created_at || ord?.createdAt || coupon.createdAt || new Date().toISOString(),
+									creditTime:
+										ord?.created_at ||
+										ord?.createdAt ||
+										coupon.createdAt ||
+										new Date().toISOString(),
 									orderStatus: (ord?.order_status || ord?.status || 'COMPLETED').toUpperCase(),
 									commissionStatus: 'CREDITED',
 								})
@@ -355,4 +412,3 @@ export function useProPartnerData(partnerIdParam?: string | null) {
 		metrics,
 	}
 }
-

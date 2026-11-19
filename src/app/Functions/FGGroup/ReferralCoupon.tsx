@@ -18,6 +18,8 @@ export function GetReferralCoupon(query?: {
 	coupon_id?: string
 	coupon_code?: string
 	coupon_type?: 'trainer' | 'pro_partner' | 'user' | 'general' | string
+	partner_inquiry_id?: string
+	self_only?: boolean
 }): Promise<FGGroupAPIResponse> {
 	return APIGet(FGGroupEndpoints.GetReferralCoupons, getAPIHeaders('fg_group'), query)
 }
@@ -65,6 +67,7 @@ export function UpdateReferralCoupon(body: {
 
 export function GetReferralCouponUsage(query?: {
 	coupon_id?: string
+	self_only?: boolean
 }): Promise<FGGroupAPIResponse> {
 	return APIGet(FGGroupEndpoints.GetCouponUsage, getAPIHeaders('fg_group'), query)
 }
