@@ -2,6 +2,7 @@
 import React from 'react'
 import html2pdf from 'html2pdf.js'
 import TermAndCondition from '../../../components/TermAndCondition'
+import './company-invoice-document.css'
 
 export interface CompanyInvoiceDocumentProps {
 	invoiceData: {
@@ -42,21 +43,30 @@ export interface CompanyInvoiceDocumentProps {
 }
 
 /**
- * Download helper using html2pdf.
- * Preserves the exact identical options, font classes, and PDF rendering pipeline.
+ * Render a separate A4 copy so downloads do not inherit the preview's width.
  */
 export const generateCompanyInvoicePDF = async (name: string, contentId = 'invoiceContent', termsId = 'invoiceTermAndCondition') => {
 	const invoiceContent = document.getElementById(contentId)
 	const termsContent = document.getElementById(termsId)
 
-	if (!invoiceContent || !termsContent) return
+	if (!invoiceContent) throw new Error('Invoice content was not found')
 
-	invoiceContent.classList.add('pdf-font-black')
-	termsContent.classList.add('pdf-font-black')
+	await document.fonts.ready
 
 	const wrapper = document.createElement('div')
-	wrapper.appendChild(invoiceContent.cloneNode(true))
-	wrapper.appendChild(termsContent.cloneNode(true))
+	wrapper.className = 'company-invoice-pdf'
+	// Page-break measurements run in the live DOM, where the desktop theme
+	// zooms <html> to 80%. Cancel that zoom for this export copy only.
+	const pageZoom = Number(window.getComputedStyle(document.documentElement).zoom) || 1
+	wrapper.style.zoom = String(1 / pageZoom)
+	const invoiceClone = invoiceContent.cloneNode(true) as HTMLElement
+	invoiceClone.classList.add('pdf-font-black')
+	wrapper.appendChild(invoiceClone)
+	if (termsContent) {
+		const termsClone = termsContent.cloneNode(true) as HTMLElement
+		termsClone.classList.add('company-invoice-terms', 'pdf-font-black')
+		wrapper.appendChild(termsClone)
+	}
 
 	const opt = {
 		margin: [8, 8, 8, 8] as [number, number, number, number],
@@ -70,6 +80,13 @@ export const generateCompanyInvoicePDF = async (name: string, contentId = 'invoi
 			useCORS: true,
 			scrollX: 0,
 			scrollY: 0,
+			windowWidth: 1200,
+			onclone: (clonedDocument: Document) => {
+				// html2canvas does not account for CSS zoom when painting text.
+				clonedDocument.documentElement.style.setProperty('zoom', '1', 'important')
+				const exportCopy = clonedDocument.querySelector<HTMLElement>('.company-invoice-pdf')
+				if (exportCopy) exportCopy.style.zoom = '1'
+			},
 		},
 		jsPDF: {
 			unit: 'mm',
@@ -78,18 +95,15 @@ export const generateCompanyInvoicePDF = async (name: string, contentId = 'invoi
 		},
 		pagebreak: {
 			mode: ['css', 'legacy'],
+			avoid: ['.invoice-header', '.invoice-details', '.invoice-items tr'],
 		},
 	}
 
 	await html2pdf().set(opt).from(wrapper).save()
-
-	invoiceContent.classList.remove('pdf-font-black')
-	termsContent.classList.remove('pdf-font-black')
 }
 
 /**
- * EXACT COMPANY INVOICE TEMPLATE
- * Unmodified layout, branding, GST, calculations, QR code, bank details, and signature.
+ * Shared company invoice used by previews and PDF downloads.
  */
 export const CompanyInvoiceDocument: React.FC<CompanyInvoiceDocumentProps> = ({
 	invoiceData,
@@ -122,7 +136,7 @@ export const CompanyInvoiceDocument: React.FC<CompanyInvoiceDocumentProps> = ({
 
 	return (
 		<div className='company-invoice-document-wrapper'>
-			<div id={containerId}>
+			<div id={containerId} className='company-invoice-document'>
 				<div className='card border-0 shadow-none'>
 					<div className='card-body p-0'>
 						<div>
@@ -230,6 +244,16 @@ export const CompanyInvoiceDocument: React.FC<CompanyInvoiceDocumentProps> = ({
 								{/* Items Table */}
 								<div className='invoice-items'>
 									<table className='border border-black w-100'>
+										<colgroup>
+											<col style={{ width: `${38 - (hasGst ? 8 : 0) - (hasDiscount ? 10 : 0)}%` }} />
+											<col style={{ width: '12%' }} />
+											<col style={{ width: '14%' }} />
+											<col style={{ width: '6%' }} />
+											<col style={{ width: '14%' }} />
+											{hasGst && <col style={{ width: '8%' }} />}
+											{hasDiscount && <col style={{ width: '10%' }} />}
+											<col style={{ width: '16%' }} />
+										</colgroup>
 										<thead>
 											<tr>
 												<th className='border border-black p-1' style={{ fontSize: '13px' }}>Product</th>
@@ -368,15 +392,15 @@ export const CompanyInvoiceDocument: React.FC<CompanyInvoiceDocumentProps> = ({
 										<div className='bill-to px-2 border-bottom border-black' style={{ fontSize: '13px', fontWeight: 600 }}>
 											Payment Details
 										</div>
-										<div className='d-flex align-items-center'>
-											<div className='px-2'>
+										<div className='invoice-payment-body d-flex align-items-center'>
+											<div className='invoice-payment-qr px-2'>
 												<img
 													src='/media/gomzi-nutrition/rag-qr-code.png'
 													alt='QR Code'
 													width='110px'
 												/>
 											</div>
-											<div className='bill-name-date px-2'>
+											<div className='invoice-payment-bank bill-name-date px-2'>
 												<p className='my-1' style={{ fontSize: '12px' }}>
 													<strong>UPI ID: bom260801350628@mahb</strong>
 												</p>
