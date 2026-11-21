@@ -30,6 +30,7 @@ interface QuotationItem {
 
 const NutritionUpdateQuotation: React.FC = () => {
 	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
 	const [downloadBtn, setDownloadBtn] = useState(false)
 	const [quotationId, setQuotationId] = useState('')
 	const [formData, setFormData] = useState({
@@ -446,16 +447,50 @@ const NutritionUpdateQuotation: React.FC = () => {
 		setFormData({ ...formData, [name]: value })
 	}
 
-	const generatePDF = async (name: any) => {
+	const capturePDFContent = (content: HTMLElement) =>
+		html2canvas(content, {
+			scale: 2,
+			useCORS: true,
+			backgroundColor: '#ffffff',
+			// html2canvas waits for cloned images and fonts, including those outside the invoice.
+			ignoreElements: (element) => {
+				if (element.tagName === 'LINK' && element.getAttribute('rel') === 'stylesheet') {
+					const href = element.getAttribute('href')
+					return !!href && new URL(href, document.baseURI).origin !== window.location.origin
+				}
+				return (
+					document.body.contains(element) &&
+					!element.contains(content) &&
+					!content.contains(element)
+				)
+			},
+			onclone: (clonedDocument, clonedContent) => {
+				// The desktop theme zooms html to 80%; canvas text metrics require an unzoomed document.
+				clonedDocument.documentElement.style.setProperty('zoom', '1', 'important')
+				// Render both pages at a printable width, including the off-screen terms section.
+				clonedDocument.body.appendChild(clonedContent)
+				clonedContent.style.position = 'static'
+				clonedContent.style.width = '794px'
+				clonedContent.style.maxWidth = 'none'
+				clonedContent.style.margin = '0'
+				clonedContent.style.fontFamily = 'Arial, sans-serif'
+				clonedContent.classList.add('pdf-font-black')
+			},
+		})
+
+	const generatePDF = async (name: string) => {
+		if (isGeneratingPDF) return
+
 		const quotationContent = document.getElementById('quotationContent')
 		const invoiceTermAndCondition = document.getElementById('invoiceTermAndCondition')
 
-		if (quotationContent && invoiceTermAndCondition) {
-			// Temporarily show the quotation content
-			// quotationContent.classList.remove('d-none')
-			quotationContent.classList.add('pdf-font-black')
-			invoiceTermAndCondition.classList.add('pdf-font-black')
+		if (!quotationContent || !invoiceTermAndCondition) {
+			toast.error('Quotation content is not ready. Please reload the page and try again.')
+			return
+		}
 
+		setIsGeneratingPDF(true)
+		try {
 			const doc = new jsPDF({
 				orientation: 'portrait',
 				unit: 'mm',
@@ -463,26 +498,18 @@ const NutritionUpdateQuotation: React.FC = () => {
 				compress: true,
 			})
 
-			Promise.all([
-				html2canvas(quotationContent, { scale: 2, useCORS: true }),
-				html2canvas(invoiceTermAndCondition, { scale: 2, useCORS: true }),
-			]).then(([invoiceCanvas, termsCanvas]) => {
-				quotationContent.classList.remove('pdf-font-black')
-				invoiceTermAndCondition.classList.remove('pdf-font-black')
+			const invoiceCanvas = await capturePDFContent(quotationContent)
+			addCanvasToPage(doc, invoiceCanvas)
+			doc.addPage()
+			const termsCanvas = await capturePDFContent(invoiceTermAndCondition)
+			addCanvasToPage(doc, termsCanvas)
 
-				// Page 1 - Invoice
-				// doc.addImage(invoiceImg, 'JPEG', margin, margin, contentWidth, contentHeight)
-
-				addCanvasToPage(doc, invoiceCanvas)
-				doc.addPage()
-				addCanvasToPage(doc, termsCanvas)
-				// doc.addImage(termsImg, 'JPEG', margin, margin, contentWidth, contentHeight)
-
-				const pdfName = `${name || 'demoName'}.pdf`
-				doc.save(pdfName)
-			})
-		} else {
-			console.error('Quotation content not found.')
+			await doc.save(`${name?.trim() || 'quotation'}.pdf`, { returnPromise: true })
+		} catch (error) {
+			console.error('Failed to download quotation PDF:', error)
+			toast.error('Unable to download the PDF. Please try again.')
+		} finally {
+			setIsGeneratingPDF(false)
 		}
 	}
 
@@ -863,16 +890,17 @@ const NutritionUpdateQuotation: React.FC = () => {
 									type='button'
 									className='btn btn-light-success d-inline-flex align-items-center gap-2'
 									style={{ height: '42px', borderRadius: '10px', fontWeight: 600 }}
+									disabled={isGeneratingPDF || isSubmitting}
 									onClick={() => generatePDF(quotationData?.name)}>
 									<i className='bi bi-file-earmark-pdf fs-5'></i>
-									Download PDF
+									{isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'}
 								</button>
 							)}
 							<button
 								type='button'
 								className='gz-mgmt-btn-primary'
 								onClick={handleUpdateQuotation}
-								disabled={isSubmitting}>
+								disabled={isSubmitting || isGeneratingPDF}>
 								<i className='bi bi-check2-circle me-1'></i>
 								{isSubmitting ? 'Updating Quotation...' : 'Update Quotation'}
 							</button>
@@ -1008,7 +1036,7 @@ const NutritionUpdateQuotation: React.FC = () => {
 											) : (
 												quotationPlanData.map((item: any, index: any) => {
 													return (
-														<tr>
+														<tr key={item._id ?? index}>
 															<td>
 																<div id='inv-product'>{item.item_name}</div>
 															</td>
@@ -1148,8 +1176,9 @@ const NutritionUpdateQuotation: React.FC = () => {
 				<button
 					type='button'
 					className='btn btn-success'
+					disabled={isGeneratingPDF || isSubmitting}
 					onClick={() => generatePDF(quotationData.name)}>
-					Download Invoice
+					{isGeneratingPDF ? 'Generating PDF...' : 'Download Invoice'}
 				</button>
 			</div>
 		</div>
