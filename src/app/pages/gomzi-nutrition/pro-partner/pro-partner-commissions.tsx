@@ -149,7 +149,7 @@ const ProPartnerCommissions: React.FC = () => {
 							</h1>
 							<span className='gz-partner-status-pill approved'>
 								<FontAwesomeIcon icon={faCheckCircle} />
-								<span>10% Standard Rate</span>
+								<span>Per-Product Credit Rates</span>
 							</span>
 						</div>
 						<p className='gz-partner-portal-subtitle'>
@@ -370,7 +370,7 @@ const ProPartnerCommissions: React.FC = () => {
 								<th>Gross Value</th>
 								<th>Client Discount</th>
 								<th>Net Paid</th>
-								<th style={{ color: '#78350F' }}>Commission (10%)</th>
+								<th style={{ color: '#78350F' }}>Commission</th>
 								<th>Payout Status</th>
 							</tr>
 						</thead>
@@ -512,6 +512,9 @@ const ProPartnerCommissions: React.FC = () => {
 													className='px-2 py-1 rounded-2 d-inline-block fw-bold'
 													style={{ background: '#FAF6F2', color: '#78350F', border: '1px solid #EFE4DC', fontSize: '13px' }}>
 													+₹{tx.commissionAmount.toLocaleString('en-IN')}
+												</div>
+												<div style={{ color: '#82756E', fontSize: '11px', marginTop: '2px' }}>
+													{tx.commissionRate}% of net paid
 												</div>
 											</td>
 

@@ -14,6 +14,13 @@ type AssignedUser = {
 	mobile?: string
 }
 
+/** Per-product coupon setting: website discount % for the customer, credit % (margin) for the coupon owner. */
+export interface CouponProductRule {
+	product_id: string
+	discount_percent: number
+	credit_percent: number
+}
+
 export function GetReferralCoupon(query?: {
 	coupon_id?: string
 	coupon_code?: string
@@ -38,6 +45,8 @@ export function CreateReferralCoupon(body: {
 	partner_mobile?: string
 	scope?: 'ALL' | 'SPECIFIC_PRODUCTS'
 	applicable_products?: string[]
+	product_rules?: CouponProductRule[]
+	credit_percent?: number | null
 }): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.CreateReferralCoupon, getAPIHeaders('fg_group'), undefined, body)
 }
@@ -59,6 +68,8 @@ export function UpdateReferralCoupon(body: {
 	partner_mobile?: string
 	scope?: 'ALL' | 'SPECIFIC_PRODUCTS'
 	applicable_products?: string[]
+	product_rules?: CouponProductRule[]
+	credit_percent?: number | null
 }): Promise<FGGroupAPIResponse> {
 	return APIPost(FGGroupEndpoints.UpdateReferralCoupon, getAPIHeaders('fg_group'), undefined, body)
 }

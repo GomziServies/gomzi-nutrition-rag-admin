@@ -35,6 +35,30 @@ const getProductImageUrl = (p: any): string => {
 	return `https://files.fggroup.in/${raw}`
 }
 
+// Per-product values typed in the selected-products table (kept as strings while editing).
+type RuleDraft = { discount_percent: string; credit_percent: string }
+
+const getProductUnitPrice = (p: any): number =>
+	Number(p?.discountPrice ?? p?.discount_price ?? p?.price ?? 0) || 0
+
+const formatINR = (n: number) =>
+	`₹${(Math.round((Number(n) || 0) * 100) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+
+const isValidPercent = (v: string | number) => {
+	const n = Number(v)
+	return String(v).trim() !== '' && Number.isFinite(n) && n >= 0 && n <= 100
+}
+
+// "10%" or "5–25%" across a coupon's per-product rules
+const ruleRangeLabel = (c: any, field: 'discount_percent' | 'credit_percent'): string | null => {
+	const rules: any[] = Array.isArray(c?.product_rules) ? c.product_rules : []
+	if (rules.length === 0) return null
+	const values = rules.map((r) => Number(r?.[field] || 0))
+	const min = Math.min(...values)
+	const max = Math.max(...values)
+	return min === max ? `${min}%` : `${min}–${max}%`
+}
+
 const ManageCoupon: React.FC = () => {
 	// View mode: 'list' (Table & KPIs) | 'generate' (Full-Page Generator Form)
 	const [viewMode, setViewMode] = useState<'list' | 'generate'>('list')
@@ -83,7 +107,30 @@ const ManageCoupon: React.FC = () => {
 		expired_at: DayJS().add(6, 'month').format('YYYY-MM-DD'),
 		scope: 'ALL' as 'ALL' | 'SPECIFIC_PRODUCTS',
 		applicable_products: [] as string[],
+		credit_percent: '10',
+		product_rules: {} as Record<string, RuleDraft>,
 	})
+
+	// A product without its own row values follows the coupon defaults.
+	const getRuleDraft = (productId: string): RuleDraft => ({
+		discount_percent: formState.product_rules[productId]?.discount_percent ?? formState.discount,
+		credit_percent: formState.product_rules[productId]?.credit_percent ?? formState.credit_percent,
+	})
+
+	const updateRuleDraft = (productId: string, field: keyof RuleDraft, value: string) => {
+		setFormState((prev) => {
+			const current: RuleDraft = {
+				discount_percent: prev.product_rules[productId]?.discount_percent ?? prev.discount,
+				credit_percent: prev.product_rules[productId]?.credit_percent ?? prev.credit_percent,
+			}
+			return { ...prev, product_rules: { ...prev.product_rules, [productId]: { ...current, [field]: value } } }
+		})
+	}
+
+	const resetRulesToDefault = () => {
+		setFormState((prev) => ({ ...prev, product_rules: {} }))
+		toast.success('All products now use the default discount and credit')
+	}
 
 	// Pagination
 	const [pagination, setPagination] = useState({
@@ -482,6 +529,8 @@ const ManageCoupon: React.FC = () => {
 			expired_at: DayJS().add(6, 'month').format('YYYY-MM-DD'),
 			scope: 'ALL',
 			applicable_products: [],
+			credit_percent: '10',
+			product_rules: {},
 		})
 		setViewMode('generate')
 		window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -508,9 +557,24 @@ const ManageCoupon: React.FC = () => {
 			setBeneficiaryType('general')
 		}
 
-		const applicableProductIds = Array.isArray(c.applicable_products)
-			? c.applicable_products.map((p: any) => (p && p._id ? p._id : String(p)))
-			: []
+		const ruleDrafts: Record<string, RuleDraft> = {}
+		;(Array.isArray(c.product_rules) ? c.product_rules : []).forEach((r: any) => {
+			const id = String(r?.product_id?._id || r?.product_id || '')
+			if (!id) return
+			ruleDrafts[id] = {
+				discount_percent: String(r.discount_percent ?? c.discount ?? 0),
+				credit_percent: String(r.credit_percent ?? c.credit_percent ?? 10),
+			}
+		})
+
+		const applicableProductIds: string[] = Array.from(
+			new Set([
+				...(Array.isArray(c.applicable_products)
+					? c.applicable_products.map((p: any) => String(p && p._id ? p._id : p))
+					: []),
+				...Object.keys(ruleDrafts),
+			])
+		)
 
 		setFormState({
 			title: c.title || '',
@@ -521,6 +585,8 @@ const ManageCoupon: React.FC = () => {
 			expired_at: c.expired_at ? DayJS(c.expired_at).format('YYYY-MM-DD') : '',
 			scope: c.scope || (applicableProductIds.length > 0 ? 'SPECIFIC_PRODUCTS' : 'ALL'),
 			applicable_products: applicableProductIds,
+			credit_percent: String(c.credit_percent ?? 10),
+			product_rules: ruleDrafts,
 		})
 
 		setViewMode('generate')
@@ -545,6 +611,45 @@ const ManageCoupon: React.FC = () => {
 		if (!formState.discount || Number(formState.discount) <= 0) {
 			toast.error('Please enter a valid discount value')
 			return
+		}
+
+		const isPercentCoupon = formState.discount_type === 'percent'
+		const earnsCredit = beneficiaryType !== 'general'
+
+		if (isPercentCoupon && Number(formState.discount) > 100) {
+			toast.error('Percentage discount cannot be more than 100%')
+			return
+		}
+		if (earnsCredit && !isValidPercent(formState.credit_percent)) {
+			toast.error('Default credit must be between 0% and 100%')
+			return
+		}
+
+		// One rule per selected product: website discount % for the customer, credit % for the owner.
+		const productRules: { product_id: string; discount_percent: number; credit_percent: number }[] = []
+		if (formState.scope === 'SPECIFIC_PRODUCTS') {
+			if (formState.applicable_products.length === 0) {
+				toast.error('Select at least one product, or choose All Products')
+				return
+			}
+			for (const productId of formState.applicable_products) {
+				const draft = getRuleDraft(productId)
+				const product = catalogProducts.find((p) => String(p._id) === productId)
+				const label = product?.title || product?.name || 'a selected product'
+				if (isPercentCoupon && !isValidPercent(draft.discount_percent)) {
+					toast.error(`Website discount for ${label} must be between 0% and 100%`)
+					return
+				}
+				if (earnsCredit && !isValidPercent(draft.credit_percent)) {
+					toast.error(`Credit for ${label} must be between 0% and 100%`)
+					return
+				}
+				productRules.push({
+					product_id: productId,
+					discount_percent: isPercentCoupon ? Number(draft.discount_percent) : 0,
+					credit_percent: earnsCredit ? Number(draft.credit_percent) : 0,
+				})
+			}
 		}
 
 		setSubmitting(true)
@@ -608,6 +713,8 @@ const ManageCoupon: React.FC = () => {
 				scope: formState.scope,
 				applicable_products:
 					formState.scope === 'SPECIFIC_PRODUCTS' ? formState.applicable_products : [],
+				product_rules: productRules,
+				credit_percent: earnsCredit ? Number(formState.credit_percent) : null,
 				coupon_type: couponType,
 				assigned_user: assignedUser,
 				partner_inquiry_id: partnerInquiryId,
@@ -674,7 +781,11 @@ const ManageCoupon: React.FC = () => {
 			Title: c.title || '',
 			'Beneficiary Type': c.coupon_type || 'General',
 			'Assigned To': c.assigned_user?.name || c.partner_name || c.assign_trainer?.name || 'Storewide',
-			Discount: `${c.discount || 0}${c.discount_type === 'percent' ? '%' : ' INR'}`,
+			Discount:
+				c.discount_type === 'percent'
+					? ruleRangeLabel(c, 'discount_percent') || `${c.discount || 0}%`
+					: `${c.discount || 0} INR`,
+			'Credit %': c.coupon_type === 'general' ? '-' : ruleRangeLabel(c, 'credit_percent') || `${c.credit_percent ?? 10}%`,
 			'Max Usage': c.max_usage_count || 1000,
 			'Expiry Date': c.expired_at ? DayJS(c.expired_at).format('YYYY-MM-DD') : 'None',
 		}))
@@ -989,8 +1100,15 @@ const ManageCoupon: React.FC = () => {
 													{/* Discount */}
 													<td>
 														<span className='gz-discount-pill'>
-															{c.discount}{c.discount_type === 'percent' ? '% Off' : ' ₹ Off'}
+															{c.discount_type === 'percent'
+																? `${ruleRangeLabel(c, 'discount_percent') || `${c.discount}%`} Off`
+																: `₹${c.discount} Off`}
 														</span>
+														{c.coupon_type !== 'general' && (
+															<div style={{ color: '#047857', fontSize: '11px', fontWeight: 600, marginTop: '4px' }}>
+																Credit {ruleRangeLabel(c, 'credit_percent') || `${c.credit_percent ?? 10}%`}
+															</div>
+														)}
 													</td>
 
 													{/* Expiry */}
@@ -1573,6 +1691,36 @@ const ManageCoupon: React.FC = () => {
 												))}
 											</div>
 										)}
+
+										{beneficiaryType !== 'general' && (
+											<div className='row g-2.5 align-items-center pt-2 mt-2 border-top' style={{ borderColor: '#EFE4DC' }}>
+												<div className='col-md-7'>
+													<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
+														Default Credit / Margin (%):
+													</label>
+													<div style={{ color: '#82756E', fontSize: '11px' }}>
+														What the {beneficiaryType === 'pro_partner' ? 'partner' : beneficiaryType} earns on the amount the customer pays.
+														{formState.scope === 'SPECIFIC_PRODUCTS' ? ' You can change it per product below.' : ''}
+													</div>
+												</div>
+												<div className='col-md-5'>
+													<div className='input-group'>
+														<input
+															type='number'
+															min={0}
+															max={100}
+															step='0.5'
+															aria-label='Default credit percent'
+															className='gz-input fw-bold'
+															style={{ height: '36px', fontSize: '13px' }}
+															value={formState.credit_percent}
+															onChange={(e) => setFormState({ ...formState, credit_percent: e.target.value })}
+														/>
+														<span className='input-group-text' style={{ height: '36px', fontSize: '12px' }}>%</span>
+													</div>
+												</div>
+											</div>
+										)}
 									</div>
 
 									{/* Step 4: Validity & Expiry */}
@@ -1667,13 +1815,39 @@ const ManageCoupon: React.FC = () => {
 										</div>
 									</div>
 
-									{/* Selected Product Summary Tray (if specific products chosen) */}
-									{formState.scope === 'SPECIFIC_PRODUCTS' && formState.applicable_products.length > 0 && (
-										<div className='gz-step-box mt-2 mb-0'>
-											<div className='d-flex align-items-center justify-content-between mb-1'>
-												<span className='fs-8 fw-bold' style={{ color: '#78350F' }}>
-													Selected Items ({formState.applicable_products.length}):
-												</span>
+								</div>
+							</div>
+
+							{/* Step 7: Per-product website discount & credit (only for specific products) */}
+							{formState.scope === 'SPECIFIC_PRODUCTS' && formState.applicable_products.length > 0 && (() => {
+								const isPercentCoupon = formState.discount_type === 'percent'
+								const earnsCredit = beneficiaryType !== 'general'
+								return (
+									<div className='gz-step-box mt-3 mb-0'>
+										<div className='d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2'>
+											<div className='gz-step-header mb-0'>
+												<div className='gz-step-num'>7</div>
+												<div>
+													<h4 className='gz-step-title'>
+														Discount & Credit per Product ({formState.applicable_products.length})
+													</h4>
+													<div style={{ color: '#82756E', fontSize: '11px' }}>
+														{isPercentCoupon
+															? 'Website %: the discount the customer gets on that product.'
+															: `Flat ₹${formState.discount || 0} is split across the eligible products in the cart.`}
+														{earnsCredit ? ' Credit %: what the coupon owner earns on what the customer pays.' : ''}
+													</div>
+												</div>
+											</div>
+											<div className='d-flex align-items-center gap-2'>
+												<button
+													type='button'
+													onClick={resetRulesToDefault}
+													className='gz-btn-brown-outline'
+													style={{ padding: '4px 10px', fontSize: '11.5px' }}>
+													<i className='bi bi-arrow-counterclockwise me-1'></i>
+													Use defaults for all
+												</button>
 												<button
 													type='button'
 													onClick={handleClearAllSelected}
@@ -1681,44 +1855,112 @@ const ManageCoupon: React.FC = () => {
 													Clear All
 												</button>
 											</div>
-											<div className='gz-selected-products-tray' style={{ maxHeight: '80px' }}>
-												{selectedProductsObjects.map((p) => {
-													const imgUrl = getProductImageUrl(p)
-													return (
-														<div key={p._id} className='gz-selected-chip'>
-															{imgUrl ? (
-																<img
-																	src={imgUrl}
-																	alt={p.title || p.name}
-																	className='gz-selected-chip-thumb'
-																	onError={(e) => {
-																		; (e.target as HTMLElement).style.display = 'none'
-																	}}
-																/>
-															) : (
-																<i className='bi bi-box-seam text-muted fs-8'></i>
-															)}
-															<span className='gz-selected-chip-title' title={p.title || p.name}>
-																{p.title || p.name}
-															</span>
-															<span className='gz-selected-chip-price'>
-																₹{p.price || 0}
-															</span>
-															<button
-																type='button'
-																className='gz-selected-chip-del'
-																title='Remove'
-																onClick={() => handleRemoveSingleProduct(p._id)}>
-																<i className='bi bi-x'></i>
-															</button>
-														</div>
-													)
-												})}
-											</div>
 										</div>
-									)}
-								</div>
-							</div>
+
+										<div className='table-responsive' style={{ maxHeight: '380px', overflowY: 'auto' }}>
+											<table className='table table-sm align-middle mb-0 fs-8'>
+												<thead style={{ position: 'sticky', top: 0, background: '#FDF9F5', zIndex: 1 }}>
+													<tr className='text-uppercase' style={{ color: '#5B270A' }}>
+														<th className='py-2 ps-2'>Product</th>
+														<th className='py-2 text-end'>Price</th>
+														{isPercentCoupon && <th className='py-2' style={{ width: '120px' }}>Website %</th>}
+														{earnsCredit && <th className='py-2' style={{ width: '120px' }}>Credit %</th>}
+														{isPercentCoupon && <th className='py-2 text-end'>Customer Pays</th>}
+														{earnsCredit && <th className='py-2 text-end'>Credit / Unit</th>}
+														<th className='py-2 pe-2'></th>
+													</tr>
+												</thead>
+												<tbody>
+													{selectedProductsObjects.map((p) => {
+														const id = String(p._id)
+														const imgUrl = getProductImageUrl(p)
+														const draft = getRuleDraft(id)
+														const unitPrice = getProductUnitPrice(p)
+														const discountPct = isPercentCoupon && isValidPercent(draft.discount_percent) ? Number(draft.discount_percent) : 0
+														const creditPct = isValidPercent(draft.credit_percent) ? Number(draft.credit_percent) : 0
+														const customerPays = unitPrice * (1 - discountPct / 100)
+														const creditPerUnit = (customerPays * creditPct) / 100
+														const isCustom = Boolean(formState.product_rules[id])
+														return (
+															<tr key={id}>
+																<td className='ps-2'>
+																	<div className='d-flex align-items-center gap-2'>
+																		{imgUrl ? (
+																			<img
+																				src={imgUrl}
+																				alt=''
+																				className='gz-selected-chip-thumb'
+																				onError={(e) => {
+																					; (e.target as HTMLElement).style.display = 'none'
+																				}}
+																			/>
+																		) : (
+																			<i className='bi bi-box-seam text-muted fs-8'></i>
+																		)}
+																		<div className='min-w-0'>
+																			<div className='fw-bold text-truncate' style={{ color: '#261E1A', maxWidth: '260px' }} title={p.title || p.name}>
+																				{p.title || p.name}
+																			</div>
+																			{!isCustom && <div style={{ color: '#A89F99', fontSize: '10.5px' }}>Using defaults</div>}
+																		</div>
+																	</div>
+																</td>
+																<td className='text-end fw-semibold'>{formatINR(unitPrice)}</td>
+																{isPercentCoupon && (
+																	<td>
+																		<div className='input-group input-group-sm'>
+																			<input
+																				type='number'
+																				min={0}
+																				max={100}
+																				step='0.5'
+																				aria-label={`Website discount percent for ${p.title || p.name}`}
+																				className={`form-control fw-bold ${isValidPercent(draft.discount_percent) ? '' : 'is-invalid'}`}
+																				value={draft.discount_percent}
+																				onChange={(e) => updateRuleDraft(id, 'discount_percent', e.target.value)}
+																			/>
+																			<span className='input-group-text'>%</span>
+																		</div>
+																	</td>
+																)}
+																{earnsCredit && (
+																	<td>
+																		<div className='input-group input-group-sm'>
+																			<input
+																				type='number'
+																				min={0}
+																				max={100}
+																				step='0.5'
+																				aria-label={`Credit percent for ${p.title || p.name}`}
+																				className={`form-control fw-bold ${isValidPercent(draft.credit_percent) ? '' : 'is-invalid'}`}
+																				value={draft.credit_percent}
+																				onChange={(e) => updateRuleDraft(id, 'credit_percent', e.target.value)}
+																			/>
+																			<span className='input-group-text'>%</span>
+																		</div>
+																	</td>
+																)}
+																{isPercentCoupon && <td className='text-end fw-bold' style={{ color: '#261E1A' }}>{formatINR(customerPays)}</td>}
+																{earnsCredit && <td className='text-end fw-bold' style={{ color: '#047857' }}>+{formatINR(creditPerUnit)}</td>}
+																<td className='pe-2 text-end'>
+																	<button
+																		type='button'
+																		className='gz-selected-chip-del'
+																		title='Remove product'
+																		aria-label={`Remove ${p.title || p.name}`}
+																		onClick={() => handleRemoveSingleProduct(id)}>
+																		<i className='bi bi-x'></i>
+																	</button>
+																</td>
+															</tr>
+														)
+													})}
+												</tbody>
+											</table>
+										</div>
+									</div>
+								)
+							})()}
 
 							{/* Bottom Action Footer */}
 							<div className='d-flex align-items-center justify-content-end gap-3 pt-3 mt-1 border-top' style={{ borderColor: '#EFE4DC' }}>
@@ -1963,9 +2205,18 @@ const ManageCoupon: React.FC = () => {
 									Assigned: {selectedCouponForUsage.assigned_user?.name || selectedCouponForUsage.partner_name || selectedCouponForUsage.assign_trainer?.name || 'Storewide'}
 								</div>
 							</div>
-							<span className='gz-discount-pill'>
-								{selectedCouponForUsage.discount}% Off
-							</span>
+							<div className='d-flex align-items-center gap-2 flex-wrap'>
+								<span className='gz-discount-pill'>
+									{selectedCouponForUsage.discount_type === 'percent'
+										? `${ruleRangeLabel(selectedCouponForUsage, 'discount_percent') || `${selectedCouponForUsage.discount}%`} Off`
+										: `₹${selectedCouponForUsage.discount} Off`}
+								</span>
+								{selectedCouponForUsage.coupon_type !== 'general' && (
+									<span className='gz-discount-pill' style={{ background: '#ECFDF5', color: '#047857' }}>
+										Credit earned: {formatINR(usageOrders.reduce((s, o) => s + Number(o.commission_amount || 0), 0))}
+									</span>
+								)}
+							</div>
 						</div>
 					)}
 
@@ -1978,27 +2229,29 @@ const ManageCoupon: React.FC = () => {
 									<th className='py-2.5'>Customer Details</th>
 									<th className='py-2.5'>Gross Value</th>
 									<th className='py-2.5'>Discount</th>
-									<th className='py-2.5 pe-3 text-end'>Paid Net</th>
+									<th className='py-2.5'>Paid Net</th>
+									<th className='py-2.5 pe-3 text-end'>Credit</th>
 								</tr>
 							</thead>
 							<tbody>
 								{usageLoading ? (
 									<tr>
-										<td colSpan={6} className='text-center py-4 text-muted'>
+										<td colSpan={7} className='text-center py-4 text-muted'>
 											Loading orders history...
 										</td>
 									</tr>
 								) : usageOrders.length === 0 ? (
 									<tr>
-										<td colSpan={6} className='text-center py-4 text-muted'>
+										<td colSpan={7} className='text-center py-4 text-muted'>
 											No orders have been redeemed using this coupon code yet.
 										</td>
 									</tr>
 								) : (
 									usageOrders.map((ord: any, idx: number) => {
-										const gross = Number(ord.amount || ord.notes?.gross_amount || 0)
-										const discount = Number(ord.notes?.discount_amount || 0)
-										const net = Number(ord.payment_breakdowns?.paid_amount || Math.max(0, gross - discount))
+										const discount = Number(ord.calculated_discount ?? ord.notes?.discount_amount ?? 0)
+										const net = Number(ord.calculated_paid ?? ord.payment_breakdowns?.paid_amount ?? ord.amount ?? 0)
+										const gross = Number(ord.calculated_gross ?? ord.notes?.gross_amount ?? net + discount)
+										const lines: any[] = Array.isArray(ord.coupon_lines) ? ord.coupon_lines : []
 
 										return (
 											<tr key={ord._id || idx}>
@@ -2007,10 +2260,24 @@ const ManageCoupon: React.FC = () => {
 												<td>
 													<div className='fw-bold text-dark'>{ord.user?.first_name || 'Customer'} {ord.user?.last_name || ''}</div>
 													<div className='text-muted fs-9'>{ord.user?.mobile || ord.user?.email || 'N/A'}</div>
+													{lines.map((l: any, i: number) => (
+														<div key={i} className='fs-9 mt-1' style={{ color: '#82756E' }}>
+															{l.name || catalogProducts.find((p) => String(p._id) === String(l.product_id))?.name || 'Product'} ×{l.quantity}
+															{' · '}
+															<span className='text-danger'>{l.discount_percent}% off</span>
+															{selectedCouponForUsage?.coupon_type !== 'general' && (
+																<>
+																	{' · '}
+																	<span style={{ color: '#047857' }}>{l.credit_percent}% credit = {formatINR(l.credit_amount)}</span>
+																</>
+															)}
+														</div>
+													))}
 												</td>
-												<td className='fw-bold text-dark'>₹{gross.toLocaleString('en-IN')}</td>
-												<td className='text-danger fw-semibold'>-₹{discount.toLocaleString('en-IN')}</td>
-												<td className='fw-bold pe-3 text-end' style={{ color: '#78350F' }}>₹{net.toLocaleString('en-IN')}</td>
+												<td className='fw-bold text-dark'>{formatINR(gross)}</td>
+												<td className='text-danger fw-semibold'>-{formatINR(discount)}</td>
+												<td className='fw-bold' style={{ color: '#78350F' }}>{formatINR(net)}</td>
+												<td className='fw-bold pe-3 text-end' style={{ color: '#047857' }}>+{formatINR(Number(ord.commission_amount || 0))}</td>
 											</tr>
 										)
 									})

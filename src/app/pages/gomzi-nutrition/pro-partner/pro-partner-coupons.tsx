@@ -70,12 +70,16 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = () => {
 
 	// Earnings + order count per coupon code
 	const statsByCode = useMemo(() => {
+		// Rows are per product, so count distinct orders.
 		const map: Record<string, { earnings: number; orders: number }> = {}
+		const seen: Record<string, Set<string>> = {}
 		orders.forEach((o) => {
 			const key = o.couponCode
 			if (!map[key]) map[key] = { earnings: 0, orders: 0 }
+			if (!seen[key]) seen[key] = new Set()
 			map[key].earnings += o.commissionAmount || 0
-			map[key].orders += 1
+			seen[key].add(String(o.orderId))
+			map[key].orders = seen[key].size
 		})
 		return map
 	}, [orders])
@@ -387,8 +391,25 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = () => {
 						const expired = isCouponExpired(c)
 						const link = `${STORE_BASE_URL}${c.coupon_code}`
 						const stat = statsByCode[c.coupon_code] || { earnings: 0, orders: 0 }
+						// Per-product website discount and partner credit, named from the populated products.
+						const productNames: Record<string, string> = {}
+						;(c.applicable_products || []).forEach((p: any) => {
+							if (p?._id) productNames[String(p._id)] = p.name || p.title || 'Product'
+						})
+						const productRates: { name: string; discount: number; credit: number }[] = (
+							Array.isArray(c.product_rules) ? c.product_rules : []
+						).map((r: any) => ({
+							name: productNames[String(r.product_id?._id || r.product_id)] || 'Product',
+							discount: Number(r.discount_percent || 0),
+							credit: Number(r.credit_percent || 0),
+						}))
+						const discounts = productRates.map((r) => r.discount)
 						const discountLabel =
-							c.discount_type === 'percent' ? `${c.discount || 10}% OFF` : `₹${c.discount} FLAT OFF`
+							c.discount_type !== 'percent'
+								? `₹${c.discount} FLAT OFF`
+								: discounts.length > 0 && Math.min(...discounts) !== Math.max(...discounts)
+								? `UP TO ${Math.max(...discounts)}% OFF`
+								: `${discounts[0] ?? c.discount ?? 10}% OFF`
 						const scopeLabel =
 							c.scope === 'SPECIFIC_PRODUCTS'
 								? `${c.applicable_products?.length || 0} selected products`
@@ -467,6 +488,31 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = () => {
 											{c.expired_at ? DayJS(c.expired_at).format('DD MMM YYYY') : 'Lifetime'}
 										</span>
 									</div>
+								</div>
+
+								<div style={{ margin: '10px 0 4px', fontSize: '12px' }}>
+									<div style={{ fontWeight: 700, color: '#82756E', fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+										Your credit
+									</div>
+									{productRates.length > 0 ? (
+										<ul style={{ listStyle: 'none', padding: 0, margin: 0, maxHeight: '120px', overflowY: 'auto' }}>
+											{productRates.map((r, i) => (
+												<li key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', padding: '2px 0' }}>
+													<span style={{ color: '#261E1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>
+														{r.name}
+													</span>
+													<span style={{ whiteSpace: 'nowrap' }}>
+														{c.discount_type === 'percent' && <span style={{ color: '#B91C1C' }}>{r.discount}% off · </span>}
+														<span style={{ color: '#047857', fontWeight: 700 }}>{r.credit}% credit</span>
+													</span>
+												</li>
+											))}
+										</ul>
+									) : (
+										<span style={{ color: '#047857', fontWeight: 700 }}>
+											{c.credit_percent ?? 10}% of what your client pays
+										</span>
+									)}
 								</div>
 
 								<div className='gz-pc-foot'>

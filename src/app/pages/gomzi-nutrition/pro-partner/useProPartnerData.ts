@@ -62,6 +62,25 @@ export interface ApprovedPartnerInfo {
 const RAG_CONTACT_SOURCE_FILTER = 'gomzilifesciences|ragnutrition|contact-us|5173|whey|rag'
 const DEFAULT_COMMISSION_PERCENT = 10
 
+// Single line from order totals, for API responses that predate per-product coupon lines.
+function buildFallbackLine(ord: any) {
+	const net = Number(ord?.calculated_paid ?? ord?.payment_breakdowns?.paid_amount ?? ord?.amount ?? 0)
+	const discount = Number(ord?.calculated_discount ?? ord?.notes?.discount_amount ?? 0)
+	const gross = Number(ord?.calculated_gross ?? net + discount)
+	const credit = Number(ord?.commission_amount ?? Math.round(net * DEFAULT_COMMISSION_PERCENT) / 100)
+	return {
+		product_id: ord?.order_item_id || ord?.multiple_items?.[0]?.item_id || '',
+		name: ord?.multiple_items?.[0]?.notes?.product_name,
+		quantity: Number(ord?.multiple_items?.[0]?.quantity || 1),
+		gross_amount: gross,
+		discount_amount: discount,
+		discount_percent: gross > 0 ? Math.round((discount / gross) * 10000) / 100 : 0,
+		net_amount: net,
+		credit_amount: credit,
+		credit_percent: net > 0 ? Math.round((credit / net) * 10000) / 100 : DEFAULT_COMMISSION_PERCENT,
+	}
+}
+
 export function useProPartnerData(partnerIdParam?: string | null) {
 	const [loading, setLoading] = useState(true)
 	const [coupons, setCoupons] = useState<any[]>([])
@@ -206,10 +225,6 @@ export function useProPartnerData(partnerIdParam?: string | null) {
 							matchedPartner?.mobile ||
 							''
 
-						const couponDiscountPercent =
-							coupon.discount_type === 'percent' ? Number(coupon.discount || 10) : 10
-						const commissionRate = DEFAULT_COMMISSION_PERCENT
-
 						ords.forEach((ord: any, idx: number) => {
 							const userObj = ord?.user || ord?.user_id || {}
 							const customerName =
@@ -221,50 +236,42 @@ export function useProPartnerData(partnerIdParam?: string | null) {
 								userObj?.mobile || userObj?.phone_number || ord?.shipping_address?.mobile || 'N/A'
 							const customerEmail = userObj?.email || ord?.shipping_address?.email || ''
 
-							const items: any[] = Array.isArray(ord?.items)
-								? ord.items
-								: Array.isArray(ord?.products)
-								? ord.products
-								: [ord]
+							// The API returns one line per coupon product with its own discount % and credit %.
+							// Older API responses only have order totals, so fall back to a single line.
+							const lines: any[] =
+								Array.isArray(ord?.coupon_lines) && ord.coupon_lines.length > 0
+									? ord.coupon_lines
+									: [buildFallbackLine(ord)]
 
-							items.forEach((itemObj: any, itemIdx: number) => {
-								const pId = String(
-									itemObj?.product_id?._id || itemObj?.product_id || itemObj?.product || ''
-								)
+							lines.forEach((line: any, itemIdx: number) => {
+								const pId = String(line?.product_id?._id || line?.product_id || '')
 								const matchedCatalogProduct = pMap[pId] || {}
 
 								const productName =
-									itemObj?.title ||
-									itemObj?.name ||
-									itemObj?.product_name ||
+									line?.name ||
 									matchedCatalogProduct?.title ||
 									matchedCatalogProduct?.name ||
-									'Authentic Nutrition Product'
+									'Nutrition Product'
 
 								const productImage =
-									itemObj?.image ||
-									itemObj?.thumbnail ||
 									matchedCatalogProduct?.thumbnail_image ||
 									matchedCatalogProduct?.featured_image ||
+									(Array.isArray(matchedCatalogProduct?.displayImages)
+										? matchedCatalogProduct.displayImages[0]
+										: '') ||
 									(Array.isArray(matchedCatalogProduct?.images)
 										? matchedCatalogProduct.images[0]
 										: '') ||
 									''
 
-								const qty = Number(itemObj?.quantity || itemObj?.qty || 1)
-								const unitPrice = Number(
-									itemObj?.price ||
-										itemObj?.unit_price ||
-										matchedCatalogProduct?.price ||
-										matchedCatalogProduct?.discount_price ||
-										999
-								)
-								const originalTotal = unitPrice * qty
-								const discountVal =
-									Math.round(originalTotal * (couponDiscountPercent / 100)) ||
-									Number(ord?.discount_amount || 0)
-								const paidVal = Math.max(0, originalTotal - discountVal)
-								const commissionVal = Math.round(paidVal * (commissionRate / 100))
+								const qty = Number(line?.quantity || 1)
+								const originalTotal = Number(line?.gross_amount || 0)
+								const discountVal = Number(line?.discount_amount || 0)
+								const paidVal = Number(line?.net_amount ?? Math.max(0, originalTotal - discountVal))
+								const commissionVal = Number(line?.credit_amount || 0)
+								const commissionRate = Number(line?.credit_percent || 0)
+								const couponDiscountPercent = Number(line?.discount_percent || 0)
+								const unitPrice = qty > 0 ? originalTotal / qty : originalTotal
 
 								txList.push({
 									id: `${ord?._id || ord?.id || 'ORD'}-${idx}-${itemIdx}`,
@@ -321,7 +328,8 @@ export function useProPartnerData(partnerIdParam?: string | null) {
 
 	// Computed Metrics
 	const metrics = useMemo(() => {
-		const totalOrders = orders.length
+		// Rows are per product; an order with two coupon products is still one order.
+		const totalOrders = new Set(orders.map((o) => o.orderId)).size
 		const totalRevenue = orders.reduce((sum, o) => sum + (o.paidAmount || 0), 0)
 		const totalOriginal = orders.reduce((sum, o) => sum + (o.orderAmount || 0), 0)
 		const totalDiscount = orders.reduce((sum, o) => sum + (o.discountAmount || 0), 0)
