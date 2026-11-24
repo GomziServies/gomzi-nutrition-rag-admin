@@ -1,28 +1,28 @@
-import React, { useState, useEffect } from 'react'
-import { Modal } from 'react-bootstrap'
-import toast from 'react-hot-toast'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-	faUserShield,
-	faKey,
+	faArrowRight,
+	faCheck,
+	faCheckCircle,
 	faCopy,
+	faEnvelope,
+	faExclamationTriangle,
 	faEye,
 	faEyeSlash,
-	faCheckCircle,
-	faExclamationTriangle,
-	faInfoCircle,
-	faSpinner,
+	faKey,
 	faPaperPlane,
-	faArrowRight,
-	faShieldAlt,
-	faEnvelope,
-	faCheck,
 	faRedo,
+	faUserShield,
 } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { useEffect, useState } from 'react'
+import { Modal } from 'react-bootstrap'
+import toast from 'react-hot-toast'
 import {
 	CreatePartnerAccount,
 	PartnerAccountResponseData,
 } from '../../../Functions/FGGroup/ContactInquiry'
+import './PartnerAccountModal.css'
+
+const PARTNER_PORTAL_LOGIN_URL = 'https://admin.ragnutrition.in/rag/login'
 
 export interface PartnerAccountModalProps {
 	show: boolean
@@ -84,17 +84,9 @@ export const PartnerAccountModal: React.FC<PartnerAccountModalProps> = ({
 	const [copiedField, setCopiedField] = useState<string | null>(null)
 	const [credentials, setCredentials] = useState<PartnerAccountResponseData | null>(null)
 
-	const applicantName = (
-		inquiry?.details?.full_name ||
-		inquiry?.name ||
-		'Partner Applicant'
-	).trim()
+	const applicantName = (inquiry?.details?.full_name || inquiry?.name || 'Partner Applicant').trim()
 	const rawEmail = (inquiry?.email || inquiry?.details?.email || '').trim().toLowerCase()
-	const applicantMobile = (
-		inquiry?.mobile ||
-		inquiry?.details?.mobile ||
-		'N/A'
-	).trim()
+	const applicantMobile = (inquiry?.mobile || inquiry?.details?.mobile || 'N/A').trim()
 	const existingAccount = inquiry?.details?.partner_account
 
 	// Initialize credentials if inquiry already has an account provisioned
@@ -136,15 +128,11 @@ export const PartnerAccountModal: React.FC<PartnerAccountModalProps> = ({
 
 	const handleCopyAll = async () => {
 		if (!credentials) return
-		const origin = typeof window !== 'undefined' && window.location?.origin
-			? window.location.origin
-			: 'http://localhost:3000'
-		const loginUrl = `${origin}/rag/login`
 
 		const payload = [
 			'RAG Pro Partner Portal Credentials',
 			'==================================',
-			`Portal Login: ${loginUrl}`,
+			`Portal Login: ${PARTNER_PORTAL_LOGIN_URL}`,
 			`Partner Email: ${credentials.email}`,
 			`Password: ${credentials.password}`,
 			'Target Portal: /rag/pro-partner/coupons',
@@ -218,10 +206,12 @@ export const PartnerAccountModal: React.FC<PartnerAccountModalProps> = ({
 		}
 	}
 
-	const originUrl = typeof window !== 'undefined' && window.location?.origin
-		? window.location.origin
-		: 'http://localhost:3000'
-	const portalUrlPreview = `${originUrl}/rag/login`
+	const initials = applicantName
+		.split(/\s+/)
+		.slice(0, 2)
+		.map((part: string) => part[0])
+		.join('')
+		.toUpperCase()
 
 	return (
 		<Modal
@@ -229,390 +219,242 @@ export const PartnerAccountModal: React.FC<PartnerAccountModalProps> = ({
 			onHide={() => {
 				if (!loading) onClose()
 			}}
-			size='lg'
 			centered
+			scrollable
+			className='partner-account-modal'
+			backdropClassName='partner-account-backdrop'
 			backdrop={loading ? 'static' : true}
 			keyboard={!loading}
 			aria-labelledby='partner-account-modal-title'
+			aria-describedby='partner-account-modal-description'
 			onClick={(event: React.MouseEvent) => event.stopPropagation()}>
 			<Modal.Header closeButton={!loading}>
-				<Modal.Title id='partner-account-modal-title' className='d-flex align-items-center gap-2'>
-					<FontAwesomeIcon
-						icon={faUserShield}
-						className={credentials ? 'text-success fs-3' : 'text-primary fs-3'}
-					/>
+				<div className='partner-account-heading'>
+					<span
+						className='partner-account-heading-icon'
+						aria-hidden='true'>
+						<FontAwesomeIcon icon={faUserShield} />
+					</span>
 					<div>
-						<div className='fs-5 fw-bold text-dark'>
-							{credentials ? 'Pro Partner Portal Credentials' : 'Pro Partner Portal Account'}
-						</div>
-						<div className='fs-8 text-muted fw-normal'>
+						<Modal.Title id='partner-account-modal-title'>
+							{credentials ? 'Partner login details' : 'Create partner account'}
+						</Modal.Title>
+						<p id='partner-account-modal-description'>
 							{credentials
-								? 'Active authentication credentials for partner portal access'
-								: 'Provision dedicated credentials with strict RBAC portal redirection'}
-						</div>
+								? 'Manage this partner’s access and share their login details.'
+								: 'Give your approved partner access to their own portal.'}
+						</p>
 					</div>
-				</Modal.Title>
+				</div>
 			</Modal.Header>
 
-			<Modal.Body className='py-4'>
-				{/* In-Modal Error Alert Banner with Retry Support */}
+			<Modal.Body aria-busy={loading}>
 				{error && (
-					<div className='alert alert-danger d-flex align-items-center mb-4' role='alert'>
-						<FontAwesomeIcon icon={faExclamationTriangle} className='fs-4 text-danger me-3 flex-shrink-0' />
+					<div
+						className='partner-account-notice is-error'
+						role='alert'>
+						<FontAwesomeIcon icon={faExclamationTriangle} />
 						<div>
-							<div className='fw-bold'>Account Generation Failed</div>
-							<div className='fs-7'>{error}</div>
+							<strong>Could not update partner access</strong>
+							<p>{error}</p>
 						</div>
 					</div>
 				)}
 
-				{!credentials ? (
-					/* =========================================================
-					   INITIAL STATE: Account Not Yet Generated
-					   ========================================================= */
-					<div className='partner-account-initial-state'>
-						{/* Context Overview Banner */}
-						<div
-							className='d-flex align-items-start gap-3 p-4 mb-4 rounded-3'
-							style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-							<FontAwesomeIcon icon={faShieldAlt} className='text-primary fs-2 mt-1 flex-shrink-0' />
-							<div>
-								<div className='fw-bold text-primary fs-6 mb-1'>
-									Pro Partner Authentication Account
-								</div>
-								<div className='fs-7 text-dark' style={{ lineHeight: 1.5 }}>
-									Provisioning an account enables the partner to access their dedicated coupon
-									management portal. Upon login, the RBAC security layer strictly isolates them
-									to authorized partner endpoints.
-								</div>
-							</div>
-						</div>
-
-						{/* Applicant Profile Information Card */}
-						<div
-							className='p-4 mb-4 rounded-3'
-							style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-							<div className='d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-gray-200'>
-								<span className='fw-bold text-dark fs-6'>Applicant Credentials Target</span>
-								<span
-									className='badge'
-									style={{
-										background: '#ECFDF5',
-										color: '#047857',
-										border: '1px solid #A7F3D0',
-										fontSize: '11px',
-										fontWeight: 700,
-										padding: '4px 8px',
-										borderRadius: '6px',
-									}}>
-									Application Approved
-								</span>
-							</div>
-
-							<div className='row g-3'>
-								<div className='col-md-6'>
-									<span className='text-muted fs-8 text-uppercase fw-bold d-block mb-1'>
-										Applicant Legal Name
-									</span>
-									<span className='fw-bold text-dark fs-6'>{applicantName}</span>
-								</div>
-
-								<div className='col-md-6'>
-									<span className='text-muted fs-8 text-uppercase fw-bold d-block mb-1'>
-										Login Identifier (Email)
-									</span>
-									<span className='fw-bold text-primary fs-6 font-monospace'>
-										{rawEmail || 'No email specified'}
-									</span>
-								</div>
-
-								<div className='col-md-6'>
-									<span className='text-muted fs-8 text-uppercase fw-bold d-block mb-1'>
-										Registered Mobile
-									</span>
-									<span className='text-dark fs-7 font-monospace'>{applicantMobile}</span>
-								</div>
-
-								<div className='col-md-6'>
-									<span className='text-muted fs-8 text-uppercase fw-bold d-block mb-1'>
-										Assigned Security Role
-									</span>
-									<span className='badge badge-light-primary font-monospace fw-bold'>
-										RAG_Pro_Partner
-									</span>
-								</div>
-							</div>
-						</div>
-
-						{/* Portal Destination & Redirection Lockdown Notice */}
-						<div
-							className='p-4 mb-4 rounded-3'
-							style={{ background: '#FFFFFF', border: '1px solid #DFE7F0' }}>
-							<div className='d-flex align-items-start gap-3'>
-								<div
-									className='d-inline-flex align-items-center justify-content-center flex-shrink-0 mt-1 rounded-circle'
-									style={{
-										width: '32px',
-										height: '32px',
-										background: '#EEF2FF',
-										color: '#4F46E5',
-									}}>
-									<FontAwesomeIcon icon={faArrowRight} />
-								</div>
-								<div className='flex-grow-1'>
-									<div className='fw-bold text-dark fs-6 mb-1'>
-										Strict Portal Redirection Route
-									</div>
-									<div className='fs-7 text-muted mb-2'>
-										Upon successful authentication, partner sessions are strictly locked to:
-									</div>
-									<div className='d-inline-flex align-items-center gap-2 px-3 py-2 bg-light rounded border font-monospace text-primary fw-bold fs-7 mb-2'>
-										<span>/rag/pro-partner/coupons</span>
-									</div>
-									<div className='fs-8 text-muted'>
-										Administrative routes (Dashboard, Deals, Inventory, HR) are completely
-										inaccessible to this role and will immediately redirect to the coupon portal.
-									</div>
-								</div>
-							</div>
-						</div>
-
-						{/* Deterministic Rule Informational Banner */}
-						<div
-							className='p-3 rounded-2 d-flex align-items-center gap-2 fs-7'
-							style={{ background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E' }}>
-							<FontAwesomeIcon icon={faKey} className='text-warning' />
-							<span>
-								Auto-generated password follows deterministic rule:{' '}
-								<strong className='font-monospace'>
-									{rawEmail ? derivePartnerPassword(rawEmail) : '<email_prefix>1234'}
-								</strong>
+				<section
+					className='partner-account-applicant'
+					aria-label='Applicant details'>
+					<div className='partner-account-applicant-header'>
+						<div className='partner-account-identity'>
+							<span
+								className='partner-account-avatar'
+								aria-hidden='true'>
+								{initials}
 							</span>
+							<div>
+								<span className='partner-account-label'>Partner applicant</span>
+								<h3>{applicantName}</h3>
+							</div>
 						</div>
+						<span className='partner-account-status'>
+							<FontAwesomeIcon icon={faCheckCircle} /> Approved
+						</span>
 					</div>
-				) : (
-					/* =========================================================
-					   RESULT STATE: Credentials Generated / Existing Account
-					   ========================================================= */
-					<div className='partner-account-result-state'>
-						{/* Delivery Status Banner */}
-						{credentials.email_status === 'failed' ? (
-							<div className='alert alert-warning d-flex align-items-start gap-3 p-4 mb-4 rounded-3 border-warning shadow-sm' role='alert'>
-								<FontAwesomeIcon
-									icon={faExclamationTriangle}
-									className='text-warning fs-2 mt-1 flex-shrink-0'
-								/>
-								<div>
-									<div className='d-flex align-items-center gap-2 mb-1'>
-										<span className='badge bg-warning text-dark fw-bold text-uppercase' style={{ fontSize: '10px' }}>
-											Email Delivery Failed
-										</span>
-										<strong className='text-warning-emphasis fs-6'>
-											Notice: Automated Email Could Not Be Sent
-										</strong>
-									</div>
-									<div className='fs-7 text-dark' style={{ lineHeight: 1.5 }}>
-										The credentials were created successfully, but the email notification service
-										could not deliver to the applicant (SMTP unavailable).{' '}
-										<strong>Please manually copy the credentials below and provide them to the partner</strong> via WhatsApp, SMS, or direct contact.
-									</div>
-								</div>
-							</div>
-						) : (
-							<div className='alert alert-success d-flex align-items-start gap-3 p-4 mb-4 rounded-3 border-success shadow-sm' role='alert'>
-								<FontAwesomeIcon
-									icon={faCheckCircle}
-									className='text-success fs-2 mt-1 flex-shrink-0'
-								/>
-								<div>
-									<div className='d-flex align-items-center gap-2 mb-1'>
-										<span className='badge bg-success text-white fw-bold text-uppercase' style={{ fontSize: '10px' }}>
-											Email Sent
-										</span>
-										<strong className='text-success fs-6'>
-											Credentials Notification Dispatched
-										</strong>
-									</div>
-									<div className='fs-7 text-dark' style={{ lineHeight: 1.5 }}>
-										Login credentials have been successfully emailed to{' '}
-										<strong>{credentials.email}</strong> (chiragpandey600@gmail.com in CC).
-									</div>
-								</div>
-							</div>
-						)}
+					<dl className='partner-account-details'>
+						<div>
+							<dt>Email address</dt>
+							<dd>{rawEmail || 'No email provided'}</dd>
+						</div>
+						<div>
+							<dt>Contact mobile</dt>
+							<dd>{applicantMobile === 'N/A' ? 'Not provided' : applicantMobile}</dd>
+						</div>
+						<div>
+							<dt>Account type</dt>
+							<dd>RAG Pro Partner</dd>
+						</div>
+						<div>
+							<dt>Portal access</dt>
+							<dd>{credentials ? 'Account created' : 'Ready to create'}</dd>
+						</div>
+					</dl>
+				</section>
 
-						{/* Existing Account Context Notice */}
-						{credentials.is_existing && (
-							<div className='alert alert-primary d-flex align-items-center gap-3 py-2 px-3 mb-4 rounded fs-7'>
-								<FontAwesomeIcon icon={faInfoCircle} className='text-primary' />
+				{!credentials ? (
+					<>
+						<section
+							className='partner-account-destination'
+							aria-label='Partner portal'>
+							<div className='partner-account-section-heading'>
+								<span className='partner-account-destination-icon'>
+									<FontAwesomeIcon icon={faArrowRight} />
+								</span>
 								<div>
-									<span className='badge bg-light-primary text-primary fw-bold text-uppercase me-2' style={{ fontSize: '10px' }}>
-										Account Active
-									</span>
-									<span>Pro Partner portal account is active in the system.</span>
+									<h3>Their dedicated partner portal</h3>
+									<p>Access to their assigned coupons, referred orders and commissions.</p>
 								</div>
 							</div>
-						)}
-
-						{/* Credentials Fields Box */}
+							<div className='partner-account-url'>{PARTNER_PORTAL_LOGIN_URL}</div>
+						</section>
 						<div
-							className='p-4 mb-4 rounded-3'
-							style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-							{/* Login Identifier */}
-							<div className='mb-3'>
-								<label className='form-label text-dark fw-bold fs-7 mb-1'>
-									Partner Login Identifier (Email)
-								</label>
-								<div className='input-group'>
-									<span className='input-group-text bg-white border-end-0 text-muted'>
-										<FontAwesomeIcon icon={faEnvelope} />
-									</span>
-									<input
-										type='text'
-										readOnly
-										className='form-control form-control-solid font-monospace fw-bold bg-white text-dark'
-										value={credentials.email}
-										aria-label='Partner Login Identifier'
-									/>
-									<button
-										type='button'
-										className={`btn ${copiedField === 'Email' ? 'btn-success' : 'btn-light-primary'} d-inline-flex align-items-center gap-1`}
-										onClick={() => handleCopy(credentials.email, 'Email')}
-										title='Copy Login Email'>
-										<FontAwesomeIcon icon={copiedField === 'Email' ? faCheck : faCopy} />
-										<span>{copiedField === 'Email' ? 'Copied' : 'Copy'}</span>
-									</button>
-								</div>
-							</div>
-
-							{/* Generated Password with Visibility Toggle */}
-							<div className='mb-3'>
-								<div className='d-flex justify-content-between align-items-center mb-1'>
-									<label className='form-label text-dark fw-bold fs-7 mb-0'>
-										Generated Portal Password
-									</label>
-									<span className='fs-8 text-muted font-monospace'>Rule: &lt;email_prefix&gt;1234</span>
-								</div>
-								<div className='input-group'>
-									<span className='input-group-text bg-white border-end-0 text-muted'>
-										<FontAwesomeIcon icon={faKey} />
-									</span>
-									<input
-										type={showPassword ? 'text' : 'password'}
-										readOnly
-										className='form-control form-control-solid font-monospace fw-bold bg-white text-dark'
-										value={credentials.password}
-										aria-label='Generated Portal Password'
-									/>
-									<button
-										type='button'
-										className='btn btn-light-secondary d-inline-flex align-items-center'
-										onClick={() => setShowPassword(!showPassword)}
-										title={showPassword ? 'Hide Password' : 'Show Password'}>
-										<FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
-									</button>
-									<button
-										type='button'
-										className={`btn ${copiedField === 'Password' ? 'btn-success' : 'btn-light-primary'} d-inline-flex align-items-center gap-1`}
-										onClick={() => handleCopy(credentials.password, 'Password')}
-										title='Copy Password'>
-										<FontAwesomeIcon icon={copiedField === 'Password' ? faCheck : faCopy} />
-										<span>{copiedField === 'Password' ? 'Copied' : 'Copy'}</span>
-									</button>
-								</div>
-							</div>
-
-							{/* Portal Destination Route */}
-							<div className='mb-0'>
-								<label className='form-label text-dark fw-bold fs-7 mb-1'>
-									Portal Destination URL
-								</label>
-								<div className='input-group'>
-									<span className='input-group-text bg-white border-end-0 text-muted'>
-										<FontAwesomeIcon icon={faArrowRight} />
-									</span>
-									<input
-										type='text'
-										readOnly
-										className='form-control form-control-solid font-monospace bg-white text-dark fs-8'
-										value={`${portalUrlPreview} (→ ${credentials.portal_url || '/rag/pro-partner/coupons'})`}
-										aria-label='Portal Destination URL'
-									/>
-									<button
-										type='button'
-										className={`btn ${copiedField === 'Portal URL' ? 'btn-success' : 'btn-light-primary'} d-inline-flex align-items-center gap-1`}
-										onClick={() => handleCopy(portalUrlPreview, 'Portal URL')}
-										title='Copy Portal Login URL'>
-										<FontAwesomeIcon icon={copiedField === 'Portal URL' ? faCheck : faCopy} />
-										<span>{copiedField === 'Portal URL' ? 'Copied' : 'Copy'}</span>
-									</button>
-								</div>
+							className='partner-account-notice'
+							role='note'>
+							<FontAwesomeIcon icon={faEnvelope} />
+							<div>
+								<strong>Login details delivered by email</strong>
+								<p>We’ll create the account and email the partner their sign-in details.</p>
 							</div>
 						</div>
-
-						{/* Primary Action: Copy All Credentials */}
+					</>
+				) : (
+					<>
+						<div
+							className={`partner-account-notice ${
+								credentials.email_status === 'failed' ? 'is-warning' : 'is-success'
+							}`}
+							role={credentials.email_status === 'failed' ? 'alert' : 'status'}>
+							<FontAwesomeIcon
+								icon={credentials.email_status === 'failed' ? faExclamationTriangle : faCheckCircle}
+							/>
+							<div>
+								<strong>
+									{credentials.email_status === 'failed'
+										? 'Account ready. Email was not delivered.'
+										: 'Login details sent'}
+								</strong>
+								<p>
+									{credentials.email_status === 'failed' ? (
+										'Copy the details below to share with the partner, or retry sending the email.'
+									) : (
+										<>
+											Login details have been emailed to{' '}
+											<span className='partner-account-recipient'>{credentials.email}</span>.
+										</>
+									)}
+								</p>
+							</div>
+						</div>
+						<div className='partner-account-credentials'>
+							{[
+								{ key: 'Email', label: 'Login email', value: credentials.email, icon: faEnvelope },
+								{
+									key: 'Password',
+									label: 'Portal password',
+									value: credentials.password,
+									icon: faKey,
+								},
+								{
+									key: 'Portal URL',
+									label: 'Portal login URL',
+									value: PARTNER_PORTAL_LOGIN_URL,
+									icon: faArrowRight,
+								},
+							].map((field, index) => (
+								<div
+									className='partner-account-field'
+									key={field.key}>
+									<label htmlFor={`partner-account-field-${index}`}>{field.label}</label>
+									<div className='partner-account-input-group'>
+										<FontAwesomeIcon
+											icon={field.icon}
+											className='partner-account-field-icon'
+										/>
+										<input
+											id={`partner-account-field-${index}`}
+											type={field.key === 'Password' && !showPassword ? 'password' : 'text'}
+											readOnly
+											value={field.value}
+										/>
+										{field.key === 'Password' && (
+											<button
+												type='button'
+												className='partner-account-icon-button'
+												onClick={() => setShowPassword(!showPassword)}
+												aria-label={showPassword ? 'Hide password' : 'Show password'}
+												aria-pressed={showPassword}>
+												<FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+											</button>
+										)}
+										<button
+											type='button'
+											className='partner-account-copy-button'
+											onClick={() => handleCopy(field.value, field.key)}
+											aria-label={`Copy ${field.label.toLowerCase()}`}>
+											<FontAwesomeIcon icon={copiedField === field.key ? faCheck : faCopy} />
+											<span>{copiedField === field.key ? 'Copied' : 'Copy'}</span>
+										</button>
+									</div>
+								</div>
+							))}
+						</div>
 						<button
 							type='button'
-							className={`btn ${copiedField === 'All Credentials' ? 'btn-success' : 'btn-primary'} fw-bold py-3 w-100 d-inline-flex align-items-center justify-content-center gap-2 mb-2 shadow-sm`}
-							onClick={handleCopyAll}
-							style={{ fontSize: '14px' }}>
+							className='partner-account-button is-secondary partner-account-copy-all'
+							onClick={handleCopyAll}>
 							<FontAwesomeIcon icon={copiedField === 'All Credentials' ? faCheck : faCopy} />
-							<span>
-								{copiedField === 'All Credentials'
-									? 'Copied!'
-									: 'Copy All Credentials'}
-							</span>
+							{copiedField === 'All Credentials'
+								? 'Login details copied'
+								: 'Copy all login details'}
 						</button>
-					</div>
+					</>
 				)}
 			</Modal.Body>
 
-			<Modal.Footer className='d-flex justify-content-between align-items-center'>
+			<Modal.Footer>
 				<button
 					type='button'
-					className='btn btn-light'
+					className='partner-account-button is-secondary'
 					onClick={onClose}
 					disabled={loading}>
-					Close
+					{credentials ? 'Done' : 'Cancel'}
 				</button>
-
-				{!credentials ? (
-					<button
-						type='button'
-						className='btn btn-primary fw-bold d-inline-flex align-items-center gap-2'
-						onClick={handleGenerate}
-						disabled={loading || !rawEmail}>
-						{loading ? (
-							<>
-								<span className='spinner-border spinner-border-sm me-1' role='status' aria-hidden='true' />
-								<span>Generating Credentials...</span>
-							</>
-						) : (
-							<>
-								<FontAwesomeIcon icon={faPaperPlane} />
-								<span>{error ? 'Retry Account Generation' : 'Generate Credentials & Send Notification'}</span>
-							</>
-						)}
-					</button>
-				) : (
-					<button
-						type='button'
-						className='btn btn-light-primary d-inline-flex align-items-center gap-2'
-						onClick={handleGenerate}
-						disabled={loading}>
-						{loading ? (
-							<>
-								<span className='spinner-border spinner-border-sm me-1' role='status' aria-hidden='true' />
-								<span>Updating…</span>
-							</>
-						) : (
-							<>
-								<FontAwesomeIcon icon={faRedo} />
-								<span>Re-send / Refresh Credentials</span>
-							</>
-						)}
-					</button>
-				)}
+				<button
+					type='button'
+					className='partner-account-button is-primary'
+					onClick={handleGenerate}
+					disabled={loading || !rawEmail}>
+					{loading ? (
+						<>
+							<span
+								className='spinner-border spinner-border-sm'
+								role='status'
+								aria-label='Updating partner account'
+							/>
+							<span>{credentials ? 'Sending email…' : 'Creating account…'}</span>
+						</>
+					) : (
+						<>
+							<FontAwesomeIcon icon={credentials ? faRedo : faPaperPlane} />
+							<span>
+								{credentials
+									? 'Refresh & resend email'
+									: error
+									? 'Try again'
+									: 'Create account & send email'}
+							</span>
+						</>
+					)}
+				</button>
 			</Modal.Footer>
 		</Modal>
 	)

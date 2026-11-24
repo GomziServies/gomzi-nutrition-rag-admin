@@ -20,7 +20,17 @@ import toast from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import { GetOrders, SetProductOrderTrackingStatus, UpdateOrder } from '../../../Functions/FGGroup'
+import {
+	GetOrders,
+	SetProductOrderTrackingStatus,
+	UpdateOrder,
+	CreateShiprocketShipmentAdmin,
+	TrackShiprocketShipmentAdmin,
+	RequestShiprocketPickupAdmin,
+	GetShiprocketLabelAdmin,
+	CancelShiprocketOrderAdmin,
+	ShiprocketData,
+} from '../../../Functions/FGGroup'
 import '../products-theme.css'
 import '../orders-theme.css'
 import { getOrderContact } from './order-contact'
@@ -36,6 +46,8 @@ const ProductOrderView: React.FC = () => {
 	const [showDiv, setShowDiv] = useState(false)
 	const [loading, setLoading] = useState(true)
 	const [updatingStatus, setUpdatingStatus] = useState(false)
+	const [shiprocketBusy, setShiprocketBusy] = useState(false)
+	const [shiprocketInfo, setShiprocketInfo] = useState<ShiprocketData | null>(null)
 
 	const handleOrderStatusChange = async (newStatus: OrderStatusValue) => {
 		const targetId = orderData?._id || order_id
@@ -208,6 +220,20 @@ const ProductOrderView: React.FC = () => {
 			setUserData(user)
 			setOrderData(data)
 
+			const srData =
+				data?.meal_product?.shiprocket ||
+				data?.user_meal_product?.shiprocket ||
+				(data?.notes?.shiprocket_order_id
+					? {
+							order_id: data.notes.shiprocket_order_id,
+							shipment_id: data.notes.shiprocket_shipment_id,
+							awb_code: data.notes.awb_code,
+							courier_name: data.notes.courier_name,
+							tracking_url: data.notes.tracking_url,
+					  }
+					: null)
+			setShiprocketInfo(srData)
+
 			const trackingList = data?.meal_product?.tracking || data?.user_meal_product?.tracking
 			if (trackingList && Array.isArray(trackingList)) {
 				let maxStepIndex = -1
@@ -237,6 +263,132 @@ const ProductOrderView: React.FC = () => {
 			fetchOrderData()
 		}
 	}, [order_id])
+
+	const handlePushToShiprocket = async () => {
+		const targetId = orderData?._id || order_id
+		if (!targetId) return
+		setShiprocketBusy(true)
+		try {
+			const res: any = await CreateShiprocketShipmentAdmin(targetId)
+			if (res && res.status < 400) {
+				toast.success('Shipment created in Shiprocket with AWB!')
+				await fetchOrderData()
+			} else {
+				throw new Error(res?.message || 'Failed to push to Shiprocket')
+			}
+		} catch (err: any) {
+			toast.error(err.message || 'Could not push to Shiprocket')
+		} finally {
+			setShiprocketBusy(false)
+		}
+	}
+
+	const handleSyncShiprocketTracking = async () => {
+		const targetId = orderData?._id || order_id
+		if (!targetId) return
+		if (!shiprocketInfo?.awb_code && !shiprocketInfo?.order_id) {
+			toast.error('Order is not connected to Shiprocket yet.')
+			return
+		}
+		setShiprocketBusy(true)
+		try {
+			const res: any = await TrackShiprocketShipmentAdmin(targetId, shiprocketInfo?.awb_code)
+			if (res && res.status < 400) {
+				if (res.data?.is_cancelled || res.data?.current_status === 'CANCELLED') {
+					toast.error('Order was cancelled in Shiprocket. Local status updated to Cancelled.')
+				} else {
+					toast.success(`Live tracking synced: ${res.data?.current_status || 'Active'}`)
+				}
+				await fetchOrderData()
+			} else {
+				throw new Error(res?.message || 'Could not fetch tracking scans')
+			}
+		} catch (err: any) {
+			toast.error(err.message || 'Failed to sync live tracking')
+		} finally {
+			setShiprocketBusy(false)
+		}
+	}
+
+	const handleCancelOrder = async () => {
+		const targetId = orderData?._id || order_id
+		if (!targetId) return
+
+		const result = await Swal.fire({
+			title: 'Cancel this Order?',
+			text: 'This will cancel the shipment in Shiprocket, cancel courier pickup, and return items to product stock.',
+			icon: 'warning',
+			input: 'text',
+			inputPlaceholder: 'Reason for cancellation (optional)',
+			showCancelButton: true,
+			confirmButtonColor: '#d33',
+			cancelButtonColor: '#6c757d',
+			confirmButtonText: 'Yes, cancel order',
+			cancelButtonText: 'No, keep order',
+		})
+
+		if (result.isConfirmed) {
+			setShiprocketBusy(true)
+			try {
+				const res: any = await CancelShiprocketOrderAdmin(targetId, result.value || 'Cancelled by Admin')
+				if (res && res.status < 400) {
+					toast.success('Order and courier shipment cancelled successfully!')
+					await fetchOrderData()
+				} else {
+					throw new Error(res?.message || 'Failed to cancel order')
+				}
+			} catch (err: any) {
+				toast.error(err.message || 'Could not cancel order')
+			} finally {
+				setShiprocketBusy(false)
+			}
+		}
+	}
+
+	const handleRequestPickup = async () => {
+		const targetId = orderData?._id || order_id
+		if (!targetId) return
+		if (!shiprocketInfo?.awb_code) {
+			toast.error('Cannot schedule courier pickup until an AWB number is assigned.')
+			return
+		}
+		setShiprocketBusy(true)
+		try {
+			const res: any = await RequestShiprocketPickupAdmin(targetId, shiprocketInfo?.shipment_id)
+			if (res && res.status < 400) {
+				toast.success('Courier pickup scheduled from Surat warehouse!')
+				await fetchOrderData()
+			} else {
+				throw new Error(res?.message || 'Failed to schedule pickup')
+			}
+		} catch (err: any) {
+			toast.error(err.message || 'Could not request courier pickup')
+		} finally {
+			setShiprocketBusy(false)
+		}
+	}
+
+	const handleDownloadLabel = async () => {
+		const targetId = orderData?._id || order_id
+		if (!targetId) return
+		if (!shiprocketInfo?.awb_code) {
+			toast.error('Shipping label is not ready until courier and AWB are generated.')
+			return
+		}
+		setShiprocketBusy(true)
+		try {
+			const res: any = await GetShiprocketLabelAdmin(targetId, shiprocketInfo?.shipment_id)
+			if (res?.data?.label_url) {
+				window.open(res.data.label_url, '_blank')
+			} else {
+				throw new Error(res?.message || 'Label URL not available')
+			}
+		} catch (err: any) {
+			toast.error(err.message || 'Could not generate label')
+		} finally {
+			setShiprocketBusy(false)
+		}
+	}
 
 	const formatOrderItemType = (orderItemType: string) => {
 		if (!orderItemType) return 'N/A'
@@ -636,6 +788,242 @@ const ProductOrderView: React.FC = () => {
 							</div>
 						</div>
 					)}
+
+					{/* SHIPROCKET LOGISTICS & COURIER PARTNER CARD */}
+					<div className='gz-order-card'>
+						<div className='gz-order-card-header d-flex justify-content-between align-items-center'>
+							<h3 className='gz-order-card-title'>
+								<FontAwesomeIcon icon={faTruck} className='icon text-primary' />
+								<span>Shiprocket Logistics &amp; Courier Tracking</span>
+							</h3>
+							{orderData?.status === 'CANCELLED' || shiprocketInfo?.current_status === 'CANCELLED' ? (
+								<span className='badge badge-light-danger fw-bold px-3 py-1'>
+									Order Cancelled
+								</span>
+							) : shiprocketInfo?.awb_code ? (
+								<span className='badge badge-light-success fw-bold px-3 py-1'>
+									Courier Assigned: {shiprocketInfo.courier_name || 'Shiprocket'}
+								</span>
+							) : shiprocketInfo?.shipment_id ? (
+								<span className='badge badge-light-info fw-bold px-3 py-1'>
+									Shipment Created
+								</span>
+							) : (
+								<span className='badge badge-light-warning fw-bold px-3 py-1'>
+									Not Dispatched to Shiprocket
+								</span>
+							)}
+						</div>
+
+						<div className='gz-order-card-body'>
+							{orderData?.status === 'CANCELLED' || shiprocketInfo?.current_status === 'CANCELLED' ? (
+								<div className='alert alert-danger d-flex align-items-center justify-content-between p-4 mb-4 rounded'>
+									<div className='d-flex align-items-center'>
+										<FontAwesomeIcon icon={faTimesCircle} className='fs-2x me-3 text-danger' />
+										<div>
+											<div className='fw-bold text-danger fs-6'>Order &amp; Courier Shipment Cancelled</div>
+											<div className='text-muted fs-8'>
+												This order is cancelled in Shiprocket. Courier pickup is voided and product stock is restored.
+												{orderData?.notes?.cancelled_reason && ` (Reason: ${orderData.notes.cancelled_reason})`}
+											</div>
+										</div>
+									</div>
+									<button
+										type='button'
+										disabled={shiprocketBusy}
+										onClick={handleSyncShiprocketTracking}
+										className='btn btn-sm btn-light-danger fw-bold text-nowrap ms-3'
+									>
+										{shiprocketBusy ? 'Syncing...' : 'Re-sync Shiprocket'}
+									</button>
+								</div>
+							) : null}
+
+							{shiprocketInfo?.awb_code || shiprocketInfo?.shipment_id ? (
+								<div>
+									<div className='row g-3 mb-4'>
+										<div className='col-md-4'>
+											<span className='text-muted fs-8 d-block mb-1'>Courier Partner</span>
+											<span className='fw-bolder fs-6 text-dark d-block'>
+												{shiprocketInfo.courier_name || 'Standard Courier'}
+											</span>
+										</div>
+
+										<div className='col-md-4'>
+											<span className='text-muted fs-8 d-block mb-1'>AWB Tracking Number</span>
+											<span className='fw-bolder fs-6 text-primary d-block'>
+												{shiprocketInfo.awb_code ? (
+													<a
+														href={
+															shiprocketInfo.tracking_url ||
+															`https://shiprocket.co/tracking/${shiprocketInfo.awb_code}`
+														}
+														target='_blank'
+														rel='noopener noreferrer'
+														className='text-primary text-decoration-underline'
+														title='Open Live Courier Tracking'
+													>
+														{shiprocketInfo.awb_code} ↗
+													</a>
+												) : orderData?.status === 'CANCELLED' || shiprocketInfo?.current_status === 'CANCELLED' ? (
+													<span className='text-danger'>Cancelled</span>
+												) : (
+													'Assigning AWB...'
+												)}
+											</span>
+										</div>
+
+										<div className='col-md-4'>
+											<span className='text-muted fs-8 d-block mb-1'>Shiprocket Shipment ID</span>
+											<span className='fw-bold fs-7 text-dark d-block'>
+												#{shiprocketInfo.shipment_id || shiprocketInfo.order_id || 'N/A'}
+											</span>
+										</div>
+
+										<div className='col-md-6'>
+											<span className='text-muted fs-8 d-block mb-1'>Warehouse Pickup Location</span>
+											<span className='fw-bold fs-7 text-dark d-block'>
+												Surat Warehouse (G-23, Time Square)
+											</span>
+											<span className='badge badge-light-secondary fs-9 mt-1'>
+												Status: {shiprocketInfo.pickup_status || 'PENDING SCHEDULE'}
+											</span>
+										</div>
+
+										<div className='col-md-6'>
+											<span className='text-muted fs-8 d-block mb-1'>Live Delivery Status</span>
+											<span className={`badge fw-bolder fs-7 ${
+												orderData?.status === 'CANCELLED' || shiprocketInfo?.current_status === 'CANCELLED'
+													? 'badge-light-danger'
+													: 'badge-light-primary'
+											}`}>
+												{orderData?.status === 'CANCELLED' || shiprocketInfo?.current_status === 'CANCELLED'
+													? 'CANCELLED'
+													: shiprocketInfo.current_status || 'IN TRANSIT'}
+											</span>
+										</div>
+									</div>
+
+									{!(orderData?.status === 'CANCELLED' || shiprocketInfo?.current_status === 'CANCELLED') && !shiprocketInfo.awb_code && (
+										<div className='alert alert-warning d-flex align-items-center justify-content-between p-3 mb-4 rounded'>
+											<div className='d-flex align-items-center'>
+												<FontAwesomeIcon icon={faTruck} className='fs-3 me-3 text-warning' />
+												<div>
+													<div className='fw-bold text-dark fs-7'>Courier Allocation Pending (AWB Not Assigned Yet)</div>
+													<div className='text-muted fs-8'>
+														Shiprocket requires min ₹100 wallet balance to book a courier and generate an AWB. Once recharged, click the button to assign courier.
+													</div>
+												</div>
+											</div>
+											<button
+												type='button'
+												disabled={shiprocketBusy}
+												onClick={handlePushToShiprocket}
+												className='btn btn-sm btn-primary fw-bold text-nowrap ms-3'
+											>
+												<FontAwesomeIcon icon={faTruck} className='me-1' />
+												{shiprocketBusy ? 'Allocating...' : 'Assign Courier / Generate AWB'}
+											</button>
+										</div>
+									)}
+
+									{/* Action buttons */}
+									<div className='d-flex flex-wrap gap-2 pt-3 border-top'>
+										{!(orderData?.status === 'CANCELLED' || shiprocketInfo?.current_status === 'CANCELLED') && !shiprocketInfo.awb_code && (
+											<button
+												type='button'
+												disabled={shiprocketBusy}
+												onClick={handlePushToShiprocket}
+												className='btn btn-sm btn-primary fw-bold'
+												title='Allocate courier and generate AWB'
+											>
+												<FontAwesomeIcon icon={faTruck} className='me-1' />
+												{shiprocketBusy ? 'Allocating...' : 'Assign Courier / Generate AWB'}
+											</button>
+										)}
+
+										<button
+											type='button'
+											disabled={shiprocketBusy}
+											onClick={handleSyncShiprocketTracking}
+											className='btn btn-sm btn-light-primary fw-bold'
+											title='Sync real-time scans from courier partner'
+										>
+											<FontAwesomeIcon icon={faClock} className='me-1' />
+											{shiprocketBusy ? 'Syncing...' : 'Sync Live Courier Status'}
+										</button>
+
+										{!(orderData?.status === 'CANCELLED' || shiprocketInfo?.current_status === 'CANCELLED') && (
+											<>
+												<button
+													type='button'
+													disabled={shiprocketBusy || !shiprocketInfo.awb_code}
+													onClick={handleRequestPickup}
+													className='btn btn-sm btn-light-success fw-bold'
+													title='Request driver pickup from Surat warehouse'
+												>
+													<FontAwesomeIcon icon={faBox} className='me-1' />
+													Request Warehouse Pickup
+												</button>
+
+												<button
+													type='button'
+													disabled={shiprocketBusy || !shiprocketInfo.awb_code}
+													onClick={handleDownloadLabel}
+													className='btn btn-sm btn-light fw-bold'
+													title='Download thermal courier shipping label'
+												>
+													<FontAwesomeIcon icon={faReceipt} className='me-1' />
+													Download Shipping Label (PDF)
+												</button>
+
+												<button
+													type='button'
+													disabled={shiprocketBusy}
+													onClick={handleCancelOrder}
+													className='btn btn-sm btn-light-danger fw-bold text-danger'
+													title='Cancel order in Shiprocket and restore inventory'
+												>
+													<FontAwesomeIcon icon={faTimesCircle} className='me-1' />
+													Cancel Order
+												</button>
+											</>
+										)}
+
+										{shiprocketInfo.awb_code && (
+											<a
+												href={
+													shiprocketInfo.tracking_url ||
+													`https://shiprocket.co/tracking/${shiprocketInfo.awb_code}`
+												}
+												target='_blank'
+												rel='noopener noreferrer'
+												className='btn btn-sm btn-light-info fw-bold ms-auto'
+											>
+												<FontAwesomeIcon icon={faExternalLinkAlt} className='me-1' />
+												Live Courier Tracking
+											</a>
+										)}
+									</div>
+								</div>
+							) : (
+								<div className='d-flex flex-column align-items-start gap-3 py-2'>
+									<p className='text-muted fs-7 mb-0'>
+										This order has not been dispatched to Shiprocket yet. Click below to automatically create the shipment, assign a courier (Xpressbees, BlueDart, Delhivery), and generate the AWB tracking number.
+									</p>
+									<button
+										type='button'
+										disabled={shiprocketBusy}
+										onClick={handlePushToShiprocket}
+										className='btn btn-primary fw-bold'
+									>
+										<FontAwesomeIcon icon={faTruck} className='me-2' />
+										{shiprocketBusy ? 'Pushing to Shiprocket...' : '🚀 Push Order to Shiprocket & Generate AWB'}
+									</button>
+								</div>
+							)}
+						</div>
+					</div>
 				</div>
 
 				{/* RIGHT COLUMN: CUSTOMER & PAYMENT DETAILS */}

@@ -116,6 +116,13 @@ import AdBannerManage from '../pages/gomzi-nutrition/ad-banners/ad-banner-manage
 
 import GymAccessOfferManage from '../pages/gomzi-nutrition/gym-access-offer/gym-access-offer-manage'
 
+import CRMLeadsList from '../pages/gomzi-nutrition/crm/leads/leads-list'
+import AbandonedCheckouts from '../pages/gomzi-nutrition/crm/abandoned/abandoned-checkouts'
+import RefillReminders from '../pages/gomzi-nutrition/crm/refill-reminders/refill-reminders'
+import CustomerSegments from '../pages/gomzi-nutrition/crm/customer-segments/customer-segments'
+import MetaAttribution from '../pages/gomzi-nutrition/crm/meta-attribution/meta-attribution'
+import VisitorCookieLogs from '../pages/gomzi-nutrition/crm/visitor-logs/visitor-logs'
+
 const AdminOrPartnerCoupons = () => {
 	const [searchParams] = useSearchParams()
 	const partnerId = searchParams.get('partner_id')
@@ -187,6 +194,10 @@ const GomziNutritionPrivateRoutes = () => {
 				<Route
 					path='/hero-banner'
 					element={<HeroBannerManage />}
+				/>
+				<Route
+					path='/popular-categories'
+					element={<CategoryManage />}
 				/>
 				<Route
 					path='/categories'
@@ -329,6 +340,32 @@ const GomziNutritionPrivateRoutes = () => {
 				<Route
 					path='/product-feedback'
 					element={<NutritionProductFeedback />}
+				/>
+
+				{/* CRM & Leads Routes */}
+				<Route
+					path='crm/leads'
+					element={<CRMLeadsList />}
+				/>
+				<Route
+					path='crm/abandoned-checkouts'
+					element={<AbandonedCheckouts />}
+				/>
+				<Route
+					path='crm/refill-reminders'
+					element={<RefillReminders />}
+				/>
+				<Route
+					path='crm/customer-segments'
+					element={<CustomerSegments />}
+				/>
+				<Route
+					path='crm/meta-attribution'
+					element={<MetaAttribution />}
+				/>
+				<Route
+					path='crm/visitor-logs'
+					element={<VisitorCookieLogs />}
 				/>
 
 				<Route

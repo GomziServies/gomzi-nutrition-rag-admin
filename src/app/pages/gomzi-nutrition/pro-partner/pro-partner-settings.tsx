@@ -78,9 +78,13 @@ const ProPartnerSettings: React.FC = () => {
 	const [changingPassword, setChangingPassword] = useState(false)
 
 	const activePartner = {
-		name: partnerInfo?.name || profileUser?.first_name ? `${profileUser?.first_name} ${profileUser?.last_name || ''}`.trim() : 'Pro Partner',
+		name:
+			partnerInfo?.name?.trim() ||
+			profileUser?.full_name?.trim() ||
+			[profileUser?.first_name, profileUser?.last_name].filter(Boolean).join(' ').trim() ||
+			'Pro Partner',
 		email: partnerInfo?.email || profileUser?.email || '',
-		mobile: partnerInfo?.mobile || profileUser?.phone || '',
+		mobile: partnerInfo?.mobile || profileUser?.mobile || profileUser?.phone_number || profileUser?.phone || '',
 		city: partnerInfo?.city || profileUser?.city || 'Not Specified',
 		state: partnerInfo?.state || profileUser?.state || 'Not Specified',
 		hasAcceptedPolicy: partnerInfo?.hasAcceptedPolicy ?? true,

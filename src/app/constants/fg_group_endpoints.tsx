@@ -36,6 +36,13 @@ export const ManageDeal = `${AdminV1Route}/deals`
 export const GetComboStacks = `${AdminV1Route}/combo-stacks`
 export const ManageComboStack = `${AdminV1Route}/combo-stacks`
 
+// Shiprocket Logistics
+export const ShiprocketCreateShipment = `${AdminV1Route}/shiprocket/create-shipment`
+export const ShiprocketTrack = `${AdminV1Route}/shiprocket/track`
+export const ShiprocketRequestPickup = `${AdminV1Route}/shiprocket/request-pickup`
+export const ShiprocketLabel = `${AdminV1Route}/shiprocket/label`
+export const ShiprocketCancelOrder = `${AdminV1Route}/shiprocket/cancel-order`
+
 // Middle Promo Banners
 export const GetPromoBanners = `${AdminV1Route}/promo-banners`
 export const ManagePromoBanner = `${AdminV1Route}/promo-banners`
@@ -825,6 +832,16 @@ export const CreateFacebookLead = `${FacebookLeadRoute}/create`
 export const GetFacebookLeads = `${FacebookLeadRoute}/get`
 export const CreateManualFacebookLead = `${FacebookLeadRoute}/create-manual-lead`
 export const BulkCreateFacebookLeads = `${FacebookLeadRoute}/bulk-create`
+export const UpdateFacebookLead = `${FacebookLeadRoute}/update`
+export const DeleteFacebookLead = `${FacebookLeadRoute}/delete`
+
+// Unified CRM Routes
+const CRMRoute = `${AdminV1Route}/crm`
+export const GetCRMLeads = `${CRMRoute}/leads`
+export const CreateCRMLead = `${CRMRoute}/leads/create`
+export const UpdateCRMLead = `${CRMRoute}/leads/update`
+export const DeleteCRMLead = `${CRMRoute}/leads/delete`
+export const GetVisitorCookieLogs = `${CRMRoute}/visitor-cookie-logs`
 
 //GN Inventory Stock
 export const GetGnStock = `${AdminV1Route}/gn-stock/get`

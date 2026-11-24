@@ -16,6 +16,7 @@ import {
 	SendIcon,
 	SparklesIcon,
 	ShieldCheckIcon,
+	TargetIcon,
 	TruckIcon,
 	UserPlusIcon,
 	UsersIcon,
@@ -43,6 +44,11 @@ export function GomziNutritionAsideMenuItems() {
 				<AsideMenuItem
 					to='/rag/hero-banner'
 					title='Hero Banners'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/popular-categories'
+					title='Popular Categories'
 					hasBullet={true}
 				/>
 				<AsideMenuItem
@@ -126,6 +132,43 @@ export function GomziNutritionAsideMenuItems() {
 				<AsideMenuItem
 					to='/rag/product-feedback'
 					title='Product Feedback'
+					hasBullet={true}
+				/>
+			</AsideMenuItemWithSub>
+
+			{/* CRM & Leads */}
+			<AsideMenuItemWithSub
+				to=''
+				title='CRM & Leads'
+				Icon={TargetIcon}>
+				<AsideMenuItem
+					to='/rag/crm/leads'
+					title='All Leads (CRM)'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/crm/abandoned-checkouts'
+					title='Abandoned Checkouts'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/crm/refill-reminders'
+					title='Repeat Refill Reminders'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/crm/customer-segments'
+					title='Customer Segmentation & LTV'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/crm/meta-attribution'
+					title='Meta Ads Attribution'
+					hasBullet={true}
+				/>
+				<AsideMenuItem
+					to='/rag/crm/visitor-logs'
+					title='Anonymous Visitors & Cookies'
 					hasBullet={true}
 				/>
 			</AsideMenuItemWithSub>

@@ -316,17 +316,21 @@ export default function GoogleDocsEditor({
 
 		try {
 			setUploadingImage(true)
-			const res: any = await FileUploadToFGGroup({
-				file,
-				file_type: 'image',
-			})
-			let url = res?.data?.url || res?.url || res?.data?.file_url
-			if (url && !url.startsWith('http') && !url.startsWith('/')) {
-				url = `${FG_GROUP_FILE_BASE_URL}/${url}`
-			}
-			if (url) {
+			const res: any = await FileUploadToFGGroup([file], { directory: 'blog' })
+			const rawUrl =
+				res?.data?.fileURLs?.[0] ||
+				res?.data?.url ||
+				res?.url ||
+				res?.data?.file_url
+			if (rawUrl) {
+				let url = rawUrl
+				if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+					url = `${FG_GROUP_FILE_BASE_URL}/${url}`
+				}
 				setImageUrl(url)
 				toast.success('Image uploaded successfully!')
+			} else {
+				toast.error('Image upload failed: no URL returned')
 			}
 		} catch (err: any) {
 			toast.error(err?.message || 'Failed to upload image')
@@ -342,7 +346,12 @@ export default function GoogleDocsEditor({
 			return
 		}
 
-		let imgHtml = `<figure class="gdocs-figure" style="text-align: center; margin: 20px 0;"><img src="${imageUrl}" alt="${imageAlt || 'Article image'}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" />`
+		let finalImageUrl = imageUrl.trim()
+		if (!finalImageUrl.startsWith('http://') && !finalImageUrl.startsWith('https://') && !finalImageUrl.startsWith('/') && !finalImageUrl.startsWith('data:')) {
+			finalImageUrl = `${FG_GROUP_FILE_BASE_URL}/${finalImageUrl}`
+		}
+
+		let imgHtml = `<figure class="gdocs-figure" style="text-align: center; margin: 20px 0;"><img src="${finalImageUrl}" alt="${imageAlt || 'Article image'}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" />`
 		if (imageCaption.trim()) {
 			imgHtml += `<figcaption style="font-size: 13px; color: #64748b; margin-top: 6px; font-style: italic;">${imageCaption.trim()}</figcaption>`
 		}
@@ -408,19 +417,20 @@ export default function GoogleDocsEditor({
 		const rows = Math.max(1, Math.min(20, tableRows))
 		const cols = Math.max(1, Math.min(10, tableCols))
 
-		let tableHtml = `<table style="width: 100%; border-collapse: collapse; margin: 18px 0; border: 1px solid #cbd5e1;"><thead><tr>`
+		let tableHtml = `<div class="table-responsive-wrapper" style="margin: 24px 0; border-radius: 16px; overflow: hidden; border: 1px solid #ebdcd2; background-color: #ffffff;"><table class="gdocs-table" style="width: 100%; border-collapse: collapse; margin: 0; background-color: #ffffff;"><thead><tr style="background-color: #8A3822; color: #ffffff;">`
 		for (let c = 0; c < cols; c++) {
-			tableHtml += `<th style="border: 1px solid #cbd5e1; padding: 10px 14px; background: #f1f5f9; font-weight: 700; text-align: left;">Header ${c + 1}</th>`
+			tableHtml += `<th style="padding: 14px 20px; font-weight: 600; text-align: left; color: #ffffff; background-color: #8A3822; border: none;">${c === 0 ? 'Factor' : `Column ${c + 1}`}</th>`
 		}
 		tableHtml += `</tr></thead><tbody>`
 		for (let r = 0; r < rows; r++) {
-			tableHtml += `<tr>`
+			tableHtml += `<tr style="border-bottom: 1px solid #ebdcd2; background-color: #ffffff;">`
 			for (let c = 0; c < cols; c++) {
-				tableHtml += `<td style="border: 1px solid #cbd5e1; padding: 10px 14px; vertical-align: top;">Cell ${r + 1},${c + 1}</td>`
+				const isFirst = c === 0
+				tableHtml += `<td style="padding: 14px 20px; vertical-align: top; border: none; ${isFirst ? 'font-weight: 700; color: #111827;' : 'color: #4b5563;'}">Sample ${r + 1},${c + 1}</td>`
 			}
 			tableHtml += `</tr>`
 		}
-		tableHtml += `</tbody></table><p><br></p>`
+		tableHtml += `</tbody></table></div><p><br></p>`
 
 		insertHtmlAtCursor(tableHtml)
 		setShowTableModal(false)
@@ -434,10 +444,19 @@ export default function GoogleDocsEditor({
 		if (!row) return
 		const colCount = row.children.length
 		const newRow = document.createElement('tr')
+		newRow.style.borderBottom = '1px solid #ebdcd2'
+		newRow.style.backgroundColor = '#ffffff'
 		for (let i = 0; i < colCount; i++) {
 			const cell = document.createElement('td')
-			cell.style.border = '1px solid #cbd5e1'
-			cell.style.padding = '10px 14px'
+			cell.style.border = 'none'
+			cell.style.padding = '14px 20px'
+			cell.style.verticalAlign = 'top'
+			if (i === 0) {
+				cell.style.fontWeight = '700'
+				cell.style.color = '#111827'
+			} else {
+				cell.style.color = '#4b5563'
+			}
 			cell.innerHTML = '<br>'
 			newRow.appendChild(cell)
 		}
@@ -471,9 +490,17 @@ export default function GoogleDocsEditor({
 		allRows.forEach((r) => {
 			const isHeader = r.parentElement?.tagName === 'THEAD'
 			const newCell = document.createElement(isHeader ? 'th' : 'td')
-			newCell.style.border = '1px solid #cbd5e1'
-			newCell.style.padding = '10px 14px'
-			newCell.innerHTML = isHeader ? 'Header' : '<br>'
+			newCell.style.border = 'none'
+			newCell.style.padding = '14px 20px'
+			if (isHeader) {
+				newCell.style.backgroundColor = '#8A3822'
+				newCell.style.color = '#ffffff'
+				newCell.style.fontWeight = '600'
+				newCell.innerHTML = 'Header'
+			} else {
+				newCell.style.color = '#4b5563'
+				newCell.innerHTML = '<br>'
+			}
 			const targetChild = r.children[cellIndex]
 			if (position === 'left') {
 				r.insertBefore(newCell, targetChild)
@@ -513,9 +540,42 @@ export default function GoogleDocsEditor({
 		}
 	}
 
-	// Paste handler (Google Docs / MS Word paste cleanup)
-	const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+	// Paste handler (Google Docs / MS Word paste cleanup + image file paste)
+	const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
 		const clipboardData = e.clipboardData
+
+		// Direct image paste (screenshot, copied file)
+		if (clipboardData.files && clipboardData.files.length > 0) {
+			const file = clipboardData.files[0]
+			if (file.type.startsWith('image/')) {
+				e.preventDefault()
+				try {
+					toast.loading('Uploading pasted image...', { id: 'paste-upload' })
+					const res: any = await FileUploadToFGGroup([file], { directory: 'blog' })
+					const rawUrl =
+						res?.data?.fileURLs?.[0] ||
+						res?.data?.url ||
+						res?.url ||
+						res?.data?.file_url
+					if (rawUrl) {
+						let url = rawUrl
+						if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+							url = `${FG_GROUP_FILE_BASE_URL}/${url}`
+						}
+						insertHtmlAtCursor(
+							`<figure class="gdocs-figure" style="text-align: center; margin: 20px 0;"><img src="${url}" alt="Article image" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" /></figure><p><br></p>`
+						)
+						toast.success('Pasted image uploaded successfully!', { id: 'paste-upload' })
+					} else {
+						toast.error('Image upload failed', { id: 'paste-upload' })
+					}
+				} catch (err: any) {
+					toast.error(err?.message || 'Error uploading pasted image', { id: 'paste-upload' })
+				}
+				return
+			}
+		}
+
 		const pastedHtml = clipboardData.getData('text/html')
 
 		if (pastedHtml) {
@@ -531,6 +591,38 @@ export default function GoogleDocsEditor({
 				.replace(/width:\s*\d+pt/gi, 'width: 100%')
 
 			insertHtmlAtCursor(cleanHtml)
+		}
+	}
+
+	const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+		if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+			const file = e.dataTransfer.files[0]
+			if (file.type.startsWith('image/')) {
+				e.preventDefault()
+				try {
+					toast.loading('Uploading dropped image...', { id: 'drop-upload' })
+					const res: any = await FileUploadToFGGroup([file], { directory: 'blog' })
+					const rawUrl =
+						res?.data?.fileURLs?.[0] ||
+						res?.data?.url ||
+						res?.url ||
+						res?.data?.file_url
+					if (rawUrl) {
+						let url = rawUrl
+						if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+							url = `${FG_GROUP_FILE_BASE_URL}/${url}`
+						}
+						insertHtmlAtCursor(
+							`<figure class="gdocs-figure" style="text-align: center; margin: 20px 0;"><img src="${url}" alt="Article image" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" /></figure><p><br></p>`
+						)
+						toast.success('Dropped image uploaded successfully!', { id: 'drop-upload' })
+					} else {
+						toast.error('Image upload failed', { id: 'drop-upload' })
+					}
+				} catch (err: any) {
+					toast.error(err?.message || 'Error uploading dropped image', { id: 'drop-upload' })
+				}
+			}
 		}
 	}
 
@@ -1028,6 +1120,8 @@ export default function GoogleDocsEditor({
 					onMouseUp={checkFormatting}
 					onClick={handleEditorClick}
 					onPaste={handlePaste}
+					onDrop={handleDrop}
+					onDragOver={(e) => e.preventDefault()}
 				/>
 			</div>
 

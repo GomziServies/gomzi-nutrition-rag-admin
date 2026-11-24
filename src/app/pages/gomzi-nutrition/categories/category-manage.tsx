@@ -30,6 +30,8 @@ import {
 	faRotateLeft,
 	faLink,
 	faStar,
+	faDesktop,
+	faMobileScreenButton,
 } from '@fortawesome/free-solid-svg-icons'
 import '../common-management.css'
 import '../products-theme.css'
@@ -59,6 +61,21 @@ const getPreviewUrl = (url?: string) => {
 	return `${FG_GROUP_FILE_BASE_URL}/${url}`
 }
 
+const getAdminBadge = (tag?: string) => {
+	if (!tag) return null
+	const upper = tag.trim().toUpperCase()
+	if (upper === 'MOST POPULAR') return { label: 'POPULAR', icon: '🔥', bg: '#fef3c7', text: '#92400e', border: '#fde68a' }
+	if (upper === 'BULK SEASON') return { label: 'MASS GAIN', icon: '💪', bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' }
+	if (upper === 'EXPLOSIVE ENERGY') return { label: 'ENERGY', icon: '⚡', bg: '#ffe4e6', text: '#9f1239', border: '#fecdd3' }
+	if (upper === 'RAPID RECOVERY') return { label: 'RECOVERY', icon: '🔄', bg: '#dbeafe', text: '#1e40af', border: '#bfdbfe' }
+	if (upper === 'RAW STRENGTH') return { label: 'STRENGTH', icon: '🏋️', bg: '#f3f4f6', text: '#1f2937', border: '#e5e7eb' }
+	if (upper === 'DAILY HEALTH') return { label: 'WELLNESS', icon: '🌿', bg: '#ccfbf1', text: '#115e59', border: '#99f6e4' }
+	if (upper === '100% VEGAN') return { label: 'VEGAN', icon: '🌱', bg: '#d1fae5', text: '#065f46', border: '#a7f3d0' }
+	if (upper.includes('BUNDLE') || upper.includes('STACK')) return { label: 'BUNDLES', icon: '📦', bg: '#fef3c7', text: '#92400e', border: '#fde68a' }
+	const shortLabel = upper.length > 10 ? upper.slice(0, 10).trim() : upper
+	return { label: shortLabel, icon: '✦', bg: '#fff7ed', text: '#c2410c', border: '#fed7aa' }
+}
+
 export default function CategoryManage() {
 	const [categories, setCategories] = useState<CategoryItem[]>([])
 	const [loading, setLoading] = useState(true)
@@ -84,6 +101,7 @@ export default function CategoryManage() {
 	const [uploadingImage, setUploadingImage] = useState(false)
 	const [imageFile, setImageFile] = useState<File | null>(null)
 	const [imagePreview, setImagePreview] = useState('')
+	const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop')
 
 	// Fetch categories
 	const loadCategories = async () => {
@@ -298,24 +316,24 @@ export default function CategoryManage() {
 	return (
 		<div className='gz-mgmt-container'>
 			<PageTitle breadcrumbs={[]}>
-				Product Categories ({categories.length})
+				Popular Categories ({categories.length})
 			</PageTitle>
 
 			{/* Breadcrumb */}
 			<div className='gz-mgmt-breadcrumb'>
 				<Link to='/rag/dashboard'>Dashboard</Link>
 				<span className='sep'>&gt;</span>
-				<span>Products & Orders</span>
+				<span>Content</span>
 				<span className='sep'>&gt;</span>
-				<span className='current'>Categories</span>
+				<span className='current'>Popular Categories</span>
 			</div>
 
 			{/* Top Header */}
 			<div className='gz-mgmt-header mb-6'>
 				<div className='gz-mgmt-title-wrap'>
-					<h1 className='gz-mgmt-title'>Product Categories</h1>
+					<h1 className='gz-mgmt-title'>Popular Categories</h1>
 					<p className='gz-mgmt-subtitle'>
-						Curate storefront collections, formulation specs, accent branding, and display hierarchy.
+						Automate homepage popular categories, ordering, badges, formulation specs, and cover visuals for responsive desktop and mobile views.
 					</p>
 				</div>
 
@@ -592,23 +610,36 @@ export default function CategoryManage() {
 
 												{/* Image Thumbnail */}
 												<td>
-													<div className='d-flex align-items-center gap-2'>
+													<div className='d-flex align-items-center gap-2.5'>
 														<div
-															className='rounded-3 overflow-hidden shadow-sm d-flex align-items-center justify-content-center'
-															style={{ width: '44px', height: '44px', minWidth: '44px', backgroundColor: '#0F172A', border: '1px solid #E2E8F0' }}>
+															className='rounded-3 overflow-hidden shadow-xs d-flex align-items-center justify-content-center p-0.5'
+															style={{
+																width: '52px',
+																height: '52px',
+																minWidth: '52px',
+																borderRadius: '12px',
+																background: 'radial-gradient(circle, #FAF7F4 0%, #EFE4DA 100%)',
+																border: '1.5px solid #E2E8F0',
+															}}>
 															<img
 																src={previewSrc}
 																alt={cat.title}
-																className='w-100 h-100 object-fit-cover'
+																className='w-100 h-100'
+																style={{ objectFit: 'cover', borderRadius: '10px' }}
 																onError={(e: any) => {
 																	e.currentTarget.onerror = null
 																	e.currentTarget.src = '/images/product-placeholder.webp'
 																}}
 															/>
 														</div>
-														<span className='text-muted fs-9 text-truncate font-monospace' style={{ maxWidth: 110 }}>
-															{cat.image.split('/').pop()}
-														</span>
+														<div className='d-flex flex-column'>
+															<span className='text-dark fw-bold fs-8 text-truncate' style={{ maxWidth: 120 }}>
+																{cat.image.split('/').pop()}
+															</span>
+															<span className='badge badge-light-secondary fs-9 fw-semibold text-muted px-1.5 py-0.5' style={{ width: 'fit-content' }}>
+																Desktop 180px • Mobile 128px
+															</span>
+														</div>
 													</div>
 												</td>
 
@@ -680,7 +711,7 @@ export default function CategoryManage() {
 					className='modal fade show d-block'
 					style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', zIndex: 1055 }}
 					tabIndex={-1}>
-					<div className='modal-dialog modal-dialog-centered modal-lg'>
+					<div className='modal-dialog modal-dialog-centered modal-xl'>
 						<div
 							className='modal-content border-0 shadow-lg'
 							style={{ borderRadius: '16px', overflow: 'hidden' }}>
@@ -689,7 +720,7 @@ export default function CategoryManage() {
 									className='p-5 d-flex align-items-center justify-content-between border-bottom'
 									style={{ backgroundColor: '#F8FAFD' }}>
 									<h4 className='modal-title fw-bolder text-dark fs-5 mb-0'>
-										{modalMode === 'create' ? 'Create New Category' : `Edit Category: ${formData.title}`}
+										{modalMode === 'create' ? 'Create New Popular Category' : `Edit Category: ${formData.title}`}
 									</h4>
 									<button
 										type='button'
@@ -701,194 +732,338 @@ export default function CategoryManage() {
 								</div>
 
 								<div className='p-6'>
-									<div className='row g-4'>
-										{/* Title */}
-										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold text-dark fs-7 required'>
-												Category Title
-											</label>
-											<input
-												type='text'
-												className='form-control'
-												style={{ borderRadius: '10px', height: '44px' }}
-												placeholder='e.g. Whey Protein, Creatine'
-												value={formData.title || ''}
-												onChange={(e) => handleTitleChange(e.target.value)}
-												required
-											/>
-										</div>
-
-										{/* Slug */}
-										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold text-dark fs-7'>
-												URL Slug
-											</label>
-											<input
-												type='text'
-												className='form-control font-monospace'
-												style={{ borderRadius: '10px', height: '44px' }}
-												placeholder='e.g. whey-protein'
-												value={formData.slug || ''}
-												onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-											/>
-										</div>
-
-										{/* Tag */}
-										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold text-dark fs-7'>
-												Tag Badge (e.g. MOST POPULAR, 100% VEGAN)
-											</label>
-											<input
-												type='text'
-												className='form-control'
-												style={{ borderRadius: '10px', height: '44px' }}
-												placeholder='e.g. MOST POPULAR'
-												value={formData.tag || ''}
-												onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
-											/>
-										</div>
-
-										{/* Spec */}
-										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold text-dark fs-7'>
-												Spec Pill (e.g. 24-27g Protein / Scoop)
-											</label>
-											<input
-												type='text'
-												className='form-control'
-												style={{ borderRadius: '10px', height: '44px' }}
-												placeholder='e.g. 24-27g Protein / Scoop'
-												value={formData.spec || ''}
-												onChange={(e) => setFormData({ ...formData, spec: e.target.value })}
-											/>
-										</div>
-
-										{/* Subtitle */}
-										<div className='col-12'>
-											<label className='form-label fw-bold text-dark fs-7'>
-												Subtitle / Formulation Description
-											</label>
-											<textarea
-												rows={2}
-												className='form-control'
-												style={{ borderRadius: '10px' }}
-												placeholder='Brief description displayed on the category card...'
-												value={formData.subtitle || ''}
-												onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-											/>
-										</div>
-
-										{/* Image Preview & Selection */}
-										<div className='col-12'>
-											<label className='form-label fw-bold text-dark fs-7 d-block mb-2'>
-												Category Visual Image
-											</label>
-
-											{/* Image Preview */}
-											<div
-												className='d-flex align-items-center gap-3 mb-3 p-3 rounded-3'
-												style={{ backgroundColor: '#F8FAFD', border: '1px solid #E2E8F0' }}>
-												<div
-													className='rounded-3 overflow-hidden bg-dark d-flex align-items-center justify-content-center shadow-sm'
-													style={{ width: '64px', height: '64px', minWidth: '64px' }}>
-													<img
-														src={imagePreview || getPreviewUrl(formData.image)}
-														alt='Category Preview'
-														className='w-100 h-100 object-fit-cover'
-														onError={(e: any) => {
-															e.currentTarget.onerror = null
-															e.currentTarget.src = '/images/product-placeholder.webp'
-														}}
+									<div className='row g-5'>
+										{/* Left Form Column */}
+										<div className='col-12 col-lg-7'>
+											<div className='row g-4'>
+												{/* Title */}
+												<div className='col-12 col-md-6'>
+													<label className='form-label fw-bold text-dark fs-7 required'>
+														Category Title
+													</label>
+													<input
+														type='text'
+														className='form-control'
+														style={{ borderRadius: '10px', height: '44px' }}
+														placeholder='e.g. Whey Protein, Creatine'
+														value={formData.title || ''}
+														onChange={(e) => handleTitleChange(e.target.value)}
+														required
 													/>
 												</div>
-												<div>
-													<span className='fw-bold text-dark fs-7 d-block'>Selected Graphic</span>
-													<span className='text-muted fs-8 font-monospace d-block'>
-														{formData.image || 'None selected'}
-													</span>
+
+												{/* Slug */}
+												<div className='col-12 col-md-6'>
+													<label className='form-label fw-bold text-dark fs-7'>
+														URL Slug
+													</label>
+													<input
+														type='text'
+														className='form-control font-monospace'
+														style={{ borderRadius: '10px', height: '44px' }}
+														placeholder='e.g. whey-protein'
+														value={formData.slug || ''}
+														onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+													/>
+												</div>
+
+												{/* Tag */}
+												<div className='col-12 col-md-6'>
+													<label className='form-label fw-bold text-dark fs-7'>
+														Tag Badge (e.g. MOST POPULAR, 100% VEGAN)
+													</label>
+													<input
+														type='text'
+														className='form-control'
+														style={{ borderRadius: '10px', height: '44px' }}
+														placeholder='e.g. MOST POPULAR'
+														value={formData.tag || ''}
+														onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
+													/>
+												</div>
+
+												{/* Spec */}
+												<div className='col-12 col-md-6'>
+													<label className='form-label fw-bold text-dark fs-7'>
+														Spec Pill (e.g. 24-27g Protein / Scoop)
+													</label>
+													<input
+														type='text'
+														className='form-control'
+														style={{ borderRadius: '10px', height: '44px' }}
+														placeholder='e.g. 24-27g Protein / Scoop'
+														value={formData.spec || ''}
+														onChange={(e) => setFormData({ ...formData, spec: e.target.value })}
+													/>
+												</div>
+
+												{/* Subtitle */}
+												<div className='col-12'>
+													<label className='form-label fw-bold text-dark fs-7'>
+														Subtitle / Formulation Description
+													</label>
+													<textarea
+														rows={2}
+														className='form-control'
+														style={{ borderRadius: '10px' }}
+														placeholder='Brief description displayed on the category card...'
+														value={formData.subtitle || ''}
+														onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+													/>
+												</div>
+
+												{/* Image Upload & Selection */}
+												<div className='col-12'>
+													<label className='form-label fw-bold text-dark fs-7 d-block mb-1'>
+														Category Visual Image (Packshot)
+													</label>
+													<div className='text-muted fs-8 mb-2'>
+														Upload high-res PNG or WebP with transparent background. The storefront automatically scales and normalizes the image for Desktop (180px) and Mobile (128px) viewports.
+													</div>
+
+													<input
+														type='file'
+														accept='image/webp,image/png,image/jpeg,image/jpg'
+														className='form-control mb-3'
+														style={{ borderRadius: '10px', height: '44px' }}
+														onChange={handleImageFileSelect}
+													/>
+
+													{/* Preset Selector */}
+													<div>
+														<label className='form-label text-muted fs-8 fw-bold mb-1'>
+															Or Select Pre-Configured Storefront Graphic:
+														</label>
+														<div className='d-flex flex-wrap gap-1.5'>
+															{PRESET_IMAGES.map((preset) => (
+																<button
+																	type='button'
+																	key={preset.url}
+																	className='btn btn-sm py-1 px-2.5 fw-bold rounded-pill'
+																	style={{
+																		backgroundColor: formData.image === preset.url ? '#172B4D' : '#F1F5F9',
+																		color: formData.image === preset.url ? '#FFFFFF' : '#334155',
+																		border: formData.image === preset.url ? '1px solid #172B4D' : '1px solid #E2E8F0',
+																		fontSize: '11px',
+																	}}
+																	onClick={() => handlePresetSelect(preset.url)}>
+																	{preset.label}
+																</button>
+															))}
+														</div>
+													</div>
+												</div>
+
+												{/* Accent Color */}
+												<div className='col-12 col-md-6'>
+													<label className='form-label fw-bold text-dark fs-7'>
+														Accent Theme Color
+													</label>
+													<div className='d-flex align-items-center gap-2'>
+														<input
+															type='color'
+															className='form-control form-control-color p-1'
+															style={{ width: '44px', height: '44px', borderRadius: '10px' }}
+															value={formData.accent || '#ff8914'}
+															onChange={(e) => setFormData({ ...formData, accent: e.target.value })}
+														/>
+														<input
+															type='text'
+															className='form-control'
+															style={{ borderRadius: '10px', height: '44px' }}
+															value={formData.accent || '#ff8914'}
+															onChange={(e) => setFormData({ ...formData, accent: e.target.value })}
+														/>
+													</div>
+												</div>
+
+												{/* Status Checkbox */}
+												<div className='col-12 col-md-6 d-flex align-items-center mt-auto'>
+													<div
+														className='p-3 rounded-3 d-flex align-items-center justify-content-between w-100'
+														style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
+														<div>
+															<span className='fw-bold text-dark fs-7 d-block'>Active on Website</span>
+															<span className='text-muted fs-8'>Display in homepage carousel</span>
+														</div>
+														<div className='form-check form-switch form-check-custom form-check-solid m-0'>
+															<input
+																className='form-check-input'
+																type='checkbox'
+																id='categoryStatusSwitch'
+																style={{ width: '44px', height: '22px', cursor: 'pointer' }}
+																checked={formData.status !== false}
+																onChange={(e) => setFormData({ ...formData, status: e.target.checked })}
+															/>
+														</div>
+													</div>
 												</div>
 											</div>
+										</div>
 
-											{/* Preset Selector */}
-											<div className='mb-3'>
-												<label className='form-label text-muted fs-8 fw-bold mb-1'>
-													Choose from Existing Category Presets:
-												</label>
-												<div className='d-flex flex-wrap gap-2'>
-													{PRESET_IMAGES.map((preset) => (
+										{/* Right Live Storefront Preview Column */}
+										<div className='col-12 col-lg-5 d-flex flex-column'>
+											<div
+												className='p-4 rounded-4 h-100 d-flex flex-column align-items-center justify-content-between'
+												style={{
+													backgroundColor: '#FAF7F3',
+													border: '1.5px dashed #D6D3D1',
+												}}>
+												<div className='w-100 d-flex align-items-center justify-content-between mb-3'>
+													<span className='fw-bolder text-dark fs-7 text-uppercase tracking-wider'>
+														Storefront Live Preview
+													</span>
+													{/* Desktop vs Mobile Toggle */}
+													<div className='btn-group btn-group-sm p-0.5 bg-white rounded-pill border'>
 														<button
 															type='button'
-															key={preset.url}
-															className='btn btn-sm py-1 px-3 fw-bold rounded-pill'
-															style={{
-																backgroundColor: formData.image === preset.url ? '#172B4D' : '#F1F5F9',
-																color: formData.image === preset.url ? '#FFFFFF' : '#334155',
-																border: formData.image === preset.url ? '1px solid #172B4D' : '1px solid #E2E8F0',
-																fontSize: '11px',
-															}}
-															onClick={() => handlePresetSelect(preset.url)}>
-															{preset.label}
+															className={`btn btn-sm py-1 px-3 rounded-pill fw-bold fs-8 border-0 ${
+																previewDevice === 'desktop'
+																	? 'btn-dark text-white'
+																	: 'text-muted'
+															}`}
+															onClick={() => setPreviewDevice('desktop')}>
+															<FontAwesomeIcon icon={faDesktop} className='me-1' />
+															Desktop (180px)
 														</button>
-													))}
+														<button
+															type='button'
+															className={`btn btn-sm py-1 px-3 rounded-pill fw-bold fs-8 border-0 ${
+																previewDevice === 'mobile'
+																	? 'btn-dark text-white'
+																	: 'text-muted'
+															}`}
+															onClick={() => setPreviewDevice('mobile')}>
+															<FontAwesomeIcon icon={faMobileScreenButton} className='me-1' />
+															Mobile (128px)
+														</button>
+													</div>
 												</div>
-											</div>
 
-											{/* Upload New File */}
-											<div>
-												<label className='form-label text-muted fs-8 fw-bold mb-1'>
-													Or Upload High-Resolution Graphic:
-												</label>
-												<input
-													type='file'
-													accept='image/webp,image/png,image/jpeg,image/jpg'
-													className='form-control'
-													style={{ borderRadius: '10px', height: '44px' }}
-													onChange={handleImageFileSelect}
-												/>
-											</div>
-										</div>
+												{/* The Card Component matching storefront */}
+												{(() => {
+													const badge = getAdminBadge(formData.tag)
+													const isMobile = previewDevice === 'mobile'
+													const stageSize = isMobile ? 128 : 180
+													const cardWidth = isMobile ? '200px' : '230px'
+													return (
+														<div
+															className='bg-white rounded-4 p-3 shadow-sm d-flex flex-column justify-content-between my-2 position-relative'
+															style={{
+																width: cardWidth,
+																minHeight: isMobile ? '290px' : '350px',
+																border: '1px solid #E7E5E4',
+																transition: 'all 0.3s ease',
+															}}>
+															{/* Header: Badge & Count */}
+															<div className='d-flex align-items-center justify-content-between gap-1 w-100'>
+																{badge ? (
+																	<span
+																		className='badge rounded-pill fw-bold text-uppercase'
+																		style={{
+																			backgroundColor: badge.bg,
+																			color: badge.text,
+																			border: `1px solid ${badge.border}`,
+																			fontSize: '9px',
+																			padding: '2px 7px',
+																		}}>
+																		{badge.icon} {badge.label}
+																	</span>
+																) : (
+																	<span className='fs-9 fw-bold text-muted text-uppercase'>
+																		GOMZI
+																	</span>
+																)}
+																<span
+																	className='badge rounded-pill fw-bold fs-9'
+																	style={{ backgroundColor: '#F5F5F4', color: '#78716C' }}>
+																	Featured
+																</span>
+															</div>
 
-										{/* Accent Color */}
-										<div className='col-12 col-md-6'>
-											<label className='form-label fw-bold text-dark fs-7'>
-												Accent Theme Color
-											</label>
-											<div className='d-flex align-items-center gap-2'>
-												<input
-													type='color'
-													className='form-control form-control-color p-1'
-													style={{ width: '44px', height: '44px', borderRadius: '10px' }}
-													value={formData.accent || '#ff8914'}
-													onChange={(e) => setFormData({ ...formData, accent: e.target.value })}
-												/>
-												<input
-													type='text'
-													className='form-control'
-													style={{ borderRadius: '10px', height: '44px' }}
-													value={formData.accent || '#ff8914'}
-													onChange={(e) => setFormData({ ...formData, accent: e.target.value })}
-												/>
-											</div>
-										</div>
+															{/* Cameo Stage */}
+															<div
+																className='position-relative mx-auto my-auto d-flex align-items-center justify-content-center'
+																style={{
+																	width: `${stageSize}px`,
+																	height: `${stageSize}px`,
+																	transition: 'all 0.3s ease',
+																}}>
+																{/* Ambient Spotlight */}
+																<div
+																	className='position-absolute'
+																	style={{
+																		inset: '-4px',
+																		borderRadius: '20px',
+																		background: `radial-gradient(circle, ${formData.accent || '#ff8914'}33 0%, rgba(255,255,255,0) 70%)`,
+																		filter: 'blur(6px)',
+																		opacity: 0.8,
+																	}}
+																/>
+																{/* Square Rounded Stage */}
+																<div
+																	className='position-relative w-100 h-100 overflow-hidden d-flex align-items-center justify-content-center p-1'
+																	style={{
+																		borderRadius: '18px',
+																		background: 'linear-gradient(180deg, #FBF8F5 0%, #F6EFE9 50%, #EFE4DA 100%)',
+																		border: '1px solid #E7E5E4',
+																		boxShadow: '0 4px 14px rgba(42,23,17,0.08)',
+																	}}>
+																	<img
+																		src={imagePreview || getPreviewUrl(formData.image)}
+																		alt={formData.title || 'Category'}
+																		className='w-100 h-100'
+																		style={{
+																			borderRadius: '14px',
+																			objectFit: 'cover',
+																		}}
+																		onError={(e: any) => {
+																			e.currentTarget.onerror = null
+																			e.currentTarget.src = '/images/product-placeholder.webp'
+																		}}
+																	/>
+																</div>
+															</div>
 
-										{/* Status Checkbox */}
-										<div className='col-12 col-md-6 d-flex align-items-center mt-auto'>
-											<div
-												className='p-3 rounded-3 d-flex align-items-center justify-content-between w-100'
-												style={{ backgroundColor: '#F8FAFD', border: '1px solid #EEF2F7' }}>
-												<div>
-													<span className='fw-bold text-dark fs-7 d-block'>Active on Website</span>
-													<span className='text-muted fs-8'>Display in store navigation</span>
-												</div>
-												<div className='form-check form-switch form-check-custom form-check-solid m-0'>
-													<input
-														className='form-check-input'
-														type='checkbox'
-														id='categoryStatusSwitch'
-														style={{ width: '44px', height: '22px', cursor: 'pointer' }}
-														checked={formData.status !== false}
-														onChange={(e) => setFormData({ ...formData, status: e.target.checked })}
-													/>
+															{/* Title & Subtitle */}
+															<div className='text-center my-1'>
+																<div
+																	className='fw-black text-dark text-truncate'
+																	style={{ fontSize: isMobile ? '12px' : '13px', fontWeight: 900 }}>
+																	{formData.title || 'Category Name'}
+																</div>
+																<div
+																	className='text-muted text-truncate'
+																	style={{ fontSize: '10px' }}>
+																	{formData.spec || formData.subtitle || 'Featured Range'}
+																</div>
+															</div>
+
+															{/* Button */}
+															<div
+																className='w-100 rounded-pill text-center fw-bold py-1'
+																style={{
+																	backgroundColor: '#FAF5F0',
+																	color: '#44403C',
+																	fontSize: '11px',
+																	border: '1px solid #E7E5E4',
+																}}>
+																Explore Range →
+															</div>
+														</div>
+													)
+												})()}
+
+												{/* Helper note */}
+												<div
+													className='w-100 p-2.5 rounded-3 mt-2 text-start'
+													style={{ backgroundColor: '#FFFFFF', border: '1px solid #E7E5E4' }}>
+													<div className='fs-9 fw-bold text-dark mb-1'>
+														⚡ Storefront Scaling Notice:
+													</div>
+													<div className='fs-9 text-muted line-height-sm'>
+														Stage is rendered at <strong>180px</strong> on Desktop and <strong>128px</strong> on Mobile. The image is scaled with <code>object-fit: contain</code> so no parts of your product packaging are cut off.
+													</div>
 												</div>
 											</div>
 										</div>

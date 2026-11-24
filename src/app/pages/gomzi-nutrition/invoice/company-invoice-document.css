@@ -1,0 +1,85 @@
+/* Keep the same typography and wrapping when html2pdf clones the document. */
+.company-invoice-document,
+.company-invoice-pdf {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 1.5;
+	font-feature-settings: normal;
+	font-kerning: none;
+	letter-spacing: normal;
+	word-spacing: normal;
+	color: #000;
+	background: #fff;
+}
+
+.company-invoice-document *,
+.company-invoice-pdf * {
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+.company-invoice-document p,
+.company-invoice-document span,
+.company-invoice-document strong,
+.company-invoice-document b,
+.company-invoice-document th,
+.company-invoice-document td {
+	font-family: Arial, Helvetica, sans-serif !important;
+	line-height: 1.5;
+	white-space: normal;
+	word-break: normal;
+	overflow-wrap: anywhere;
+	/* html2canvas measures individual characters when spacing is nonzero.
+	   This also preserves wrapping of long words in the PDF canvas. */
+	letter-spacing: 0.01px;
+}
+
+.company-invoice-document .invoice-details > div {
+	flex-shrink: 0;
+}
+
+.company-invoice-document .invoice-items table {
+	table-layout: fixed;
+	width: 100%;
+}
+
+.company-invoice-document .invoice-items th,
+.company-invoice-document .invoice-items td {
+	padding: 5px 4px !important;
+	vertical-align: top;
+}
+
+.company-invoice-document .invoice-items th {
+	font-size: 11px !important;
+}
+
+.company-invoice-document .invoice-payment-body {
+	padding: 6px 0;
+}
+
+.company-invoice-document .invoice-payment-qr {
+	flex-shrink: 0;
+}
+
+.company-invoice-document .invoice-payment-bank {
+	flex: 1;
+}
+
+.company-invoice-document img {
+	max-width: 100%;
+	height: auto;
+}
+
+/* A4 printable width: 210mm minus the two 8mm PDF margins. */
+.company-invoice-pdf {
+	width: 194mm;
+	margin: 0;
+	padding: 0;
+}
+
+.company-invoice-pdf > .company-invoice-document,
+.company-invoice-pdf > .company-invoice-terms {
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+}
