@@ -82,10 +82,14 @@ const belongsToAccount = (coupon: any, account: any) => {
 
 // Single line from order totals, for API responses that predate per-product coupon lines.
 function buildFallbackLine(ord: any) {
-	const net = Number(ord?.calculated_paid ?? ord?.payment_breakdowns?.paid_amount ?? ord?.amount ?? 0)
+	const net = Number(
+		ord?.calculated_paid ?? ord?.payment_breakdowns?.paid_amount ?? ord?.amount ?? 0
+	)
 	const discount = Number(ord?.calculated_discount ?? ord?.notes?.discount_amount ?? 0)
 	const gross = Number(ord?.calculated_gross ?? net + discount)
-	const credit = Number(ord?.commission_amount ?? Math.round(net * DEFAULT_COMMISSION_PERCENT) / 100)
+	const credit = Number(
+		ord?.commission_amount ?? Math.round(net * DEFAULT_COMMISSION_PERCENT) / 100
+	)
 	return {
 		product_id: ord?.order_item_id || ord?.multiple_items?.[0]?.item_id || '',
 		name: ord?.multiple_items?.[0]?.notes?.product_name,

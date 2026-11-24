@@ -1,41 +1,31 @@
 /* eslint-disable */
-import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-	faAward,
 	faBank,
-	faCalendarAlt,
 	faCheckCircle,
-	faDownload,
 	faFileExcel,
 	faHandHoldingUsd,
-	faInfoCircle,
 	faReceipt,
 	faShoppingBag,
 	faTag,
 	faUser,
 	faWallet,
 } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Link, useSearchParams } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
 import UsersListPagination from '../../../components/TablePagination'
-import { useProPartnerData } from './useProPartnerData'
 import './pro-partner-coupons.css'
+import { useProPartnerData } from './useProPartnerData'
 
 const ProPartnerCommissions: React.FC = () => {
 	const [searchParams] = useSearchParams()
 	const partnerIdParam = searchParams.get('partner_id')
 
-	const {
-		loading,
-		coupons,
-		orders,
-		partnerInfo,
-		metrics,
-	} = useProPartnerData(partnerIdParam)
+	const { loading, coupons, orders, partnerInfo, metrics } = useProPartnerData(partnerIdParam)
 
 	const [searchTerm, setSearchTerm] = useState('')
 	const [statusFilter, setStatusFilter] = useState('ALL')
@@ -115,10 +105,7 @@ const ProPartnerCommissions: React.FC = () => {
 			const worksheet = XLSX.utils.json_to_sheet(rows)
 			const workbook = XLSX.utils.book_new()
 			XLSX.utils.book_append_sheet(workbook, worksheet, 'Commissions Ledger')
-			XLSX.writeFile(
-				workbook,
-				`RAG_Pro_Partner_Commissions_${DayJS().format('YYYY-MM-DD')}.xlsx`
-			)
+			XLSX.writeFile(workbook, `RAG_Pro_Partner_Commissions_${DayJS().format('YYYY-MM-DD')}.xlsx`)
 			toast.success('Commissions ledger exported to Excel!')
 		} catch (error) {
 			console.error('Export error:', error)
@@ -144,27 +131,30 @@ const ProPartnerCommissions: React.FC = () => {
 					</div>
 					<div>
 						<div className='d-flex align-items-center flex-wrap'>
-							<h1 className='gz-partner-portal-title'>
-								Commissions Ledger &amp; Payouts
-							</h1>
+							<h1 className='gz-partner-portal-title'>Commissions Ledger &amp; Payouts</h1>
 							<span className='gz-partner-status-pill approved'>
 								<FontAwesomeIcon icon={faCheckCircle} />
 								<span>Per-Product Credit Rates</span>
 							</span>
 						</div>
 						<p className='gz-partner-portal-subtitle'>
-							Track your earnings generated from referral sales, commission disbursement ledger, and bank settlement status.
+							Track your earnings generated from referral sales, commission disbursement ledger, and
+							bank settlement status.
 						</p>
 					</div>
 				</div>
 
 				<div className='gz-partner-header-right'>
-					<Link to='/rag/pro-partner/coupons' className='gz-btn-brown-outline'>
+					<Link
+						to='/rag/pro-partner/coupons'
+						className='gz-btn-brown-outline'>
 						<FontAwesomeIcon icon={faTag} />
 						<span>My Coupons</span>
 					</Link>
 
-					<Link to='/rag/pro-partner/orders' className='gz-btn-brown-outline'>
+					<Link
+						to='/rag/pro-partner/orders'
+						className='gz-btn-brown-outline'>
 						<FontAwesomeIcon icon={faShoppingBag} />
 						<span>Order History</span>
 					</Link>
@@ -205,7 +195,9 @@ const ProPartnerCommissions: React.FC = () => {
 								<FontAwesomeIcon icon={faHandHoldingUsd} />
 							</div>
 						</div>
-						<div className='gz-kpi-value text-success'>₹{metrics.pendingCommission.toLocaleString('en-IN')}</div>
+						<div className='gz-kpi-value text-success'>
+							₹{metrics.pendingCommission.toLocaleString('en-IN')}
+						</div>
 						<div className='gz-kpi-desc'>Eligible for next settlement cycle</div>
 					</div>
 				</div>
@@ -259,21 +251,35 @@ const ProPartnerCommissions: React.FC = () => {
 						<FontAwesomeIcon icon={faBank} />
 					</div>
 					<div>
-						<div className='fw-bold fs-6' style={{ color: '#261E1A' }}>
+						<div
+							className='fw-bold fs-6'
+							style={{ color: '#261E1A' }}>
 							Commission Payout Destination:
 						</div>
 						<div className='fs-8 text-muted mt-0.5'>
 							{bankDetails.accountNumber ? (
 								<>
-									Bank: <strong style={{ color: '#261E1A' }}>{bankDetails.bankName || 'Verified Bank'}</strong> • Acc: <strong style={{ color: '#261E1A' }}>••••{String(bankDetails.accountNumber).slice(-4)}</strong> • IFSC: <strong style={{ color: '#261E1A' }}>{bankDetails.ifscCode || 'Verified'}</strong>
+									Bank:{' '}
+									<strong style={{ color: '#261E1A' }}>
+										{bankDetails.bankName || 'Verified Bank'}
+									</strong>{' '}
+									• Acc:{' '}
+									<strong style={{ color: '#261E1A' }}>
+										••••{String(bankDetails.accountNumber).slice(-4)}
+									</strong>{' '}
+									• IFSC:{' '}
+									<strong style={{ color: '#261E1A' }}>{bankDetails.ifscCode || 'Verified'}</strong>
 								</>
 							) : bankDetails.upiId ? (
 								<>
 									UPI ID: <strong style={{ color: '#261E1A' }}>{bankDetails.upiId}</strong>
 								</>
 							) : (
-								<span className='fw-semibold' style={{ color: '#B45309' }}>
-									No payout destination configured yet. Please configure your bank account or UPI ID to receive disbursements.
+								<span
+									className='fw-semibold'
+									style={{ color: '#B45309' }}>
+									No payout destination configured yet. Please configure your bank account or UPI ID
+									to receive disbursements.
 								</span>
 							)}
 						</div>
@@ -285,7 +291,11 @@ const ProPartnerCommissions: React.FC = () => {
 					className='gz-btn-brown-outline'
 					style={{ padding: '7px 16px', fontSize: '12.5px' }}>
 					<FontAwesomeIcon icon={faUser} />
-					<span>{bankDetails.accountNumber || bankDetails.upiId ? 'Update Bank / UPI' : 'Configure Payout Details'}</span>
+					<span>
+						{bankDetails.accountNumber || bankDetails.upiId
+							? 'Update Bank / UPI'
+							: 'Configure Payout Details'}
+					</span>
 				</Link>
 			</div>
 
@@ -294,10 +304,18 @@ const ProPartnerCommissions: React.FC = () => {
 			    ========================================================================= */}
 			<div className='gz-table-card'>
 				{/* Filter & Search Toolbar */}
-				<div className='p-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3' style={{ background: '#FAF6F2' }}>
-					<div className='d-flex align-items-center gap-3 flex-grow-1' style={{ maxWidth: '420px' }}>
-						<div className='gz-search-bar-box w-100' style={{ height: '38px' }}>
-							<i className='bi bi-search' style={{ fontSize: '13px' }}></i>
+				<div
+					className='p-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3'
+					style={{ background: '#FAF6F2' }}>
+					<div
+						className='d-flex align-items-center gap-3 flex-grow-1'
+						style={{ maxWidth: '420px' }}>
+						<div
+							className='gz-search-bar-box w-100'
+							style={{ height: '38px' }}>
+							<i
+								className='bi bi-search'
+								style={{ fontSize: '13px' }}></i>
 							<input
 								type='text'
 								className='gz-search-bar-input'
@@ -323,7 +341,8 @@ const ProPartnerCommissions: React.FC = () => {
 
 					<div className='d-flex align-items-center gap-2 flex-wrap'>
 						<span className='fs-8 text-muted fw-semibold d-none d-sm-inline me-1'>
-							{filteredTransactions.length} transaction{filteredTransactions.length === 1 ? '' : 's'}
+							{filteredTransactions.length} transaction
+							{filteredTransactions.length === 1 ? '' : 's'}
 						</span>
 
 						<select
@@ -347,7 +366,11 @@ const ProPartnerCommissions: React.FC = () => {
 								style={{ width: '65px', height: '38px', paddingRight: '18px' }}
 								value={pagination.itemsPerPage}
 								onChange={(e) =>
-									setPagination((prev) => ({ ...prev, itemsPerPage: Number(e.target.value), page: 1 }))
+									setPagination((prev) => ({
+										...prev,
+										itemsPerPage: Number(e.target.value),
+										page: 1,
+									}))
 								}>
 								<option value='10'>10</option>
 								<option value='25'>25</option>
@@ -378,14 +401,21 @@ const ProPartnerCommissions: React.FC = () => {
 							{loading ? (
 								Array.from({ length: 4 }).map((_, i) => (
 									<tr key={`skel-comm-${i}`}>
-										<td colSpan={10} className='py-4 ps-4'>
-											<div className='bg-light rounded' style={{ width: '100%', height: '24px' }} />
+										<td
+											colSpan={10}
+											className='py-4 ps-4'>
+											<div
+												className='bg-light rounded'
+												style={{ width: '100%', height: '24px' }}
+											/>
 										</td>
 									</tr>
 								))
 							) : paginatedList.length === 0 ? (
 								<tr>
-									<td colSpan={10} className='text-center py-5'>
+									<td
+										colSpan={10}
+										className='text-center py-5'>
 										<div className='d-flex flex-column align-items-center justify-content-center py-4'>
 											<div
 												className='mb-2 d-flex align-items-center justify-content-center'
@@ -399,11 +429,14 @@ const ProPartnerCommissions: React.FC = () => {
 												}}>
 												<FontAwesomeIcon icon={faHandHoldingUsd} />
 											</div>
-											<span className='fw-bold fs-6' style={{ color: '#261E1A' }}>
+											<span
+												className='fw-bold fs-6'
+												style={{ color: '#261E1A' }}>
 												No Commission Entries Found
 											</span>
 											<span className='fs-8 text-muted mt-1'>
-												When clients complete orders with your coupon, credited commissions appear here automatically.
+												When clients complete orders with your coupon, credited commissions appear
+												here automatically.
 											</span>
 										</div>
 									</td>
@@ -418,7 +451,9 @@ const ProPartnerCommissions: React.FC = () => {
 											{/* Date */}
 											<td>
 												<div className='d-flex flex-column'>
-													<span className='fw-bold fs-7' style={{ color: '#261E1A' }}>
+													<span
+														className='fw-bold fs-7'
+														style={{ color: '#261E1A' }}>
 														{DayJS(tx.creditTime).format('DD MMM YYYY')}
 													</span>
 													<span className='text-muted fs-8'>
@@ -429,7 +464,13 @@ const ProPartnerCommissions: React.FC = () => {
 
 											{/* Receipt */}
 											<td>
-												<span className='badge font-monospace fs-8' style={{ background: '#FAF6F2', color: '#78350F', border: '1px solid #EFE4DC' }}>
+												<span
+													className='badge font-monospace fs-8'
+													style={{
+														background: '#FAF6F2',
+														color: '#78350F',
+														border: '1px solid #EFE4DC',
+													}}>
 													{tx.receiptId}
 												</span>
 											</td>
@@ -437,7 +478,9 @@ const ProPartnerCommissions: React.FC = () => {
 											{/* Client Details */}
 											<td>
 												<div>
-													<div className='fw-bold fs-7' style={{ color: '#261E1A' }}>
+													<div
+														className='fw-bold fs-7'
+														style={{ color: '#261E1A' }}>
 														{tx.customerName}
 													</div>
 													<div className='text-muted fs-8'>{tx.customerMobile}</div>
@@ -477,7 +520,10 @@ const ProPartnerCommissions: React.FC = () => {
 														</div>
 													)}
 													<div>
-														<div className='fw-bold fs-7 text-truncate' style={{ color: '#261E1A', maxWidth: '200px' }} title={tx.productName}>
+														<div
+															className='fw-bold fs-7 text-truncate'
+															style={{ color: '#261E1A', maxWidth: '200px' }}
+															title={tx.productName}>
 															{tx.productName}
 														</div>
 														<div className='text-muted fs-8'>Qty: {tx.quantity}</div>
@@ -487,7 +533,9 @@ const ProPartnerCommissions: React.FC = () => {
 
 											{/* Gross */}
 											<td>
-												<span className='fw-bold fs-7' style={{ color: '#261E1A' }}>
+												<span
+													className='fw-bold fs-7'
+													style={{ color: '#261E1A' }}>
 													₹{tx.orderAmount.toLocaleString('en-IN')}
 												</span>
 											</td>
@@ -501,7 +549,9 @@ const ProPartnerCommissions: React.FC = () => {
 
 											{/* Paid */}
 											<td>
-												<span className='fw-bold fs-7' style={{ color: '#261E1A' }}>
+												<span
+													className='fw-bold fs-7'
+													style={{ color: '#261E1A' }}>
 													₹{tx.paidAmount.toLocaleString('en-IN')}
 												</span>
 											</td>
@@ -510,7 +560,12 @@ const ProPartnerCommissions: React.FC = () => {
 											<td>
 												<div
 													className='px-2 py-1 rounded-2 d-inline-block fw-bold'
-													style={{ background: '#FAF6F2', color: '#78350F', border: '1px solid #EFE4DC', fontSize: '13px' }}>
+													style={{
+														background: '#FAF6F2',
+														color: '#78350F',
+														border: '1px solid #EFE4DC',
+														fontSize: '13px',
+													}}>
 													+₹{tx.commissionAmount.toLocaleString('en-IN')}
 												</div>
 												<div style={{ color: '#82756E', fontSize: '11px', marginTop: '2px' }}>
@@ -525,7 +580,9 @@ const ProPartnerCommissions: React.FC = () => {
 													style={{
 														background: tx.commissionStatus === 'PAID' ? '#ECFDF5' : '#FEF3C7',
 														color: tx.commissionStatus === 'PAID' ? '#047857' : '#B45309',
-														border: `1px solid ${tx.commissionStatus === 'PAID' ? '#A7F3D0' : '#FDE68A'}`,
+														border: `1px solid ${
+															tx.commissionStatus === 'PAID' ? '#A7F3D0' : '#FDE68A'
+														}`,
 														fontWeight: 700,
 														fontSize: '11px',
 														padding: '4px 8px',
@@ -542,7 +599,9 @@ const ProPartnerCommissions: React.FC = () => {
 				</div>
 
 				{/* Pagination */}
-				<div className='p-3 border-top d-flex justify-content-end' style={{ background: '#FAF6F2' }}>
+				<div
+					className='p-3 border-top d-flex justify-content-end'
+					style={{ background: '#FAF6F2' }}>
 					<UsersListPagination
 						totalPages={Math.ceil(filteredTransactions.length / pagination.itemsPerPage) || 1}
 						currentPage={pagination.page}
@@ -555,4 +614,3 @@ const ProPartnerCommissions: React.FC = () => {
 }
 
 export default ProPartnerCommissions
-

@@ -1,13 +1,13 @@
 /* eslint-disable */
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Modal } from 'react-bootstrap'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { DayJS } from '../../../../_metronic/helpers/Utils'
 import { PageTitle } from '../../../../_metronic/layout/core'
-import UsersListPagination from '../../../components/TablePagination'
 import CopyButton from '../../../components/motion/CopyButton'
+import UsersListPagination from '../../../components/TablePagination'
 import {
 	CreateReferralCoupon,
 	GetContactInquiry,
@@ -42,7 +42,9 @@ const getProductUnitPrice = (p: any): number =>
 	Number(p?.discountPrice ?? p?.discount_price ?? p?.price ?? 0) || 0
 
 const formatINR = (n: number) =>
-	`₹${(Math.round((Number(n) || 0) * 100) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+	`₹${(Math.round((Number(n) || 0) * 100) / 100).toLocaleString('en-IN', {
+		maximumFractionDigits: 2,
+	})}`
 
 const isValidPercent = (v: string | number) => {
 	const n = Number(v)
@@ -93,7 +95,9 @@ const ManageCoupon: React.FC = () => {
 	const [usageLoading, setUsageLoading] = useState(false)
 
 	// Generator Form State
-	const [beneficiaryType, setBeneficiaryType] = useState<'user' | 'pro_partner' | 'trainer' | 'general'>('user')
+	const [beneficiaryType, setBeneficiaryType] = useState<
+		'user' | 'pro_partner' | 'trainer' | 'general'
+	>('user')
 	const [selectedUserId, setSelectedUserId] = useState<string>('')
 	const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
 	const [selectedTrainerId, setSelectedTrainerId] = useState<string>('')
@@ -123,7 +127,10 @@ const ManageCoupon: React.FC = () => {
 				discount_percent: prev.product_rules[productId]?.discount_percent ?? prev.discount,
 				credit_percent: prev.product_rules[productId]?.credit_percent ?? prev.credit_percent,
 			}
-			return { ...prev, product_rules: { ...prev.product_rules, [productId]: { ...current, [field]: value } } }
+			return {
+				...prev,
+				product_rules: { ...prev.product_rules, [productId]: { ...current, [field]: value } },
+			}
 		})
 	}
 
@@ -204,7 +211,9 @@ const ManageCoupon: React.FC = () => {
 				})
 				raw = Array.isArray(fallbackRes?.data)
 					? fallbackRes.data
-					: (Array.isArray(fallbackRes?.data?.data) ? fallbackRes.data.data : [])
+					: Array.isArray(fallbackRes?.data?.data)
+					? fallbackRes.data.data
+					: []
 			}
 
 			// Include all Pro Partner applications (both accepted and submitted), prioritizing approved
@@ -225,8 +234,10 @@ const ManageCoupon: React.FC = () => {
 			const list = partnerApplications.length > 0 ? partnerApplications : raw
 
 			list.sort((a: any, b: any) => {
-				const aApproved = a.partner_status === 'approved' || Boolean(a.partner_policy?.accepted_at) ? 1 : 0
-				const bApproved = b.partner_status === 'approved' || Boolean(b.partner_policy?.accepted_at) ? 1 : 0
+				const aApproved =
+					a.partner_status === 'approved' || Boolean(a.partner_policy?.accepted_at) ? 1 : 0
+				const bApproved =
+					b.partner_status === 'approved' || Boolean(b.partner_policy?.accepted_at) ? 1 : 0
 				if (aApproved !== bApproved) return bApproved - aApproved
 				const aTime = new Date(a.createdAt || 0).getTime()
 				const bTime = new Date(b.createdAt || 0).getTime()
@@ -350,7 +361,10 @@ const ManageCoupon: React.FC = () => {
 			if (statusFilter === 'expired' && !isExpired) return false
 
 			const isPartner = c.coupon_type === 'pro_partner' || Boolean(c.partner_inquiry_id)
-			const isTrainer = (c.coupon_type === 'trainer' || Boolean(c.assign_trainer?.name && c.assign_trainer?.name !== 'N/A')) && !isPartner
+			const isTrainer =
+				(c.coupon_type === 'trainer' ||
+					Boolean(c.assign_trainer?.name && c.assign_trainer?.name !== 'N/A')) &&
+				!isPartner
 			const isUser = Boolean(c.assigned_user?.user_id) || c.coupon_type === 'user'
 			const isGeneral = !isPartner && !isTrainer && !isUser
 
@@ -497,7 +511,12 @@ const ManageCoupon: React.FC = () => {
 			nameBase = selectedTrainerObject.full_name || 'TRAINER'
 		}
 
-		const cleanName = nameBase.trim().split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase() || 'OFFER'
+		const cleanName =
+			nameBase
+				.trim()
+				.split(' ')[0]
+				.replace(/[^a-zA-Z0-9]/g, '')
+				.toUpperCase() || 'OFFER'
 		const code = `RAG${cleanName}${formState.discount || '10'}`
 		setFormState((prev) => ({
 			...prev,
@@ -597,7 +616,10 @@ const ManageCoupon: React.FC = () => {
 	const handleSubmitCoupon = async (e: React.FormEvent) => {
 		e.preventDefault()
 
-		const cleanCode = formState.coupon_code.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '')
+		const cleanCode = formState.coupon_code
+			.trim()
+			.toUpperCase()
+			.replace(/[^A-Z0-9_-]/g, '')
 		if (!cleanCode) {
 			toast.error('Coupon code is required and must contain alphanumeric characters')
 			return
@@ -626,7 +648,8 @@ const ManageCoupon: React.FC = () => {
 		}
 
 		// One rule per selected product: website discount % for the customer, credit % for the owner.
-		const productRules: { product_id: string; discount_percent: number; credit_percent: number }[] = []
+		const productRules: { product_id: string; discount_percent: number; credit_percent: number }[] =
+			[]
 		if (formState.scope === 'SPECIFIC_PRODUCTS') {
 			if (formState.applicable_products.length === 0) {
 				toast.error('Select at least one product, or choose All Products')
@@ -671,7 +694,9 @@ const ManageCoupon: React.FC = () => {
 				couponType = 'user'
 				assignedUser = {
 					user_id: selectedUserObject._id,
-					name: `${selectedUserObject.first_name || ''} ${selectedUserObject.last_name || ''}`.trim() || 'User',
+					name:
+						`${selectedUserObject.first_name || ''} ${selectedUserObject.last_name || ''}`.trim() ||
+						'User',
 					email: selectedUserObject.email || '',
 					mobile: selectedUserObject.mobile || '',
 				}
@@ -683,7 +708,8 @@ const ManageCoupon: React.FC = () => {
 				}
 				couponType = 'pro_partner'
 				partnerInquiryId = selectedPartnerObject._id
-				partnerName = selectedPartnerObject.details?.full_name || selectedPartnerObject.name || 'Pro Partner'
+				partnerName =
+					selectedPartnerObject.details?.full_name || selectedPartnerObject.name || 'Pro Partner'
 				partnerEmail = selectedPartnerObject.details?.email || selectedPartnerObject.email || ''
 				partnerMobile = selectedPartnerObject.details?.mobile || selectedPartnerObject.mobile || ''
 				assignTrainer = {
@@ -753,8 +779,8 @@ const ManageCoupon: React.FC = () => {
 			const ordersList: any[] = Array.isArray(usageData?.orders)
 				? usageData.orders
 				: Array.isArray(usageData)
-					? usageData
-					: []
+				? usageData
+				: []
 			setUsageOrders(ordersList)
 		} catch (err) {
 			console.error('Failed to load usage orders:', err)
@@ -780,12 +806,16 @@ const ManageCoupon: React.FC = () => {
 			'Coupon Code': c.coupon_code || '',
 			Title: c.title || '',
 			'Beneficiary Type': c.coupon_type || 'General',
-			'Assigned To': c.assigned_user?.name || c.partner_name || c.assign_trainer?.name || 'Storewide',
+			'Assigned To':
+				c.assigned_user?.name || c.partner_name || c.assign_trainer?.name || 'Storewide',
 			Discount:
 				c.discount_type === 'percent'
 					? ruleRangeLabel(c, 'discount_percent') || `${c.discount || 0}%`
 					: `${c.discount || 0} INR`,
-			'Credit %': c.coupon_type === 'general' ? '-' : ruleRangeLabel(c, 'credit_percent') || `${c.credit_percent ?? 10}%`,
+			'Credit %':
+				c.coupon_type === 'general'
+					? '-'
+					: ruleRangeLabel(c, 'credit_percent') || `${c.credit_percent ?? 10}%`,
 			'Max Usage': c.max_usage_count || 1000,
 			'Expiry Date': c.expired_at ? DayJS(c.expired_at).format('YYYY-MM-DD') : 'None',
 		}))
@@ -816,7 +846,8 @@ const ManageCoupon: React.FC = () => {
 							<div>
 								<h2 className='gz-header-title'>Referral Coupons Management</h2>
 								<div className='gz-header-subtitle'>
-									Create user-assigned discount codes, track usage metrics, and link affiliate partners.
+									Create user-assigned discount codes, track usage metrics, and link affiliate
+									partners.
 								</div>
 							</div>
 						</div>
@@ -848,11 +879,15 @@ const ManageCoupon: React.FC = () => {
 						<div className='gz-kpi-card kpi-accent-amber'>
 							<div className='gz-kpi-top'>
 								<span className='gz-kpi-label'>User & Partner Coupons</span>
-								<div className='gz-kpi-icon' style={{ background: '#FEF3C7', color: '#B45309' }}>
+								<div
+									className='gz-kpi-icon'
+									style={{ background: '#FEF3C7', color: '#B45309' }}>
 									<i className='bi bi-people'></i>
 								</div>
 							</div>
-							<div className='gz-kpi-value' style={{ color: '#B45309' }}>
+							<div
+								className='gz-kpi-value'
+								style={{ color: '#B45309' }}>
 								{loading ? '...' : kpis.userCoupons}
 							</div>
 							<div className='gz-kpi-desc'>Coupons assigned to specific users</div>
@@ -861,11 +896,15 @@ const ManageCoupon: React.FC = () => {
 						<div className='gz-kpi-card kpi-accent-emerald'>
 							<div className='gz-kpi-top'>
 								<span className='gz-kpi-label'>Live & Active</span>
-								<div className='gz-kpi-icon' style={{ background: '#ECFDF5', color: '#059669' }}>
+								<div
+									className='gz-kpi-icon'
+									style={{ background: '#ECFDF5', color: '#059669' }}>
 									<i className='bi bi-check-circle'></i>
 								</div>
 							</div>
-							<div className='gz-kpi-value' style={{ color: '#059669' }}>
+							<div
+								className='gz-kpi-value'
+								style={{ color: '#059669' }}>
 								{loading ? '...' : kpis.liveCoupons}
 							</div>
 							<div className='gz-kpi-desc'>Currently valid for website checkout</div>
@@ -874,11 +913,15 @@ const ManageCoupon: React.FC = () => {
 						<div className='gz-kpi-card kpi-accent-stone'>
 							<div className='gz-kpi-top'>
 								<span className='gz-kpi-label'>Expired Coupons</span>
-								<div className='gz-kpi-icon' style={{ background: '#F5F5F4', color: '#78716C' }}>
+								<div
+									className='gz-kpi-icon'
+									style={{ background: '#F5F5F4', color: '#78716C' }}>
 									<i className='bi bi-clock-history'></i>
 								</div>
 							</div>
-							<div className='gz-kpi-value' style={{ color: '#78716C' }}>
+							<div
+								className='gz-kpi-value'
+								style={{ color: '#78716C' }}>
 								{loading ? '...' : kpis.expiredCoupons}
 							</div>
 							<div className='gz-kpi-desc'>Past validity expiry date</div>
@@ -955,13 +998,25 @@ const ManageCoupon: React.FC = () => {
 							</select>
 
 							<div className='d-flex align-items-center gap-2 ms-auto'>
-								<span style={{ fontSize: '12px', fontWeight: 600, color: '#82756E', whiteSpace: 'nowrap' }}>Show:</span>
+								<span
+									style={{
+										fontSize: '12px',
+										fontWeight: 600,
+										color: '#82756E',
+										whiteSpace: 'nowrap',
+									}}>
+									Show:
+								</span>
 								<select
 									className='gz-select'
 									style={{ width: '70px', paddingRight: '20px' }}
 									value={pagination.itemsPerPage}
 									onChange={(e) =>
-										setPagination((prev) => ({ ...prev, itemsPerPage: Number(e.target.value), page: 1 }))
+										setPagination((prev) => ({
+											...prev,
+											itemsPerPage: Number(e.target.value),
+											page: 1,
+										}))
 									}>
 									<option value='10'>10</option>
 									<option value='25'>25</option>
@@ -1000,25 +1055,43 @@ const ManageCoupon: React.FC = () => {
 									{loading ? (
 										Array.from({ length: 5 }).map((_, i) => (
 											<tr key={`skel-${i}`}>
-												<td colSpan={9} className='py-4 ps-4'>
-													<div className='bg-light rounded' style={{ width: '100%', height: '24px' }} />
+												<td
+													colSpan={9}
+													className='py-4 ps-4'>
+													<div
+														className='bg-light rounded'
+														style={{ width: '100%', height: '24px' }}
+													/>
 												</td>
 											</tr>
 										))
 									) : paginatedCoupons.length === 0 ? (
 										<tr>
-											<td colSpan={9} className='text-center py-8'>
+											<td
+												colSpan={9}
+												className='text-center py-8'>
 												<div className='d-flex flex-column align-items-center justify-content-center py-6'>
-													<i className='bi bi-tag fs-1 mb-2' style={{ color: '#A89F99' }}></i>
-													<span className='fw-bold fs-6' style={{ color: '#443B35' }}>No coupons found</span>
-													<span className='fs-8' style={{ color: '#82756E' }}>Adjust your search or filter parameters.</span>
+													<i
+														className='bi bi-tag fs-1 mb-2'
+														style={{ color: '#A89F99' }}></i>
+													<span
+														className='fw-bold fs-6'
+														style={{ color: '#443B35' }}>
+														No coupons found
+													</span>
+													<span
+														className='fs-8'
+														style={{ color: '#82756E' }}>
+														Adjust your search or filter parameters.
+													</span>
 												</div>
 											</td>
 										</tr>
 									) : (
 										paginatedCoupons.map((c: any, idx: number) => {
 											const actualIndex = (pagination.page - 1) * pagination.itemsPerPage + idx + 1
-											const isExpired = c.expired_at && new Date(c.expired_at).getTime() < new Date().getTime()
+											const isExpired =
+												c.expired_at && new Date(c.expired_at).getTime() < new Date().getTime()
 											const storeLink = `https://www.ragnutrition.in/gomzi-supplement?coupon_code=${c.coupon_code}`
 
 											return (
@@ -1028,16 +1101,21 @@ const ManageCoupon: React.FC = () => {
 													{/* Coupon Code */}
 													<td>
 														<div className='d-inline-flex align-items-center gap-2'>
-															<span className='gz-code-badge'>
-																{c.coupon_code}
-															</span>
-															<CopyButton text={c.coupon_code} title="Copy coupon code" />
+															<span className='gz-code-badge'>{c.coupon_code}</span>
+															<CopyButton
+																text={c.coupon_code}
+																title='Copy coupon code'
+															/>
 														</div>
 													</td>
 
 													{/* Title */}
 													<td>
-														<div className='fw-bold' style={{ color: '#261E1A', fontSize: '13px' }}>{c.title}</div>
+														<div
+															className='fw-bold'
+															style={{ color: '#261E1A', fontSize: '13px' }}>
+															{c.title}
+														</div>
 														<div style={{ color: '#82756E', fontSize: '11px', marginTop: '2px' }}>
 															Created: {DayJS(c.createdAt).format('DD MMM YYYY')}
 														</div>
@@ -1050,29 +1128,40 @@ const ManageCoupon: React.FC = () => {
 																<span className='gz-badge-user mb-1'>
 																	<i className='bi bi-person me-1'></i>User
 																</span>
-																<div className='fw-bold' style={{ color: '#261E1A', fontSize: '13px' }}>
+																<div
+																	className='fw-bold'
+																	style={{ color: '#261E1A', fontSize: '13px' }}>
 																	{c.assigned_user?.name || 'Customer'}
 																</div>
 																<div style={{ color: '#82756E', fontSize: '11px' }}>
 																	{c.assigned_user?.mobile || c.assigned_user?.email || 'N/A'}
 																</div>
 															</div>
-														) : c.coupon_type === 'pro_partner' || c.partner_inquiry_id || c.partner_name ? (
+														) : c.coupon_type === 'pro_partner' ||
+														  c.partner_inquiry_id ||
+														  c.partner_name ? (
 															<div>
 																<div className='d-flex align-items-center gap-2 mb-1'>
 																	<span className='gz-badge-partner'>
 																		<i className='bi bi-gem me-1'></i>Pro Partner
 																	</span>
 																	<Link
-																		to={`/rag/pro-partner/coupons?partner_id=${c.partner_inquiry_id?._id || c.partner_inquiry_id || ''}`}
+																		to={`/rag/pro-partner/coupons?partner_id=${
+																			c.partner_inquiry_id?._id || c.partner_inquiry_id || ''
+																		}`}
 																		className='badge fw-bold fs-9 text-decoration-none'
 																		style={{ background: '#FEF3C7', color: '#78350F' }}
 																		title='View Pro Partner Portal for this user'>
 																		View Portal &gt;
 																	</Link>
 																</div>
-																<div className='fw-bold' style={{ color: '#261E1A', fontSize: '13px' }}>
-																	{c.partner_name || c.partner_inquiry_id?.name || c.assign_trainer?.name || 'Pro Partner'}
+																<div
+																	className='fw-bold'
+																	style={{ color: '#261E1A', fontSize: '13px' }}>
+																	{c.partner_name ||
+																		c.partner_inquiry_id?.name ||
+																		c.assign_trainer?.name ||
+																		'Pro Partner'}
 																</div>
 																<div style={{ color: '#82756E', fontSize: '11px' }}>
 																	{c.partner_mobile || c.partner_email || ''}
@@ -1083,7 +1172,9 @@ const ManageCoupon: React.FC = () => {
 																<span className='gz-badge-trainer mb-1'>
 																	<i className='bi bi-person-check me-1'></i>Trainer
 																</span>
-																<div className='fw-bold' style={{ color: '#261E1A', fontSize: '13px' }}>
+																<div
+																	className='fw-bold'
+																	style={{ color: '#261E1A', fontSize: '13px' }}>
 																	{c.assign_trainer.name}
 																</div>
 															</div>
@@ -1092,7 +1183,9 @@ const ManageCoupon: React.FC = () => {
 																<span className='gz-badge-general mb-1'>
 																	<i className='bi bi-shop me-1'></i>Storewide
 																</span>
-																<div style={{ color: '#82756E', fontSize: '11px' }}>Open public code</div>
+																<div style={{ color: '#82756E', fontSize: '11px' }}>
+																	Open public code
+																</div>
 															</div>
 														)}
 													</td>
@@ -1105,8 +1198,16 @@ const ManageCoupon: React.FC = () => {
 																: `₹${c.discount} Off`}
 														</span>
 														{c.coupon_type !== 'general' && (
-															<div style={{ color: '#047857', fontSize: '11px', fontWeight: 600, marginTop: '4px' }}>
-																Credit {ruleRangeLabel(c, 'credit_percent') || `${c.credit_percent ?? 10}%`}
+															<div
+																style={{
+																	color: '#047857',
+																	fontSize: '11px',
+																	fontWeight: 600,
+																	marginTop: '4px',
+																}}>
+																Credit{' '}
+																{ruleRangeLabel(c, 'credit_percent') ||
+																	`${c.credit_percent ?? 10}%`}
 															</div>
 														)}
 													</td>
@@ -1114,15 +1215,23 @@ const ManageCoupon: React.FC = () => {
 													{/* Expiry */}
 													<td>
 														<div className='d-flex flex-column'>
-															<span className='fw-bold' style={{ color: '#261E1A', fontSize: '13px' }}>
-																{c.expired_at ? DayJS(c.expired_at).format('DD MMM YYYY') : 'No Expiry'}
+															<span
+																className='fw-bold'
+																style={{ color: '#261E1A', fontSize: '13px' }}>
+																{c.expired_at
+																	? DayJS(c.expired_at).format('DD MMM YYYY')
+																	: 'No Expiry'}
 															</span>
 															{isExpired ? (
-																<span className='gz-status-expired mt-1' style={{ width: 'fit-content' }}>
+																<span
+																	className='gz-status-expired mt-1'
+																	style={{ width: 'fit-content' }}>
 																	Expired
 																</span>
 															) : (
-																<span className='gz-status-live mt-1' style={{ width: 'fit-content' }}>
+																<span
+																	className='gz-status-live mt-1'
+																	style={{ width: 'fit-content' }}>
 																	Live & Active
 																</span>
 															)}
@@ -1132,7 +1241,9 @@ const ManageCoupon: React.FC = () => {
 													{/* Usage Limit */}
 													<td>
 														<div className='d-flex flex-column'>
-															<span className='fw-bold' style={{ color: '#261E1A', fontSize: '13px' }}>
+															<span
+																className='fw-bold'
+																style={{ color: '#261E1A', fontSize: '13px' }}>
 																Max: {c.max_usage_count || 1000}
 															</span>
 															<span style={{ color: '#82756E', fontSize: '11px' }}>1 per user</span>
@@ -1141,12 +1252,17 @@ const ManageCoupon: React.FC = () => {
 
 													{/* Product Scope */}
 													<td>
-														{c.scope === 'SPECIFIC_PRODUCTS' && Array.isArray(c.applicable_products) && c.applicable_products.length > 0 ? (
+														{c.scope === 'SPECIFIC_PRODUCTS' &&
+														Array.isArray(c.applicable_products) &&
+														c.applicable_products.length > 0 ? (
 															<span className='gz-badge-user'>
-																<i className='bi bi-box-seam me-1'></i>{c.applicable_products.length} Products
+																<i className='bi bi-box-seam me-1'></i>
+																{c.applicable_products.length} Products
 															</span>
 														) : (
-															<span style={{ color: '#82756E', fontSize: '12px' }}>All Store Products</span>
+															<span style={{ color: '#82756E', fontSize: '12px' }}>
+																All Store Products
+															</span>
 														)}
 													</td>
 
@@ -1158,7 +1274,9 @@ const ManageCoupon: React.FC = () => {
 																onClick={() => openUsageModal(c)}
 																className='gz-action-btn'
 																title='View Usage & Orders History'>
-																<i className='bi bi-receipt' style={{ color: '#FFFFFF' }}></i>
+																<i
+																	className='bi bi-receipt'
+																	style={{ color: '#FFFFFF' }}></i>
 															</button>
 
 															<button
@@ -1166,7 +1284,9 @@ const ManageCoupon: React.FC = () => {
 																onClick={() => openGeneratorEdit(c)}
 																className='gz-action-btn'
 																title='Edit Coupon'>
-																<i className='bi bi-pencil' style={{ color: '#FFFFFF' }}></i>
+																<i
+																	className='bi bi-pencil'
+																	style={{ color: '#FFFFFF' }}></i>
 															</button>
 
 															<button
@@ -1177,7 +1297,9 @@ const ManageCoupon: React.FC = () => {
 																}}
 																className='gz-action-btn'
 																title='Copy Store Link'>
-																<i className='bi bi-link-45deg' style={{ color: '#FFFFFF' }}></i>
+																<i
+																	className='bi bi-link-45deg'
+																	style={{ color: '#FFFFFF' }}></i>
 															</button>
 														</div>
 													</td>
@@ -1190,7 +1312,9 @@ const ManageCoupon: React.FC = () => {
 						</div>
 
 						{/* Pagination Footer */}
-						<div className='p-4 border-top d-flex justify-content-end' style={{ background: '#FAF6F2' }}>
+						<div
+							className='p-4 border-top d-flex justify-content-end'
+							style={{ background: '#FAF6F2' }}>
 							<UsersListPagination
 								totalPages={Math.ceil(filteredCoupons.length / pagination.itemsPerPage) || 1}
 								currentPage={pagination.page}
@@ -1233,14 +1357,21 @@ const ManageCoupon: React.FC = () => {
 										flexShrink: 0,
 										boxShadow: '0 2px 6px rgba(120, 53, 15, 0.25)',
 									}}>
-									<i className='bi bi-ticket-perforated-fill' style={{ color: '#FFFFFF' }}></i>
+									<i
+										className='bi bi-ticket-perforated-fill'
+										style={{ color: '#FFFFFF' }}></i>
 								</div>
 								<div>
-									<h3 className='gz-header-title' style={{ fontSize: '17px', margin: 0 }}>
+									<h3
+										className='gz-header-title'
+										style={{ fontSize: '17px', margin: 0 }}>
 										{editingCouponId ? 'Edit Referral Coupon' : 'Generate New Referral Coupon'}
 									</h3>
-									<div className='gz-header-subtitle' style={{ fontSize: '12px', marginTop: '2px' }}>
-										Select beneficiary, assign discount percentage, set expiry date, and choose applicable products.
+									<div
+										className='gz-header-subtitle'
+										style={{ fontSize: '12px', marginTop: '2px' }}>
+										Select beneficiary, assign discount percentage, set expiry date, and choose
+										applicable products.
 									</div>
 								</div>
 							</div>
@@ -1261,7 +1392,9 @@ const ManageCoupon: React.FC = () => {
 								disabled={submitting}
 								className='gz-btn-brown'
 								style={{ padding: '8px 18px', fontSize: '13px' }}>
-								<i className='bi bi-check-lg' style={{ color: '#FFFFFF' }}></i>
+								<i
+									className='bi bi-check-lg'
+									style={{ color: '#FFFFFF' }}></i>
 								<span>{editingCouponId ? 'Update Coupon' : 'Save & Generate Coupon'}</span>
 							</button>
 						</div>
@@ -1286,10 +1419,13 @@ const ManageCoupon: React.FC = () => {
 													<button
 														type='button'
 														onClick={() => setBeneficiaryType('user')}
-														className={`gz-beneficiary-btn ${beneficiaryType === 'user' ? 'is-active' : ''
-															}`}>
+														className={`gz-beneficiary-btn ${
+															beneficiaryType === 'user' ? 'is-active' : ''
+														}`}>
 														<div className='gz-beneficiary-icon-box'>
-															<i className='bi bi-person' style={{ color: '#FFFFFF' }}></i>
+															<i
+																className='bi bi-person'
+																style={{ color: '#FFFFFF' }}></i>
 														</div>
 														<div className='min-w-0'>
 															<div className='gz-b-title text-truncate'>Registered User</div>
@@ -1302,10 +1438,13 @@ const ManageCoupon: React.FC = () => {
 													<button
 														type='button'
 														onClick={() => setBeneficiaryType('pro_partner')}
-														className={`gz-beneficiary-btn ${beneficiaryType === 'pro_partner' ? 'is-active' : ''
-															}`}>
+														className={`gz-beneficiary-btn ${
+															beneficiaryType === 'pro_partner' ? 'is-active' : ''
+														}`}>
 														<div className='gz-beneficiary-icon-box'>
-															<i className='bi bi-gem' style={{ color: '#FFFFFF' }}></i>
+															<i
+																className='bi bi-gem'
+																style={{ color: '#FFFFFF' }}></i>
 														</div>
 														<div className='min-w-0'>
 															<div className='gz-b-title text-truncate'>Pro Partner</div>
@@ -1318,10 +1457,13 @@ const ManageCoupon: React.FC = () => {
 													<button
 														type='button'
 														onClick={() => setBeneficiaryType('trainer')}
-														className={`gz-beneficiary-btn ${beneficiaryType === 'trainer' ? 'is-active' : ''
-															}`}>
+														className={`gz-beneficiary-btn ${
+															beneficiaryType === 'trainer' ? 'is-active' : ''
+														}`}>
 														<div className='gz-beneficiary-icon-box'>
-															<i className='bi bi-person-check' style={{ color: '#FFFFFF' }}></i>
+															<i
+																className='bi bi-person-check'
+																style={{ color: '#FFFFFF' }}></i>
 														</div>
 														<div className='min-w-0'>
 															<div className='gz-b-title text-truncate'>Trainer</div>
@@ -1334,10 +1476,13 @@ const ManageCoupon: React.FC = () => {
 													<button
 														type='button'
 														onClick={() => setBeneficiaryType('general')}
-														className={`gz-beneficiary-btn ${beneficiaryType === 'general' ? 'is-active' : ''
-															}`}>
+														className={`gz-beneficiary-btn ${
+															beneficiaryType === 'general' ? 'is-active' : ''
+														}`}>
 														<div className='gz-beneficiary-icon-box'>
-															<i className='bi bi-shop' style={{ color: '#FFFFFF' }}></i>
+															<i
+																className='bi bi-shop'
+																style={{ color: '#FFFFFF' }}></i>
 														</div>
 														<div className='min-w-0'>
 															<div className='gz-b-title text-truncate'>Storewide</div>
@@ -1349,14 +1494,22 @@ const ManageCoupon: React.FC = () => {
 
 											{/* User Dropdown */}
 											{beneficiaryType === 'user' && (
-												<div className='p-2.5 rounded' style={{ background: '#FFFFFF', border: '1.5px solid #EFE4DC' }}>
-													<label className='form-label fw-bold mb-1.5 text-uppercase' style={{ color: '#78350F', fontSize: '11px' }}>
+												<div
+													className='p-2.5 rounded'
+													style={{ background: '#FFFFFF', border: '1.5px solid #EFE4DC' }}>
+													<label
+														className='form-label fw-bold mb-1.5 text-uppercase'
+														style={{ color: '#78350F', fontSize: '11px' }}>
 														Search & Select Customer User:
 													</label>
 													<div className='row g-2'>
 														<div className='col-md-6'>
-															<div className='gz-search-bar-box w-100' style={{ height: '38px' }}>
-																<i className='bi bi-search' style={{ fontSize: '13px' }}></i>
+															<div
+																className='gz-search-bar-box w-100'
+																style={{ height: '38px' }}>
+																<i
+																	className='bi bi-search'
+																	style={{ fontSize: '13px' }}></i>
 																<input
 																	type='text'
 																	className='gz-search-bar-input'
@@ -1388,8 +1541,11 @@ const ManageCoupon: React.FC = () => {
 																		: `-- Choose User (${filteredUsersList.length} Available) --`}
 																</option>
 																{filteredUsersList.map((u) => (
-																	<option key={u._id} value={u._id}>
-																		{u.first_name} {u.last_name} {u.mobile ? `(${u.mobile})` : ''} {u.email ? `• ${u.email}` : ''}
+																	<option
+																		key={u._id}
+																		value={u._id}>
+																		{u.first_name} {u.last_name} {u.mobile ? `(${u.mobile})` : ''}{' '}
+																		{u.email ? `• ${u.email}` : ''}
 																	</option>
 																))}
 															</select>
@@ -1397,13 +1553,23 @@ const ManageCoupon: React.FC = () => {
 													</div>
 
 													{selectedUserObject && (
-														<div className='d-flex align-items-center justify-content-between p-2 mt-2 rounded' style={{ border: '1.5px solid #78350F', background: '#FAF6F2' }}>
+														<div
+															className='d-flex align-items-center justify-content-between p-2 mt-2 rounded'
+															style={{ border: '1.5px solid #78350F', background: '#FAF6F2' }}>
 															<div>
-																<span className='fw-bold' style={{ color: '#261E1A', fontSize: '12.5px' }}>
+																<span
+																	className='fw-bold'
+																	style={{ color: '#261E1A', fontSize: '12.5px' }}>
 																	{selectedUserObject.first_name} {selectedUserObject.last_name}
 																</span>
-																<span style={{ color: '#82756E', fontSize: '11.5px', marginLeft: '8px' }}>
-																	{selectedUserObject.mobile || 'No Mobile'} • {selectedUserObject.email || 'No Email'}
+																<span
+																	style={{
+																		color: '#82756E',
+																		fontSize: '11.5px',
+																		marginLeft: '8px',
+																	}}>
+																	{selectedUserObject.mobile || 'No Mobile'} •{' '}
+																	{selectedUserObject.email || 'No Email'}
 																</span>
 															</div>
 															<button
@@ -1420,14 +1586,22 @@ const ManageCoupon: React.FC = () => {
 
 											{/* Pro Partner Dropdown */}
 											{beneficiaryType === 'pro_partner' && (
-												<div className='p-2.5 rounded' style={{ background: '#FFFFFF', border: '1.5px solid #EFE4DC' }}>
-													<label className='form-label fw-bold mb-1.5 text-uppercase' style={{ color: '#78350F', fontSize: '11px' }}>
+												<div
+													className='p-2.5 rounded'
+													style={{ background: '#FFFFFF', border: '1.5px solid #EFE4DC' }}>
+													<label
+														className='form-label fw-bold mb-1.5 text-uppercase'
+														style={{ color: '#78350F', fontSize: '11px' }}>
 														Search & Select Approved Pro Partner:
 													</label>
 													<div className='row g-2'>
 														<div className='col-md-6'>
-															<div className='gz-search-bar-box w-100' style={{ height: '38px' }}>
-																<i className='bi bi-search' style={{ fontSize: '13px' }}></i>
+															<div
+																className='gz-search-bar-box w-100'
+																style={{ height: '38px' }}>
+																<i
+																	className='bi bi-search'
+																	style={{ fontSize: '13px' }}></i>
 																<input
 																	type='text'
 																	className='gz-search-bar-input'
@@ -1460,13 +1634,22 @@ const ManageCoupon: React.FC = () => {
 																</option>
 																{filteredPartnersList.map((p) => {
 																	const d = p.details || {}
-																	const name = (d.full_name || p.name || 'Partner #' + String(p._id).slice(-4)).trim()
+																	const name = (
+																		d.full_name ||
+																		p.name ||
+																		'Partner #' + String(p._id).slice(-4)
+																	).trim()
 																	const mobile = (d.mobile || p.mobile || '').trim()
 																	const email = (d.email || p.email || '').trim()
-																	const isApproved = p.partner_status === 'approved' || Boolean(p.partner_policy?.accepted_at)
+																	const isApproved =
+																		p.partner_status === 'approved' ||
+																		Boolean(p.partner_policy?.accepted_at)
 																	return (
-																		<option key={p._id} value={p._id}>
-																			{name} {mobile ? `(${mobile})` : (email ? `(${email})` : '')} {isApproved ? '✓ [Approved]' : '[Partner]'}
+																		<option
+																			key={p._id}
+																			value={p._id}>
+																			{name} {mobile ? `(${mobile})` : email ? `(${email})` : ''}{' '}
+																			{isApproved ? '✓ [Approved]' : '[Partner]'}
 																		</option>
 																	)
 																})}
@@ -1475,13 +1658,26 @@ const ManageCoupon: React.FC = () => {
 													</div>
 
 													{selectedPartnerObject && (
-														<div className='d-flex align-items-center justify-content-between p-2 mt-2 rounded' style={{ border: '1.5px solid #78350F', background: '#FAF6F2' }}>
+														<div
+															className='d-flex align-items-center justify-content-between p-2 mt-2 rounded'
+															style={{ border: '1.5px solid #78350F', background: '#FAF6F2' }}>
 															<div>
-																<span className='fw-bold' style={{ color: '#261E1A', fontSize: '12.5px' }}>
-																	{selectedPartnerObject.details?.full_name || selectedPartnerObject.name}
+																<span
+																	className='fw-bold'
+																	style={{ color: '#261E1A', fontSize: '12.5px' }}>
+																	{selectedPartnerObject.details?.full_name ||
+																		selectedPartnerObject.name}
 																</span>
-																<span style={{ color: '#82756E', fontSize: '11.5px', marginLeft: '8px' }}>
-																	{selectedPartnerObject.details?.mobile || selectedPartnerObject.mobile || 'No Mobile'} • Status: {selectedPartnerObject.partner_status || 'Approved'}
+																<span
+																	style={{
+																		color: '#82756E',
+																		fontSize: '11.5px',
+																		marginLeft: '8px',
+																	}}>
+																	{selectedPartnerObject.details?.mobile ||
+																		selectedPartnerObject.mobile ||
+																		'No Mobile'}{' '}
+																	• Status: {selectedPartnerObject.partner_status || 'Approved'}
 																</span>
 															</div>
 															<button
@@ -1498,8 +1694,12 @@ const ManageCoupon: React.FC = () => {
 
 											{/* Trainer Dropdown */}
 											{beneficiaryType === 'trainer' && (
-												<div className='p-2.5 rounded' style={{ background: '#FFFFFF', border: '1.5px solid #EFE4DC' }}>
-													<label className='form-label fw-bold mb-1.5 text-uppercase' style={{ color: '#78350F', fontSize: '11px' }}>
+												<div
+													className='p-2.5 rounded'
+													style={{ background: '#FFFFFF', border: '1.5px solid #EFE4DC' }}>
+													<label
+														className='form-label fw-bold mb-1.5 text-uppercase'
+														style={{ color: '#78350F', fontSize: '11px' }}>
 														Select Fitness Trainer:
 													</label>
 													<select
@@ -1513,20 +1713,33 @@ const ManageCoupon: React.FC = () => {
 																: `-- Choose Trainer (${trainerData.length} Available) --`}
 														</option>
 														{trainerData.map((t) => (
-															<option key={t.trainer_id || t._id} value={t.trainer_id || t._id}>
+															<option
+																key={t.trainer_id || t._id}
+																value={t.trainer_id || t._id}>
 																{t.full_name || t.name} {t.mobile ? `(${t.mobile})` : ''}
 															</option>
 														))}
 													</select>
 
 													{selectedTrainerObject && (
-														<div className='d-flex align-items-center justify-content-between p-2 mt-2 rounded' style={{ border: '1.5px solid #78350F', background: '#FAF6F2' }}>
+														<div
+															className='d-flex align-items-center justify-content-between p-2 mt-2 rounded'
+															style={{ border: '1.5px solid #78350F', background: '#FAF6F2' }}>
 															<div>
-																<span className='fw-bold' style={{ color: '#261E1A', fontSize: '12.5px' }}>
+																<span
+																	className='fw-bold'
+																	style={{ color: '#261E1A', fontSize: '12.5px' }}>
 																	{selectedTrainerObject.full_name || selectedTrainerObject.name}
 																</span>
-																<span style={{ color: '#82756E', fontSize: '11.5px', marginLeft: '8px' }}>
-																	ID: {selectedTrainerObject.trainer_id || selectedTrainerObject._id} • {selectedTrainerObject.mobile || 'No Mobile'}
+																<span
+																	style={{
+																		color: '#82756E',
+																		fontSize: '11.5px',
+																		marginLeft: '8px',
+																	}}>
+																	ID:{' '}
+																	{selectedTrainerObject.trainer_id || selectedTrainerObject._id} •{' '}
+																	{selectedTrainerObject.mobile || 'No Mobile'}
 																</span>
 															</div>
 															<button
@@ -1547,13 +1760,13 @@ const ManageCoupon: React.FC = () => {
 									<div className='gz-step-box'>
 										<div className='gz-step-header'>
 											<div className='gz-step-num'>2</div>
-											<h4 className='gz-step-title'>
-												Coupon Code & Campaign Title
-											</h4>
+											<h4 className='gz-step-title'>Coupon Code & Campaign Title</h4>
 										</div>
 										<div className='row g-2.5'>
 											<div className='col-md-5'>
-												<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
+												<label
+													className='form-label fw-bold fs-8 text-uppercase mb-1'
+													style={{ color: '#82756E' }}>
 													Coupon Code: <span className='text-danger'>*</span>
 												</label>
 												<div className='d-flex gap-1.5 align-items-center'>
@@ -1566,7 +1779,9 @@ const ManageCoupon: React.FC = () => {
 														onChange={(e) =>
 															setFormState({
 																...formState,
-																coupon_code: e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''),
+																coupon_code: e.target.value
+																	.toUpperCase()
+																	.replace(/[^A-Z0-9_-]/g, ''),
 															})
 														}
 														required
@@ -1575,15 +1790,24 @@ const ManageCoupon: React.FC = () => {
 														type='button'
 														onClick={handleAutoFillCode}
 														className='gz-btn-brown d-inline-flex align-items-center gap-1.5'
-														style={{ height: '38px', padding: '0 12px', whiteSpace: 'nowrap', fontSize: '12px' }}>
-														<i className='bi bi-magic' style={{ color: '#FFFFFF' }}></i>
+														style={{
+															height: '38px',
+															padding: '0 12px',
+															whiteSpace: 'nowrap',
+															fontSize: '12px',
+														}}>
+														<i
+															className='bi bi-magic'
+															style={{ color: '#FFFFFF' }}></i>
 														<span>Auto</span>
 													</button>
 												</div>
 											</div>
 
 											<div className='col-md-7'>
-												<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
+												<label
+													className='form-label fw-bold fs-8 text-uppercase mb-1'
+													style={{ color: '#82756E' }}>
 													Campaign Title: <span className='text-danger'>*</span>
 												</label>
 												<input
@@ -1602,12 +1826,12 @@ const ManageCoupon: React.FC = () => {
 									<div className='gz-step-box'>
 										<div className='gz-step-header'>
 											<div className='gz-step-num'>5</div>
-											<h4 className='gz-step-title'>
-												Usage Limits
-											</h4>
+											<h4 className='gz-step-title'>Usage Limits</h4>
 										</div>
 										<div>
-											<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
+											<label
+												className='form-label fw-bold fs-8 text-uppercase mb-1'
+												style={{ color: '#82756E' }}>
 												Max Uses:
 											</label>
 											<input
@@ -1615,7 +1839,9 @@ const ManageCoupon: React.FC = () => {
 												className='gz-input'
 												style={{ height: '36px', fontSize: '13px' }}
 												value={formState.max_usage_count}
-												onChange={(e) => setFormState({ ...formState, max_usage_count: e.target.value })}
+												onChange={(e) =>
+													setFormState({ ...formState, max_usage_count: e.target.value })
+												}
 												required
 											/>
 											<div style={{ color: '#82756E', fontSize: '11px', marginTop: '3px' }}>
@@ -1631,29 +1857,31 @@ const ManageCoupon: React.FC = () => {
 									<div className='gz-step-box'>
 										<div className='gz-step-header'>
 											<div className='gz-step-num'>3</div>
-											<h4 className='gz-step-title'>
-												Discount Amount & Type
-											</h4>
+											<h4 className='gz-step-title'>Discount Amount & Type</h4>
 										</div>
 										<div className='row g-2.5 align-items-center mb-2'>
 											<div className='col-md-7'>
-												<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
+												<label
+													className='form-label fw-bold fs-8 text-uppercase mb-1'
+													style={{ color: '#82756E' }}>
 													Discount Type:
 												</label>
 												<div className='d-flex gap-2'>
 													<button
 														type='button'
 														onClick={() => setFormState({ ...formState, discount_type: 'percent' })}
-														className={`gz-scope-btn ${formState.discount_type === 'percent' ? 'is-active' : ''
-															}`}
+														className={`gz-scope-btn ${
+															formState.discount_type === 'percent' ? 'is-active' : ''
+														}`}
 														style={{ height: '36px', fontSize: '12px' }}>
 														Percentage (%)
 													</button>
 													<button
 														type='button'
 														onClick={() => setFormState({ ...formState, discount_type: 'flat' })}
-														className={`gz-scope-btn ${formState.discount_type === 'flat' ? 'is-active' : ''
-															}`}
+														className={`gz-scope-btn ${
+															formState.discount_type === 'flat' ? 'is-active' : ''
+														}`}
 														style={{ height: '36px', fontSize: '12px' }}>
 														Flat Amount (₹)
 													</button>
@@ -1661,7 +1889,9 @@ const ManageCoupon: React.FC = () => {
 											</div>
 
 											<div className='col-md-5'>
-												<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
+												<label
+													className='form-label fw-bold fs-8 text-uppercase mb-1'
+													style={{ color: '#82756E' }}>
 													Discount Value:
 												</label>
 												<input
@@ -1677,15 +1907,22 @@ const ManageCoupon: React.FC = () => {
 										</div>
 
 										{formState.discount_type === 'percent' && (
-											<div className='d-flex align-items-center gap-1.5 pt-2 border-top' style={{ borderColor: '#EFE4DC' }}>
-												<span className='fs-8 fw-bold' style={{ color: '#82756E', marginRight: '4px' }}>Presets:</span>
+											<div
+												className='d-flex align-items-center gap-1.5 pt-2 border-top'
+												style={{ borderColor: '#EFE4DC' }}>
+												<span
+													className='fs-8 fw-bold'
+													style={{ color: '#82756E', marginRight: '4px' }}>
+													Presets:
+												</span>
 												{['5', '10', '15', '20', '25'].map((pct) => (
 													<button
 														key={pct}
 														type='button'
 														onClick={() => setFormState({ ...formState, discount: pct })}
-														className={`gz-pill-brown ${formState.discount === pct ? 'is-active' : ''
-															}`}>
+														className={`gz-pill-brown ${
+															formState.discount === pct ? 'is-active' : ''
+														}`}>
 														{pct}%
 													</button>
 												))}
@@ -1693,14 +1930,22 @@ const ManageCoupon: React.FC = () => {
 										)}
 
 										{beneficiaryType !== 'general' && (
-											<div className='row g-2.5 align-items-center pt-2 mt-2 border-top' style={{ borderColor: '#EFE4DC' }}>
+											<div
+												className='row g-2.5 align-items-center pt-2 mt-2 border-top'
+												style={{ borderColor: '#EFE4DC' }}>
 												<div className='col-md-7'>
-													<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
+													<label
+														className='form-label fw-bold fs-8 text-uppercase mb-1'
+														style={{ color: '#82756E' }}>
 														Default Credit / Margin (%):
 													</label>
 													<div style={{ color: '#82756E', fontSize: '11px' }}>
-														What the {beneficiaryType === 'pro_partner' ? 'partner' : beneficiaryType} earns on the amount the customer pays.
-														{formState.scope === 'SPECIFIC_PRODUCTS' ? ' You can change it per product below.' : ''}
+														What the{' '}
+														{beneficiaryType === 'pro_partner' ? 'partner' : beneficiaryType} earns
+														on the amount the customer pays.
+														{formState.scope === 'SPECIFIC_PRODUCTS'
+															? ' You can change it per product below.'
+															: ''}
 													</div>
 												</div>
 												<div className='col-md-5'>
@@ -1714,9 +1959,15 @@ const ManageCoupon: React.FC = () => {
 															className='gz-input fw-bold'
 															style={{ height: '36px', fontSize: '13px' }}
 															value={formState.credit_percent}
-															onChange={(e) => setFormState({ ...formState, credit_percent: e.target.value })}
+															onChange={(e) =>
+																setFormState({ ...formState, credit_percent: e.target.value })
+															}
 														/>
-														<span className='input-group-text' style={{ height: '36px', fontSize: '12px' }}>%</span>
+														<span
+															className='input-group-text'
+															style={{ height: '36px', fontSize: '12px' }}>
+															%
+														</span>
 													</div>
 												</div>
 											</div>
@@ -1727,13 +1978,13 @@ const ManageCoupon: React.FC = () => {
 									<div className='gz-step-box'>
 										<div className='gz-step-header'>
 											<div className='gz-step-num'>4</div>
-											<h4 className='gz-step-title'>
-												Expiry Date & Validity
-											</h4>
+											<h4 className='gz-step-title'>Expiry Date & Validity</h4>
 										</div>
 										<div>
 											<div className='mb-2'>
-												<label className='form-label fw-bold fs-8 text-uppercase mb-1' style={{ color: '#82756E' }}>
+												<label
+													className='form-label fw-bold fs-8 text-uppercase mb-1'
+													style={{ color: '#82756E' }}>
 													Valid Until: <span className='text-danger'>*</span>
 												</label>
 												<input
@@ -1741,7 +1992,9 @@ const ManageCoupon: React.FC = () => {
 													className='gz-input fw-bold'
 													style={{ height: '38px', fontSize: '13px' }}
 													value={formState.expired_at}
-													onChange={(e) => setFormState({ ...formState, expired_at: e.target.value })}
+													onChange={(e) =>
+														setFormState({ ...formState, expired_at: e.target.value })
+													}
 													required
 												/>
 											</div>
@@ -1749,25 +2002,45 @@ const ManageCoupon: React.FC = () => {
 											<div className='d-flex align-items-center gap-1.5 flex-wrap pt-1'>
 												<button
 													type='button'
-													onClick={() => setFormState({ ...formState, expired_at: DayJS().add(30, 'day').format('YYYY-MM-DD') })}
+													onClick={() =>
+														setFormState({
+															...formState,
+															expired_at: DayJS().add(30, 'day').format('YYYY-MM-DD'),
+														})
+													}
 													className='gz-pill-brown'>
 													+30 Days
 												</button>
 												<button
 													type='button'
-													onClick={() => setFormState({ ...formState, expired_at: DayJS().add(90, 'day').format('YYYY-MM-DD') })}
+													onClick={() =>
+														setFormState({
+															...formState,
+															expired_at: DayJS().add(90, 'day').format('YYYY-MM-DD'),
+														})
+													}
 													className='gz-pill-brown'>
 													+90 Days
 												</button>
 												<button
 													type='button'
-													onClick={() => setFormState({ ...formState, expired_at: DayJS().add(6, 'month').format('YYYY-MM-DD') })}
+													onClick={() =>
+														setFormState({
+															...formState,
+															expired_at: DayJS().add(6, 'month').format('YYYY-MM-DD'),
+														})
+													}
 													className='gz-pill-brown'>
 													+6 Months
 												</button>
 												<button
 													type='button'
-													onClick={() => setFormState({ ...formState, expired_at: DayJS().add(1, 'year').format('YYYY-MM-DD') })}
+													onClick={() =>
+														setFormState({
+															...formState,
+															expired_at: DayJS().add(1, 'year').format('YYYY-MM-DD'),
+														})
+													}
 													className='gz-pill-brown'>
 													+1 Year
 												</button>
@@ -1778,25 +2051,23 @@ const ManageCoupon: React.FC = () => {
 									<div className='gz-step-box'>
 										<div className='gz-step-header'>
 											<div className='gz-step-num'>6</div>
-											<h4 className='gz-step-title'>
-												Product Scope
-											</h4>
+											<h4 className='gz-step-title'>Product Scope</h4>
 										</div>
 										<div>
 											<div className='d-flex gap-1.5 mb-2'>
 												<button
 													type='button'
 													onClick={() => setFormState({ ...formState, scope: 'ALL' })}
-													className={`gz-scope-btn ${formState.scope === 'ALL' ? 'is-active' : ''
-														}`}
+													className={`gz-scope-btn ${formState.scope === 'ALL' ? 'is-active' : ''}`}
 													style={{ height: '36px', fontSize: '11.5px', padding: '0 8px' }}>
 													All Products
 												</button>
 												<button
 													type='button'
 													onClick={() => setFormState({ ...formState, scope: 'SPECIFIC_PRODUCTS' })}
-													className={`gz-scope-btn ${formState.scope === 'SPECIFIC_PRODUCTS' ? 'is-active' : ''
-														}`}
+													className={`gz-scope-btn ${
+														formState.scope === 'SPECIFIC_PRODUCTS' ? 'is-active' : ''
+													}`}
 													style={{ height: '36px', fontSize: '11.5px', padding: '0 8px' }}>
 													Specific ({formState.applicable_products.length})
 												</button>
@@ -1808,162 +2079,229 @@ const ManageCoupon: React.FC = () => {
 													onClick={() => setShowProductModal(true)}
 													className='gz-btn-brown w-100 d-inline-flex align-items-center justify-content-center gap-1'
 													style={{ height: '28px', fontSize: '11.5px' }}>
-													<i className='bi bi-grid-3x3-gap-fill' style={{ color: '#FFFFFF' }}></i>
+													<i
+														className='bi bi-grid-3x3-gap-fill'
+														style={{ color: '#FFFFFF' }}></i>
 													<span>Select Products</span>
 												</button>
 											)}
 										</div>
 									</div>
-
 								</div>
 							</div>
 
 							{/* Step 7: Per-product website discount & credit (only for specific products) */}
-							{formState.scope === 'SPECIFIC_PRODUCTS' && formState.applicable_products.length > 0 && (() => {
-								const isPercentCoupon = formState.discount_type === 'percent'
-								const earnsCredit = beneficiaryType !== 'general'
-								return (
-									<div className='gz-step-box mt-3 mb-0'>
-										<div className='d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2'>
-											<div className='gz-step-header mb-0'>
-												<div className='gz-step-num'>7</div>
-												<div>
-													<h4 className='gz-step-title'>
-														Discount & Credit per Product ({formState.applicable_products.length})
-													</h4>
-													<div style={{ color: '#82756E', fontSize: '11px' }}>
-														{isPercentCoupon
-															? 'Website %: the discount the customer gets on that product.'
-															: `Flat ₹${formState.discount || 0} is split across the eligible products in the cart.`}
-														{earnsCredit ? ' Credit %: what the coupon owner earns on what the customer pays.' : ''}
+							{formState.scope === 'SPECIFIC_PRODUCTS' &&
+								formState.applicable_products.length > 0 &&
+								(() => {
+									const isPercentCoupon = formState.discount_type === 'percent'
+									const earnsCredit = beneficiaryType !== 'general'
+									return (
+										<div className='gz-step-box mt-3 mb-0'>
+											<div className='d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2'>
+												<div className='gz-step-header mb-0'>
+													<div className='gz-step-num'>7</div>
+													<div>
+														<h4 className='gz-step-title'>
+															Discount & Credit per Product ({formState.applicable_products.length})
+														</h4>
+														<div style={{ color: '#82756E', fontSize: '11px' }}>
+															{isPercentCoupon
+																? 'Website %: the discount the customer gets on that product.'
+																: `Flat ₹${
+																		formState.discount || 0
+																  } is split across the eligible products in the cart.`}
+															{earnsCredit
+																? ' Credit %: what the coupon owner earns on what the customer pays.'
+																: ''}
+														</div>
 													</div>
 												</div>
+												<div className='d-flex align-items-center gap-2'>
+													<button
+														type='button'
+														onClick={resetRulesToDefault}
+														className='gz-btn-brown-outline'
+														style={{ padding: '4px 10px', fontSize: '11.5px' }}>
+														<i className='bi bi-arrow-counterclockwise me-1'></i>
+														Use defaults for all
+													</button>
+													<button
+														type='button'
+														onClick={handleClearAllSelected}
+														className='btn btn-link p-0 text-danger fs-8 fw-bold text-decoration-none'>
+														Clear All
+													</button>
+												</div>
 											</div>
-											<div className='d-flex align-items-center gap-2'>
-												<button
-													type='button'
-													onClick={resetRulesToDefault}
-													className='gz-btn-brown-outline'
-													style={{ padding: '4px 10px', fontSize: '11.5px' }}>
-													<i className='bi bi-arrow-counterclockwise me-1'></i>
-													Use defaults for all
-												</button>
-												<button
-													type='button'
-													onClick={handleClearAllSelected}
-													className='btn btn-link p-0 text-danger fs-8 fw-bold text-decoration-none'>
-													Clear All
-												</button>
-											</div>
-										</div>
 
-										<div className='table-responsive' style={{ maxHeight: '380px', overflowY: 'auto' }}>
-											<table className='table table-sm align-middle mb-0 fs-8'>
-												<thead style={{ position: 'sticky', top: 0, background: '#FDF9F5', zIndex: 1 }}>
-													<tr className='text-uppercase' style={{ color: '#5B270A' }}>
-														<th className='py-2 ps-2'>Product</th>
-														<th className='py-2 text-end'>Price</th>
-														{isPercentCoupon && <th className='py-2' style={{ width: '120px' }}>Website %</th>}
-														{earnsCredit && <th className='py-2' style={{ width: '120px' }}>Credit %</th>}
-														{isPercentCoupon && <th className='py-2 text-end'>Customer Pays</th>}
-														{earnsCredit && <th className='py-2 text-end'>Credit / Unit</th>}
-														<th className='py-2 pe-2'></th>
-													</tr>
-												</thead>
-												<tbody>
-													{selectedProductsObjects.map((p) => {
-														const id = String(p._id)
-														const imgUrl = getProductImageUrl(p)
-														const draft = getRuleDraft(id)
-														const unitPrice = getProductUnitPrice(p)
-														const discountPct = isPercentCoupon && isValidPercent(draft.discount_percent) ? Number(draft.discount_percent) : 0
-														const creditPct = isValidPercent(draft.credit_percent) ? Number(draft.credit_percent) : 0
-														const customerPays = unitPrice * (1 - discountPct / 100)
-														const creditPerUnit = (customerPays * creditPct) / 100
-														const isCustom = Boolean(formState.product_rules[id])
-														return (
-															<tr key={id}>
-																<td className='ps-2'>
-																	<div className='d-flex align-items-center gap-2'>
-																		{imgUrl ? (
-																			<img
-																				src={imgUrl}
-																				alt=''
-																				className='gz-selected-chip-thumb'
-																				onError={(e) => {
-																					; (e.target as HTMLElement).style.display = 'none'
-																				}}
-																			/>
-																		) : (
-																			<i className='bi bi-box-seam text-muted fs-8'></i>
-																		)}
-																		<div className='min-w-0'>
-																			<div className='fw-bold text-truncate' style={{ color: '#261E1A', maxWidth: '260px' }} title={p.title || p.name}>
-																				{p.title || p.name}
+											<div
+												className='table-responsive'
+												style={{ maxHeight: '380px', overflowY: 'auto' }}>
+												<table className='table table-sm align-middle mb-0 fs-8'>
+													<thead
+														style={{
+															position: 'sticky',
+															top: 0,
+															background: '#FDF9F5',
+															zIndex: 1,
+														}}>
+														<tr
+															className='text-uppercase'
+															style={{ color: '#5B270A' }}>
+															<th className='py-2 ps-2'>Product</th>
+															<th className='py-2 text-end'>Price</th>
+															{isPercentCoupon && (
+																<th
+																	className='py-2'
+																	style={{ width: '120px' }}>
+																	Website %
+																</th>
+															)}
+															{earnsCredit && (
+																<th
+																	className='py-2'
+																	style={{ width: '120px' }}>
+																	Credit %
+																</th>
+															)}
+															{isPercentCoupon && <th className='py-2 text-end'>Customer Pays</th>}
+															{earnsCredit && <th className='py-2 text-end'>Credit / Unit</th>}
+															<th className='py-2 pe-2'></th>
+														</tr>
+													</thead>
+													<tbody>
+														{selectedProductsObjects.map((p) => {
+															const id = String(p._id)
+															const imgUrl = getProductImageUrl(p)
+															const draft = getRuleDraft(id)
+															const unitPrice = getProductUnitPrice(p)
+															const discountPct =
+																isPercentCoupon && isValidPercent(draft.discount_percent)
+																	? Number(draft.discount_percent)
+																	: 0
+															const creditPct = isValidPercent(draft.credit_percent)
+																? Number(draft.credit_percent)
+																: 0
+															const customerPays = unitPrice * (1 - discountPct / 100)
+															const creditPerUnit = (customerPays * creditPct) / 100
+															const isCustom = Boolean(formState.product_rules[id])
+															return (
+																<tr key={id}>
+																	<td className='ps-2'>
+																		<div className='d-flex align-items-center gap-2'>
+																			{imgUrl ? (
+																				<img
+																					src={imgUrl}
+																					alt=''
+																					className='gz-selected-chip-thumb'
+																					onError={(e) => {
+																						;(e.target as HTMLElement).style.display = 'none'
+																					}}
+																				/>
+																			) : (
+																				<i className='bi bi-box-seam text-muted fs-8'></i>
+																			)}
+																			<div className='min-w-0'>
+																				<div
+																					className='fw-bold text-truncate'
+																					style={{ color: '#261E1A', maxWidth: '260px' }}
+																					title={p.title || p.name}>
+																					{p.title || p.name}
+																				</div>
+																				{!isCustom && (
+																					<div style={{ color: '#A89F99', fontSize: '10.5px' }}>
+																						Using defaults
+																					</div>
+																				)}
 																			</div>
-																			{!isCustom && <div style={{ color: '#A89F99', fontSize: '10.5px' }}>Using defaults</div>}
-																		</div>
-																	</div>
-																</td>
-																<td className='text-end fw-semibold'>{formatINR(unitPrice)}</td>
-																{isPercentCoupon && (
-																	<td>
-																		<div className='input-group input-group-sm'>
-																			<input
-																				type='number'
-																				min={0}
-																				max={100}
-																				step='0.5'
-																				aria-label={`Website discount percent for ${p.title || p.name}`}
-																				className={`form-control fw-bold ${isValidPercent(draft.discount_percent) ? '' : 'is-invalid'}`}
-																				value={draft.discount_percent}
-																				onChange={(e) => updateRuleDraft(id, 'discount_percent', e.target.value)}
-																			/>
-																			<span className='input-group-text'>%</span>
 																		</div>
 																	</td>
-																)}
-																{earnsCredit && (
-																	<td>
-																		<div className='input-group input-group-sm'>
-																			<input
-																				type='number'
-																				min={0}
-																				max={100}
-																				step='0.5'
-																				aria-label={`Credit percent for ${p.title || p.name}`}
-																				className={`form-control fw-bold ${isValidPercent(draft.credit_percent) ? '' : 'is-invalid'}`}
-																				value={draft.credit_percent}
-																				onChange={(e) => updateRuleDraft(id, 'credit_percent', e.target.value)}
-																			/>
-																			<span className='input-group-text'>%</span>
-																		</div>
+																	<td className='text-end fw-semibold'>{formatINR(unitPrice)}</td>
+																	{isPercentCoupon && (
+																		<td>
+																			<div className='input-group input-group-sm'>
+																				<input
+																					type='number'
+																					min={0}
+																					max={100}
+																					step='0.5'
+																					aria-label={`Website discount percent for ${
+																						p.title || p.name
+																					}`}
+																					className={`form-control fw-bold ${
+																						isValidPercent(draft.discount_percent)
+																							? ''
+																							: 'is-invalid'
+																					}`}
+																					value={draft.discount_percent}
+																					onChange={(e) =>
+																						updateRuleDraft(id, 'discount_percent', e.target.value)
+																					}
+																				/>
+																				<span className='input-group-text'>%</span>
+																			</div>
+																		</td>
+																	)}
+																	{earnsCredit && (
+																		<td>
+																			<div className='input-group input-group-sm'>
+																				<input
+																					type='number'
+																					min={0}
+																					max={100}
+																					step='0.5'
+																					aria-label={`Credit percent for ${p.title || p.name}`}
+																					className={`form-control fw-bold ${
+																						isValidPercent(draft.credit_percent) ? '' : 'is-invalid'
+																					}`}
+																					value={draft.credit_percent}
+																					onChange={(e) =>
+																						updateRuleDraft(id, 'credit_percent', e.target.value)
+																					}
+																				/>
+																				<span className='input-group-text'>%</span>
+																			</div>
+																		</td>
+																	)}
+																	{isPercentCoupon && (
+																		<td
+																			className='text-end fw-bold'
+																			style={{ color: '#261E1A' }}>
+																			{formatINR(customerPays)}
+																		</td>
+																	)}
+																	{earnsCredit && (
+																		<td
+																			className='text-end fw-bold'
+																			style={{ color: '#047857' }}>
+																			+{formatINR(creditPerUnit)}
+																		</td>
+																	)}
+																	<td className='pe-2 text-end'>
+																		<button
+																			type='button'
+																			className='gz-selected-chip-del'
+																			title='Remove product'
+																			aria-label={`Remove ${p.title || p.name}`}
+																			onClick={() => handleRemoveSingleProduct(id)}>
+																			<i className='bi bi-x'></i>
+																		</button>
 																	</td>
-																)}
-																{isPercentCoupon && <td className='text-end fw-bold' style={{ color: '#261E1A' }}>{formatINR(customerPays)}</td>}
-																{earnsCredit && <td className='text-end fw-bold' style={{ color: '#047857' }}>+{formatINR(creditPerUnit)}</td>}
-																<td className='pe-2 text-end'>
-																	<button
-																		type='button'
-																		className='gz-selected-chip-del'
-																		title='Remove product'
-																		aria-label={`Remove ${p.title || p.name}`}
-																		onClick={() => handleRemoveSingleProduct(id)}>
-																		<i className='bi bi-x'></i>
-																	</button>
-																</td>
-															</tr>
-														)
-													})}
-												</tbody>
-											</table>
+																</tr>
+															)
+														})}
+													</tbody>
+												</table>
+											</div>
 										</div>
-									</div>
-								)
-							})()}
+									)
+								})()}
 
 							{/* Bottom Action Footer */}
-							<div className='d-flex align-items-center justify-content-end gap-3 pt-3 mt-1 border-top' style={{ borderColor: '#EFE4DC' }}>
+							<div
+								className='d-flex align-items-center justify-content-end gap-3 pt-3 mt-1 border-top'
+								style={{ borderColor: '#EFE4DC' }}>
 								<button
 									type='button'
 									onClick={() => setViewMode('list')}
@@ -1977,7 +2315,9 @@ const ManageCoupon: React.FC = () => {
 									disabled={submitting}
 									className='gz-btn-brown px-5'
 									style={{ padding: '8px 20px', fontSize: '13.5px' }}>
-									<i className='bi bi-check-lg' style={{ color: '#FFFFFF' }}></i>
+									<i
+										className='bi bi-check-lg'
+										style={{ color: '#FFFFFF' }}></i>
 									<span>{editingCouponId ? 'Update Coupon' : 'Save & Generate Coupon'}</span>
 								</button>
 							</div>
@@ -1995,7 +2335,9 @@ const ManageCoupon: React.FC = () => {
 				size='xl'
 				centered
 				scrollable>
-				<Modal.Header closeButton style={{ borderBottom: '1.5px solid #EFE4DC', background: '#FDF9F5' }}>
+				<Modal.Header
+					closeButton
+					style={{ borderBottom: '1.5px solid #EFE4DC', background: '#FDF9F5' }}>
 					<div className='d-flex align-items-center justify-content-between w-100 pe-4 flex-wrap gap-2'>
 						<div className='d-flex align-items-center gap-2'>
 							<div
@@ -2013,7 +2355,9 @@ const ManageCoupon: React.FC = () => {
 								<i className='bi bi-boxes'></i>
 							</div>
 							<div>
-								<Modal.Title className='fs-6 fw-bold mb-0' style={{ color: '#261E1A' }}>
+								<Modal.Title
+									className='fs-6 fw-bold mb-0'
+									style={{ color: '#261E1A' }}>
 									Select Applicable Products
 								</Modal.Title>
 								<div style={{ color: '#82756E', fontSize: '12px' }}>
@@ -2022,18 +2366,24 @@ const ManageCoupon: React.FC = () => {
 							</div>
 						</div>
 
-						<span className='gz-discount-pill' style={{ background: '#78350F', color: '#FFFFFF' }}>
+						<span
+							className='gz-discount-pill'
+							style={{ background: '#78350F', color: '#FFFFFF' }}>
 							{formState.applicable_products.length} Products Selected
 						</span>
 					</div>
 				</Modal.Header>
 
-				<Modal.Body className='py-3' style={{ background: '#FFFFFF' }}>
+				<Modal.Body
+					className='py-3'
+					style={{ background: '#FFFFFF' }}>
 					{/* Modal Filter Bar */}
 					<div className='mb-3'>
 						<div className='d-flex align-items-center gap-3 flex-wrap mb-2'>
 							{/* Product Search Input */}
-							<div className='gz-search-bar-box flex-grow-1' style={{ minWidth: '220px', height: '38px' }}>
+							<div
+								className='gz-search-bar-box flex-grow-1'
+								style={{ minWidth: '220px', height: '38px' }}>
 								<i className='bi bi-search'></i>
 								<input
 									type='text'
@@ -2098,10 +2448,16 @@ const ManageCoupon: React.FC = () => {
 
 					{/* Products Grid with Pictures */}
 					{filteredProductsList.length === 0 ? (
-						<div className='text-center py-5' style={{ color: '#82756E' }}>
-							<i className='bi bi-box-seam fs-1 d-block mb-2' style={{ color: '#D7C3B5' }}></i>
+						<div
+							className='text-center py-5'
+							style={{ color: '#82756E' }}>
+							<i
+								className='bi bi-box-seam fs-1 d-block mb-2'
+								style={{ color: '#D7C3B5' }}></i>
 							<div className='fw-bold fs-7'>No products matched your criteria</div>
-							<div className='fs-8'>Try searching for a different keyword or select "ALL" categories</div>
+							<div className='fs-8'>
+								Try searching for a different keyword or select "ALL" categories
+							</div>
 						</div>
 					) : (
 						<div className='gz-product-grid'>
@@ -2126,7 +2482,7 @@ const ManageCoupon: React.FC = () => {
 													alt={p.title || p.name}
 													loading='lazy'
 													onError={(e) => {
-														; (e.target as HTMLElement).style.display = 'none'
+														;(e.target as HTMLElement).style.display = 'none'
 													}}
 												/>
 											) : (
@@ -2136,7 +2492,9 @@ const ManageCoupon: React.FC = () => {
 
 										{/* Product Details */}
 										<div className='gz-product-info'>
-											<div className='gz-product-name' title={p.title || p.name}>
+											<div
+												className='gz-product-name'
+												title={p.title || p.name}>
 												{p.title || p.name}
 											</div>
 											<div className='gz-product-cat'>{categoryLabel}</div>
@@ -2159,7 +2517,9 @@ const ManageCoupon: React.FC = () => {
 				<Modal.Footer
 					className='d-flex align-items-center justify-content-between py-3 px-4'
 					style={{ borderTop: '1.5px solid #EFE4DC', background: '#FDF9F5' }}>
-					<div className='fw-bold fs-7' style={{ color: '#78350F' }}>
+					<div
+						className='fw-bold fs-7'
+						style={{ color: '#78350F' }}>
 						<i className='bi bi-check2-circle me-1'></i>
 						{formState.applicable_products.length} Products Selected
 					</div>
@@ -2190,30 +2550,57 @@ const ManageCoupon: React.FC = () => {
 				onHide={() => setShowUsageModal(false)}
 				size='lg'
 				centered>
-				<Modal.Header closeButton style={{ borderBottom: '1.5px solid #EFE4DC', background: '#FDF9F5' }}>
-					<Modal.Title className='fs-6 fw-bold' style={{ color: '#261E1A' }}>
-						<i className='bi bi-receipt me-2' style={{ color: '#78350F' }}></i>
-						Coupon Usage: <span className='gz-code-badge ms-1'>{selectedCouponForUsage?.coupon_code}</span>
+				<Modal.Header
+					closeButton
+					style={{ borderBottom: '1.5px solid #EFE4DC', background: '#FDF9F5' }}>
+					<Modal.Title
+						className='fs-6 fw-bold'
+						style={{ color: '#261E1A' }}>
+						<i
+							className='bi bi-receipt me-2'
+							style={{ color: '#78350F' }}></i>
+						Coupon Usage:{' '}
+						<span className='gz-code-badge ms-1'>{selectedCouponForUsage?.coupon_code}</span>
 					</Modal.Title>
 				</Modal.Header>
-				<Modal.Body className='py-4' style={{ background: '#FFFFFF' }}>
+				<Modal.Body
+					className='py-4'
+					style={{ background: '#FFFFFF' }}>
 					{selectedCouponForUsage && (
-						<div className='p-3 rounded mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2' style={{ background: '#FAF6F2', border: '1px solid #EFE4DC' }}>
+						<div
+							className='p-3 rounded mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2'
+							style={{ background: '#FAF6F2', border: '1px solid #EFE4DC' }}>
 							<div>
-								<div className='fw-bold fs-6' style={{ color: '#261E1A' }}>{selectedCouponForUsage.title}</div>
+								<div
+									className='fw-bold fs-6'
+									style={{ color: '#261E1A' }}>
+									{selectedCouponForUsage.title}
+								</div>
 								<div style={{ color: '#82756E', fontSize: '12px' }}>
-									Assigned: {selectedCouponForUsage.assigned_user?.name || selectedCouponForUsage.partner_name || selectedCouponForUsage.assign_trainer?.name || 'Storewide'}
+									Assigned:{' '}
+									{selectedCouponForUsage.assigned_user?.name ||
+										selectedCouponForUsage.partner_name ||
+										selectedCouponForUsage.assign_trainer?.name ||
+										'Storewide'}
 								</div>
 							</div>
 							<div className='d-flex align-items-center gap-2 flex-wrap'>
 								<span className='gz-discount-pill'>
 									{selectedCouponForUsage.discount_type === 'percent'
-										? `${ruleRangeLabel(selectedCouponForUsage, 'discount_percent') || `${selectedCouponForUsage.discount}%`} Off`
+										? `${
+												ruleRangeLabel(selectedCouponForUsage, 'discount_percent') ||
+												`${selectedCouponForUsage.discount}%`
+										  } Off`
 										: `₹${selectedCouponForUsage.discount} Off`}
 								</span>
 								{selectedCouponForUsage.coupon_type !== 'general' && (
-									<span className='gz-discount-pill' style={{ background: '#ECFDF5', color: '#047857' }}>
-										Credit earned: {formatINR(usageOrders.reduce((s, o) => s + Number(o.commission_amount || 0), 0))}
+									<span
+										className='gz-discount-pill'
+										style={{ background: '#ECFDF5', color: '#047857' }}>
+										Credit earned:{' '}
+										{formatINR(
+											usageOrders.reduce((s, o) => s + Number(o.commission_amount || 0), 0)
+										)}
 									</span>
 								)}
 							</div>
@@ -2223,7 +2610,9 @@ const ManageCoupon: React.FC = () => {
 					<div className='table-responsive'>
 						<table className='table table-sm table-row-dashed align-middle mb-0 fs-8'>
 							<thead>
-								<tr className='text-uppercase' style={{ color: '#5B270A', background: '#FDF9F5' }}>
+								<tr
+									className='text-uppercase'
+									style={{ color: '#5B270A', background: '#FDF9F5' }}>
 									<th className='py-2.5 ps-3'>Receipt ID</th>
 									<th className='py-2.5'>Order Date</th>
 									<th className='py-2.5'>Customer Details</th>
@@ -2236,39 +2625,68 @@ const ManageCoupon: React.FC = () => {
 							<tbody>
 								{usageLoading ? (
 									<tr>
-										<td colSpan={7} className='text-center py-4 text-muted'>
+										<td
+											colSpan={7}
+											className='text-center py-4 text-muted'>
 											Loading orders history...
 										</td>
 									</tr>
 								) : usageOrders.length === 0 ? (
 									<tr>
-										<td colSpan={7} className='text-center py-4 text-muted'>
+										<td
+											colSpan={7}
+											className='text-center py-4 text-muted'>
 											No orders have been redeemed using this coupon code yet.
 										</td>
 									</tr>
 								) : (
 									usageOrders.map((ord: any, idx: number) => {
-										const discount = Number(ord.calculated_discount ?? ord.notes?.discount_amount ?? 0)
-										const net = Number(ord.calculated_paid ?? ord.payment_breakdowns?.paid_amount ?? ord.amount ?? 0)
-										const gross = Number(ord.calculated_gross ?? ord.notes?.gross_amount ?? net + discount)
+										const discount = Number(
+											ord.calculated_discount ?? ord.notes?.discount_amount ?? 0
+										)
+										const net = Number(
+											ord.calculated_paid ?? ord.payment_breakdowns?.paid_amount ?? ord.amount ?? 0
+										)
+										const gross = Number(
+											ord.calculated_gross ?? ord.notes?.gross_amount ?? net + discount
+										)
 										const lines: any[] = Array.isArray(ord.coupon_lines) ? ord.coupon_lines : []
 
 										return (
 											<tr key={ord._id || idx}>
-												<td className='font-monospace fw-bold ps-3' style={{ color: '#78350F' }}>{ord.receipt_id || ord.order_id || 'REC-N/A'}</td>
-												<td className='text-muted'>{DayJS(ord.createdAt).format('DD MMM YYYY, hh:mm A')}</td>
+												<td
+													className='font-monospace fw-bold ps-3'
+													style={{ color: '#78350F' }}>
+													{ord.receipt_id || ord.order_id || 'REC-N/A'}
+												</td>
+												<td className='text-muted'>
+													{DayJS(ord.createdAt).format('DD MMM YYYY, hh:mm A')}
+												</td>
 												<td>
-													<div className='fw-bold text-dark'>{ord.user?.first_name || 'Customer'} {ord.user?.last_name || ''}</div>
-													<div className='text-muted fs-9'>{ord.user?.mobile || ord.user?.email || 'N/A'}</div>
+													<div className='fw-bold text-dark'>
+														{ord.user?.first_name || 'Customer'} {ord.user?.last_name || ''}
+													</div>
+													<div className='text-muted fs-9'>
+														{ord.user?.mobile || ord.user?.email || 'N/A'}
+													</div>
 													{lines.map((l: any, i: number) => (
-														<div key={i} className='fs-9 mt-1' style={{ color: '#82756E' }}>
-															{l.name || catalogProducts.find((p) => String(p._id) === String(l.product_id))?.name || 'Product'} ×{l.quantity}
+														<div
+															key={i}
+															className='fs-9 mt-1'
+															style={{ color: '#82756E' }}>
+															{l.name ||
+																catalogProducts.find((p) => String(p._id) === String(l.product_id))
+																	?.name ||
+																'Product'}{' '}
+															×{l.quantity}
 															{' · '}
 															<span className='text-danger'>{l.discount_percent}% off</span>
 															{selectedCouponForUsage?.coupon_type !== 'general' && (
 																<>
 																	{' · '}
-																	<span style={{ color: '#047857' }}>{l.credit_percent}% credit = {formatINR(l.credit_amount)}</span>
+																	<span style={{ color: '#047857' }}>
+																		{l.credit_percent}% credit = {formatINR(l.credit_amount)}
+																	</span>
 																</>
 															)}
 														</div>
@@ -2276,8 +2694,16 @@ const ManageCoupon: React.FC = () => {
 												</td>
 												<td className='fw-bold text-dark'>{formatINR(gross)}</td>
 												<td className='text-danger fw-semibold'>-{formatINR(discount)}</td>
-												<td className='fw-bold' style={{ color: '#78350F' }}>{formatINR(net)}</td>
-												<td className='fw-bold pe-3 text-end' style={{ color: '#047857' }}>+{formatINR(Number(ord.commission_amount || 0))}</td>
+												<td
+													className='fw-bold'
+													style={{ color: '#78350F' }}>
+													{formatINR(net)}
+												</td>
+												<td
+													className='fw-bold pe-3 text-end'
+													style={{ color: '#047857' }}>
+													+{formatINR(Number(ord.commission_amount || 0))}
+												</td>
 											</tr>
 										)
 									})

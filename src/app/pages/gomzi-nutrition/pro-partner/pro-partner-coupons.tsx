@@ -491,19 +491,52 @@ const ProPartnerCoupons: React.FC<{ defaultTab?: string }> = () => {
 								</div>
 
 								<div style={{ margin: '10px 0 4px', fontSize: '12px' }}>
-									<div style={{ fontWeight: 700, color: '#82756E', fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+									<div
+										style={{
+											fontWeight: 700,
+											color: '#82756E',
+											fontSize: '10.5px',
+											textTransform: 'uppercase',
+											letterSpacing: '0.05em',
+											marginBottom: '4px',
+										}}>
 										Your credit
 									</div>
 									{productRates.length > 0 ? (
-										<ul style={{ listStyle: 'none', padding: 0, margin: 0, maxHeight: '120px', overflowY: 'auto' }}>
+										<ul
+											style={{
+												listStyle: 'none',
+												padding: 0,
+												margin: 0,
+												maxHeight: '120px',
+												overflowY: 'auto',
+											}}>
 											{productRates.map((r, i) => (
-												<li key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', padding: '2px 0' }}>
-													<span style={{ color: '#261E1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>
+												<li
+													key={i}
+													style={{
+														display: 'flex',
+														justifyContent: 'space-between',
+														gap: '8px',
+														padding: '2px 0',
+													}}>
+													<span
+														style={{
+															color: '#261E1A',
+															overflow: 'hidden',
+															textOverflow: 'ellipsis',
+															whiteSpace: 'nowrap',
+														}}
+														title={r.name}>
 														{r.name}
 													</span>
 													<span style={{ whiteSpace: 'nowrap' }}>
-														{c.discount_type === 'percent' && <span style={{ color: '#B91C1C' }}>{r.discount}% off · </span>}
-														<span style={{ color: '#047857', fontWeight: 700 }}>{r.credit}% credit</span>
+														{c.discount_type === 'percent' && (
+															<span style={{ color: '#B91C1C' }}>{r.discount}% off · </span>
+														)}
+														<span style={{ color: '#047857', fontWeight: 700 }}>
+															{r.credit}% credit
+														</span>
 													</span>
 												</li>
 											))}
